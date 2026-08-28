@@ -93,6 +93,24 @@ and scale ratio.
 
 **Owner.** `src/ending/trigger.ts`, `src/ending/sequence.ts`, and `src/state/save_parse/ending.ts`
 
+### Named magnitude scoreboard
+
+**Decision.** The central tumor scoreboard gives every million-and-above cell total its full illion
+title while retaining the compact numeric value for rapid scanning. Full number mode spells out
+million, billion, and trillion as well as later generated illion names.
+
+**Why.** The BigNum name grammar is part of the incremental game's escalating reward language, not
+an implementation detail. One supporting magnitude title makes scale memorable without adding
+explanatory prose or competing with the tumor.
+
+**Consequence.** `src/bignum/format.ts` remains the sole rounding and naming authority. It exposes
+the name for the same displayed triad used by the count, including rollover rounding, and
+`TumorArena` presents that title as noninteractive scoreboard content. Unnamed values and
+scientific-notation overflow add no empty row.
+
+**Owner.** `src/bignum/format.ts`, `src/render/colony_panel.tsx`,
+`src/render/tumor_arena.tsx`, and `src/tumor_arena.css`
+
 ### Persisted Chicago-report interaction
 
 **Decision.** The Chicago scale report is a compact Solid leaf above the live board only once the
@@ -582,7 +600,11 @@ The direct click must confirm a real accepted division rather than rewarding ine
 `src/svg/colony_layout.ts` owns their bounded composition response. `src/svg/morphology.ts` and
 the visual catalog remain the authority for stage and hallmark grammar. `TumorArena` derives a
 pointer location only from rendered membrane or nucleus geometry, then emits division feedback only
-after the controller accepts the event. `StageTransitionEmphasis` is keyed presentation state, not
+after the controller accepts the event. Persistent reticles and observer equipment are absent;
+cell hover/focus and accepted cleavage-and-daughter feedback express the cancer-cell viewpoint.
+The late producer-queue action retains its domain contract while presenting a parent-to-daughters
+cell-priming glyph and action copy instead of laboratory glassware.
+`StageTransitionEmphasis` is keyed presentation state, not
 durable biology. Tissue breathing, cycling, perfusion, invasion, and feedback use synchronized,
 bounded motion; generic full-arena scanner rings are retired. Reduced-motion rendering preserves
 the same static morphology, division result, and arrival state.
@@ -614,6 +636,11 @@ controls, accessible names, tooltip descriptions, focus restoration, and the spe
 the interaction contract. The 1280 x 800 first view renders one shallow scoreboard, one dominant
 tumor arena, one active evolution family, one illustrated upgrade rack, and one compact reward
 strip.
+
+Producer purchase rows are the single pointer and focus route for their price, owned level,
+production, marginal benefit, and biological context. Affordable rows use a vivid enabled treatment;
+unaffordable or locked rows remain readable but visibly muted and disabled. Their tooltip layer is
+positioned outside layout flow, replacing expandable detail controls that competed with the rack.
 
 **Owner.** `src/svg/`, `src/render/action_icon.tsx`, `src/render/game_ui_state.ts`,
 `src/render/action_tooltip.tsx`, `src/render/inspector_drawer.tsx`,

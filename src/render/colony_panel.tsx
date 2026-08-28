@@ -6,7 +6,7 @@
 import { ErrorBoundary, Show, createMemo, createSignal } from "solid-js";
 import type { JSX } from "solid-js";
 
-import { formatBigNum } from "../bignum/format.js";
+import { formatBigNum, formatMagnitudeName, formatQuantity } from "../bignum/format.js";
 import { cellProductionRate } from "../economy/production.js";
 import type { GameState } from "../types/state.js";
 import { createGameColonyScene } from "../svg/colony_visual_state.js";
@@ -89,7 +89,14 @@ export function ColonyPanel(props: ColonyPanelProps): JSX.Element {
             <TumorArena
               disabled={props.disabled === true}
               scene={ready().scene}
-              cellsLabel={formatBigNum(props.game.cells, props.game.numberFormat, 2)}
+              cellsLabel={formatQuantity(
+                props.game.cells,
+                props.game.numberFormat,
+                2,
+                "cell",
+                "cells",
+              )}
+              magnitudeName={formatMagnitudeName(props.game.cells, 2)}
               productionLabel={`${formatBigNum(productionRate(), props.game.numberFormat, 2)} cells/s`}
               description={`${ready().caption} Stylized game abstraction.`}
               feedbackTarget={feedbackTarget}

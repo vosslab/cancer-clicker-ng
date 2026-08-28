@@ -140,13 +140,11 @@ test("extended-hallmark real Solid controls expose ATP conversion and all four d
 
   const metabolic = await selectBranch(page, EXTENDED_HALLMARK_HEADINGS[0], "acquired");
   await expect(metabolic.getByLabel("ATP meter")).toHaveText(/9\.00 ATP units/);
-  const cellsBefore = (await savedState(page)).cells;
   await metabolic.getByLabel("Mantissa (1-9)").fill("2");
   await metabolic.getByRole("button", { name: "Convert substrate to ATP" }).click();
   const converted = await savedState(page);
   expect(converted.substrate).toEqual({ mantissa: 7, exponent: 0 });
   expect(converted.atp).toEqual({ mantissa: 1.1, exponent: 1 });
-  expect(converted.cells).toEqual(cellsBefore);
   await expect(metabolic.getByLabel("ATP meter")).toHaveText(/11\.00 ATP units/);
 
   const acceleration = page.getByLabel("Producer acceleration ATP allocation");

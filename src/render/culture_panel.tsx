@@ -211,29 +211,11 @@ export function CulturePanel(props: CulturePanelProps): JSX.Element {
           {(queue) => (
             <p class="culture-network-board__status" aria-live="polite">
               <CultureNetworkProp kind="assay" state={queue().affordable ? "ready" : "locked"} />
-              <span>assay: {queue().producerLabel}</span>
+              <span>primed: {queue().producerLabel}</span>
               <span>{queue().cost}</span>
             </p>
           )}
         </Show>
-        <details>
-          <summary>Specimen notes</summary>
-          <p>
-            An immortalization choice clears host-local history, converts the active niche into one
-            cryobank program, and debits that cryobank rank from the new award in the same accepted
-            event.
-          </p>
-          <Show when={presentation().queuedAction}>
-            {(queue) => (
-              <p>
-                Queued {queue().producerLabel}: next cost {queue().cost};{" "}
-                {queue().affordable
-                  ? "its accepted assay event is reconciling."
-                  : "waiting for an affordable balance."}
-              </p>
-            )}
-          </Show>
-        </details>
       </div>
       <dialog
         ref={(element) => {

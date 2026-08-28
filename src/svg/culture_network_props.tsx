@@ -66,10 +66,10 @@ function propGeometry(kind: CultureNetworkPropKind): JSX.Element {
     case "assay":
       return (
         <>
-          <path d="M18 13h28v36H18z" />
-          <path d="M23 13v-4h18v4m-15 10h12m-12 8h12m-12 8h12" />
-          <circle cx="32" cy="42" r="5" />
-          <path d="M32 37v10m-5-5h10" />
+          <circle cx="22" cy="32" r="11" />
+          <circle cx="45" cy="20" r="7" />
+          <circle cx="45" cy="44" r="7" />
+          <path d="M33 32h20m-6-6 6 6-6 6" />
         </>
       );
     case "passage":

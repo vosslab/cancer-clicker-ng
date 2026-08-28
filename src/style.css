@@ -6,20 +6,20 @@
     ui-sans-serif,
     system-ui,
     sans-serif;
-  background: #071313;
-  color: #f2f7ee;
-  --ink: #071313;
-  --surface: rgb(13 34 29 / 94%);
-  --line: #527b66;
-  --copy: #f2f7ee;
-  --muted: #bdd0c0;
-  --growth: #b8ef99;
-  --growth-bright: #e1ffc6;
-  --blood: #e86171;
-  --hypoxia: #a579dc;
-  --atp: #ffd67a;
-  --danger: #ffb5a4;
-  --focus: #fff0a7;
+  background: #06121d;
+  color: #f5f8fb;
+  --ink: #06121d;
+  --surface: rgb(9 28 40 / 95%);
+  --line: #397b8c;
+  --copy: #f5f8fb;
+  --muted: #a8c2ce;
+  --growth: #ff789a;
+  --growth-bright: #ffd7e0;
+  --blood: #ff5f6d;
+  --hypoxia: #a978e2;
+  --atp: #ffd16f;
+  --danger: #ff9b83;
+  --focus: #8ff5ee;
 }
 
 * {
@@ -31,7 +31,10 @@ body {
   min-height: 100vh;
   margin: 0;
   overflow-x: hidden;
-  background: linear-gradient(142deg, #173328 0%, var(--ink) 50%, #0b1818 100%);
+  background:
+    radial-gradient(circle at 14% 12%, rgb(40 143 164 / 16%), transparent 34%),
+    radial-gradient(circle at 84% 78%, rgb(180 43 79 / 12%), transparent 38%),
+    linear-gradient(142deg, #0b2a38 0%, var(--ink) 52%, #160d1b 100%);
 }
 
 button,
@@ -43,19 +46,19 @@ select {
 button {
   min-width: 2.75rem;
   min-height: 2.75rem;
-  border: 1px solid #8ebf9e;
+  border: 1px solid #77ced5;
   border-radius: 0.62rem;
   padding: 0.55rem 0.75rem;
-  color: #102015;
+  color: #201018;
   background: linear-gradient(145deg, var(--growth-bright), var(--growth));
   font-weight: 850;
   cursor: pointer;
 }
 
 button:disabled {
-  border-color: #50675a;
-  color: #9caea1;
-  background: #2a3d34;
+  border-color: #4a5d66;
+  color: #8e9ca2;
+  background: #25343c;
   cursor: not-allowed;
 }
 
@@ -839,13 +842,6 @@ polygon.colony-figure__outline {
   color: #d7caa8;
   font-size: 0.76rem;
   line-height: 1.35;
-}
-.producer-row__details {
-  color: #e7dab8 !important;
-}
-.producer-row__details:focus-visible {
-  outline: 2px solid var(--focus);
-  outline-offset: 2px;
 }
 .producer-row__unlock {
   color: #e1b8b0;

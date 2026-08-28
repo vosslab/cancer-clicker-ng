@@ -316,24 +316,6 @@ export function NetworkPanel(props: NetworkPanelProps): JSX.Element {
             </ul>
           )}
         </Show>
-        <details>
-          <summary>Specimen notes</summary>
-          <p>
-            Each node changes local throughput and detection. Stabilize a node, then collect its one
-            durable Pressure credit.
-          </p>
-          <p>
-            Containment: {presentation().containment.selected ?? "none"}.{" "}
-            {presentation().containment.effect}
-          </p>
-          <Show when={presentation().activeCampaign}>
-            {(campaign) => (
-              <p>
-                {campaign().effects} Retired alternatives: {campaign().retiredAlternatives}.
-              </p>
-            )}
-          </Show>
-        </details>
       </div>
       <dialog
         ref={(element) => {

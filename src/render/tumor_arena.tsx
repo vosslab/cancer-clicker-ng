@@ -2,7 +2,7 @@
  * The visual-first direct division surface. The canonical colony SVG remains
  * the only source of biological morphology, vessels, hypoxia, and invasion.
  */
-import { createMemo } from "solid-js";
+import { Show, createMemo } from "solid-js";
 import type { Accessor, JSX } from "solid-js";
 
 import { Colony } from "../svg/colony.js";
@@ -16,6 +16,7 @@ export type TumorArenaProps = Readonly<{
   disabled: boolean;
   scene: ColonySceneRequest;
   cellsLabel: string;
+  magnitudeName: string | undefined;
   productionLabel: string;
   description: string;
   feedbackTarget: Accessor<Readonly<{ x: number; y: number }>>;
@@ -107,10 +108,6 @@ export function TumorArena(props: TumorArenaProps): JSX.Element {
     if (focalCell === undefined) return { x: 500, y: 350 };
     return focalCell.centre;
   });
-  const tooltip = createMemo(
-    () => `Divide a visible cell. ${props.cellsLabel}; ${props.productionLabel}.`,
-  );
-
   function divideFromArena(event: MouseEvent): void {
     // Keyboard and assistive activation has detail 0. Pointer/touch intent must
     // originate from a rendered cell rather than the surrounding specimen well.
@@ -126,7 +123,18 @@ export function TumorArena(props: TumorArenaProps): JSX.Element {
   return (
     <div class="tumor-arena">
       <div class="tumor-arena__hud">
-        <output class="tumor-arena__metric tumor-arena__metric--cells" aria-label="Arena biomass">
+        <Show when={props.magnitudeName}>
+          {(name) => (
+            <span class="tumor-arena__magnitude" aria-label={`Named magnitude ${name()}`}>
+              {name()}
+            </span>
+          )}
+        </Show>
+        <output
+          class="tumor-arena__metric tumor-arena__metric--cells"
+          aria-label="Tumor biomass"
+          aria-live="polite"
+        >
           {props.cellsLabel}
         </output>
         <output class="tumor-arena__metric tumor-arena__metric--rate" aria-label="Arena output">
@@ -145,7 +153,6 @@ export function TumorArena(props: TumorArenaProps): JSX.Element {
             disabled={props.disabled}
             aria-label="Divide cell"
             aria-describedby={`${tooltipBindings["aria-describedby"]} colony-a11y-description`}
-            title={tooltip()}
             on:click={divideFromArena}
           >
             <span class="tumor-arena__scene">
@@ -155,11 +162,7 @@ export function TumorArena(props: TumorArenaProps): JSX.Element {
         )}
       </HelpTooltip>
       <StageTransitionEmphasis stageId={props.scene.stageId} />
-      <TumorFeedback
-        reticleTarget={focalPoint}
-        feedbackTarget={props.feedbackTarget}
-        sequence={props.feedbackSequence}
-      />
+      <TumorFeedback feedbackTarget={props.feedbackTarget} sequence={props.feedbackSequence} />
       <p id="colony-a11y-description" class="tumor-arena__a11y-description">
         {props.description} Click a visible cell to divide. Enter or Space also divides.
       </p>

@@ -137,9 +137,10 @@ const ICONS: Readonly<Record<SvgIconName, SvgIconModel>> = Object.freeze({
     ),
   ]),
   assay: icon("assay", [
-    primitive("path", stroked({ d: "M8 3v7l-3 8a2 2 0 0 0 2 3h10a2 2 0 0 0 2-3l-3-8V3" })),
-    primitive("line", stroked({ x1: 8, y1: 3, x2: 16, y2: 3 })),
-    primitive("path", stroked({ d: "M8 15h8" })),
+    primitive("circle", stroked({ cx: 8, cy: 12, r: 4 })),
+    primitive("circle", stroked({ cx: 16, cy: 8, r: 2.25 })),
+    primitive("circle", stroked({ cx: 16, cy: 16, r: 2.25 })),
+    primitive("path", stroked({ d: "M12 12h7m-2.5-2.5L19 12l-2.5 2.5" })),
   ]),
   stage_advance: icon("stage_advance", [
     primitive("path", stroked({ d: "M4 12h14M13 6l6 6-6 6" })),

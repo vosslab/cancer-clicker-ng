@@ -20,12 +20,18 @@ diagnosis, prognosis, outbreak, or clinical simulation.
 | Shallow scoreboard HUD    | Always shows cell count, cells/s, stage, save condition, number format, and an optional specimen route.                          |
 | Living tumor arena        | A pointer action must land on visible cell geometry; Enter and Space activate the same `Divide cell` control.                    |
 | Evolution dock            | Shows six compact icon tabs while one family is active, keeping upgrades legible rather than stacking every system at once.      |
-| Illustrated upgrade rack  | Keeps buy quantity, machine art, owned level, next cost, marginal benefit, and biological details continuously available.        |
+| Illustrated upgrade rack  | Highlights affordable purchases, grays unavailable ones, and reveals richer economics and biology in row tooltips.               |
 | Tooltip and drawer routes | Explain unfamiliar icons, biological tradeoffs, and specimen facts when requested without turning the first board into a manual. |
 
-The icon is a family cue, not the only instruction. Decorative SVG marks sit beside text labels;
+The play surface stays in the cancer cells' viewpoint: cells, tumor tissue, vessels, hypoxia, and
+invasion are present while observer tools and targeting crosshairs are absent. The icon is a family
+cue, not the only instruction. Decorative SVG marks sit beside text labels;
 icon-first utility controls retain explicit accessible names and tooltips. High-consequence choices
 keep their words visible.
+
+Named BigNum magnitudes are part of the reward loop. The arena keeps the compact count readable and
+adds one prominent million-and-above illion title; full number mode spells that same canonical name
+inside counts, prices, reports, and other formatter-owned readouts.
 
 ## Progression and continued play
 

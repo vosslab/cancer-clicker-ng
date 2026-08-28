@@ -133,6 +133,7 @@ test("Chicago report is keyboard-openable, persisted, scale-aware, and leaves th
   await page.goto("/?debug=1");
 
   const report = page.locator(".ending-view");
+  await expect(page.locator(".tumor-arena__magnitude")).toHaveText("septillion");
   const open = page.getByRole("button", { name: "Open the Chicago scale report" });
   await expect(report).toBeVisible();
   await expect(report).toContainText("All report conditions are met.");
@@ -178,6 +179,7 @@ test("Chicago report is keyboard-openable, persisted, scale-aware, and leaves th
     tumorRemainsVisible: true,
   });
   await page.getByRole("button", { name: "Use full number names" }).click();
+  await expect(page.getByLabel("Cell count", { exact: true })).toContainText("septillion cells");
   await expect(report).toContainText("septillion cells");
   await expect(page.getByLabel("Modeled cell volume")).toContainText(
     "septillion m3 of cell volume",

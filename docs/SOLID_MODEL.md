@@ -12,15 +12,16 @@ the accepted event, then Solid reconciles the resulting durable state.
 
 The default 1280 x 800 (16:10) composition is a living game board rather than a page of controls.
 A shallow `GameHud` keeps cells, production rate, stage, local-save state, number formatting, and
-specimen inspection available without competing with play. `GameBoard` then arranges four stable
-areas:
+specimen inspection available without competing with play. The central count adds the formatter's
+full million-and-above magnitude title while keeping the compact numeric value dominant. `GameBoard`
+then arranges four stable areas:
 
-| Area                  | Solid owner                                       | Player purpose                                                                                              |
-| --------------------- | ------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| Living tumor arena    | `TumorArena` through `ColonyPanel`                | Directly divide a rendered cancer cell and read immediate count/rate feedback.                              |
-| Evolution family      | `EvolutionDock` plus the selected tab             | Keep one progression family active at a time: stage/hallmarks, routes, reset, culture, or network.          |
-| Upgrade rack          | `ProducersPanel`                                  | Inspect illustrated molecular machinery, choose a buy quantity, and purchase from an always-present Store.  |
-| Rewards and inspector | `GameRewardDock`, `EndingView`, `InspectorDrawer` | Surface short feedback, the optional scale report, and on-demand specimen facts without crowding the board. |
+| Area                  | Solid owner                                       | Player purpose                                                                                               |
+| --------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| Living tumor arena    | `TumorArena` through `ColonyPanel`                | Directly divide a rendered cancer cell and read immediate count/rate feedback.                               |
+| Evolution family      | `EvolutionDock` plus the selected tab             | Keep one progression family active at a time: stage/hallmarks, routes, reset, culture, or network.           |
+| Upgrade rack          | `ProducersPanel`                                  | Read price state immediately, inspect row tooltips, choose a buy quantity, and purchase molecular machinery. |
+| Rewards and inspector | `GameRewardDock`, `EndingView`, `InspectorDrawer` | Surface short feedback, the optional scale report, and on-demand specimen facts without crowding the board.  |
 
 The active evolution tab, drawer open state, tooltip visibility, and transient reward feedback are
 presentation state in `src/render/game_ui_state.ts`. They never enter saves or replay. The game
@@ -35,8 +36,9 @@ nucleus; background tissue, voids, and board whitespace remain inert. Enter, Spa
 assistive activation use that same button and typed divide intent once. There are no per-cell tab
 stops or duplicate mutation paths.
 
-The control includes a short visible-accessible instruction, stage-aware specimen description,
-focus treatment, authoritative count/rate outputs, and a local division response. The colony is a
+The control includes a focusable tooltip, stage-aware accessible description, cell-level pointer
+treatment, authoritative count/rate outputs, and a local division response without a persistent
+targeting overlay. The colony is a
 fictional scientific game abstraction, not a patient image, diagnosis, clinical prediction, or
 medical advice. [ART_DIRECTION.md](ART_DIRECTION.md) and
 [MORPHOLOGY_REFERENCE.md](MORPHOLOGY_REFERENCE.md) define that boundary.
@@ -47,7 +49,8 @@ medical advice. [ART_DIRECTION.md](ART_DIRECTION.md) and
 decorative glyph beside an existing visible text label; the label remains the native accessible
 name. Icon-first utility controls use `ActionTooltip`, which supplies an explicit accessible name
 and focusable tooltip. `HelpTooltip` attaches the same concise explanation to an existing button
-without changing its action.
+without changing its action. Producer rows use that existing buy surface for economics and biology,
+so hidden help is absolutely positioned and contributes no track or row height.
 
 Tooltips open for pointer, focus, and pointer-down input, expose `role="tooltip"`, and connect to
 the trigger with `aria-describedby`. The optional specimen drawer moves focus to its close control,

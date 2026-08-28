@@ -56,9 +56,6 @@ function producerLabel(id: ProducerId): string {
 /** Persistent illustrated upgrade rack: one buy mode applies to every molecular machine. */
 export function ProducersPanel(props: ProducersPanelProps): JSX.Element {
   const [quantity, setQuantity] = createSignal<PurchaseQuantity>(1);
-  const [expandedProducerIds, setExpandedProducerIds] = createSignal<ReadonlySet<ProducerId>>(
-    new Set(),
-  );
 
   function rows(): readonly ProducerDefinition[] {
     return props.reverse ? [...STAGE_ONE_PRODUCERS].reverse() : STAGE_ONE_PRODUCERS;
@@ -67,19 +64,6 @@ export function ProducersPanel(props: ProducersPanelProps): JSX.Element {
     hasPassageUpgrade(props.game.culture, passageUpgradeId("assay_discipline"));
   const queuedAssay = (): GameState["culture"]["queuedProducerAction"] =>
     props.game.culture.queuedProducerAction;
-
-  function producerDetailsOpen(id: ProducerId): boolean {
-    return expandedProducerIds().has(id);
-  }
-
-  function toggleProducerDetails(id: ProducerId): void {
-    setExpandedProducerIds((current) => {
-      const next = new Set(current);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  }
 
   return (
     <section class="panel producers-panel" aria-labelledby="producers-title">
@@ -135,29 +119,43 @@ export function ProducersPanel(props: ProducersPanelProps): JSX.Element {
               );
             };
             const unlockStage = (): string => stageDefinition(producer.unlockStage).title;
+            const available = (): boolean => unlocked() && selectedQuote().affordable;
+            const purchaseTooltip = (): string => {
+              const quote = selectedQuote();
+              const owned = levelFor(props.game, producer.id);
+              const economics = `${producer.displayName}. Owned ${owned}. Produces ${contribution()} cells/s. Buy ${quantityLabel(quantity())} for ${formatBigNum(quote.debit, props.game.numberFormat, 2)} cells; adds ${marginalBenefit()} cells/s.`;
+              if (!unlocked()) return `${economics} Unlock at ${unlockStage()}.`;
+              return `${economics} ${quote.affordable ? "Affordable now." : "More cells required."}`;
+            };
             const assayLabel = (): string => {
               const queued = queuedAssay();
-              if (!queued) return "Queue assay purchase";
+              if (!queued) return "Prime next purchase";
               return queued.producerId === producer.id
-                ? "Queued assay purchase"
-                : `Replace assay target with ${producer.displayName}`;
+                ? "Primed next purchase"
+                : `Prime ${producer.displayName} instead`;
             };
             const assayAriaLabel = (): string => {
               const queued = queuedAssay();
-              if (!queued) return `Queue ${producer.displayName} as the assay purchase target`;
+              if (!queued) return `Prime ${producer.displayName} as the next purchase`;
               const prior = producerLabel(queued.producerId);
-              return `Replace assay target from ${prior} to ${producer.displayName}`;
+              return `Replace primed purchase from ${prior} to ${producer.displayName}`;
             };
             return (
               <li
                 class="producer-row"
                 classList={{
                   "is-locked": !unlocked(),
-                  "is-affordable": selectedQuote().affordable,
+                  "is-affordable": available(),
+                  "is-unaffordable": !available(),
                 }}
                 data-producer-id={producer.id}
+                data-affordable={available() ? "true" : "false"}
               >
-                <HelpTooltip tooltip={`Buy ${quantityLabel(quantity())} ${producer.displayName}`}>
+                <HelpTooltip
+                  tooltip={purchaseTooltip()}
+                  disabled={!available() || props.disabled === true}
+                  disabledLabel={purchaseTooltip()}
+                >
                   {(tooltipBindings) => (
                     <button
                       {...tooltipBindings}
@@ -167,7 +165,6 @@ export function ProducersPanel(props: ProducersPanelProps): JSX.Element {
                       disabled={props.disabled || !unlocked() || !selectedQuote().affordable}
                       onClick={() => props.onPurchase(producer.id, quantity())}
                       aria-label={`Buy ${quantityLabel(quantity())} ${producer.displayName} machine${quantity() === 1 ? "" : "s"} for ${formatBigNum(selectedQuote().debit, props.game.numberFormat, 2)}`}
-                      title={`Buy ${quantityLabel(quantity())} ${producer.displayName}`}
                     >
                       <span class="producer-row__art" aria-hidden="true">
                         <ProducerMachine
@@ -227,46 +224,12 @@ export function ProducersPanel(props: ProducersPanelProps): JSX.Element {
                         }
                         onClick={() => props.onQueueAssay?.(producer.id)}
                         class="producer-row__assay"
-                        title={assayLabel()}
                       >
                         <ActionIcon name="assay" />
                         <span class="sr-only">{assayLabel()}</span>
                       </button>
                     )}
                   </HelpTooltip>
-                </Show>
-                <HelpTooltip tooltip={`${producer.displayName} specimen details`}>
-                  {(tooltipBindings) => (
-                    <button
-                      {...tooltipBindings}
-                      class="producer-row__detail-trigger"
-                      type="button"
-                      aria-label={`Open ${producer.displayName} biological details`}
-                      aria-expanded={producerDetailsOpen(producer.id)}
-                      onClick={() => toggleProducerDetails(producer.id)}
-                      title={`${producer.displayName} specimen details`}
-                    >
-                      <ActionIcon name="assay" />
-                      <span class="sr-only">Open {producer.displayName} specimen details</span>
-                    </button>
-                  )}
-                </HelpTooltip>
-                <Show when={producerDetailsOpen(producer.id)}>
-                  <section
-                    class="producer-row__detail"
-                    aria-label={`${producer.displayName} details`}
-                  >
-                    <p>
-                      <strong>Base:</strong> +
-                      {formatBigNum(producer.baseCellRate, props.game.numberFormat, 2)} cells/s per
-                      machine. Current production uses stage and hallmark modifiers.
-                    </p>
-                    <Show when={!unlocked()}>
-                      <p>
-                        <strong>Unlock:</strong> reach {unlockStage()}.
-                      </p>
-                    </Show>
-                  </section>
                 </Show>
               </li>
             );

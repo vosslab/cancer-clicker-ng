@@ -64,19 +64,24 @@ function magnitudeLabel(group: number, format: NumberFormat): string | undefined
   if (format === "short") {
     return shortSuffixForGroup(group);
   }
-  if (group <= 3) {
-    return shortSuffixForGroup(group);
-  }
-  return illionNameForGroup(group);
+  return illionNameForGroup(group) ?? shortSuffixForGroup(group);
 }
 
-function formattedTriad(value: BigNum, format: NumberFormat, fractionalDigits: number): string {
+function resolvedTriad(
+  value: BigNum,
+  fractionalDigits: number,
+): Readonly<{ group: number; coefficient: number }> {
   let group = triadGroup(value);
   let coefficient = triadCoefficient(value, group);
   if (roundedCoefficient(coefficient, fractionalDigits) >= 1000) {
     group += 1;
     coefficient = triadCoefficient(value, group);
   }
+  return { group, coefficient };
+}
+
+function formattedTriad(value: BigNum, format: NumberFormat, fractionalDigits: number): string {
+  const { group, coefficient } = resolvedTriad(value, fractionalDigits);
 
   const label = magnitudeLabel(group, format);
   if (label === undefined) {
@@ -99,6 +104,13 @@ export function formatBigNum(
     return ordinaryDecimal(value, fractionalDigits);
   }
   return formattedTriad(value, format, fractionalDigits);
+}
+
+/** The full illion title for the value's displayed triad, when that triad has a name. */
+export function formatMagnitudeName(value: BigNum, fractionalDigits: number): string | undefined {
+  requireFractionalDigits(fractionalDigits);
+  if (value.exponent < 3) return undefined;
+  return illionNameForGroup(resolvedTriad(value, fractionalDigits).group);
 }
 
 function usesSingularUnit(value: BigNum): boolean {

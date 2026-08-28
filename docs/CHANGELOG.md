@@ -142,6 +142,26 @@
 
 ### Behavior or Interface Changes
 
+- Reworked the first-view interaction grammar around the cancer-cell viewpoint. Rendered cells now
+  carry their own pointer response and visible count update, accepted divisions retain the local
+  cleavage-and-daughter burst, and the persistent targeting reticle is removed.
+
+- Made producer affordability unmistakable: affordable rows receive an enabled medical-cyan
+  treatment while locked or underfunded rows are disabled and desaturated. Each buy surface now
+  owns its economics and biology tooltip without a separate detail button or expanding layout row;
+  persistent stage and hallmark notes likewise move behind existing tooltip and drawer routes.
+
+- Shifted the board toward a vivid medical-biological palette of venous navy, arterial coral,
+  eosin-like tissue rose, hematoxylin-like nuclei, oxygenated cyan, and ATP amber.
+
+- Recast the late producer-queue control as a compact cell-priming action. Its parent-to-daughters
+  SVG and action copy preserve the real automation mechanic without reintroducing a flask-shaped
+  detail trigger or outside-observer equipment.
+
+- Promoted the canonical BigNum illion grammar into the central tumor scoreboard. Million-and-above
+  totals now carry a prominent full magnitude title, and full number mode spells out million,
+  billion, and trillion alongside the later generated names.
+
 - Reframed release-candidate closure as a manager-and-subagent evidence contract: canonical code,
   build, browser, and Python gates; `devel/verify_candidate.py`; fixed-clock capture;
   independent agent image review; and static Pages workflow validation close M22. Repository
@@ -149,16 +169,21 @@
 
 ### Fixes and Maintenance
 
-- Reconciled M22's current-candidate evidence from base HEAD
-  `28591cc98ec5e2bb9cd2acc4678468b99c4092b9`: 5/5 source checks with 368 Node tests in 1.60
-  seconds, build, 48/48 browser tests, Pages verification, and a 1,533-test byte-stable candidate
-  projection that preserved the real index. Historical counts remain labeled as such.
+- Reconciled the post-M22 interface correction from base HEAD
+  `d4230ce1a9abe6d52e00329365c7e29764027b3a`: 5/5 source checks with 368 Node tests,
+  a production build, 49/49 browser tests, and seven fixed-clock 1280 x 800 captures. The broader
+  M22 release audit, candidate projection, renderer corpus, and balance evidence remain dated
+  baseline results.
 
-- Updated visual provenance to the 2026-08-28T21:31:14.013Z 216-frame contact manifest and
-  recorded the independent PASS review of 44 originals: all 36 repaired-lesion combinations plus
-  eight progression samples. The seven 1280 x 800 README frames were recaptured and reviewed at
-  original resolution; six remained byte-identical, while the perfused-tumor frame received its
-  current recorded identity.
+- Recaptured and reviewed all seven 1280 x 800 README frames after the medical palette,
+  affordability, tooltip, direct-cell, and cancer-cell-viewpoint corrections. Current identities
+  live in the visual-first review; the prior 216-frame contact manifest remains dated M22 evidence
+  rather than a pixel-equivalence requirement.
+
+- Removed a fragile browser-level exact cell snapshot from the live metabolism journey. The pure
+  reducer suite remains the permanent owner of the no-cell-minting contract, while the browser
+  journey verifies visible substrate and ATP behavior in the presence of normal background
+  production.
 
 - Recorded the permanent real-cell-target layout contract, the one-time sparse-void sweep, the
   semantic-only regression boundary, canonical balance provenance, and exact schema-8 cutover.
@@ -235,6 +260,11 @@
 
 ### Developer Tests and Notes
 
+- Current interface verification passed all five `./check_codebase.sh` lanes with 368 Node tests,
+  the production build, and all 49 production-browser tests. Seven fresh 1280 x 800 captures passed
+  direct-cell, price-state, targeting-overlay absence, overflow, narrow-layout, and motion checks;
+  original-resolution review accepted the opening, hypoxic, perfused, invasive, culture, network,
+  and Chicago frames.
 - Historical final local verification passed all five `./check_codebase.sh` lanes with 372 Node tests, the
   GitHub Pages build, and 48 production-browser tests. A synthetic full-candidate Git projection
   passed all 1,484 Python tests while preserving the real index; the ordinary tracked projection

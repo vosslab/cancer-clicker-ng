@@ -466,20 +466,18 @@ test("network frontier confirms one saved campaign and retires its alternatives"
   expect(diagnostics).toEqual([]);
 });
 
-test("producer rail labels a queued assay target and its explicit replacement", async ({
-  page,
-}) => {
+test("producer rail labels a primed purchase and its explicit replacement", async ({ page }) => {
   await installFixedClock(page);
   const diagnostics = installDiagnostics(page);
   await seedQueuedAssayFixture(page);
   await page.goto("/");
   const queued = page.locator('[data-assay-queue-target="replication_fork"]');
-  await expect(queued).toHaveText("Queued assay purchase");
+  await expect(queued).toHaveText("Primed next purchase");
   const replacement = page.locator('[data-assay-queue-target="cdk4"]');
-  await expect(replacement).toHaveText("Replace assay target with CDK4");
+  await expect(replacement).toHaveText("Prime CDK4 instead");
   await expect(replacement).toHaveAttribute(
     "aria-label",
-    "Replace assay target from Replication Fork to CDK4",
+    "Replace primed purchase from Replication Fork to CDK4",
   );
   expect(diagnostics).toEqual([]);
 });

@@ -886,7 +886,7 @@ export function HallmarkTree(props: HallmarkTreeProps): JSX.Element {
           {(branch) => {
             const isActive = (): boolean => activeBranch()?.definition.id === branch.definition.id;
             const tooltip = (): string =>
-              `${branch.definition.displayName}. ${branch.status}. ${branch.unlock}`;
+              `${branch.definition.displayName}. ${readableIdentifier(branch.status)}. ${branchSummary(branch)} ${branch.unlock}`;
             return (
               <li data-state={branch.status}>
                 <HelpTooltip tooltip={tooltip()}>
@@ -942,14 +942,9 @@ export function HallmarkTree(props: HallmarkTreeProps): JSX.Element {
                 </button>
               </Show>
               <Show when={branch().status === "acquired"}>{BranchControls(props, branch())}</Show>
-              <details class="evolution-hallmarks__specimen">
-                <summary>Specimen note</summary>
-                <p>{branchSummary(branch())}</p>
-                <p>{branch().unlock}</p>
-                <Show when={controlExplanation(props, branch().status)}>
-                  {(message) => <p>{message()}</p>}
-                </Show>
-              </details>
+              <Show when={controlExplanation(props, branch().status)}>
+                {(message) => <p class="hallmark-empty">{message()}</p>}
+              </Show>
             </section>
           );
         }}

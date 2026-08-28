@@ -40,6 +40,16 @@ origin belongs there too. Rules: [REPO_STYLE.md](REPO_STYLE.md).
   and limited to tooltips.
 - Make it fun for high-school and college students; let the living tumor, illustrated machines,
   and small icons carry the experience.
+- Highlight options I can afford so they read as clickable, and gray out options that cost more
+  than I currently have.
+- Replace the highlighter-tip detail buttons with Cookie Clicker-style tooltip popups. Hidden
+  details should take no space in the layout.
+- Clicking the rendered cancer cells must create more cells; that direct action is the point of
+  the clicker loop.
+- Give the interface a stronger medical and biological color identity.
+- Present the game from the cancer cells' perspective. Remove crosshairs and lab-observer
+  equipment such as microscopes from the play surface.
+- Make the number-naming content in `src/bignum/` more prominent in the interface.
 
 ## Review expectations
 

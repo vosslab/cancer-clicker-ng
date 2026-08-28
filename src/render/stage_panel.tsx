@@ -215,27 +215,6 @@ export function StagePanel(props: StagePanelProps): JSX.Element {
           </div>
         )}
       </Show>
-      <details class="evolution-stage__specimen">
-        <summary>Specimen notes</summary>
-        <dl>
-          <div>
-            <dt>Pressure</dt>
-            <dd>{current().pressure}</dd>
-          </div>
-          <div>
-            <dt>Opportunity</dt>
-            <dd>{current().opportunity}</dd>
-          </div>
-          <div>
-            <dt>Play shift</dt>
-            <dd>{current().gameplayIdentity}</dd>
-          </div>
-          <div>
-            <dt>Retired</dt>
-            <dd>{current().retires}</dd>
-          </div>
-        </dl>
-      </details>
     </section>
   );
 }

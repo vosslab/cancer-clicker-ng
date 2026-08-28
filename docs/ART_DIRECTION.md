@@ -2,7 +2,8 @@
 
 ## Visual contract
 
-Cancer Clicker NG uses a clinical-dark incremental-game board centered on a living, editable SVG
+Cancer Clicker NG uses a vivid medical-biological incremental-game board centered on a living,
+editable SVG
 tumor. The 1280 x 800 target presents a shallow scoreboard HUD above a three-part composition:
 one active evolution family, dominant direct tumor interaction, and an illustrated upgrade rack. It is a
 stylized scientific game illustration, not pathology, a patient image, a diagnostic slide, or a
@@ -25,14 +26,24 @@ renderer does not invent biological state. The visual reading order is:
 4. Brief non-diagnostic explanation and direct action instruction.
 
 Pointer interaction is deliberately exact: only a membrane or nucleus accepts a pointer division.
-The surrounding specimen well is visually meaningful but inert. One native `Divide cell` button
+The surrounding tissue niche is visually meaningful but inert. One native `Divide cell` button
 provides keyboard parity through Enter, Space, and assistive activation, avoiding a cluttered grid
-of cell tab stops. Count, rate, focus, and a local response complete the interaction feedback.
+of cell tab stops. Pointer cursor, membrane response, count, rate, focus, and a local daughter-cell
+burst complete the interaction feedback. A persistent crosshair would imply an outside observer,
+so the tumor surface carries its own affordance.
+
+Late-game automation uses a cell-priming glyph: one parent cell, two daughter cells, and a forward
+cue. This keeps the saved producer-queue mechanic recognizable as an action while avoiding flask,
+microscope, targeting, or other outside-observer equipment on the play surface.
+
+The arena scoreboard treats the current illion name as a compact reward title. Million-and-above
+names use rose emphasis, uppercase rhythm, and the same rounded triad as the large cell count; the
+name disappears entirely when the formatter has no canonical title.
 
 ## Living progression contract
 
 The arena opens with one large transformed cell. It is a direct-manipulation lesson: the cell
-occupies enough of the well to read as the board's primary action while the surrounding specimen
+occupies enough of the well to read as the board's primary action while the surrounding tissue
 space remains quiet. Progression then forms a non-regressive microcolony. Later biomass changes the
 same living scene rather than swapping it for a smaller badge or a generic progress meter.
 
@@ -70,17 +81,19 @@ utility control has an explicit accessible name and a focusable tooltip.
 
 This is a recognition aid, not a substitution for language. Purchases retain names, costs, owned
 levels, and marginal benefit. Biological decisions retain their labels, gates, and tradeoffs.
-Tooltips and the optional specimen drawer concentrate explanatory text at the moment it is useful.
+Producer biology and economics share the purchase surface's pointer/focus tooltip; they do not add
+separate detail buttons or expanding rows. Tooltips and the optional specimen drawer concentrate
+explanatory text at the moment it is useful.
 
 ## Palette and non-color cues
 
-| Role                                  | Direction                                                | Companion cue                                           |
-| ------------------------------------- | -------------------------------------------------------- | ------------------------------------------------------- |
-| Board canvas                          | Near-black blue-green field with quiet borders           | Stable panel hierarchy and generous spacing             |
-| Action controls                       | Mint and gold interactive language                       | Native label, visible focus, enabled state              |
-| Cytoplasm and nucleus                 | Desaturated tissue colors and a darker core              | Contour, volume, depth, and overlap                     |
-| Hypoxia, necrosis, and vascular state | Restrained purple, amber, ash, or contrasting route line | Region, void, density, directional placement, and shape |
-| Network connection                    | Bright outline and diamond/route geometry                | Connected-site position and label                       |
+| Role                                  | Direction                                              | Companion cue                                           |
+| ------------------------------------- | ------------------------------------------------------ | ------------------------------------------------------- |
+| Board canvas                          | Deep venous navy with arterial and oxygenated accents  | Stable panel hierarchy and generous spacing             |
+| Action controls                       | Coral growth, oxygenated cyan, and ATP amber           | Native label, visible focus, enabled state              |
+| Cytoplasm and nucleus                 | Eosin-like rose tissue with a hematoxylin-purple core  | Contour, volume, depth, and overlap                     |
+| Hypoxia, necrosis, and vascular state | Purple, ash, arterial coral, or contrasting route line | Region, void, density, directional placement, and shape |
+| Network connection                    | Bright outline and diamond/route geometry              | Connected-site position and label                       |
 
 Color never carries stage, selection, action availability, depth, or biological status alone.
 Meaningful text and icons are reviewed in their actual backgrounds, and every interaction has a
@@ -94,7 +107,9 @@ first, followed by the active evolution family, upgrade rack, then rewards. The 
 preserves direct cell activation, native labels, tooltips, and the specimen drawer rather than
 reducing the game to a poster or a single button.
 
-Motion reinforces an already-readable state change. Tissue breathing, cycling, perfusion, invasion,
+The viewpoint stays with the cancer cells and their tissue environment. Medical color and
+biological morphology provide the identity; microscope reticles and observer equipment stay off
+the play surface. Motion reinforces an already-readable state change. Tissue breathing, cycling, perfusion, invasion,
 and local division feedback use bounded, synchronized movement anchored to the living tumor rather
 than independent decoration. Generic full-arena scanner rings are absent. A stage arrival cue is a
 brief, keyed presentation layer with static geometry, not a persistent scanning effect. Under

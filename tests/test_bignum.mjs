@@ -29,7 +29,7 @@ import {
   toNumberClamped,
   zero,
 } from "../src/bignum/bignum.ts";
-import { formatBigNum, formatQuantity } from "../src/bignum/format.ts";
+import { formatBigNum, formatMagnitudeName, formatQuantity } from "../src/bignum/format.ts";
 import { illionNameForGroup, shortSuffixForGroup } from "../src/bignum/illion.ts";
 
 function fields(value) {
@@ -261,6 +261,9 @@ test("BigNum suffixes and format rendering cover named checkpoints and fallbacks
   assert.throws(() => shortSuffixForGroup(1.5));
   assert.equal(formatBigNum(bigNum(1, 2), "short", 2), "100.00");
   assert.equal(formatBigNum(bigNum(1, 3), "short", 0), "1 K");
+  assert.equal(formatBigNum(bigNum(1, 6), "full", 0), "1 million");
+  assert.equal(formatBigNum(bigNum(1, 9), "full", 0), "1 billion");
+  assert.equal(formatBigNum(bigNum(1, 12), "full", 0), "1 trillion");
   assert.equal(formatBigNum(bigNum(1, 33), "full", 0), "1 decillion");
   assert.equal(formatBigNum(bigNum(1, 84), "full", 0), "1 septenvigintillion");
   assert.equal(formatBigNum(bigNum(1, 303), "full", 0), "1 centillion");
@@ -274,6 +277,15 @@ test("BigNum suffixes and format rendering cover named checkpoints and fallbacks
   assert.equal(formatBigNum(bigNum(1.2, 0), "short", 0), "1");
   assert.equal(formatBigNum(one(), "full", 6), "1.000000");
   assert.throws(() => formatBigNum(one(), "short", 7));
+});
+
+test("displayed magnitudes expose their full illion title", () => {
+  assert.equal(formatMagnitudeName(bigNum(1, 3), 2), undefined);
+  assert.equal(formatMagnitudeName(bigNum(1, 6), 2), "million");
+  assert.equal(formatMagnitudeName(bigNum(9.99999, 5), 2), "million");
+  assert.equal(formatMagnitudeName(bigNum(1, 84), 2), "septenvigintillion");
+  assert.equal(formatMagnitudeName(bigNum(1, 3006), 2), undefined);
+  assert.throws(() => formatMagnitudeName(one(), 7));
 });
 
 test("formatQuantity has fixed precision and exact singular handling", () => {

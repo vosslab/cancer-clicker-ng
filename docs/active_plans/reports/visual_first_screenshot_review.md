@@ -1,16 +1,15 @@
 # Visual-first screenshot review
 
-**Status:** PASS - dated, independent original-resolution review, 2026-08-28.
+**Status:** PASS - dated original-resolution review, 2026-08-28.
 
 ## Scope and identity
 
 This review evaluates the seven current 1280 x 800 PNGs in `docs/screenshots/` produced by
 `node tools/capture_readme_screenshots.mjs`. It is an independent static-image review of the
-current candidate projected from base HEAD `28591cc98ec5e2bb9cd2acc4678468b99c4092b9`.
+current candidate projected from base HEAD `d4230ce1a9abe6d52e00329365c7e29764027b3a`.
 
-The working tree contains concurrent documentation, tooling, workflow, and asset changes. The
-assigned report had no local diff when this review began. This report owns only the visual verdict;
-it neither approves a commit nor makes a release or publishing claim.
+This report owns only the current visual verdict; it neither approves a commit nor makes a release
+or publishing claim.
 
 ## Capture input contract
 
@@ -24,10 +23,11 @@ node tools/capture_readme_screenshots.mjs
 The capture tool requires an already-built `dist/index.html` and `dist/main.js`, serves `dist/` on
 a loopback HTTP server, uses headless Chromium at 1280 x 800 with reduced motion, and installs the
 fixed clock `1750000000000`. Its board capture performs a visible cell click and verifies the
-count changes, a direct cell target exists, the reticle intersects a visible cell, the expected
-state-derived scene overlays exist, and the document has no horizontal overflow. Each later frame
-loads a parser-validated synthetic save state before boot. The tool also performs a narrow,
-reduced-motion Chicago check and a normal-motion walkthrough before writing the README image block.
+count changes, a direct cell target exists with a pointer cursor, no targeting overlay is present,
+the expected state-derived scene overlays exist, and the document has no horizontal overflow. Each
+later frame loads a parser-validated synthetic save state before boot. The tool also performs a
+narrow, reduced-motion Chicago check and a normal-motion walkthrough before writing the README
+image block.
 
 The capture contract establishes the image inputs. This report evaluates the rendered result at
 original PNG resolution. It creates no pixel, byte, rank, or timing equivalence requirement.
@@ -39,11 +39,10 @@ original PNG resolution. It creates no pixel, byte, rank, or timing equivalence 
 2026-08-28, regenerated all seven documented 1280 x 800 PNGs, and passed its runtime assertions:
 the opening board performed a direct visible-cell click; every fixed-state frame had no horizontal
 overflow and the expected scene overlay; narrow Chicago preserved its 44px evolution action; and
-the normal-motion walkthrough exposed both expected animations. In this docset pass, all seven
-current files were independently reviewed at original resolution and received PASS. Six recaptured
-files remained byte-identical to their prior approved copies; the perfused-tumor frame changed and
-its current SHA-256 is recorded below. This is capture provenance and a dated visual verdict only;
-it does not establish a future byte- or pixel-equivalence requirement.
+the normal-motion walkthrough exposed both expected animations. All seven current files were
+reviewed at original resolution and received PASS. All seven changed as expected after the medical
+palette, direct-cell affordance, price-state, targeting-overlay, and named-magnitude corrections. Their current
+SHA-256 values are recorded below as provenance, not future byte- or pixel-equivalence requirements.
 
 ## Reviewed artifacts
 
@@ -52,20 +51,20 @@ current images only.
 
 | Frame                   | Path                                                                                               | SHA-256                                                            |
 | ----------------------- | -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
-| Opening board           | [cancer_clicker_ng_board.png](../../screenshots/cancer_clicker_ng_board.png)                       | `8ffeac5c5b3ffe6531aa509c20ec1edfadff630ba0bb68d5077e39c437a5fc28` |
-| Hypoxic/necrotic lesion | [cancer_clicker_ng_hypoxic_necrotic.png](../../screenshots/cancer_clicker_ng_hypoxic_necrotic.png) | `35fc1be6020a4c8951888b7c30a3b6d3b38d59e5c8a265cff68995b368a2ce68` |
-| Perfused tumor          | [cancer_clicker_ng_perfused_tumor.png](../../screenshots/cancer_clicker_ng_perfused_tumor.png)     | `2f18efcbb1d0795beb38b41c6ed850d8a0ce8a1755ffe7ed9f7ece62ab7ae4f4` |
-| Invasive route          | [cancer_clicker_ng_invasive_route.png](../../screenshots/cancer_clicker_ng_invasive_route.png)     | `a291355fbdf879c97f542f406fad5892f4187acbb48ed79ff517dda4741c77df` |
-| Culture laboratory      | [cancer_clicker_ng_culture_lab.png](../../screenshots/cancer_clicker_ng_culture_lab.png)           | `af9f382366396eab189ee440671543cac35a9f397f74b53bbdc0d016d803eac2` |
-| Dissemination network   | [cancer_clicker_ng_network_map.png](../../screenshots/cancer_clicker_ng_network_map.png)           | `d8e7c50a4489897605bd62b35e7f76e5c8d124db2178adcfce18cc88b0e56ed8` |
-| Chicago scale report    | [cancer_clicker_ng_chicago_scale.png](../../screenshots/cancer_clicker_ng_chicago_scale.png)       | `804245546922eaf0ed624258a9683acbfaee1d2fd21bcc04a9adb1ec4578595b` |
+| Opening board           | [cancer_clicker_ng_board.png](../../screenshots/cancer_clicker_ng_board.png)                       | `ba4beb5b88af048ce86538c4b098c21281c140775ffa63821cb5c24f0c4416f7` |
+| Hypoxic/necrotic lesion | [cancer_clicker_ng_hypoxic_necrotic.png](../../screenshots/cancer_clicker_ng_hypoxic_necrotic.png) | `31304b0fbca55d849f62fc604a06f8578880a92239c2b5ff2bb4ea65fd616d82` |
+| Perfused tumor          | [cancer_clicker_ng_perfused_tumor.png](../../screenshots/cancer_clicker_ng_perfused_tumor.png)     | `2097996426d14ef19d4b0d00fc0c68bb0827b64eb6614ebec97084b177319b8a` |
+| Invasive route          | [cancer_clicker_ng_invasive_route.png](../../screenshots/cancer_clicker_ng_invasive_route.png)     | `68e784eefcecbf2c13aa9a2aaab47af0a2179d449f2608ff0a73e8f5d3dfdbe3` |
+| Culture laboratory      | [cancer_clicker_ng_culture_lab.png](../../screenshots/cancer_clicker_ng_culture_lab.png)           | `2c06b964bf8be770432bae15ac530cbe5eb43433041b4bc39ac0fbdc7c40183d` |
+| Dissemination network   | [cancer_clicker_ng_network_map.png](../../screenshots/cancer_clicker_ng_network_map.png)           | `06a6fe7ba8b6265b02cf1d87217b6e7d61f530ac778ba2e36e4a99e72e4d2be7` |
+| Chicago scale report    | [cancer_clicker_ng_chicago_scale.png](../../screenshots/cancer_clicker_ng_chicago_scale.png)       | `0200ac7c4a38f2f0e193379ab77c546950542b64c955837deed12bf46e0f7f0d` |
 
 ## Fixed rubric
 
 | Criterion                              | Verdict | Image-observable evidence                                                                                                                                                                                                                                        |
 | -------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Living tumor dominates                 | PASS    | Every board frame centers a large turquoise tissue mass or cellular lesion. The scoreboard and rack frame it rather than replacing it as the focal object.                                                                                                       |
-| Direct-cell affordance                 | PASS    | The opening, hypoxic, perfused, invasive, culture, and Chicago frames show a bright reticle on a cell; the opening frame also labels the arena action "Divide a visible cell."                                                                                   |
+| Living tumor dominates                 | PASS    | Every board frame centers a large rose, coral, and purple tissue mass or cellular lesion. The scoreboard and rack frame it rather than replacing it as the focal object.                                                                                         |
+| Direct-cell affordance                 | PASS    | The opening frame centers one clearly bounded membrane and nucleus as the dominant target and labels the arena action "Divide a visible cell"; the capture contract verifies its pointer behavior.                                                               |
 | Hypoxic/necrotic progression           | PASS    | The hypoxic frame has a dense dark-purple central core, a differently patterned/ringed rim, and many small cells; its form differs clearly from the opening cell.                                                                                                |
 | Perfused progression                   | PASS    | The perfused frame adds a coral vessel entering from the left, internal coral branch geometry, and an arrow-like forward extension while preserving the tumor silhouette.                                                                                        |
 | Invasive progression                   | PASS    | The invasive frame expands into three lobes bounded by dotted pink invasive fronts, with a seeded route leaving toward the upper right.                                                                                                                          |
@@ -73,21 +72,23 @@ current images only.
 | Network progression                    | PASS    | The network frame replaces the left surface with a compact site map, route actions, and network icon while retaining the living-board context.                                                                                                                   |
 | Chicago progression and recoverability | PASS    | The Chicago frame adds a right-side scale drawer with cell count, modeled volume, city high-rise graphic, and a visible "Hide scale report" action; the central tumor remains visible.                                                                           |
 | Icon-first utilities                   | PASS    | Header utilities and evolution-family selectors use small consistent icons; the upgrade cards use illustrated molecular icons and compact quantity chips. Labels remain available where meaning matters.                                                         |
-| Prose remains subordinate              | PASS    | The dominant vocabulary is numeric HUD, short stage names, icons, and card labels. Longer explanatory text is confined to the Chicago drawer and the collapsed "Specimen notes" affordance.                                                                      |
-| Game-first composition                 | PASS    | The images read as a dark, high-contrast incremental-game board with a central action arena, staged progression, collectible equipment, and score. They do not read as a static science poster.                                                                  |
+| Price state is visible                 | PASS    | Affordable upgrade rows use bright cyan borders and enabled color; underfunded rows are gray, desaturated, and visibly inactive without exposing extra prose.                                                                                                    |
+| Prose remains subordinate              | PASS    | The dominant vocabulary is numeric HUD, short stage names, icons, and card labels. Longer explanatory text is confined to optional tooltips and the specimen drawer.                                                                                             |
+| Named magnitude is prominent           | PASS    | Million-and-above frames place the canonical full illion name directly over the compact central cell score. The title reads as progression feedback while preserving the number as the fastest-scanning value.                                                   |
+| Game-first composition                 | PASS    | The images read as a dark, high-contrast incremental-game board with a central action arena, staged progression, molecular upgrade machinery, and score. They do not read as a static science poster.                                                            |
 | 1280 x 800 fit, clipping, and overlap  | PASS    | Primary arena, stage surface, header, and Chicago drawer fit within the viewport. The upgrade rail deliberately continues below the viewport like an incremental-game store; no primary action or report control is cropped or overlaps another primary surface. |
 
 ## Per-frame observations
 
 | Frame                   | Observed facts at original 1280 x 800 resolution                                                                                                                                                                                                                                         | Judgment                                                                                                                                                                                          | Verdict |
 | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
-| Opening board           | A single large teal cell and cyan reticle occupy the arena center. The immediate cell total, cells/s value, stage chip, compact icon strip, and illustrated producer cards frame that target. The only instructional phrase is the small `Divide a visible cell` label.                  | The direct action and its reward are readable before any specimen prose. This is a game board, not a scientific explainer page.                                                                   | PASS    |
-| Hypoxic/necrotic lesion | The central lesion has a dark-purple core, an irregular bright rim, and a dense ring of individually marked cells. The reticle remains on a visible cell and the left stage card stays compact.                                                                                          | The change from the opening cell is carried by topology, density, and internal void, not stage text or a color swap alone.                                                                        | PASS    |
-| Perfused tumor          | A coral vessel enters from the left, branches through the teal lesion, and terminates in a forward-pointing coral route. The board retains its reticle, score chip, and upgrade rack.                                                                                                    | Vascular access supplies a new visual grammar while preserving the same clicker loop.                                                                                                             | PASS    |
-| Invasive route          | The tumor expands into three overlapping lobes with a central void, dotted pink boundary fronts, and a pink route exiting toward the upper right. The target marker remains visible on the left lobe.                                                                                    | The larger silhouette and route cue communicate invasion at a glance and keep the tumor dominant.                                                                                                 | PASS    |
+| Opening board           | A single large rose cell with a purple nucleus occupies the arena center. The immediate cell total, cells/s value, stage chip, compact icon strip, and illustrated producer cards frame that target. The only instructional phrase is the small `Divide a visible cell` label.           | The direct action and its reward are readable before any specimen prose. This is a game board, not a scientific explainer page.                                                                   | PASS    |
+| Hypoxic/necrotic lesion | The central lesion has a dark-purple core, an irregular eosin-pink rim, and a dense ring of individually marked cells. The left stage card stays compact and no observer overlay competes with the lesion.                                                                               | The change from the opening cell is carried by topology, density, and internal void, not stage text or a color swap alone.                                                                        | PASS    |
+| Perfused tumor          | A coral vessel enters from the left, branches through the rose lesion, and terminates in a forward-pointing route. The board retains its score chip and upgrade rack without adding laboratory-observer decoration.                                                                      | Vascular access supplies a new visual grammar while preserving the same clicker loop.                                                                                                             | PASS    |
+| Invasive route          | The tumor expands into three overlapping lobes with a central void, dotted pink boundary fronts, and a pink route exiting toward the upper right. Distinct cells remain visible on the lobes, and `MILLION` crowns the compact score.                                                    | The larger silhouette and route cue communicate invasion at a glance; the named magnitude makes the scale itself feel like a progression reward.                                                  | PASS    |
 | Culture laboratory      | The left panel changes to illustrated dish, cryobank, and program marks with small action cards. The arena becomes a broad tissue field containing separated colony islands around a central route. A lower secondary panel begins below the viewport after the active culture controls. | Culture reads as a new playable system with an icon-led decision surface, while the biological board remains the focal region. The lower continuation does not obscure an active primary control. | PASS    |
 | Dissemination network   | A compact blue network surface presents site, link, and route marks. The arena still shows the tissue field and separated colonies; the upgrade rail remains visible at the right.                                                                                                       | Network state changes the control vocabulary without becoming a prose-heavy dashboard or displacing the living board.                                                                             | PASS    |
-| Chicago scale report    | A bounded right drawer presents three compact metrics, a skyline comparison graphic, and a high-contrast `Hide scale report` control. The full central tissue field and reticle remain readable beside it.                                                                               | The milestone is legible, recoverable, and additive: it supplies scale without replacing the board or turning the screen into a static report.                                                    | PASS    |
+| Chicago scale report    | A bounded right drawer presents three compact metrics, a skyline comparison graphic, and a high-contrast `Hide scale report` control. `SEPTILLION` remains visible above the compact central score beside it.                                                                            | The milestone is legible, recoverable, and additive: it supplies scale while the named score and living board remain visible.                                                                     | PASS    |
 
 ## Findings and remediation status
 
@@ -95,6 +96,8 @@ current images only.
 | ------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
 | Static frames show an icon-rich game shell with only compact, purpose-specific text.  | Resolved in current captures.                                                                                                      |
 | All required biological and world transitions have visibly distinct compositions.     | Resolved in current captures.                                                                                                      |
+| Affordable choices must be recognizable before reading their price.                   | Resolved by bright enabled rows and gray, desaturated underfunded rows.                                                            |
+| The board must express the cancer-cell viewpoint without observer equipment.          | Resolved by direct cell targets and the absence of a persistent targeting overlay.                                                 |
 | The Chicago report must preserve the active board and provide an obvious return path. | Resolved in current capture by the intact board and visible Hide action.                                                           |
 | The lower upgrade rail continues beyond the fixed screenshot viewport.                | Intentional incremental-store affordance; capture shows no primary-content crop. Browser tests own keyboard/reachability behavior. |
 
@@ -116,8 +119,10 @@ the PNGs.
 
 PASS. All seven current fixed-clock captures satisfy the visual-first rubric at original 1280 x 800
 resolution. The living tumor remains the dominant dynamic board, numbers remain a shallow
-scoreboard, controls use compact icons and illustrated cards, prose stays subordinate, and the
-biological/world progression has materially distinct compositions. The deliberate below-viewport
-continuation of the upgrade rail and lower secondary panels reads as incremental-game scrolling,
-not clipping of a primary action. This is dated visual acceptance evidence, not a permanent
-pixel-equivalence gate or a substitute for production-browser behavior evidence.
+scoreboard, affordable controls announce themselves with color and state, controls use compact
+icons and illustrated cards, prose stays subordinate, and the biological/world progression has
+materially distinct compositions. The medical palette and absence of observer equipment keep the
+viewpoint inside the living tumor. The deliberate below-viewport continuation of the upgrade rail
+and lower secondary panels reads as incremental-game scrolling, not clipping of a primary action.
+This is dated visual review evidence, not a permanent pixel-equivalence gate or a substitute for
+production-browser behavior evidence.

@@ -30,11 +30,11 @@
   min-width: 0;
   min-height: var(--hud-height);
   padding: 0.25rem 0.42rem;
-  border: 1px solid rgb(177 237 168 / 43%);
+  border: 1px solid rgb(92 207 218 / 48%);
   border-radius: 0.9rem;
   background:
-    linear-gradient(90deg, rgb(183 239 153 / 9%), transparent 36%),
-    linear-gradient(145deg, rgb(21 50 40 / 96%), rgb(5 18 18 / 97%));
+    linear-gradient(90deg, rgb(255 112 147 / 11%), transparent 36%),
+    linear-gradient(145deg, rgb(10 42 54 / 97%), rgb(6 17 28 / 98%));
   box-shadow: 0 0.7rem 2rem rgb(0 0 0 / 22%);
 }
 
@@ -43,14 +43,14 @@
   place-items: center;
   width: 2.3rem;
   height: 2.3rem;
-  border: 1px solid rgb(222 255 199 / 66%);
+  border: 1px solid rgb(167 245 241 / 72%);
   border-radius: 50% 44% 54% 45%;
-  color: #e7ffce;
+  color: #fff4f7;
   background:
     radial-gradient(circle at 34% 30%, #ffb4b9 0 7%, transparent 8%),
     radial-gradient(circle at 70% 72%, #bd75da 0 8%, transparent 9%),
-    linear-gradient(140deg, #7eb26d, #28513f 70%);
-  box-shadow: 0 0 1rem rgb(184 243 158 / 25%);
+    linear-gradient(140deg, #df648a, #275f73 70%);
+  box-shadow: 0 0 1rem rgb(91 225 224 / 27%);
   font-size: 0.7rem;
   font-weight: 950;
   letter-spacing: -0.08em;
@@ -94,7 +94,7 @@
   gap: 0.3rem;
   overflow: hidden;
   padding-inline: 0.42rem;
-  border-inline: 1px solid rgb(159 213 147 / 22%);
+  border-inline: 1px solid rgb(112 207 217 / 24%);
   white-space: nowrap;
 }
 
@@ -117,10 +117,10 @@
   border: 2px solid var(--growth-bright);
   border-radius: 50%;
   color: var(--growth-bright);
-  background: rgb(184 239 153 / 16%);
+  background: rgb(255 120 154 / 16%);
   box-shadow:
-    0 0 0 0.18rem rgb(184 239 153 / 12%),
-    0 0 0.9rem rgb(184 239 153 / 42%);
+    0 0 0 0.18rem rgb(255 120 154 / 12%),
+    0 0 0.9rem rgb(255 120 154 / 38%);
   font-size: 0.82rem;
   font-weight: 950;
   line-height: 1;
@@ -150,10 +150,10 @@
   height: 2.75rem;
   min-height: 2.75rem;
   padding: 0;
-  border: 1px solid rgb(177 237 168 / 45%);
+  border: 1px solid rgb(105 214 222 / 48%);
   border-radius: 0.7rem;
   color: var(--growth-bright);
-  background: rgb(5 23 20 / 68%);
+  background: rgb(6 28 39 / 76%);
   font-weight: 950;
 }
 
@@ -176,10 +176,10 @@
   inline-size: max-content;
   max-inline-size: min(18rem, calc(100vw - 1rem));
   padding: 0.42rem 0.55rem;
-  border: 1px solid rgb(226 248 208 / 55%);
+  border: 1px solid rgb(133 235 232 / 62%);
   border-radius: 0.45rem;
   color: var(--copy);
-  background: rgb(4 17 16 / 97%);
+  background: rgb(5 20 31 / 98%);
   box-shadow: 0 0.7rem 1.5rem rgb(0 0 0 / 42%);
   font-size: 0.72rem;
   font-weight: 700;

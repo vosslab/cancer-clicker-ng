@@ -1,6 +1,6 @@
-/* Neutral-light is a deliberately separate specimen treatment for the visual
-   corpus: a warm microscope slide surrounds a darker, still-playable tissue
-   well. The shared SVG geometry remains authoritative; these role colors make
+/* Neutral-light is a deliberately separate living-tissue treatment for the
+   visual corpus. A warm stromal field surrounds a darker, still-playable tumor
+   niche. The shared SVG geometry remains authoritative; these role colors make
    its biology legible in a bright environment instead of merely inverting the
    default arena. */
 .colony-panel.is-neutral-light {
@@ -137,15 +137,6 @@
 
 .colony-panel.is-neutral-light .tumor-arena__action:disabled {
   background: rgb(39 25 37 / 62%);
-}
-
-.colony-panel.is-neutral-light .tumor-feedback__reticle-ring {
-  stroke: #ffc1d9;
-}
-
-.colony-panel.is-neutral-light .tumor-feedback__reticle-core,
-.colony-panel.is-neutral-light .tumor-feedback__reticle-ticks {
-  stroke: #fff0c7;
 }
 
 .colony-panel.is-neutral-light .tumor-arena__action:hover:not(:disabled) .colony-cell__membrane,

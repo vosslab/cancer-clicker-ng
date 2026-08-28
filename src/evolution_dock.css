@@ -8,12 +8,12 @@
 .evolution-stage,
 .evolution-hallmarks {
   min-width: 0;
-  border: 1px solid rgb(196 237 166 / 40%);
+  border: 1px solid rgb(94 196 209 / 46%);
   border-radius: 1rem;
   padding: clamp(0.7rem, 1.2vw, 1rem);
   background:
-    radial-gradient(circle at 88% 8%, rgb(187 255 141 / 14%), transparent 31%),
-    linear-gradient(145deg, rgb(18 55 38 / 98%), rgb(8 24 25 / 98%));
+    radial-gradient(circle at 88% 8%, rgb(255 115 152 / 15%), transparent 31%),
+    linear-gradient(145deg, rgb(10 43 55 / 98%), rgb(7 20 31 / 98%));
   box-shadow: inset 0 1px rgb(233 255 222 / 8%), 0 0.85rem 1.8rem rgb(0 0 0 / 18%);
 }
 
@@ -45,16 +45,16 @@
   stroke-linejoin: round;
 }
 
-.stage-sigil__track { stroke: rgb(210 250 186 / 22%); stroke-width: 5; }
-.stage-sigil__progress { stroke: #c9ff9b; stroke-width: 5; transform: rotate(-90deg); transform-origin: center; }
-.stage-sigil__core { fill: rgb(199 255 142 / 16%); stroke: #e4ffc4; stroke-width: 2; }
+.stage-sigil__track { stroke: rgb(156 226 232 / 24%); stroke-width: 5; }
+.stage-sigil__progress { stroke: #7ce8e2; stroke-width: 5; transform: rotate(-90deg); transform-origin: center; }
+.stage-sigil__core { fill: rgb(255 116 151 / 17%); stroke: #ffd3de; stroke-width: 2; }
 
 .evolution-stage__kicker,
 .evolution-hallmarks__kicker,
 .evolution-hallmarks__active-heading p,
 .evolution-hallmarks__state {
   margin: 0;
-  color: #d8ffb8;
+  color: #9ceee8;
   font-size: 0.64rem;
   font-weight: 900;
   letter-spacing: 0.08em;
@@ -70,7 +70,7 @@
 }
 
 .evolution-stage h2 { font-size: clamp(1.05rem, 1.7vw, 1.35rem); }
-.evolution-stage__mode { margin: 0.2rem 0 0; color: #aad2b7; font-size: 0.76rem; }
+.evolution-stage__mode { margin: 0.2rem 0 0; color: #a9c9d3; font-size: 0.76rem; }
 
 .evolution-stage__numbers {
   display: flex;
@@ -91,10 +91,10 @@
 .evolution-stage__goal {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(3.75rem, 0.55fr) 7.8rem;
-  border: 1px solid rgb(255 217 118 / 48%);
+  border: 1px solid rgb(255 154 179 / 52%);
   border-radius: 0.82rem;
   padding: 0.55rem;
-  background: linear-gradient(120deg, rgb(100 68 13 / 49%), rgb(39 45 22 / 62%));
+  background: linear-gradient(120deg, rgb(103 30 52 / 52%), rgb(17 41 50 / 68%));
 }
 
 .evolution-stage__goal-copy { display: grid; grid-template-columns: 1fr auto; gap: 0.08rem 0.4rem; }
@@ -104,8 +104,8 @@
 .evolution-stage__goal-copy span { color: #dbcfa5; font-size: 0.7rem; }
 .evolution-stage__goal-copy output { text-align: end; font-weight: 850; }
 .evolution-stage__gate-state { grid-column: 1 / -1; font-weight: 900; letter-spacing: 0.07em; text-transform: uppercase; }
-.evolution-stage__gate-state[data-state="ready"] { color: #d9ffad; }
-.evolution-stage__gate-state[data-state="locked"] { color: #ffd480; }
+.evolution-stage__gate-state[data-state="ready"] { color: #82f3da; }
+.evolution-stage__gate-state[data-state="locked"] { color: #99a8ae; }
 
 .evolution-stage progress {
   width: 100%;
@@ -150,28 +150,15 @@
 .evolution-stage__advance:not(:disabled):active,
 .evolution-hallmarks__acquire:not(:disabled):active { transform: translateY(0.2rem); box-shadow: 0 0.08rem 0 #8e5a0c; }
 
-.evolution-stage__specimen,
-.evolution-hallmarks__specimen {
-  color: #99b8a8;
-  font-size: 0.72rem;
-}
-
-.evolution-stage__specimen summary,
-.evolution-hallmarks__specimen summary { cursor: pointer; color: #c8dccd; }
-.evolution-stage__specimen dl { display: grid; gap: 0.35rem; margin: 0.55rem 0 0; }
-.evolution-stage__specimen dl div { display: grid; grid-template-columns: 5.5rem 1fr; gap: 0.45rem; }
-.evolution-stage__specimen dt { color: #d8ffb8; font-weight: 800; }
-.evolution-stage__specimen dd,
-.evolution-hallmarks__specimen p { margin: 0; line-height: 1.35; }
-.evolution-stage__terminal { margin: 0; color: #d8ffb8; font-weight: 800; }
+.evolution-stage__terminal { margin: 0; color: #92eee4; font-weight: 800; }
 
 .evolution-hallmarks {
   display: grid;
   gap: 0.65rem;
   border-color: rgb(204 168 255 / 48%);
   background:
-    radial-gradient(circle at 12% 2%, rgb(221 181 255 / 14%), transparent 31%),
-    linear-gradient(145deg, rgb(44 29 64 / 98%), rgb(11 26 29 / 98%));
+    radial-gradient(circle at 12% 2%, rgb(232 116 172 / 16%), transparent 31%),
+    linear-gradient(145deg, rgb(44 25 61 / 98%), rgb(7 27 37 / 98%));
 }
 
 .evolution-hallmarks__heading { justify-content: space-between; align-items: end; }
@@ -199,6 +186,17 @@
   padding: 0.25rem 0.12rem;
   color: #c4b5d7;
   background: rgb(10 14 26 / 45%);
+}
+
+.evolution-hallmarks__constellation li[data-state="locked"] {
+  filter: grayscale(0.72) saturate(0.32);
+  opacity: 0.58;
+}
+
+.evolution-hallmarks__constellation li[data-state="available"] .evolution-hallmarks__sigil-button {
+  border-color: #ffd074;
+  background: rgb(92 52 24 / 58%);
+  box-shadow: inset 0 0 0 1px rgb(255 218 126 / 36%), 0 0 0.8rem rgb(255 179 72 / 20%);
 }
 
 .evolution-hallmarks__sigil-button:hover,

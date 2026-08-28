@@ -202,6 +202,7 @@ export function App(props: AppProps): JSX.Element {
           { label: "Cells", value: cells },
           { label: "Production", value: `${rate} cells/s` },
           { label: "Pressure", value: stage.pressure },
+          { label: "Opportunity", value: stage.opportunity },
         ],
       },
       invoker,

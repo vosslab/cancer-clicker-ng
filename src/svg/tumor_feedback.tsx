@@ -8,14 +8,12 @@ import { Show } from "solid-js";
 import type { Accessor, JSX } from "solid-js";
 
 export type TumorFeedbackProps = Readonly<{
-  reticleTarget: Accessor<Readonly<{ x: number; y: number }>>;
   feedbackTarget: Accessor<Readonly<{ x: number; y: number }>>;
   sequence: Accessor<number>;
 }>;
 
-/** Renders the direct-action reticle and a click-local biological division burst. */
+/** Renders a click-local biological division burst after durable cell growth. */
 export function TumorFeedback(props: TumorFeedbackProps): JSX.Element {
-  const reticleTarget = (): Readonly<{ x: number; y: number }> => props.reticleTarget();
   const feedbackTarget = (): Readonly<{ x: number; y: number }> => props.feedbackTarget();
   return (
     <svg
@@ -24,17 +22,6 @@ export function TumorFeedback(props: TumorFeedbackProps): JSX.Element {
       preserveAspectRatio="xMidYMid meet"
       aria-hidden="true"
     >
-      <g
-        class="tumor-feedback__reticle"
-        transform={`translate(${reticleTarget().x} ${reticleTarget().y})`}
-      >
-        <circle class="tumor-feedback__reticle-ring" r="42" />
-        <circle class="tumor-feedback__reticle-core" r="8" />
-        <path
-          class="tumor-feedback__reticle-ticks"
-          d="M -58 0 h 18 M 40 0 h 18 M 0 -58 v 18 M 0 40 v 18"
-        />
-      </g>
       <Show when={props.sequence() > 0 ? props.sequence() : undefined} keyed>
         {(sequence) => (
           <g

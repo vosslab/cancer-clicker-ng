@@ -298,8 +298,8 @@ function collectDiagnostics(page) {
 async function assertBoard(page) {
   const required = [
     page.getByRole("button", { name: "Divide cell" }),
-    page.getByLabel("Cell count"),
-    page.getByLabel("Cell production rate"),
+    page.getByLabel("Cell count", { exact: true }),
+    page.getByLabel("Cell production rate", { exact: true }),
     page.getByRole("region", { name: "Living tumor arena" }),
     page.getByRole("navigation", { name: "Evolution systems" }),
     page.getByRole("complementary", { name: "Division apparatus store" }),
@@ -350,30 +350,23 @@ async function assertSceneEvidence(page, expected) {
   return evidence;
 }
 
-/** One-time capture evidence that the persistent targeting reticle is on a visible cell. */
-async function assertReticleIntersectsVisibleCell(page) {
-  const intersections = await page.locator("body").evaluate((body) => {
+/** One-time capture evidence that cell geometry, rather than observer equipment, invites play. */
+async function assertCancerCellViewpoint(page) {
+  const evidence = await page.locator("body").evaluate((body) => {
     const view = body.ownerDocument.defaultView;
     if (view === null) throw new Error("The capture document has no window.");
-    const reticle = body.querySelector(".tumor-feedback__reticle");
-    if (!(reticle instanceof view.SVGGElement)) throw new Error("The tumor reticle is absent.");
-    const reticleMatrix = reticle.getScreenCTM();
-    if (reticleMatrix === null) throw new Error("The tumor reticle has no screen transform.");
-    const point = new view.DOMPoint(0, 0).matrixTransform(reticleMatrix);
-    return [...body.querySelectorAll("[data-colony-cell]")].filter((cell) =>
-      [...cell.querySelectorAll(".colony-cell__membrane, .colony-cell__nucleus")].some(
-        (candidate) => {
-          if (!(candidate instanceof view.SVGGeometryElement)) return false;
-          const matrix = candidate.getScreenCTM();
-          if (matrix === null) return false;
-          const localPoint = point.matrixTransform(matrix.inverse());
-          return candidate.isPointInFill(localPoint) || candidate.isPointInStroke(localPoint);
-        },
-      ),
-    ).length;
+    const cell = body.querySelector("[data-colony-cell]");
+    if (!(cell instanceof view.SVGGElement)) throw new Error("The tumor cell target is absent.");
+    return {
+      targetingOverlayCount: body.querySelectorAll(".tumor-feedback__reticle").length,
+      cellCursor: view.getComputedStyle(cell).cursor,
+    };
   });
-  if (intersections === 0) throw new Error("The tumor reticle does not intersect a visible cell.");
-  return { reticleCellIntersections: intersections };
+  if (evidence.targetingOverlayCount !== 0)
+    throw new Error("The cancer-cell viewpoint contains a targeting overlay.");
+  if (evidence.cellCursor !== "pointer")
+    throw new Error("The rendered cancer cell does not expose its direct-action cursor.");
+  return evidence;
 }
 
 /** Keeps the narrow Evolution advance action inside the goal card that owns it. */
@@ -434,7 +427,7 @@ async function screenshotBoard(page, url, outputPath) {
   await page.goto(url, { waitUntil: "networkidle" });
   await resetPageScroll(page);
   const measurements = await assertBoard(page);
-  const count = page.getByLabel("Cell count");
+  const count = page.getByLabel("Cell count", { exact: true });
   const before = await count.textContent();
   const visibleCell = page.locator("[data-colony-cell]").first();
   await visibleCell.click();
@@ -447,9 +440,9 @@ async function screenshotBoard(page, url, outputPath) {
     burdenTier: "sparse",
     overlaySelectors: [".tumor-feedback__division"],
   });
-  const reticle = await assertReticleIntersectsVisibleCell(page);
+  const viewpoint = await assertCancerCellViewpoint(page);
   await page.screenshot({ path: outputPath });
-  return { ...measurements, directCellClick: true, reticle, scene };
+  return { ...measurements, directCellClick: true, viewpoint, scene };
 }
 
 async function screenshotHypoxicNecrotic(page, url, outputPath) {
@@ -478,9 +471,9 @@ async function screenshotInvasiveRoute(page, url, outputPath) {
     burdenTier: "dense",
     overlaySelectors: [".colony-figure__invasive-front", ".colony-figure__seed-anchor"],
   });
-  const reticle = await assertReticleIntersectsVisibleCell(page);
+  const viewpoint = await assertCancerCellViewpoint(page);
   await page.screenshot({ path: outputPath });
-  return { ...measurements, reticle, scene };
+  return { ...measurements, viewpoint, scene };
 }
 
 async function screenshotCultureLab(page, url, outputPath) {

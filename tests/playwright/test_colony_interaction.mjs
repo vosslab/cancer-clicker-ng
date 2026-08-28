@@ -133,6 +133,8 @@ test("visible cells accept pointer division while tissue whitespace stays inert 
   await expect(cell).toBeVisible();
   await cell.click();
   expect(await readSavedCellCount(page)).toBe(1);
+  await expect(page.getByLabel("Cell count", { exact: true })).toContainText("1.00 cell");
+  await expect(page.getByLabel("Tumor biomass", { exact: true })).toContainText("1.00 cell");
 
   await whitespace.click({ position: { x: 8, y: 8 } });
   expect(await readSavedCellCount(page)).toBe(1);
@@ -145,6 +147,36 @@ test("visible cells accept pointer division while tissue whitespace stays inert 
   await page.keyboard.press("Space");
   expect(await readSavedCellCount(page)).toBe(3);
   await expect(action).toBeFocused();
+});
+
+test("upgrade rows expose price state at a glance and keep biology in their tooltip", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const action = page.getByRole("button", { name: "Divide cell" });
+  const firstRow = page.locator('[data-producer-id="producer"]');
+  const secondRow = page.locator('[data-producer-id="cdk4"]');
+  const firstBuy = firstRow.locator(".producer-row__buy");
+
+  await expect(firstRow).toHaveAttribute("data-affordable", "false");
+  await expect(firstBuy).toBeDisabled();
+  await action.locator(".colony-cell__membrane").first().click();
+  await expect(firstRow).toHaveAttribute("data-affordable", "true");
+  await expect(firstBuy).toBeEnabled();
+  await expect(secondRow).toHaveAttribute("data-affordable", "false");
+  await expect(secondRow.locator(".producer-row__buy")).toBeDisabled();
+
+  const rowHeightBeforeTooltip = await firstRow.evaluate(
+    (element) => element.getBoundingClientRect().height,
+  );
+  await firstBuy.focus();
+  await expect(firstRow.locator(".help-tooltip-content")).toContainText("Affordable now");
+  await expect(firstRow.locator(".help-tooltip-content")).toContainText("Produces");
+  const rowHeightWithTooltip = await firstRow.evaluate(
+    (element) => element.getBoundingClientRect().height,
+  );
+  expect(rowHeightWithTooltip).toBe(rowHeightBeforeTooltip);
+  await expect(page.getByRole("button", { name: /biological details/i })).toHaveCount(0);
 });
 
 test("compact reduced-motion cell membranes and nuclei each divide once while tissue remains inert", async ({
