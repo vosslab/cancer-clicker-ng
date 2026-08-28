@@ -1,5 +1,5 @@
 {
-  "formatVersion": 1,
+  "formatVersion": 2,
   "semanticRevision": "p8-visible-surface-v1",
   "curveRevision": "catalog-2026-08-28",
   "seeds": [1871632466],
@@ -438,6 +438,8 @@
   "decisionWitness": {
     "system": "ending",
     "question": "Which visible actions remain after the Chicago scale report?",
-    "alternatives": ["continued network", "continued culture", "continued local growth"]
+    "alternatives": ["continued network", "continued culture", "continued local growth"],
+    "requiredVisibleEventTypes": ["collect-transmission-pressure"],
+    "requiredActionTags": ["network"]
   }
 }

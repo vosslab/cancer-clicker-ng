@@ -1,18 +1,263 @@
 {
-  "formatVersion": 1,
+  "formatVersion": 2,
   "semanticRevision": "p8-visible-surface-v1",
   "curveRevision": "catalog-2026-08-28",
-  "seeds": [0],
+  "seeds": [740367411],
   "actionBudget": 12,
   "elapsedScheduleMs": [1000, 5000, 10000],
   "allowedKinds": ["divide", "producer", "hallmark", "stage", "prestige", "network", "allocation"],
   "id": "l3_culture_workflows_v1",
   "initial": {
-    "kind": "new-game"
+    "kind": "durable-snapshot",
+    "state": {
+      "cells": {
+        "mantissa": 0,
+        "exponent": 0
+      },
+      "substrate": {
+        "mantissa": 0,
+        "exponent": 0
+      },
+      "atp": {
+        "mantissa": 0,
+        "exponent": 0
+      },
+      "producerLevels": [
+        {
+          "id": "producer",
+          "level": 0
+        },
+        {
+          "id": "cdk4",
+          "level": 0
+        },
+        {
+          "id": "myc",
+          "level": 0
+        },
+        {
+          "id": "ras",
+          "level": 0
+        },
+        {
+          "id": "telomerase",
+          "level": 0
+        },
+        {
+          "id": "egfr",
+          "level": 0
+        },
+        {
+          "id": "pi3k",
+          "level": 0
+        },
+        {
+          "id": "replication_fork",
+          "level": 0
+        }
+      ],
+      "hallmarkLevels": [
+        {
+          "id": "proliferative_signaling",
+          "level": 0
+        },
+        {
+          "id": "growth_suppressor_evasion",
+          "level": 0
+        },
+        {
+          "id": "cell_death_resistance",
+          "level": 0
+        },
+        {
+          "id": "replicative_immortality",
+          "level": 0
+        },
+        {
+          "id": "angiogenesis",
+          "level": 0
+        },
+        {
+          "id": "invasion_metastasis",
+          "level": 0
+        },
+        {
+          "id": "metabolic_deregulation",
+          "level": 0
+        },
+        {
+          "id": "immune_destruction_avoidance",
+          "level": 0
+        },
+        {
+          "id": "tumor_promoting_inflammation",
+          "level": 0
+        },
+        {
+          "id": "genome_instability_mutation",
+          "level": 0
+        },
+        {
+          "id": "phenotypic_plasticity",
+          "level": 0
+        },
+        {
+          "id": "epigenetic_reprogramming",
+          "level": 0
+        },
+        {
+          "id": "polymorphic_microbiomes",
+          "level": 0
+        },
+        {
+          "id": "senescent_cells",
+          "level": 0
+        }
+      ],
+      "currentStage": "immortalized_culture",
+      "stageStartedAtMs": 100,
+      "activeTimeMs": 100,
+      "pendingProgression": [],
+      "stageProgress": 0,
+      "stageGateProgress": {},
+      "oxygenPressure": 0,
+      "damagePressure": 0,
+      "immunePressure": 0,
+      "contactPressure": 0,
+      "nutrientPressure": 0,
+      "signalingAllocation": "burst",
+      "manualDivisionCharge": 0,
+      "cycleFillRate": 0,
+      "bypassedCheckpoints": [],
+      "survivalCapacity": 0,
+      "regions": [],
+      "telomereReserveByRegion": {},
+      "telomeraseCharges": 0,
+      "reserveFloor": 0,
+      "vesselMaintenanceAtp": 0,
+      "committedCellCommitments": {},
+      "routeRiskById": {},
+      "seededSites": [],
+      "atpBudget": {},
+      "atpSinks": [],
+      "immuneVisibilityByRegion": {},
+      "concealmentTokens": 0,
+      "maskedRegions": [],
+      "inflammationEpisodes": [],
+      "regionalInflammation": {},
+      "routeDiscoveryProgress": 0,
+      "mutationOffers": [],
+      "chosenMutations": [],
+      "mutationLiabilities": [],
+      "genomeBurden": 0,
+      "lateHallmarks": {
+        "plasticity": {
+          "switchCooldownByRegion": {}
+        },
+        "epigenetic": {
+          "assignments": [],
+          "cooldownDeadlineMs": null
+        },
+        "microbiome": {
+          "activeComposition": null,
+          "pendingOffer": null,
+          "nextRotationDeadlineMs": null,
+          "rotationSequence": 0
+        },
+        "senescence": {
+          "pendingDecisions": [],
+          "retainedRegions": []
+        }
+      },
+      "lineageLedger": {
+        "lineageSeed": 17,
+        "hostRunSequence": 0,
+        "currentHostRunId": null,
+        "completedL1ResetCount": 0,
+        "completedHostTransferCount": 1,
+        "hostCollapseAfterTransferCount": 0,
+        "successfulTransitCount": 0,
+        "organTagsSeen": [],
+        "chosenHallmarksAcrossLineage": [
+          "proliferative_signaling",
+          "cell_death_resistance",
+          "replicative_immortality",
+          "angiogenesis"
+        ],
+        "usedLineageBoonIds": ["extra_card_reveal"],
+        "lineageBoonApplications": [],
+        "terminalPreparation": null,
+        "hostDraftSequence": 0,
+        "networkSeed": 709697200,
+        "frontierSequence": 0,
+        "stabilizedRewardedNodeIds": []
+      },
+      "metastasis": {
+        "metastaticPotential": {
+          "mantissa": 0,
+          "exponent": 0
+        },
+        "allocations": [],
+        "programs": [],
+        "activeNicheContext": null
+      },
+      "hostTransfer": {
+        "hostImprints": 0,
+        "purchasedBoons": [],
+        "activeHost": null,
+        "pendingDraft": null
+      },
+      "culture": {
+        "passages": 2,
+        "purchasedPassageUpgrades": [
+          {
+            "upgradeId": "cryobank",
+            "rank": 1
+          }
+        ],
+        "cryobankProgram": "cryobank_exploit",
+        "queuedProducerAction": null
+      },
+      "network": {
+        "globalTier": 0,
+        "transmissionPressure": {
+          "mantissa": 0,
+          "exponent": 0
+        },
+        "nodes": [],
+        "edges": [],
+        "pendingFrontier": null,
+        "activeCampaign": null,
+        "completedCampaigns": [],
+        "containedNodeId": null
+      },
+      "pendingDamageEvents": [],
+      "pendingTransitEvents": [],
+      "deterministicSeed": 740367411,
+      "eventSequence": 2,
+      "prestigeAvailability": [
+        {
+          "id": "L3",
+          "status": "earned"
+        }
+      ],
+      "totalOfflineMs": 12,
+      "numberFormat": "short",
+      "ending": {
+        "phase": "unreached"
+      },
+      "lastStageTransition": {
+        "from": "host_collapse",
+        "to": "immortalized_culture",
+        "atMs": 100
+      }
+    }
   },
   "decisionWitness": {
     "system": "L3",
-    "question": "Which culture workflow changes the first durable choice?",
-    "alternatives": ["producer tempo", "cryobank", "containment"]
+    "question": "Which culture choices are available after immortalization?",
+    "alternatives": ["passage upgrade", "alternate cryobank program"],
+    "requiredVisibleEventTypes": ["purchase-passage-upgrade", "select-cryobank-program"],
+    "requiredActionTags": ["culture"]
   }
 }

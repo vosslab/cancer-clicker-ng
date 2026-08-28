@@ -17,10 +17,15 @@ import {
 } from "../../prestige/hosts.js";
 import { COLONIZATION_PROGRAM_CATALOG, ORGAN_SITE_CATALOG } from "../../prestige/seeding.js";
 import type { HostTransferState, LineageLedger, MetastasisState } from "../../prestige/layers.js";
+import type { StageId } from "../../types/ids.js";
 import { identifier, natural, numberValue, unique } from "./guards.js";
 import { exactShape, safeArray, uint32 } from "./prestige_guards.js";
 
-export function parseMetastasis(value: unknown): MetastasisState | undefined {
+export function parseMetastasis(
+  value: unknown,
+  currentStage: StageId,
+  completedL1ResetCount: number,
+): MetastasisState | undefined {
   if (!exactShape(value, ["metastaticPotential", "allocations", "programs", "activeNicheContext"]))
     return undefined;
   const metastaticPotential = numberValue(value.metastaticPotential);
@@ -81,13 +86,13 @@ export function parseMetastasis(value: unknown): MetastasisState | undefined {
   let activeNicheContext: MetastasisState["activeNicheContext"];
   const context = value.activeNicheContext;
   if (context === null) {
-    // ASVS 2.2.3: the pre-L1 empty aggregate has one closed null-context form.
-    if (
+    const hasPreL1Planning =
       metastaticPotential.mantissa !== 0 ||
       metastaticPotential.exponent !== 0 ||
       parsedAllocations.length !== 0 ||
-      parsedPrograms.length !== 0
-    )
+      parsedPrograms.length !== 0;
+    // A selected L1 run owns active context. Before it, host collapse owns the planning portfolio.
+    if (hasPreL1Planning && (currentStage !== "host_collapse" || completedL1ResetCount !== 0))
       return undefined;
     activeNicheContext = null;
   } else {

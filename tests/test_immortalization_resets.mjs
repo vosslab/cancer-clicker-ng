@@ -11,6 +11,7 @@ import {
 } from "../src/brands.ts";
 import { createInitialGameState } from "../src/state/game_state.ts";
 import { recordEvent } from "../src/state/events.ts";
+import { parseSave, serializeGameState } from "../src/state/save_load.ts";
 
 function eligibleHostCollapse() {
   const initial = createInitialGameState();
@@ -90,6 +91,12 @@ test("immortalization atomically buys the matching cryobank translation and clea
   });
   assert.equal(after.eventSequence, 1);
   assert.equal(after.currentStage, "immortalized_culture");
+  assert.equal(after.stageStartedAtMs, 80);
+  assert.deepEqual(after.lastStageTransition, {
+    from: "host_collapse",
+    to: "immortalized_culture",
+    atMs: 80,
+  });
   assert.deepEqual(after.metastasis, createInitialGameState().metastasis);
   assert.deepEqual(after.hostTransfer, createInitialGameState().hostTransfer);
   assert.equal(after.culture.cryobankProgram, "cryobank_exploit");
@@ -98,6 +105,9 @@ test("immortalization atomically buys the matching cryobank translation and clea
   assert.equal(after.lineageLedger.currentHostRunId, null);
   assert.equal(after.lineageLedger.networkSeed !== null, true);
   assert.equal(after.totalOfflineMs, before.totalOfflineMs);
+  const loaded = parseSave(serializeGameState(after, 80));
+  assert.equal(loaded.status, "loaded");
+  if (loaded.status === "loaded") assert.deepEqual(loaded.state, after);
 });
 
 test("immortalization rejects stale or foreign cryobank selection without touching state", () => {

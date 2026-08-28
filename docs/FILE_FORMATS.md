@@ -86,7 +86,7 @@ calibration question:
 
 ```json
 {
-  "formatVersion": 1,
+  "formatVersion": 2,
   "id": "l1_route_tradeoffs_v1",
   "semanticRevision": "p8-visible-surface-v1",
   "curveRevision": "catalog-2026-08-28",
@@ -98,34 +98,46 @@ calibration question:
   "decisionWitness": {
     "system": "L1",
     "question": "Which visible route posture produces the better local outcome?",
-    "alternatives": ["local growth", "stealth seeding"]
+    "alternatives": ["local growth", "stealth seeding"],
+    "requiredVisibleEventTypes": [
+      "allocate-organ-site",
+      "select-colonization-program",
+      "perform-metastasis-reset"
+    ],
+    "requiredActionTags": ["organ", "colonization", "reset", "L1"]
   }
 }
 ```
 
-| Field                                     | Contract                                                                         |
-| ----------------------------------------- | -------------------------------------------------------------------------------- |
-| `formatVersion`                           | Literal integer `1`.                                                             |
-| `id`, `semanticRevision`, `curveRevision` | Nonempty provenance strings.                                                     |
-| `seeds`                                   | Nonempty array of nonnegative safe integers.                                     |
-| `actionBudget`                            | Positive safe integer.                                                           |
-| `elapsedScheduleMs`                       | Nonnegative safe integers, cycled after accepted actions.                        |
-| `allowedKinds`                            | Nonempty subset of visible action kinds.                                         |
-| `initial`                                 | A new game or a durable snapshot passing the current format-2/schema-8 boundary. |
-| `decisionWitness`                         | A bounded L1, L2, L3, L4, or ending question with alternatives.                  |
+| Field                                       | Contract                                                                           |
+| ------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `formatVersion`                             | Literal integer `2`.                                                               |
+| `id`, `semanticRevision`, `curveRevision`   | Nonempty provenance strings.                                                       |
+| `seeds`                                     | Nonempty array of nonnegative safe integers.                                       |
+| `actionBudget`                              | Positive safe integer.                                                             |
+| `elapsedScheduleMs`                         | Nonnegative safe integers, cycled after accepted actions.                          |
+| `allowedKinds`                              | Nonempty subset of visible action kinds.                                           |
+| `initial`                                   | A new game or a durable snapshot passing the current format-2/schema-8 boundary.   |
+| `decisionWitness`                           | A bounded question with alternatives plus nonempty event-type and action-tag sets. |
+| `decisionWitness.requiredVisibleEventTypes` | Event types that the declared surface exposes together in one policy window.       |
+| `decisionWitness.requiredActionTags`        | Effect tags that the declared surface exposes together in that same window.        |
 
 The runner projects `projectVisibleDecisionSurface()`, chooses only displayed actions, validates each
 through the event parser and reducer, and advances time through the shared offline-economy adapter.
 `greedy-payback` ranks a producer by its displayed cells cost divided by its authoritative displayed
 marginal `+cells/s` benefit; the Store shows that same quote. It is deterministic development
-evidence, never an in-game bot or a substitute for human balance judgment. `docs/BALANCE.md` owns
-the policy contract and command guidance.
+evidence, never an in-game bot or a substitute for manager-recorded calibration decisions.
+`docs/BALANCE.md` owns the policy contract and command guidance.
+
+Each report records only the matched policy/window/action IDs, event types, and tags for a witness.
+An absent full type-and-tag match is a witness-integrity finding; it asks for a bounded scenario
+input or curve redesign before selecting that calibration candidate.
 
 ## Balance reports and validation
 
 Reports are generated below ignored `output_balance/`. With no selector, the tool runs its default
-suite: five tracked scenarios times five canonical policies. It writes one aggregate format-2
-report; a `--scenario` command writes one focused format-2 report:
+suite: five tracked scenarios times five canonical policies. It writes one aggregate format-3
+report; a `--scenario` command writes one focused format-3 report:
 
 ```bash
 node --import tsx tools/balance_sim.mjs --suite \

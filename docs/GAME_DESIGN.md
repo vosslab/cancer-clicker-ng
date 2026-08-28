@@ -62,6 +62,6 @@ board target and narrow responsive width. Those rendered checks are qualitative 
 not pixel-equivalence or arbitrary machine-timing gates.
 
 The deterministic balance laboratory is a development instrument. It compares visible-state-only
-policies and records traces, witnesses, completions, stalls, and outliers for a human tuning
-decision. [BALANCE.md](BALANCE.md), when present, owns the accepted calibration conclusion;
-generated reports remain one-time output rather than a player-facing score.
+policies and records traces, witnesses, completions, stalls, and outliers for a manager-recorded
+calibration decision. [BALANCE.md](BALANCE.md), when present, owns the accepted calibration
+conclusion; generated reports remain one-time output rather than a player-facing score.

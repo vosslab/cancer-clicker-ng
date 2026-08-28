@@ -1,5 +1,5 @@
 {
-  "formatVersion": 1,
+  "formatVersion": 2,
   "semanticRevision": "p8-visible-surface-v1",
   "curveRevision": "catalog-2026-08-28",
   "seeds": [1871632466],
@@ -431,6 +431,8 @@
   "decisionWitness": {
     "system": "L4",
     "question": "Which visible mandate sequence preserves dissemination choices?",
-    "alternatives": ["breadth", "depth", "hardening", "reroute"]
+    "alternatives": ["breadth", "depth", "hardening", "reroute"],
+    "requiredVisibleEventTypes": ["choose-dissemination-mandate"],
+    "requiredActionTags": ["network"]
   }
 }

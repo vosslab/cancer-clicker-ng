@@ -1,8 +1,9 @@
-import { spawn } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
 import { createHash } from "node:crypto";
 import { mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import net from "node:net";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 import { chromium } from "playwright";
 
@@ -11,8 +12,23 @@ import { STAGE_IDS } from "../src/state/catalog.ts";
 import { createInitialGameState } from "../src/state/game_state.ts";
 import { serializeGameState } from "../src/state/save_load.ts";
 
-const ARTIFACT_ROOT = "/private/tmp/cancer-clicker-ng.pTNth9/colony-contact-sheet";
+function repositoryRoot() {
+  const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
+  return execFileSync("git", ["rev-parse", "--show-toplevel"], {
+    cwd: scriptDirectory,
+    encoding: "utf8",
+  }).trim();
+}
+
+const REPOSITORY_ROOT = repositoryRoot();
+process.chdir(REPOSITORY_ROOT);
+const ARTIFACT_ROOT = path.join(REPOSITORY_ROOT, "output_visual", "colony-contact-sheet");
 const SAVE_KEY = "cancer-clicker-ng.save.v2";
+const MANIFEST_SCHEMA = "cancer-clicker-ng.colony-contact-sheet/v2";
+const CAPTURE_COMMAND = "node --import tsx tools/colony_contact_sheet.mjs";
+const VISUAL_ASSET_AGGREGATE_ALGORITHM =
+  "sha256 of UTF-8 path, tab, SHA-256, newline records sorted by path";
+const FIXED_SYNTHETIC_SAVE_TIMESTAMP_MS = Date.UTC(2030, 0, 1, 0, 0, 0);
 const SEEDS = Object.freeze([17, 91, 2026]);
 const VIEWPORTS = Object.freeze([
   Object.freeze({ label: "compact-360", width: 360, height: 900 }),
@@ -65,6 +81,89 @@ async function waitForServer(url) {
 
 function sha256(value) {
   return createHash("sha256").update(value).digest("hex");
+}
+
+function relativeDistPath(absolutePath) {
+  const relativePath = path.relative(path.join(REPOSITORY_ROOT, "dist"), absolutePath);
+  if (
+    relativePath.length === 0 ||
+    relativePath === ".." ||
+    relativePath.startsWith(`..${path.sep}`) ||
+    path.isAbsolute(relativePath)
+  ) {
+    throw new Error(`Visual asset must remain inside dist: ${absolutePath}`);
+  }
+  return path.posix.join("dist", relativePath.split(path.sep).join("/"));
+}
+
+function stylesheetPaths(indexHtml) {
+  const stylesheetTags = indexHtml.match(/<link\b[^>]*>/gi) ?? [];
+  const paths = [];
+  for (const tag of stylesheetTags) {
+    const rel = tag.match(/\brel\s*=\s*(["'])(.*?)\1/i)?.[2];
+    const href = tag.match(/\bhref\s*=\s*(["'])(.*?)\1/i)?.[2];
+    if (rel === undefined || href === undefined || !/\bstylesheet\b/i.test(rel)) continue;
+    const assetUrl = new URL(href, "http://contact-sheet.local/");
+    if (assetUrl.origin !== "http://contact-sheet.local") {
+      throw new Error(`Stylesheet must be served from dist: ${href}`);
+    }
+    const decodedPathname = decodeURIComponent(assetUrl.pathname);
+    if (!decodedPathname.endsWith(".css")) {
+      throw new Error(`Stylesheet must name a built CSS asset: ${href}`);
+    }
+    const relativePath = decodedPathname.replace(/^\/+/, "");
+    const absolutePath = path.resolve(REPOSITORY_ROOT, "dist", relativePath);
+    paths.push(relativeDistPath(absolutePath));
+  }
+  return [...new Set(paths)].sort();
+}
+
+function visualAssetAggregate(assets) {
+  const canonicalRecords = assets.map((asset) => `${asset.path}\t${asset.sha256}\n`).join("");
+  return sha256(canonicalRecords);
+}
+
+async function visualAssetIdentity() {
+  const indexPath = path.join(REPOSITORY_ROOT, "dist", "index.html");
+  const indexHtml = await readFile(indexPath, "utf8");
+  const assetPaths = ["dist/index.html", "dist/main.js", ...stylesheetPaths(indexHtml)].sort();
+  const duplicatePath = assetPaths.find(
+    (assetPath, index) => assetPaths.indexOf(assetPath) !== index,
+  );
+  if (duplicatePath !== undefined) {
+    throw new Error(`Visual asset identity contains a duplicate path: ${duplicatePath}`);
+  }
+  const assets = [];
+  for (const assetPath of assetPaths) {
+    const localPath = path.join(REPOSITORY_ROOT, assetPath);
+    const bytes = await readFile(localPath);
+    assets.push({ path: assetPath, sha256: sha256(bytes) });
+  }
+  const aggregateSha256 = visualAssetAggregate(assets);
+  return { algorithm: VISUAL_ASSET_AGGREGATE_ALGORITHM, aggregateSha256, assets };
+}
+
+function assetUrl(baseUrl, assetPath) {
+  const distRelativePath = assetPath.replace(/^dist\//, "");
+  return new URL(distRelativePath, baseUrl).toString();
+}
+
+async function verifyServedVisualAssets(baseUrl, identity) {
+  for (const asset of identity.assets) {
+    const response = await fetch(assetUrl(baseUrl, asset.path));
+    if (!response.ok) {
+      throw new Error(`Visual asset server returned ${response.status} for ${asset.path}.`);
+    }
+    const servedBytes = Buffer.from(await response.arrayBuffer());
+    const servedHash = sha256(servedBytes);
+    if (servedHash !== asset.sha256) {
+      throw new Error(`Visual asset server differs from built dist for ${asset.path}.`);
+    }
+  }
+}
+
+function visualAssetIdentityMatches(actual, expected) {
+  return JSON.stringify(actual) === JSON.stringify(expected);
 }
 
 async function availablePort() {
@@ -154,7 +253,7 @@ function contactSheetStageGate(targetStageId) {
 function savedStageGate(stageId, seed) {
   const state = contactSheetStageGate(stageId);
   const seededState = { ...state, deterministicSeed: seed };
-  return serializeGameState(seededState, Date.now());
+  return serializeGameState(seededState, FIXED_SYNTHETIC_SAVE_TIMESTAMP_MS);
 }
 
 async function enterStage(page, stageId, seed, port) {
@@ -172,18 +271,23 @@ async function enterStage(page, stageId, seed, port) {
   const title = STAGE_TITLES[stageId];
   if (title === undefined) throw new Error(`No stage title for ${stageId}`);
   if (stageId !== "transformed_cell") {
-    await page.getByRole("button", { name: `Advance to ${title}` }).click();
+    await page.getByRole("button", { name: "Advance" }).click();
   }
   await page.getByRole("heading", { name: title }).waitFor({ state: "visible" });
-  await page.getByRole("heading", { name: "Colony morphology" }).waitFor({ state: "visible" });
-  const figure = page.locator("svg.colony-figure");
+  const arena = page.getByRole("region", { name: "Living tumor arena" });
+  await arena.waitFor({ state: "visible" });
+  const figure = arena.locator("svg.colony-figure");
   await figure.waitFor({ state: "visible" });
-  const role = await figure.getAttribute("role");
-  if (role !== "img") throw new Error(`${stageId}: colony figure lost its image role.`);
-  await page.locator(".colony-panel figcaption").waitFor({ state: "visible" });
+  const description = arena.locator("#colony-a11y-description");
+  await description.waitFor({ state: "attached" });
+  const descriptionText = (await description.textContent())?.trim();
+  if (descriptionText === undefined || descriptionText.length === 0) {
+    throw new Error(`${stageId}: living tumor arena has no accessible description.`);
+  }
+  return descriptionText;
 }
 
-async function collectFrame(page, theme) {
+async function collectFrame(page, theme, accessibleDescription) {
   if (theme === "neutral-light") {
     await page.locator(".colony-panel").evaluate((panel) => {
       panel.classList.add("is-neutral-light");
@@ -216,19 +320,16 @@ async function collectFrame(page, theme) {
     };
   });
   if (!result.allFiniteBoxes) throw new Error("SVG contains a non-finite layout box.");
-  return result;
+  return { ...result, accessibleDescription };
 }
 
 async function ensurePanelVisible(page) {
   const panel = page.locator(".colony-panel");
-  const figure = page.locator("svg.colony-figure");
-  const caption = panel.locator("figcaption");
   await panel.scrollIntoViewIfNeeded();
   const result = await panel.evaluate((element) => {
     const figureElement = element.querySelector("svg.colony-figure");
-    const captionElement = element.querySelector("figcaption");
-    if (figureElement === null || captionElement === null) {
-      throw new Error("Colony panel does not contain both figure and caption.");
+    if (figureElement === null) {
+      throw new Error("Living tumor arena does not contain its colony figure.");
     }
     function visibleBox(node) {
       const box = node.getBoundingClientRect();
@@ -244,16 +345,15 @@ async function ensurePanelVisible(page) {
     return {
       panel: visibleBox(element),
       figure: visibleBox(figureElement),
-      caption: visibleBox(captionElement),
     };
   });
-  if (!result.figure.nonzero || !result.caption.nonzero) {
-    throw new Error("The colony figure or caption has zero rendered area.");
+  if (!result.figure.nonzero) {
+    throw new Error("The colony figure has zero rendered area.");
   }
-  if (!result.figure.fullyVisible || !result.caption.fullyVisible) {
-    throw new Error("The colony figure and caption must both be fully visible before capture.");
+  if (!result.figure.fullyVisible) {
+    throw new Error("The colony figure must be fully visible before capture.");
   }
-  return { panel, figure, caption, boxes: result };
+  return { panel, boxes: result };
 }
 
 function screenshotPath(stageId, seed, viewport, theme) {
@@ -276,17 +376,72 @@ function frameRecord(stageId, seed, viewport, theme, screenshot, inspection, box
 function createIndex(records) {
   const cards = records
     .map((record) => {
-      const label = `${record.stageId} | ${record.seed} | ${record.viewport.label} | ${record.theme}`;
-      return `<figure><img src="${record.screenshot}" alt="${label}"><figcaption>${label}</figcaption></figure>`;
+      const label = [record.stageId, record.seed, record.viewport.label, record.theme].join(" | ");
+      return [
+        "<figure>",
+        `<img src="${record.screenshot}" alt="${label}">`,
+        `<figcaption>${label}</figcaption>`,
+        "</figure>",
+      ].join("");
     })
     .join("\n");
-  return `<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><title>colony renderer real renderer contact sheet</title>
-<style>body{background:#20242a;color:#f5f5f5;font:14px system-ui;margin:16px}main{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}figure{background:#303841;margin:0;padding:8px}img{display:block;width:100%;height:auto}figcaption{padding:8px 0 0}</style>
-</head><body><h1>colony renderer actual production renderer contact sheet</h1><main>${cards}</main></body></html>`;
+  const index = `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>colony renderer real renderer contact sheet</title>
+  <style>
+    body {
+      background: #20242a;
+      color: #f5f5f5;
+      font: 14px system-ui;
+      margin: 16px;
+    }
+    main {
+      display: grid;
+      gap: 16px;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    }
+    figure {
+      background: #303841;
+      margin: 0;
+      padding: 8px;
+    }
+    img {
+      display: block;
+      height: auto;
+      width: 100%;
+    }
+    figcaption {
+      padding: 8px 0 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>colony renderer actual production renderer contact sheet</h1>
+  <main>${cards}</main>
+</body>
+</html>`;
+  return index;
 }
 
-async function verifyArtifacts(records) {
+function createManifest(records, visualAssets) {
+  const bundle = visualAssets.assets.find((asset) => asset.path === "dist/main.js");
+  if (bundle === undefined) throw new Error("Visual asset identity must include dist/main.js.");
+  return {
+    schema: MANIFEST_SCHEMA,
+    identity: {
+      command: CAPTURE_COMMAND,
+      capturedAtUtc: new Date().toISOString(),
+      // This single-file identity remains a readable compatibility field.
+      bundle: { path: bundle.path, sha256: bundle.sha256 },
+      visualAssets,
+    },
+    records,
+  };
+}
+
+async function verifyArtifacts(records, expectedVisualAssets) {
   const expectedFrames = STAGE_IDS.length * SEEDS.length * VIEWPORTS.length * THEMES.length;
   if (records.length !== expectedFrames) {
     throw new Error(`Expected ${expectedFrames} captured frames, found ${records.length}.`);
@@ -295,6 +450,39 @@ async function verifyArtifacts(records) {
   const indexPath = path.join(ARTIFACT_ROOT, "index.html");
   const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
   const index = await readFile(indexPath, "utf8");
+  if (manifest.schema !== MANIFEST_SCHEMA) {
+    throw new Error("Contact-sheet manifest needs its schema identity.");
+  }
+  if (
+    manifest.identity?.bundle?.path !== "dist/main.js" ||
+    manifest.identity.bundle.sha256 !==
+      expectedVisualAssets.assets.find((asset) => asset.path === "dist/main.js")?.sha256
+  ) {
+    throw new Error(
+      "Contact-sheet manifest bundle identity must match the captured production dist.",
+    );
+  }
+  if (
+    typeof manifest.identity.command !== "string" ||
+    typeof manifest.identity.capturedAtUtc !== "string"
+  ) {
+    throw new Error("Contact-sheet manifest needs reproduction metadata.");
+  }
+  const recordedVisualAssets = manifest.identity.visualAssets;
+  if (!visualAssetIdentityMatches(recordedVisualAssets, expectedVisualAssets)) {
+    throw new Error("Contact-sheet manifest visual asset identity differs from the captured dist.");
+  }
+  if (recordedVisualAssets.algorithm !== VISUAL_ASSET_AGGREGATE_ALGORITHM) {
+    throw new Error("Contact-sheet manifest uses an unknown visual asset aggregate algorithm.");
+  }
+  const recordedAggregate = visualAssetAggregate(recordedVisualAssets.assets);
+  if (recordedAggregate !== recordedVisualAssets.aggregateSha256) {
+    throw new Error("Contact-sheet manifest visual asset aggregate does not match its assets.");
+  }
+  const currentVisualAssets = await visualAssetIdentity();
+  if (!visualAssetIdentityMatches(currentVisualAssets, expectedVisualAssets)) {
+    throw new Error("Built visual assets changed during contact-sheet capture.");
+  }
   if (!Array.isArray(manifest.records) || manifest.records.length !== expectedFrames) {
     throw new Error("Contact-sheet manifest does not contain the full frame corpus.");
   }
@@ -310,21 +498,51 @@ async function verifyArtifacts(records) {
     if (information.size === 0) throw new Error(`Empty contact-sheet PNG: ${record.screenshot}`);
     if (
       !record.boxes.figure.fullyVisible ||
-      !record.boxes.caption.fullyVisible ||
       !record.boxes.figure.nonzero ||
-      !record.boxes.caption.nonzero
+      record.accessibleDescription.length === 0
     ) {
       throw new Error(`Incomplete panel capture geometry: ${record.screenshot}`);
     }
   }
-  return { expectedFrames, figureCount };
+  return {
+    expectedFrames,
+    figureCount,
+    bundleHash: manifest.identity.bundle.sha256,
+    visualAssetAggregate: recordedVisualAssets.aggregateSha256,
+  };
+}
+
+function contactSheetMode(argumentsList) {
+  if (argumentsList.length === 0) return "capture";
+  if (argumentsList.length === 1 && argumentsList[0] === "--verify-existing") {
+    return "verify-existing";
+  }
+  throw new Error(
+    "Usage: node --import tsx tools/colony_contact_sheet.mjs [--verify-existing]. " +
+      "Run without arguments to rebuild and capture; --verify-existing only reads the corpus.",
+  );
+}
+
+async function verifyExistingArtifacts() {
+  phase("VERIFY EXISTING CONTACT SHEET");
+  const manifestPath = path.join(ARTIFACT_ROOT, "manifest.json");
+  const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
+  if (!Array.isArray(manifest.records)) {
+    throw new Error("Existing contact-sheet manifest does not contain a records array.");
+  }
+  const currentVisualAssets = await visualAssetIdentity();
+  const artifactStatus = await verifyArtifacts(manifest.records, currentVisualAssets);
+  console.log(
+    `Verified ${artifactStatus.expectedFrames} existing production frames with bundle ` +
+      `${artifactStatus.bundleHash} and visual aggregate ` +
+      `${artifactStatus.visualAssetAggregate} in ${ARTIFACT_ROOT}`,
+  );
 }
 
 async function main() {
   phase("BUILD PRODUCTION DIST");
   await run("./build_github_pages.sh", []);
-  const bundle = await readFile("dist/main.js");
-  const bundleHash = sha256(bundle);
+  const visualAssets = await visualAssetIdentity();
   const port = await availablePort();
   phase("PREPARE ARTIFACT DIRECTORY");
   await rm(ARTIFACT_ROOT, { recursive: true, force: true });
@@ -338,11 +556,11 @@ async function main() {
   try {
     const baseUrl = `http://127.0.0.1:${port}/`;
     await waitForServer(baseUrl);
-    const servedBundle = await (await fetch(`${baseUrl}main.js`)).arrayBuffer();
-    if (sha256(Buffer.from(servedBundle)) !== bundleHash) {
-      throw new Error("The contact-sheet server is not serving the current dist/main.js bundle.");
-    }
-    console.log(`Verified current dist/main.js SHA-256: ${bundleHash}`);
+    await verifyServedVisualAssets(baseUrl, visualAssets);
+    console.log(
+      `Verified ${visualAssets.assets.length} current visual assets with aggregate SHA-256: ` +
+        visualAssets.aggregateSha256,
+    );
     const browser = await chromium.launch({ headless: true });
     const records = [];
     try {
@@ -358,8 +576,8 @@ async function main() {
               });
               try {
                 const page = await context.newPage();
-                await enterStage(page, stageId, seed, port);
-                const inspection = await collectFrame(page, theme);
+                const accessibleDescription = await enterStage(page, stageId, seed, port);
+                const inspection = await collectFrame(page, theme, accessibleDescription);
                 const panel = await ensurePanelVisible(page);
                 const screenshot = screenshotPath(stageId, seed, viewport, theme);
                 await panel.panel.screenshot({ path: screenshot });
@@ -379,17 +597,24 @@ async function main() {
     phase("WRITE MANIFEST AND BROWSERABLE CONTACT SHEET");
     await writeFile(
       path.join(ARTIFACT_ROOT, "manifest.json"),
-      `${JSON.stringify({ records }, null, 2)}\n`,
+      `${JSON.stringify(createManifest(records, visualAssets), null, 2)}\n`,
       "utf8",
     );
     await writeFile(path.join(ARTIFACT_ROOT, "index.html"), createIndex(records), "utf8");
-    const artifactStatus = await verifyArtifacts(records);
+    const artifactStatus = await verifyArtifacts(records, visualAssets);
     console.log(
-      `Captured ${artifactStatus.expectedFrames} actual production-page frames in ${ARTIFACT_ROOT}`,
+      `Captured ${artifactStatus.expectedFrames} production frames with bundle ` +
+        `${artifactStatus.bundleHash} and visual aggregate ` +
+        `${artifactStatus.visualAssetAggregate} in ${ARTIFACT_ROOT}`,
     );
   } finally {
     server.kill("SIGTERM");
   }
 }
 
-await main();
+const mode = contactSheetMode(process.argv.slice(2));
+if (mode === "verify-existing") {
+  await verifyExistingArtifacts();
+} else {
+  await main();
+}

@@ -1,0 +1,159 @@
+/* Neutral-light is a deliberately separate specimen treatment for the visual
+   corpus: a warm microscope slide surrounds a darker, still-playable tissue
+   well. The shared SVG geometry remains authoritative; these role colors make
+   its biology legible in a bright environment instead of merely inverting the
+   default arena. */
+.colony-panel.is-neutral-light {
+  --colony-surface: #0f6f73;
+  --colony-middle: #286f8d;
+  --colony-deep: #4f4b88;
+  border-color: rgb(112 78 59 / 72%);
+  background:
+    radial-gradient(circle at 13% 10%, rgb(255 255 241 / 94%) 0 2%, transparent 19%),
+    radial-gradient(circle at 86% 88%, rgb(211 149 122 / 22%), transparent 31%),
+    repeating-radial-gradient(circle at 22% 28%, rgb(109 72 57 / 10%) 0 1px, transparent 1px 13px),
+    linear-gradient(142deg, #fff8e8, #e8cba9 62%, #c79476);
+  box-shadow:
+    inset 0 0 0 1px rgb(255 255 247 / 68%),
+    0 0.8rem 1.8rem rgb(71 38 28 / 22%);
+}
+
+.colony-panel.is-neutral-light .tumor-arena {
+  border-color: rgb(72 47 42 / 82%);
+  background:
+    radial-gradient(ellipse at 50% 47%, rgb(162 65 91 / 34%), transparent 42%),
+    radial-gradient(circle at 18% 18%, rgb(255 224 183 / 22%) 0 1px, transparent 1px 12px),
+    repeating-radial-gradient(
+      circle at 74% 68%,
+      rgb(248 197 157 / 14%) 0 2px,
+      transparent 2px 17px
+    ),
+    linear-gradient(136deg, #4a2534, #241a2b 57%, #152c35);
+  box-shadow:
+    inset 0 0 3rem rgb(255 191 151 / 18%),
+    inset 0 0 0 1px rgb(255 236 207 / 16%),
+    0 1rem 2rem rgb(73 39 32 / 30%);
+}
+
+.colony-panel.is-neutral-light .colony-figure {
+  background: radial-gradient(circle at 50% 48%, rgb(229 113 124 / 30%), transparent 43%), #2c2636;
+}
+
+.colony-panel.is-neutral-light .colony-figure__plate {
+  fill: #2c2636;
+}
+
+.colony-panel.is-neutral-light .colony-figure__tissue-fascia {
+  stroke: rgb(255 224 181 / 30%);
+}
+
+.colony-panel.is-neutral-light .colony-figure__silhouette-regions {
+  filter: drop-shadow(0 0.45rem 1.2rem rgb(24 10 20 / 66%));
+}
+
+.colony-panel.is-neutral-light .colony-figure__silhouette {
+  fill: #75405a;
+  stroke: #ffd3a1;
+}
+
+.colony-panel.is-neutral-light .colony-figure__region {
+  fill: rgb(226 103 126 / 42%);
+  stroke: rgb(255 214 181 / 66%);
+}
+
+.colony-panel.is-neutral-light .colony-figure__void {
+  fill: rgb(41 27 52 / 90%);
+  stroke: rgb(255 181 214 / 86%);
+}
+
+.colony-panel.is-neutral-light .colony-figure__activity {
+  mix-blend-mode: screen;
+}
+
+.colony-panel.is-neutral-light .colony-figure__activity-aura {
+  fill: rgb(255 145 167 / 12%);
+  stroke: rgb(255 216 181 / 34%);
+}
+
+.colony-panel.is-neutral-light .colony-figure__outline polygon,
+.colony-panel.is-neutral-light polygon.colony-figure__outline {
+  stroke: #ffd5a0;
+}
+
+.colony-panel.is-neutral-light .colony-cell__membrane {
+  stroke: rgb(255 233 207 / 92%);
+}
+
+.colony-panel.is-neutral-light .colony-cell__nucleus {
+  fill: #562951;
+}
+
+.colony-panel.is-neutral-light .colony-figure__hypoxic-core {
+  fill: rgb(104 61 139 / 72%);
+  stroke: rgb(238 190 255 / 88%);
+}
+
+.colony-panel.is-neutral-light .colony-figure__necrotic-core {
+  fill: rgb(57 37 42 / 94%);
+  stroke: rgb(255 192 151 / 92%);
+}
+
+.colony-panel.is-neutral-light .tumor-arena__hud {
+  border-color: rgb(255 222 181 / 58%);
+  color: #fff8e8;
+  background: rgb(39 25 37 / 88%);
+  box-shadow: 0 0.45rem 1.1rem rgb(35 17 25 / 48%);
+}
+
+.colony-panel.is-neutral-light .tumor-arena__metric--cells {
+  color: #fff4df;
+  text-shadow: 0 0 0.7rem rgb(255 189 143 / 52%);
+}
+
+.colony-panel.is-neutral-light .tumor-arena__metric--rate {
+  color: #ffdaa0;
+}
+
+.colony-panel.is-neutral-light .tumor-arena .help-tooltip-content {
+  border-color: rgb(255 220 178 / 78%);
+  color: #fff9ec;
+  background: rgb(46 28 41 / 94%);
+  box-shadow: 0 0.45rem 1.1rem rgb(43 22 29 / 48%);
+}
+
+.colony-panel.is-neutral-light .tumor-arena__action::after {
+  border-color: rgb(255 216 164 / 0%);
+}
+
+.colony-panel.is-neutral-light .tumor-arena__action:hover:not(:disabled)::after,
+.colony-panel.is-neutral-light .tumor-arena__action:focus-visible::after {
+  border-color: rgb(255 224 174 / 88%);
+  box-shadow: inset 0 0 1.7rem rgb(255 151 170 / 24%);
+}
+
+.colony-panel.is-neutral-light .tumor-arena__action:focus-visible {
+  outline-color: #ffedb7;
+}
+
+.colony-panel.is-neutral-light .tumor-arena__action:disabled {
+  background: rgb(39 25 37 / 62%);
+}
+
+.colony-panel.is-neutral-light .tumor-feedback__reticle-ring {
+  stroke: #ffc1d9;
+}
+
+.colony-panel.is-neutral-light .tumor-feedback__reticle-core,
+.colony-panel.is-neutral-light .tumor-feedback__reticle-ticks {
+  stroke: #fff0c7;
+}
+
+.colony-panel.is-neutral-light .tumor-arena__action:hover:not(:disabled) .colony-cell__membrane,
+.colony-panel.is-neutral-light .tumor-arena__action:focus-visible .colony-cell__membrane {
+  stroke: #fff8e8;
+}
+
+.colony-panel.is-neutral-light .tumor-arena__action:active:not(:disabled) .colony-cell__membrane {
+  stroke: #ffd0e4;
+  filter: drop-shadow(0 0 0.34rem rgb(255 178 205 / 78%));
+}

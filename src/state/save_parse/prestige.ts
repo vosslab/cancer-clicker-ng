@@ -11,12 +11,16 @@ export { parseNetwork } from "./prestige_network.js";
  */
 export function parsePrestige(
   value: unknown,
-  state: Pick<GameState, "activeTimeMs" | "eventSequence">,
+  state: Pick<GameState, "activeTimeMs" | "eventSequence" | "currentStage">,
 ): Pick<GameState, "lineageLedger" | "metastasis" | "hostTransfer"> | undefined {
   if (!exactShape(value, PRESTIGE_KEYS)) return undefined;
   const lineageLedger = parseLineageLedger(value.lineageLedger, state.activeTimeMs);
   if (lineageLedger === undefined) return undefined;
-  const metastasis = parseMetastasis(value.metastasis);
+  const metastasis = parseMetastasis(
+    value.metastasis,
+    state.currentStage,
+    lineageLedger.completedL1ResetCount,
+  );
   if (metastasis === undefined) return undefined;
   const hostTransfer = parseHostTransfer(value.hostTransfer, lineageLedger, state.eventSequence);
   if (hostTransfer === undefined) return undefined;

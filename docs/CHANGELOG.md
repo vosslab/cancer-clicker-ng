@@ -2,13 +2,37 @@
 
 ### Additions and New Features
 
+- Completed M22 autonomous local-candidate closure: fresh independent release audit PASS, 5/5
+  source checks plus 372 Node tests, 48/48 production-browser tests, Pages workflow verification,
+  selected zero-blocker balance evidence, and a post-report 1,520-test disposable candidate
+  projection that preserved the real Git index.
+
+- Added the supported scoped neutral-light tumor-arena specimen treatment and made it an explicit
+  build asset rather than a capture-only label.
+
+- Strengthened contact-sheet provenance to manifest v2: it identifies the complete served visual
+  asset set with sorted individual hashes and an aggregate, and its CLI now has safe no-argument
+  capture plus read-only `--verify-existing` verification modes.
+
+- Regenerated and independently accepted the current seven-frame and 216-frame visual evidence.
+  These dated review results establish current artifact attribution and visual quality; they do not
+  create future byte, pixel, or timing thresholds.
+
 - Recorded owner guidance that the central panel should be more dynamic than Cookie Clicker's
   cookie and that the original implementation plan's visual progression remains the contract.
 
-- Added `docs/RELEASE_EVIDENCE.md` as the human review surface for the visual-first candidate.
-  It documents the strict format-2/schema-8 boundary, separates permanent semantic tests from
-  one-time balance and visual review, records bounded focused evidence, and reserves final gates
-  plus GitHub Pages/Git acceptance for fresh human-owned handoff.
+- Added `docs/RELEASE_EVIDENCE.md` as the autonomous evidence surface for the visual-first
+  candidate. It documents the strict format-2/schema-8 boundary, separates permanent semantic
+  tests from dated capture and visual evidence, records bounded focused evidence, and defines
+  manager-and-subagent-only candidate closure.
+
+- Added `devel/verify_candidate.py` as the reproducible full-candidate projection route. It writes
+  ignored `output_release/candidate_manifest.json`, runs the full Python suite in a disposable Git
+  index and object store, and verifies the real index remains unchanged.
+
+- Added `devel/verify_pages_workflow.py` and its explicit `pyyaml` development dependency. The
+  verifier parses the local Pages workflow contract for template parity, trigger, permission,
+  build, upload, and deploy semantics without a remote workflow run.
 
 - Added a three-part review of the local 2013 Cookie Clicker source covering its source ownership,
   increment formulas and reinforcement loops, and dynamic three-column visual layout. The notes
@@ -114,7 +138,31 @@
 
 ### Behavior or Interface Changes
 
+- Reframed release-candidate closure as a manager-and-subagent evidence contract: canonical code,
+  build, browser, and Python gates; `devel/verify_candidate.py`; fixed-clock capture;
+  independent agent image review; and static Pages workflow validation close M22. Repository
+  history and remote distribution add evidence without changing candidate status.
+
 ### Fixes and Maintenance
+
+- Made reset stage observations durable and coherent: L1/L2 record their reset to transformed
+  cells, immortalization records entry to culture, and a same-stage L4 campaign begins without
+  retaining unrelated stage-transition history. Current-save parsing recognizes the one canonical
+  non-adjacent reset record and focused reset outputs now round-trip through the save boundary.
+
+- Reconciled the balance laboratory's candidate-selection contract with trace evidence. Generated
+  reports now distinguish scoped policy observations from demonstrated witness defects, withhold a
+  candidate when a named decision surface is never reached, and record the bounded remediation.
+
+- Replaced metadata-only early balance probes with parser-validated L1, L2, and L3 durable
+  snapshots. The format-3 suite now records executable visible-surface witnesses and selects the
+  current shipped curve without a demonstrated blocking degeneracy.
+
+- Repaired the current prestige persistence/reset contract: pre-L1 `host_collapse` may retain a
+  populated planning portfolio with null active context, selected runs require their exact context,
+  and reset projections now own coherent stage/timestamp/transition observations. This fixes the
+  canonical event/save round trip exposed by executable balance witnesses; it is not a legacy
+  migration.
 
 - Moved the optional reached Chicago report into a compact right-rail drawer so its copy and scale
   graphic remain available while the complete central tumor action surface stays clickable.
@@ -161,10 +209,10 @@
 
 ### Developer Tests and Notes
 
-- Final local verification passed all five `./check_codebase.sh` lanes with 370 Node tests, the
-  GitHub Pages build, and 48 production-browser tests. A disposable full-candidate Git projection
-  passed all 1,484 Python tests while preserving the human-owned real index; the ordinary tracked
-  projection reported only the two intentionally untracked new screenshot links.
+- Final local verification passed all five `./check_codebase.sh` lanes with 372 Node tests, the
+  GitHub Pages build, and 48 production-browser tests. A synthetic full-candidate Git projection
+  passed all 1,484 Python tests while preserving the real index; the ordinary tracked projection
+  reported only the two intentionally untracked new screenshot links.
 - Recaptured all seven 1280 x 800 documentation frames with no browser diagnostics or horizontal
   overflow. Independent original-resolution review accepted every frame, including the final
   right-rail Chicago drawer with the central living tumor fully unobscured.

@@ -16,6 +16,7 @@ run_playwright_tests.sh       Production-browser test runner
 run_web_server.sh             Local production-artifact preview
 dist/                         Generated static deployment artifact
 output_balance/               Generated calibration reports
+output_visual/                Generated contact-sheet and renderer-calibration artifacts
 graphify-out/                 Generated repository-navigation map
 ```
 
@@ -46,6 +47,9 @@ graphify-out/                 Generated repository-navigation map
 - [src/style.css](../src/style.css) owns shared tokens and controls. Focused CSS files own the game
   canvas, tumor arena, evolution dock, upgrade rack, culture/network, prestige/route, and ending
   presentation layers.
+- [src/tumor_arena_neutral_light.css](../src/tumor_arena_neutral_light.css) owns the scoped
+  neutral-light specimen treatment for the tumor arena; the build explicitly copies it as a served
+  stylesheet asset.
 - [src/content/](../src/content/) holds reusable player-facing content that is independent of a
   particular component layout.
 
@@ -106,7 +110,15 @@ graphify-out/                 Generated repository-navigation map
   the real visible-decision surface. Scenario inputs belong in
   [tools/balance_scenarios/](../tools/balance_scenarios/).
 - [tools/verify_colony_rendering.mjs](../tools/verify_colony_rendering.mjs) and
-  [tools/colony_contact_sheet.mjs](../tools/colony_contact_sheet.mjs) support rendered SVG review.
+  [tools/colony_contact_sheet.mjs](../tools/colony_contact_sheet.mjs) support rendered SVG review;
+  they own `output_visual/colony-rendering-verification/` and
+  `output_visual/colony-contact-sheet/`, respectively.
+- `devel/verify_candidate.py`, documented in
+  [devel/DEVEL_README.md](../devel/DEVEL_README.md), projects the complete nonignored working tree
+  through disposable Git storage, runs repository-hygiene checks, writes a candidate manifest,
+  and verifies the real Git index remains unchanged.
+- [devel/verify_pages_workflow.py](../devel/verify_pages_workflow.py) validates the local Pages
+  workflow contract, including template parity and the build, artifact-upload, and deploy shape.
 
 ## Generated artifacts
 
@@ -116,6 +128,16 @@ graphify-out/                 Generated repository-navigation map
 - `output_balance/` receives calibration reports from
   [tools/balance_sim.mjs](../tools/balance_sim.mjs). Scenarios are source; reports are generated
   evidence and can be recreated.
+- `output_visual/` is the ignored root-level visual-calibration output family. The contact-sheet
+  tool clears and recreates only `output_visual/colony-contact-sheet/`; the structural renderer
+  tool clears and recreates only `output_visual/colony-rendering-verification/`, including
+  `report.json`. Both artifacts regenerate from their canonical tool commands and are dated
+  evidence, not authored source.
+- `output_release/candidate_manifest.json` is an ignored, regenerated candidate-projection
+  manifest written by `devel/verify_candidate.py`, as documented in
+  [devel/DEVEL_README.md](../devel/DEVEL_README.md). Its sorted path/mode/blob entries and digest
+  identify one working-tree projection; the verifier isolates all projection writes in disposable
+  Git storage and preserves the real index.
 - `graphify-out/` holds a generated navigation graph. Use it to narrow source
   investigation, then confirm conclusions in the current files and tests.
 - `test-results/` and Playwright report directories are transient browser-test
@@ -154,6 +176,9 @@ graphify-out/                 Generated repository-navigation map
   artifacts outside permanent tests.
 - Add a calibration input to [tools/balance_scenarios/](../tools/balance_scenarios/) and retain
   generated output under `output_balance/`.
+- Regenerate visual-calibration output with its owning tool and review it from `output_visual/`;
+  retain scene and capture logic under [tools/](../tools/) rather than editing generated frames or
+  reports.
 - Add durable reference documentation under [docs/](.), following
   [docs/MARKDOWN_STYLE.md](MARKDOWN_STYLE.md); put implementation-time material in the appropriate
   [docs/active_plans/](active_plans/) subdirectory.
@@ -161,5 +186,5 @@ graphify-out/                 Generated repository-navigation map
 ## Known gaps
 
 - Verify future generated artifacts only after running their owning command. The repository does
-  not treat a pre-existing `dist/` or `output_balance/` directory as
+  not treat a pre-existing `dist/`, `output_balance/`, or `output_visual/` directory as
   proof that it matches the current source.

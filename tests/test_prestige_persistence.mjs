@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { organTagId } from "../src/brands.ts";
+import { bigNum, organTagId, stageId } from "../src/brands.ts";
 import { createInitialGameState } from "../src/state/game_state.ts";
 import { recordEvent } from "../src/state/events.ts";
 import { generateHostDraftV1 } from "../src/prestige/hosts.ts";
@@ -37,23 +37,28 @@ test("current saves round-trip without notices and keep empty prestige, culture,
   assert.deepEqual(loaded.state.network, state.network);
 });
 
-test("current prestige persistence permits a null active niche only in the empty aggregate", () => {
-  const empty = createInitialGameState();
-  assert.equal(empty.metastasis.activeNicheContext, null);
-  assert.equal(parseSave(serializeGameState(empty, 19)).status, "loaded");
-
-  const populated = createInitialGameState();
-  populated.metastasis = {
-    ...populated.metastasis,
+test("pre-L1 host-collapse planning persists without a selected niche context", () => {
+  const planning = createInitialGameState();
+  planning.currentStage = stageId("host_collapse");
+  planning.metastasis = {
+    ...planning.metastasis,
+    metastaticPotential: bigNum(42, 0),
     allocations: [{ siteId: "bone_marrow", rank: 1 }],
     programs: [{ siteId: "bone_marrow", programId: "exploit_niche" }],
   };
-  assert.throws(() => serializeGameState(populated, 19));
+  const raw = serializeGameState(planning, 19);
+  const loaded = parseSave(raw);
+  assert.equal(loaded.status, "loaded");
+  if (loaded.status !== "loaded") throw new Error("Expected host-collapse planning state to load.");
+  assert.deepEqual(loaded.state.metastasis, planning.metastasis);
 
-  const raw = currentEnvelope();
-  raw.state.metastasis.allocations = [{ siteId: "bone_marrow", rank: 1 }];
-  raw.state.metastasis.programs = [{ siteId: "bone_marrow", programId: "exploit_niche" }];
-  assert.equal(parseSave(JSON.stringify(raw)).status, "rejected");
+  const outsideHostCollapse = JSON.parse(raw);
+  outsideHostCollapse.state.currentStage = "transformed_cell";
+  assert.equal(parseSave(JSON.stringify(outsideHostCollapse)).status, "rejected");
+
+  const afterL1 = JSON.parse(raw);
+  afterL1.state.lineageLedger.completedL1ResetCount = 1;
+  assert.equal(parseSave(JSON.stringify(afterL1)).status, "rejected");
 });
 
 test("current parser rejects a prior state schema without fabricating defaults", () => {
@@ -201,6 +206,12 @@ test("network persistence reloads a retained selected campaign with its saved pl
     ...initial,
     activeTimeMs: 6,
     currentStage: "global_lab_contamination",
+    stageStartedAtMs: 6,
+    lastStageTransition: {
+      from: stageId("immortalized_culture"),
+      to: stageId("global_lab_contamination"),
+      atMs: 6,
+    },
     prestigeAvailability: [
       { id: "L3", status: "earned" },
       { id: "L4", status: "earned" },
@@ -230,6 +241,8 @@ test("network persistence reloads a retained selected campaign with its saved pl
     sourceEventSequence: state.eventSequence,
     atMs: state.activeTimeMs,
   });
+  assert.equal(Object.hasOwn(selected, "lastStageTransition"), false);
+  assert.equal(selected.stageStartedAtMs, selected.activeTimeMs);
   const loaded = parseSave(serializeGameState(selected, 19));
   assert.equal(loaded.status, "loaded");
   if (loaded.status !== "loaded") throw new Error("Expected selected campaign to reload.");

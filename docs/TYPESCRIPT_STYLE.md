@@ -496,10 +496,13 @@ These repos deploy through GitHub Actions from the build output:
 
 - `build_github_pages.sh` emits the site into `dist/`, including `dist/.nojekyll`, and `dist/`
   is the published site root.
-- A root-level `deploy-pages.yml` workflow seed ships alongside the repo files. A human moves
-  it into the workflows directory to activate it. Root placement is the convention: agents
-  edit only repo-root files, so the seed ships cleanly at the root and a human completes the
-  move into the workflows directory.
+- The root-level `deploy-pages.yml` is the canonical workflow template. The published
+  `.github/workflows/deploy-pages.yml` is its semantic-parity copy; repository tooling or the
+  manager/subagent workflow maintains that copy as part of the repository workflow.
+- `devel/verify_pages_workflow.py` verifies semantic parity and the deployment contract,
+  including triggers, least permissions, ordered build/upload steps, the `dist/` artifact, and
+  the deployment dependency. Run it through `source source_me.sh && python3
+devel/verify_pages_workflow.py` when changing either workflow file.
 
 ### Live URL in the README
 

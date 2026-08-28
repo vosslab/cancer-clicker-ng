@@ -7,15 +7,16 @@ lives in [active_plans/](active_plans/).
 
 ## Release candidate evidence
 
-- Assemble `docs/RELEASE_EVIDENCE.md` as the single owner-facing record of the working build,
-  save migration, browser behavior, accessibility, visual review, and known limits. Success is
-  evidence that links each release claim to its command or captured artifact.
+- Maintain `docs/RELEASE_EVIDENCE.md` as the manager-owned record of the working build, save
+  migration, browser behavior, accessibility, independent-agent visual report, and known limits.
+  Success is reproducible evidence that links each release claim to its command or captured artifact.
 - Run the headless calibration owner in [tools/balance_sim.mjs](../tools/balance_sim.mjs) and turn
-  its observations into `docs/BALANCE.md`. Success is a documented decision about cost curves and
-  decision witnesses, with measurements informing judgment rather than arbitrary pass thresholds.
+  its observations into `docs/BALANCE.md`. Success is a manager-recorded calibration policy for
+  cost curves and decision witnesses, with measurements informing decisions rather than arbitrary
+  pass thresholds.
 - Prepare the static Pages release surface through [build_github_pages.sh](../build_github_pages.sh)
-  and the repository's release documentation. Success is a reproducible local distribution with
-  the maintained release artifacts present; publication and final approval remain human actions.
+  and the repository's release documentation. Success is a reproducible local candidate with the
+  maintained artifacts present; publication is an optional external distribution action.
 
 ## Make the living board legible
 

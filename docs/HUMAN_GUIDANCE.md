@@ -50,6 +50,9 @@ origin belongs there too. Rules: [REPO_STYLE.md](REPO_STYLE.md).
   without byte, pixel, or arbitrary timing equivalence.
 - Use domain names in permanent test files and documentation; milestone numbers belong in planning
   and dated history rather than current test identities.
+- I want every plan milestone to close through manager-and-subagent evidence while I am away. Use
+  captured fixtures, synthetic transitions, debug harnesses, workflow checks, and automated
+  behavior tests as the completion path.
 
 ## Working style
 

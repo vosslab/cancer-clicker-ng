@@ -160,8 +160,25 @@ path nor a replacement for player-facing browser tests.
 - [tests/TESTS_TYPESCRIPT_README.md](../tests/TESTS_TYPESCRIPT_README.md) describes test tiers;
   [docs/PLAYWRIGHT_USAGE.md](PLAYWRIGHT_USAGE.md) documents production-browser workflows.
 - [build_github_pages.sh](../build_github_pages.sh) type-checks and bundles the production
-  artifact. Rendered captures and human visual review are one-time evidence for visual changes,
-  rather than brittle permanent pixel-equivalence tests.
+  artifact. Rendered captures and independent agent original-resolution review are dated evidence
+  for visual changes; structural and browser assertions retain the durable behavioral contract
+  without pixel equivalence.
+- `devel/verify_candidate.py`, documented in
+  [devel/DEVEL_README.md](../devel/DEVEL_README.md), owns the complete-candidate projection
+  boundary. It projects every nonignored working-tree path through a disposable Git index and
+  object store, runs the full repository-hygiene Python suite against that projection, writes the
+  ignored `output_release/candidate_manifest.json`, and proves the real index bytes remain
+  unchanged. This is an explicit release-evidence tool lane rather than a permanent test.
+- [devel/verify_pages_workflow.py](../devel/verify_pages_workflow.py) owns the offline Pages
+  workflow-contract lane. It checks the root template and published workflow for equivalent
+  triggers, permissions, ordered build/upload steps, and deploy dependency without requiring a
+  remote workflow run.
+- [tools/colony_contact_sheet.mjs](../tools/colony_contact_sheet.mjs) and
+  [tools/verify_colony_rendering.mjs](../tools/verify_colony_rendering.mjs) own visual-calibration
+  output below the root-level `output_visual/` family. They respectively clear and regenerate only
+  `output_visual/colony-contact-sheet/` and
+  `output_visual/colony-rendering-verification/`; their dated artifacts support independent visual
+  review rather than a permanent pixel-equivalence contract.
 
 ## Extension points
 
@@ -183,8 +200,5 @@ path nor a replacement for player-facing browser tests.
 
 ## Known gaps
 
-- Re-run [check_codebase.sh](../check_codebase.sh), the production browser suite, and visual
-  capture after the active implementation work settles; their results are evidence for the current
-  tree rather than a permanent performance or pixel gate.
 - Review the development replay recorder's caller wiring after the controller integration lands,
   so the architecture documentation can name its concrete development entry point.

@@ -64,11 +64,31 @@ function resetHallmarks(state: GameState, retainHalf: boolean): readonly Hallmar
   }));
 }
 
+type ResetStageProjection = Readonly<{
+  currentStage: GameState["currentStage"];
+  stageStartedAtMs: number;
+  lastStageTransition: GameState["lastStageTransition"];
+}>;
+
+/** A reset owns its destination observation; a same-stage campaign has no stage transition. */
+function resetStageProjection(
+  state: GameState,
+  targetStage: GameState["currentStage"],
+  recordsStageTransition: boolean,
+): ResetStageProjection {
+  const stageStartedAtMs = state.activeTimeMs;
+  const lastStageTransition = recordsStageTransition
+    ? { from: state.currentStage, to: targetStage, atMs: stageStartedAtMs }
+    : undefined;
+  return { currentStage: targetStage, stageStartedAtMs, lastStageTransition };
+}
+
 /** Constructs the complete fresh local run; it deliberately never patches an initial state. */
 function projectClearedRunV1(
   state: GameState,
   hallmarkLevels: readonly HallmarkLevel[],
   deterministicSeed: number,
+  stage: ResetStageProjection,
 ): GameState {
   return {
     cells: bigNum(0, 0),
@@ -76,8 +96,7 @@ function projectClearedRunV1(
     atp: bigNum(0, 0),
     producerLevels: STAGE_ONE_PRODUCERS.map((producer) => ({ id: producer.id, level: 0 })),
     hallmarkLevels,
-    currentStage: stageId("transformed_cell"),
-    stageStartedAtMs: state.activeTimeMs,
+    ...stage,
     activeTimeMs: state.activeTimeMs,
     pendingProgression: [],
     stageProgress: 0,
@@ -160,11 +179,10 @@ export function projectL3Reset(
     state,
     resetHallmarks(state, false),
     deriveSeedV1("l3-reset-v1", state.lineageLedger.lineageSeed, state.eventSequence),
+    resetStageProjection(state, stageId("immortalized_culture"), true),
   );
   return {
     ...cleared,
-    currentStage: stageId("immortalized_culture"),
-    stageStartedAtMs: state.activeTimeMs,
     metastasis: createEmptyMetastasisState(),
     hostTransfer: createEmptyHostTransferState(),
     culture: {
@@ -209,11 +227,10 @@ export function projectL4CampaignReset(
     state,
     resetHallmarks(state, false),
     deriveSeedV1("l4-campaign-reset-v1", state.lineageLedger.lineageSeed, state.eventSequence),
+    resetStageProjection(state, stageId("global_lab_contamination"), false),
   );
   return {
     ...cleared,
-    currentStage: stageId("global_lab_contamination"),
-    stageStartedAtMs: state.activeTimeMs,
     culture: state.culture,
     network: state.network,
   };
@@ -257,7 +274,12 @@ export function projectL1Reset(
     state.lineageLedger.lineageSeed,
     state.eventSequence,
   );
-  const cleared = projectClearedRunV1(state, resetHallmarks(state, true), deterministicSeed);
+  const cleared = projectClearedRunV1(
+    state,
+    resetHallmarks(state, true),
+    deterministicSeed,
+    resetStageProjection(state, stageId("transformed_cell"), true),
+  );
   return {
     ...cleared,
     metastasis: {
@@ -299,7 +321,12 @@ export function projectL2Reset(
     state.lineageLedger.lineageSeed,
     state.eventSequence,
   );
-  const cleared = projectClearedRunV1(state, resetHallmarks(state, false), deterministicSeed);
+  const cleared = projectClearedRunV1(
+    state,
+    resetHallmarks(state, false),
+    deterministicSeed,
+    resetStageProjection(state, stageId("transformed_cell"), true),
+  );
   return {
     ...cleared,
     hostTransfer: {

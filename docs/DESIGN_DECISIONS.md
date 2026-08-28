@@ -36,11 +36,32 @@ second action catalog, hidden-state bot, browser dependency, or a permanent tune
 **Consequence.** `tools/balance_sim.mjs` keeps policies restricted to displayed actions and values.
 The `greedy-payback` policy divides the displayed producer cost by the authoritative marginal
 production quote that the Store also renders. Scenario JSON stays versioned under
-`tools/balance_scenarios/`; the default five-by-five suite writes an aggregate format-2 report
+`tools/balance_scenarios/`; the default five-by-five suite writes an aggregate format-3 report
 under ignored `output_balance/`. Scenario conclusions remain calibration observations, not
 performance or rank gates.
 
 **Owner.** `tools/balance_sim.mjs` and `tools/balance_scenarios/`
+
+### Prestige reset persistence boundary
+
+**Decision.** Before the first accepted L1 reset, `host_collapse` may persist a populated
+Metastasis planning portfolio with a null `activeNicheContext`. Once L1 has run, selected-run
+effects require the exact active context; populated null-context data rejects outside that bounded
+planning phase. Reset projections own their target stage, timestamp, and transition together: L1
+and L2 reset to `transformed_cell`, L3 resets to `immortalized_culture`, and same-stage L4 clears
+unrelated transition history.
+
+**Why.** The portfolio records a player-ready L1 plan before a biological destination is selected;
+it is not selected-run evidence. A complete projection keeps the canonical event and save
+round-trip boundary coherent. Executable balance witnesses exposed both ownership requirements.
+
+**Consequence.** Save parsing accepts the populated null-context shape only at pre-L1
+`host_collapse` and rejects it everywhere else. Each accepted reset has one durable stage
+observation with its event time, while L4 retains no stale stage-transition record. This is a
+current pre-production contract correction, not a legacy migration.
+
+**Owner.** `src/prestige/reset.ts`, `src/state/save_parse/prestige_ending.ts`, and
+`docs/PRESTIGE_DESIGN.md`
 
 ### Canonical visible decision surface
 
@@ -494,6 +515,37 @@ environment, observations, and reproduce command for design review.
 **Owner.** `tools/balance_sim.mjs`, `tools/balance_scenarios/`, and
 `docs/REPO_STYLE.md`
 
+### Autonomous release-candidate closure
+
+**Decision.** Milestones close through reproducible manager-and-subagent evidence. External
+publication is a separate distribution operation.
+
+**Why.** The release-candidate plan needs a complete unattended path while preserving honest
+evidence boundaries for a locally built static game.
+
+**Consequence.** Each visual, state, and Pages-shaped claim names a fixture, synthetic transition,
+debug or capture harness, browser behavior check, or static workflow contract. Permanent tests
+protect lasting semantic behavior; captured reports remain dated artifacts. Git history and remote
+distribution can add evidence without changing the completion status of the candidate.
+
+**Owner.** `docs/active_plans/implementation_plan.md` and `docs/RELEASE_EVIDENCE.md`
+
+### Offline Pages workflow contract parsing
+
+**Decision.** Use local YAML 1.2-compatible parsing to verify the checked-in GitHub Pages workflow
+contract and the semantic parity of the root template and published workflow copy.
+
+**Why.** The release candidate needs reproducible evidence that its Pages workflow has the intended
+triggers, permissions, build, artifact upload, and deployment shape without requiring a network
+service or installed runtime package.
+
+**Consequence.** `PyYAML` is an explicit development dependency used only by
+`devel/verify_pages_workflow.py`. The verifier parses local files, preserves the YAML `on` key,
+compares `deploy-pages.yml` with `.github/workflows/deploy-pages.yml` semantically, and reports a
+focused contract result. The SolidJS client and its build integration remain the runtime boundary.
+
+**Owner.** `devel/verify_pages_workflow.py` and `pip_requirements-dev.txt`
+
 ### Durable domain naming
 
 **Decision.** Repository paths under `src/`, `tests/`, and `tools/` name their enduring behavior
@@ -566,5 +618,25 @@ strip.
 **Owner.** `src/svg/`, `src/render/action_icon.tsx`, `src/render/game_ui_state.ts`,
 `src/render/action_tooltip.tsx`, `src/render/inspector_drawer.tsx`,
 `docs/ART_DIRECTION.md`, and `docs/active_plans/reports/game_visual_redesign.md`
+
+### Scoped neutral-light specimen treatment and full visual provenance
+
+**Decision.** `src/tumor_arena_neutral_light.css` is a supported, explicitly served scoped
+specimen treatment. The contact-sheet manifest v2 owns the complete identity of the served visual
+asset set, and its tool has two intentional modes: no arguments rebuild and capture; `--verify-existing`
+performs a read-only corpus and provenance verification.
+
+**Why.** The alternate specimen surface needs a real visual treatment, rather than a capture label
+that merely changes metadata. A contact review is meaningful only when it can identify every served
+HTML, JavaScript, and stylesheet input. Separating capture from verification makes follow-up review
+safe and repeatable.
+
+**Consequence.** The build requires and copies the neutral-light stylesheet. The manifest records
+sorted visual-asset paths, individual hashes, and their aggregate alongside frame records; review
+can verify that identity without mutating output. These dated identities establish attribution for
+one capture, not future byte, pixel, or performance requirements.
+
+**Owner.** `src/tumor_arena_neutral_light.css`, `tools/build_solid.mjs`, and
+`tools/colony_contact_sheet.mjs`
 
 ## Generated artifacts

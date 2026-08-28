@@ -19,12 +19,12 @@ Three properties are load-bearing and settled by the user:
   Offline accrual and stacked prestige layers are day-one requirements, not polish.
 - **Egg, Inc.-style number names.** The player should meet "septenvigintillion" (10^84) and
   learn it. This forces a custom big-number type and a Conway-Wechsler illion name generator.
-- **No human in the execution path.** Manager and subagents must carry this plan from empty repo
-  to a validated release candidate while the human sleeps. Every gate is an automated check, a
-  captured artifact, or an agent review with written criteria.
+- **Manager-complete execution path.** Manager and subagents carry this plan from empty repo to a
+  validated release candidate while the owner is away. Every gate is an automated check, a captured
+  artifact, or an agent review with written criteria.
 
-This revision incorporates two rounds of external LLM plan review and two user directives:
-remove all human-dependent gates, and prefer many small milestones over few large ones. The
+This revision incorporates two rounds of external LLM plan review and two user directives: use
+manager-complete gates, and prefer many small milestones over few large ones. The
 milestone count went from 6 to 22 for those reasons.
 
 The organizing bet of the plan: **the biology drives the mechanics, the visuals, and the
@@ -42,8 +42,8 @@ biology expressed as systems rather than larger numbers layered onto a good open
 - Represent arbitrarily large quantities with correct short suffixes and full Latin illion names,
   with arithmetic proven against the operations the economy actually performs.
 - Make every stage-dependent visual change traceable to a documented biological rationale.
-- Reach a fully validated release candidate, summarized in one compact evidence package, with no
-  human action required at any milestone.
+- Reach a fully validated release candidate, summarized in one compact evidence package, through
+  manager-and-subagent evidence at every milestone.
 
 ## Design philosophy
 
@@ -104,13 +104,16 @@ Cites **Design for adaptability** and **Atomic task decomposition**.
 - Write the satirical copy pass with an automated tone and safety guard.
 - Add permanent Node and Playwright behavior tests, plus one-time visual, balance, and performance
   calibration artifacts.
-- Produce `docs/RELEASE_EVIDENCE.md`: one compact package a human can approve from, plus the full
-  durable documentation set.
+- Produce `docs/RELEASE_EVIDENCE.md`: the autonomous closeout record that maps every
+  release-candidate claim to reproducible commands, captured artifacts, and an independent agent
+  audit, plus the full durable documentation set.
 
 ## Non-goals
 
-- Add runtime npm dependencies other than the approved client-only `solid-js` UI runtime and its
-  required build integration. Dev dependencies otherwise stay as shipped.
+- Keep runtime npm dependencies limited to the approved client-only `solid-js` UI runtime and its
+  required build integration. Development tooling includes the explicit `PyYAML` dependency solely
+  for offline parsing of the checked-in GitHub Pages workflow contract in
+  `devel/verify_pages_workflow.py`; it adds no network service or runtime dependency.
 - Build a backend, accounts, cloud saves, leaderboards, or analytics.
 - Build monetization of any kind: no ads, no microtransactions, no timers-for-money.
 - Add quizzes, graded assessment, or explicit teaching panels. This is not a trainer;
@@ -119,9 +122,11 @@ Cites **Design for adaptability** and **Atomic task decomposition**.
 - Use canvas rendering in the first release. The colony view is SVG plus CSS.
 - Depict identifiable real patients, or frame the satire at people who have cancer. The target of
   the joke is the cell's relentless optimization.
-- Run `git commit` or `git push`. Repo rule reserves those for the human. The plan's terminal
-  state is a staged, validated candidate with a drafted commit message, reached without waiting
-  on anyone.
+- Complete repository-history and remote-distribution operations. The plan completes at a validated
+  **working-tree release candidate** with `dist/`, captured artifacts, a read-only candidate
+  manifest, a workflow-contract result, and an independent agent audit verdict. A later
+  repository-maintainer workflow can add history and hosting evidence under the repository's Git
+  ownership rules; those operations do not alter milestone completion.
 - Add breadth during implementation. Achievements, audio, a fifth prestige layer, a fifteenth
   hallmark, a thirteenth stage, a backend, or a second renderer are all excluded from this
   release. This is a scope **freeze**, not a scope ceiling: the plan already carries enough
@@ -145,9 +150,11 @@ Cites **Design for adaptability** and **Atomic task decomposition**.
   and `node --import tsx --test tests/test_*.mjs`.
 - `docs/REPO_STYLE.md` requires generated output directories at the **repo root** with a
   root-scoped `/output*/` ignore rule. A nested `tests/e2e/output/` would be tracked and would
-  violate that rule, so the balance laboratory writes to `output_balance/` at the root.
+  violate that rule, so the balance laboratory writes to `output_balance/` and visual calibration
+  writes to `output_visual/` at the root.
 - Binding repo rules: files under 1000 physical lines, ASCII-only source, tabs for indentation,
-  `git mv` for renames, agents update `docs/CHANGELOG.md` and never commit.
+  `git mv` for renames, agents update `docs/CHANGELOG.md`, and the repository-maintainer workflow
+  owns commits.
 - `svg-creator-expert` carries a local book corpus used by the art lane. Its
   `LOCAL_SERVIER_SVG_FILE_PATHS.txt` asset inventory is **not present on this machine**; the plan
   assumes none of it.
@@ -219,7 +226,7 @@ src/
                            depth strata, invasive fronts, focal regions
     colony.ts              renders a layout into SVG (no layout decisions)
     defs.ts                shared <defs>: gradients, filters, masks, motifs
-    describe.ts            stage-aware <title>/<desc>
+    describe.ts            stage-aware `#colony-a11y-description` content
     icons.ts               hallmark and producer glyphs
   content/
     copy.ts                stage, hallmark, milestone strings
@@ -247,32 +254,32 @@ pauses the agent, routes to `typescript-engineer`, and resumes after the stub la
 
 ## Milestone plan
 
-Twenty-two milestones. Each reaches green independently. No milestone waits on a human.
+Twenty-two milestones. Each reaches green independently through manager-complete evidence.
 
-| M   | Title                           | Summary                                                  | Goal                                                     |
-| --- | ------------------------------- | -------------------------------------------------------- | -------------------------------------------------------- |
-| M1  | Contracts and slice probe       | Types plus five compile-only vertical slices             | Contracts exist and are provisionally sufficient         |
-| M2  | Progression design              | `docs/PROGRESSION_DESIGN.md` for all 14 hallmarks        | Distinctness specified before anything depends on it     |
-| M3  | Numbers                         | BigNum over a derived operation set, illion names        | Economy math proven, not just formatting                 |
-| M4  | State and persistence           | Canonical state, event funnel, versioned save            | Save round-trips and migrates                            |
-| M5  | Offline semantics               | One documented model, implemented and tested             | Away time matches live time within tolerance             |
-| M6  | Economy and tick                | Producers, costs, bulk buy, frame integration            | Numbers go up correctly                                  |
-| M7  | Minimal playable                | Click, buy, idle, reload, offline report                 | Genre-complete idle game, one stage                      |
-| M8  | Contract freeze                 | Evidence review of `src/types/*` after real use          | Contracts frozen on evidence                             |
-| M9  | Stage ladder                    | 12 stages, gates, transitions, UI modes                  | Full arc traversable in simulation                       |
-| M10 | Hallmarks, core six             | Six 2000-era branches                                    | Six distinct mechanics live                              |
-| M11 | Hallmarks, 2011 four            | Metabolism, immune evasion, inflammation, instability    | ATP resource live                                        |
-| M12 | Hallmarks, 2022 four            | Plasticity, epigenetics, microbiome, senescence          | Tree complete at 14                                      |
-| M13 | Prestige and interaction design | `docs/PRESTIGE_DESIGN.md`, `docs/SYSTEM_INTERACTIONS.md` | Four systems that reach into each other, not four resets |
-| M14 | Prestige layers 1 and 2         | Metastasis seeding, host draft                           | Reset scopes verified by unit test                       |
-| M15 | Prestige layers 3 and 4         | Immortalization tree, contamination network              | Endless scaling confirmed                                |
-| M16 | Morphology reference            | `docs/MORPHOLOGY_REFERENCE.md` plus noise and grammar    | Biology mapped before drawing                            |
-| M17 | Colony layout subsystem         | `colony_layout.ts`: macro composition                    | Stage reads correctly with cell detail suppressed        |
-| M18 | Cell rendering and defs         | `cell.ts`, `blob.ts`, `defs.ts`, `describe.ts`, icons    | Cells unique, same-stage family recognizable             |
-| M19 | Soft ending                     | Trigger, sequence, scale reframing, continuation         | The payoff is a system, not a text screen                |
-| M20 | Deterministic replay            | Record and replay over the event funnel                  | Any bug or balance finding reproduces exactly            |
-| M21 | Balance laboratory              | Five strategy bots, machine-readable report, tuning      | Pacing decided on evidence across play styles            |
-| M22 | Release evidence package        | `docs/RELEASE_EVIDENCE.md`, staged candidate             | One compact artifact a human approves from               |
+| M   | Title                              | Summary                                                  | Goal                                                     |
+| --- | ---------------------------------- | -------------------------------------------------------- | -------------------------------------------------------- |
+| M1  | Contracts and slice probe          | Types plus five compile-only vertical slices             | Contracts exist and are provisionally sufficient         |
+| M2  | Progression design                 | `docs/PROGRESSION_DESIGN.md` for all 14 hallmarks        | Distinctness specified before anything depends on it     |
+| M3  | Numbers                            | BigNum over a derived operation set, illion names        | Economy math proven, not just formatting                 |
+| M4  | State and persistence              | Canonical state, event funnel, versioned save            | Save round-trips and migrates                            |
+| M5  | Offline semantics                  | One documented model, implemented and tested             | Away time matches live time within tolerance             |
+| M6  | Economy and tick                   | Producers, costs, bulk buy, frame integration            | Numbers go up correctly                                  |
+| M7  | Minimal playable                   | Click, buy, idle, reload, offline report                 | Genre-complete idle game, one stage                      |
+| M8  | Contract freeze                    | Evidence review of `src/types/*` after real use          | Contracts frozen on evidence                             |
+| M9  | Stage ladder                       | 12 stages, gates, transitions, UI modes                  | Full arc traversable in simulation                       |
+| M10 | Hallmarks, core six                | Six 2000-era branches                                    | Six distinct mechanics live                              |
+| M11 | Hallmarks, 2011 four               | Metabolism, immune evasion, inflammation, instability    | ATP resource live                                        |
+| M12 | Hallmarks, 2022 four               | Plasticity, epigenetics, microbiome, senescence          | Tree complete at 14                                      |
+| M13 | Prestige and interaction design    | `docs/PRESTIGE_DESIGN.md`, `docs/SYSTEM_INTERACTIONS.md` | Four systems that reach into each other, not four resets |
+| M14 | Prestige layers 1 and 2            | Metastasis seeding, host draft                           | Reset scopes verified by unit test                       |
+| M15 | Prestige layers 3 and 4            | Immortalization tree, contamination network              | Endless scaling confirmed                                |
+| M16 | Morphology reference               | `docs/MORPHOLOGY_REFERENCE.md` plus noise and grammar    | Biology mapped before drawing                            |
+| M17 | Colony layout subsystem            | `colony_layout.ts`: macro composition                    | Stage reads correctly with cell detail suppressed        |
+| M18 | Cell rendering and defs            | `cell.ts`, `blob.ts`, `defs.ts`, `describe.ts`, icons    | Cells unique, same-stage family recognizable             |
+| M19 | Soft ending                        | Trigger, sequence, scale reframing, continuation         | The payoff is a system, not a text screen                |
+| M20 | Deterministic replay               | Record and replay over the event funnel                  | Any bug or balance finding reproduces exactly            |
+| M21 | Balance laboratory                 | Five strategy bots, machine-readable report, tuning      | Pacing decided on evidence across play styles            |
+| M22 | Autonomous release-evidence record | `docs/RELEASE_EVIDENCE.md`, validated candidate          | Every claim is reproducible and independently reviewed   |
 
 ### Milestone: M1 contracts and slice probe
 
@@ -380,7 +387,7 @@ Twenty-two milestones. Each reaches green independently. No milestone waits on a
 - Entry criteria: M5 exit met.
 - Exit criteria: eight stage-1 producers; cost curves as data; bulk buy of 1, 10, 100, and max
   agree with hand-computed values; tick integration is delta-time correct under an irregular
-  injected clock. Tests never sleep.
+  injected clock. Tests advance that clock deterministically.
 - Parallel-plan ready: yes.
 
 ### Milestone: M7 minimal playable
@@ -761,9 +768,17 @@ Twenty-two milestones. Each reaches green independently. No milestone waits on a
   strata, invasive fronts, and focal regions, and produces a data structure that carries no
   drawing. Its public request/result boundary is data-only and immutable; internal passes may
   evolve while preserving finite geometry, declared containment, clearance, and occlusion. The
-  decisive test: contact sheets rendered with all
-  internal cell detail suppressed remain stage-distinguishable. If the stages only differ once
-  cells are drawn, the layout layer is not carrying its weight.
+  decisive one-time acceptance evidence is a deterministic suppressed-detail contact sheet at
+  `output_visual/colony-contact-sheet/`. Its
+  manifest records declared stages, seeds, viewports, themes, panel and figure fit,
+  `#colony-a11y-description` presence, finite boxes, and overflow; a fresh independent agent
+  applies the written rubric to determine stage distinction. The contact-sheet reproduction command
+  is `node --import tsx tools/colony_contact_sheet.mjs`; it clears only that exact subdirectory
+  before regeneration. `node --import tsx tools/verify_colony_rendering.mjs` similarly owns
+  `output_visual/colony-rendering-verification/report.json` and clears only its exact
+  subdirectory. A dated optional renderer calibration may
+  record node, path, and performance observations for art tuning; it carries no release threshold.
+  If the stages only differ once cells are drawn, the layout layer is not carrying its weight.
 - Permanent geometry evidence proves finite values, immutable inputs/outputs, declared
   containment and clearance, deterministic result for the same request, meaningful seed
   variation, and no renderer-owned layout decision. A one-time calibration sweep records
@@ -772,7 +787,10 @@ Twenty-two milestones. Each reaches green independently. No milestone waits on a
 - M18 handoff: M17 delivers slot geometry and a suppressed-detail serialization only. M18 consumes
   it at 320x224, 560x392, and 1000x700, owns actual inline SVG/DOM rendering and accessibility,
   and validates figure fit, accessibility, and readable composition. Neither milestone uses pixel
-  equivalence as an acceptance substitute.
+  equivalence as an acceptance substitute. The dated M17 review records source revision, exact
+  commands and capture inputs, the fixed rubric, per-criterion verdicts, evidence paths,
+  remediation status, and a final verdict; geometry and determinism remain permanent behavior
+  checks while this visual calibration remains one-time evidence.
 - Parallel-plan ready: no. This is the shared upstream for M18.
 
 ### Milestone: M18 cell rendering and defs
@@ -824,8 +842,13 @@ Twenty-two milestones. Each reaches green independently. No milestone waits on a
   accessible tooltips, and specimen drawer; I.10 adds the durable
   `tests/playwright/test_colony_interaction.mjs` player journey. The image-evaluation lane records
   initial, perfused, late-game, and compact reduced-motion evidence after the production build is
-  available. Screenshot review judges focal hierarchy, game feel, and biological legibility rather
-  than pixel equivalence.
+  available. A fresh agent applies the captured-state visual rubric to the production-built
+  screenshots: arena dominance, direct-cell affordance, visible progression, icon-first utility
+  language, copy contained in tooltips or the specimen drawer, absence of a document-panel layout,
+  and reduced-motion legibility. The review records its deterministic routes, fixed seeds,
+  1280x800 and compact frames, criterion verdicts, and remediation status. It is dated one-time
+  acceptance evidence, while the durable Playwright interaction and accessibility contracts remain
+  permanent tests.
 - Parallel-plan ready: yes, after `colony.ts` lands.
 
 ### Milestone: M19 soft ending
@@ -872,34 +895,49 @@ Twenty-two milestones. Each reaches green independently. No milestone waits on a
   `output_balance/balance_report.json` plus a human-readable summary in `docs/BALANCE.md`; the
   report publishes assumptions, curve version, observed pacing, dead actions, dominant actions,
   reachable gates, and L4 decision-surface observations. Each stage, hallmark, and prestige review
-  links its reachable decision witness. The design owner selects or revises a curve from that
-  evidence; bot ranks and elapsed time inform review rather than becoming CI pass/fail targets.
+  links its reachable decision witness. The report records an explicit candidate-selection result:
+  inputs, the current shipped candidate, observed flags, demonstrated blocking findings, selection,
+  rationale, and remediation status. A bounded policy nonselection, an aggregate tie, or a later
+  tier absent from an earlier witness remains a calibration observation. A finding becomes blocking
+  when its trace demonstrates degeneracy inside that witness's named decision surface, or when the
+  scenario never reaches the surface named by its question. The manager selects a candidate only
+  when its report has no demonstrated blocking findings; when several candidates qualify, select
+  the candidate with the greatest count of still-divergent declared strategies, then the
+  lexicographically first curve identifier. A withheld selection dispatches one bounded redesign of
+  the implicated curve or scenario input and a fresh report before the next selection. Bot ranks
+  and elapsed observations inform calibration rather than becoming CI pass/fail targets.
   `output_balance/` is root-scoped per `docs/REPO_STYLE.md` and covered by the `/output*/` ignore
   rule.
 - Parallel-plan ready: no. Tuning is one measurement loop; parallel curve edits conflict.
 
-### Milestone: M22 release evidence package
+### Milestone: M22 autonomous release-evidence record
 
 - Depends on: M21, and M18 for the art artifacts.
-- Deliverables: `docs/RELEASE_EVIDENCE.md`; `.github/workflows/deploy-pages.yml` installed;
-  captured artifacts; drafted changelog and commit message; human-ready worktree and file manifest.
-- Workstreams: I assembles the evidence package and exact handoff manifest; the human owner reviews
-  the candidate and owns index and commit actions.
+- Deliverables: `docs/RELEASE_EVIDENCE.md`; `.github/workflows/deploy-pages.yml` and the local
+  workflow-contract result from `devel/verify_pages_workflow.py`; a read-only candidate manifest;
+  `dist/`; captured artifacts; and `docs/active_plans/reports/release_audit.md`.
+- Workstreams: an evidence integrator assembles the closeout record and candidate manifest; a fresh
+  independent audit agent verifies it against the captured evidence and writes the final verdict.
 - Entry criteria: every prior milestone green.
 - Exit criteria: `docs/RELEASE_EVIDENCE.md` contains, in one place: every gate result with its
   command, exit status, relevant tool version, concise behavior summary, and artifact link;
   balance observations for all five bots; screenshots and the art
-  contact sheet; current-save boundary evidence; accessibility output (contrast measurements, reduced
-  motion, the colony's `<title>`/`<desc>` text); SVG node-count and framerate measurements; the
-  copy-guard and copy-review verdicts; and a written known-limitations section.
+  contact sheet; current-save boundary evidence; accessibility output (contrast measurements,
+  `#colony-a11y-description` coverage, geometry and horizontal-overflow results, and reduced-motion
+  evidence); the copy-guard and copy-review verdicts; the read-only candidate manifest; the local
+  workflow-contract result; and a written known-limitations section. A dated optional one-time
+  renderer calibration may record node, path, and performance observations with its source revision,
+  capture inputs, and conclusion; those observations guide renderer evolution and set no M22 release
+  threshold.
   It also opens with a **progression narrative**, because this project is design-heavy and gate
   evidence alone cannot show whether the intended experience exists:
   `single transformed cell -> early tumor -> carcinoma in situ -> invasion -> first metastasis ->
 host death -> immortalized culture -> global contamination -> Chicago ending -> continued play`.
   Each transition links its captured screenshot, its dominant mechanic, and the automated result
-  that proves it is reachable. The document should demonstrate the game, not only the correctness
-  of the repository. The human approves a finished candidate from this one document rather than
-  reconstructing confidence from scattered logs.
+  that proves it is reachable. The document demonstrates the game as well as repository
+  correctness. M22 closes when its exact command results are green and the fresh independent audit
+  has a `PASS` final verdict with every required criterion resolved; the manager can regenerate the
+  record while the owner is away.
 - Parallel-plan ready: yes. Artifact capture parallelizes by artifact.
 
 ## Workstream breakdown
@@ -946,7 +984,7 @@ host death -> immortalized culture -> global contamination -> Chicago ending -> 
   `tick.ts` with injectable clock; WP-C.4 M21 curve tuning as data edits.
 - Needs: A, B.
 - Provides: rates to D, E, F, I.
-- Review boundary: pure functions, no DOM, clock as a parameter so tests never sleep.
+- Review boundary: pure functions, no DOM, and an injected clock that tests advance deterministically.
 
 ### Workstream: D hallmarks and stages
 
@@ -1123,7 +1161,7 @@ regardless, since the build copies no asset directory.
 
 ## Automated tone and safety guard
 
-Copy review was the plan's last human gate. It is replaced by three automated layers.
+Copy review closes through three agent-executable layers.
 
 - `tests/test_copy_guard.mjs`: ASCII-only; a banned-phrase list covering slurs, mockery of
   patients, and treatment misinformation; a required-framing check that second-person address in
@@ -1136,8 +1174,9 @@ Copy review was the plan's last human gate. It is replaced by three automated la
 - A boundary statement in `docs/DESIGN_DECISIONS.md` that both layers cite, so the criteria are
   versioned rather than remembered.
 
-The human still reads the copy before release, as an approver of a finished candidate rather than
-a gate the build waits on.
+The automated guard and independent checklist close the copy boundary for this plan. A later
+repository-maintainer workflow may read completed copy as optional distribution orientation; that
+reading does not change the milestone state.
 
 ## Acceptance criteria and gates
 
@@ -1153,6 +1192,26 @@ a gate the build waits on.
 - Independent review gate: `reviewer` for the M8 contract freeze and the copy pass;
   `image_evaluator` for the M18 contact sheet; `audit-code-reviewer` before M22.
 
+### Standard agent-review artifact
+
+Every independent review named by this plan writes a dated Markdown report under
+`docs/active_plans/reports/`. The report uses this schema so an unattended manager has a decidable
+closeout record:
+
+| Field              | Required content                                                                                       |
+| ------------------ | ------------------------------------------------------------------------------------------------------ |
+| Scope and revision | Milestone or artifact scope and the source revision or working-tree manifest identity reviewed         |
+| Exact inputs       | Commands, deterministic routes, fixture/state-builder inputs, fixed seeds, viewport, and tool versions |
+| Criteria           | Written criterion checklist, including the relevant milestone exit criteria                            |
+| Evidence paths     | Paths to command logs, JSON reports, screenshots, contact sheets, traces, and generated artifacts      |
+| Criterion verdicts | `PASS`, `FAIL`, or `NOT_APPLICABLE` for every criterion, with concise evidence references              |
+| Remediation status | Each finding's owner, bounded follow-up, and resolved or open state                                    |
+| Final verdict      | `PASS` only when every required criterion passes and remediation is resolved; otherwise `FAIL`         |
+
+M8, M17, M18, the copy review, M21, and M22 use this schema. A reviewer may capture one-time
+calibration evidence without converting its measured values into a permanent pixel, byte, or timing
+test.
+
 ## Test and verification strategy
 
 Three evidence classes keep durable contracts strong and calibration flexible. Each new test must
@@ -1164,7 +1223,8 @@ refactor. Tests use inline inputs or a local builder; regular tests run offline.
   invariants, normalized save/replay semantics, registered-event coverage, reset-policy semantics,
   direct hallmark outcomes, atomicity, and declared geometry containment/clearance. Built-output
   Playwright protects visible cell activation, keyboard access, figure fit at 1280 x 800 and compact
-  supported sizes, reduced motion, reload/offline behavior, and accessible description. Canonical
+  supported sizes, reduced motion, reload/offline behavior, and the `#colony-a11y-description`
+  contract. Canonical
   commands are `./check_codebase.sh`, `./build_github_pages.sh`, and
   `./run_playwright_tests.sh` as the change requires.
 - **One-time calibration** (`tools/`, `output_*/`, session evidence): `tools/balance_sim.mjs`,
@@ -1176,18 +1236,20 @@ refactor. Tests use inline inputs or a local builder; regular tests run offline.
   system carries a decision witness with reachable state, alternatives, observed tradeoff, and its
   design rationale. Provenance is required where biology creates a visible consequence; a declared
   absence has a rationale. Independent review traces the claim to the actual behavior.
-- **Repo hygiene** (`source source_me.sh && python3 -m pytest tests/`): shipped Python checks keep
-  ASCII, indentation, source-size, Markdown-link, and vendored-header rules healthy.
+- **Candidate repo hygiene** (`source source_me.sh && python3 devel/verify_candidate.py`): the
+  disposable candidate projection runs the full `pytest tests/` suite while preserving the real Git
+  index, and keeps ASCII, indentation, source-size, Markdown-link, and vendored-header rules
+  healthy.
 
 ### Evidence task dispatch
 
-| Task                            | Owner                           | Target artifact                                                                   | Success criterion                                                                                                                                | Canonical command                                                                                         |
-| ------------------------------- | ------------------------------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------- |
-| Offline model calibration       | State owner with reviewer       | `docs/GAME_DESIGN.md` and dated offline report                                    | Exact segments preserve normalized durable outcomes; any display approximation has a named measured envelope                                     | `./check_codebase.sh` plus focused offline Node test and production-dist scenario                         |
-| Geometry and render calibration | SVG creator and image evaluator | `tools/colony_contact_sheet.mjs` and dated visual report                          | Contact sheet covers registered stages, representative seeds, supported sizes, themes, and reduced motion; review traces visible fit and biology | `./build_github_pages.sh`, `./run_playwright_tests.sh`, contact-sheet command                             |
-| Balance design review           | Balance owner with planner      | `tools/balance_sim.mjs`, `output_balance/balance_report.json`, `docs/BALANCE.md`  | Report links strategies to decision witnesses and identifies dead actions, dominance, gates, and L4 renewal                                      | `node tools/balance_sim.mjs`                                                                              |
-| Release evidence                | Integrator and docs owner       | `docs/RELEASE_EVIDENCE.md`                                                        | Each release claim has command, status, behavior summary, relevant version, and artifact link                                                    | `./check_codebase.sh`, `./build_github_pages.sh`, `./run_playwright_tests.sh`, `source source_me.sh && python3 -m pytest tests/` |
-| Durable naming migration        | Maintainer with tester review   | domain-named `src/`, `tests/`, and `tools/` paths plus `docs/DESIGN_DECISIONS.md` | Implementation milestone labels leave durable paths; valid schema-version and scientific identifiers remain                                      | `./check_codebase.sh`, `./build_github_pages.sh`, applicable `./run_playwright_tests.sh`, `pytest tests/` |
+| Task                            | Owner                           | Target artifact                                                                   | Success criterion                                                                                                                                | Canonical command                                                                                                                                    |
+| ------------------------------- | ------------------------------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Offline model calibration       | State owner with reviewer       | `docs/GAME_DESIGN.md` and dated offline report                                    | Exact segments preserve normalized durable outcomes; any display approximation has a named measured envelope                                     | `./check_codebase.sh` plus focused offline Node test and production-dist scenario                                                                    |
+| Geometry and render calibration | SVG creator and image evaluator | `tools/colony_contact_sheet.mjs` and dated visual report                          | Contact sheet covers registered stages, representative seeds, supported sizes, themes, and reduced motion; review traces visible fit and biology | `./build_github_pages.sh`, `./run_playwright_tests.sh`, `node --import tsx tools/colony_contact_sheet.mjs`                                           |
+| Balance design review           | Balance owner with planner      | `tools/balance_sim.mjs`, `output_balance/balance_report.json`, `docs/BALANCE.md`  | Report links strategies to decision witnesses and identifies dead actions, dominance, gates, and L4 renewal                                      | `node --import tsx tools/balance_sim.mjs --suite --output output_balance/balance_report.json`                                                        |
+| Release evidence                | Integrator and docs owner       | `docs/RELEASE_EVIDENCE.md`                                                        | Each release claim has command, status, behavior summary, relevant version, and artifact link                                                    | `./check_codebase.sh`, `./build_github_pages.sh`, `./run_playwright_tests.sh`, `source source_me.sh && python3 devel/verify_candidate.py`            |
+| Durable naming migration        | Maintainer with tester review   | domain-named `src/`, `tests/`, and `tools/` paths plus `docs/DESIGN_DECISIONS.md` | Implementation milestone labels leave durable paths; valid schema-version and scientific identifiers remain                                      | `./check_codebase.sh`, `./build_github_pages.sh`, applicable `./run_playwright_tests.sh`, `source source_me.sh && python3 devel/verify_candidate.py` |
 
 ### Simulator player-strategy model
 
@@ -1269,7 +1331,7 @@ with a documented tradeoff, including after the ending and through L4 renewal.
 | Colony reads as uniform noise                       | Art effort produces an unreadable field                                  | Cells generated before composition                     | G            | `colony_layout.ts` split makes layout-first structural; suppressed-detail test                                     |
 | Art invents plausible-looking but wrong biology     | Loses the science-accurate premise                                       | Generator tuned by eye alone                           | G            | `docs/MORPHOLOGY_REFERENCE.md` gates all drawing code; every visual change cites a row                             |
 | Cells unique but visually unrelated                 | The colony looks like a sticker sheet                                    | Per-cell parameters drawn independently                | G            | Family-coherence metric: within-stage variance bounded, between-stage separation required                          |
-| SVG node count tanks framerate                      | Colony stutters late game                                                | Cell count exceeds a few thousand nodes                | G            | Representative sampling, `<defs>` reuse, CSS-class styling, explicit node budget                                   |
+| Renderer detail obscures the playable colony        | Late-game cells lose readable interaction                                | Cell detail outgrows the visible arena                 | G            | Representative sampling, `<defs>` reuse, CSS-class styling, and dated optional renderer calibration                |
 | Systems are individually strong but do not interact | A pile of good subsystems, no emergent game                              | Each lane validated only against itself                | J, D, E      | `docs/SYSTEM_INTERACTIONS.md` at M13; M21 checks prestige changes which hallmarks are attractive                   |
 | Hallmark tree is a menu, not a tree                 | Player ranks 14 branches independently and always buys in the same order | No specified synergies or tensions                     | D            | M2 requires named synergies, tensions, and direct decision witnesses                                               |
 | Stages are reskins                                  | The clearest progression signal carries no gameplay                      | Stage spec is visual only                              | D, J         | M2 assigns each stage a gameplay identity and decision witness                                                     |
@@ -1279,41 +1341,68 @@ with a documented tradeoff, including after the ending and through L4 renewal.
 | Tuning to the bots                                  | Mechanics optimized for the simulator, experimentation stripped out      | One correct build per situation is treated as the goal | I, J         | Bots report degeneracy; near-optimal ties are left alone                                                           |
 | The ending is a text screen                         | The payoff undersells the whole game                                     | Ending treated as copy                                 | E, J         | M19 specifies it as a system with its own milestone and validation                                                 |
 | Tone lands wrong                                    | Satire reads as mocking patients                                         | Copy drifts toward the disease rather than the cell    | H            | Automated copy guard plus `reviewer` checklist; versioned boundary statement                                       |
-| A milestone stalls waiting on a person              | The plan cannot finish overnight                                         | Any gate phrased as human judgment                     | Orchestrator | Every gate is a command, a metric, or an agent review with written criteria                                        |
+| Manager-complete evidence is incomplete             | The plan lacks an unattended completion path                             | A required claim lacks a command, artifact, or rubric  | Orchestrator | Every gate is a command, a metric, or an agent review with written criteria                                        |
 
 ## Rollout and release checklist
 
-Every item is executable by the manager or a subagent.
+### Manager-complete candidate evidence
 
-- [ ] `./check_codebase.sh` passes with zero warnings.
-- [ ] `pytest tests/` passes, including ASCII, indentation, line-limit, and markdown-link checks.
-- [ ] `./run_playwright_tests.sh` passes, full playthrough included.
-- [ ] `./build_github_pages.sh` produces `dist/` with `index.html`, `main.js`, `.nojekyll`.
-- [ ] `.github/workflows/deploy-pages.yml` installed from the shipped `deploy-pages.yml`.
-- [ ] `output_balance/balance_report.json` written; `docs/BALANCE.md` summarizes all five bots.
-- [ ] Prestige decision witnesses and balance review are recorded in `docs/BALANCE.md`.
-- [ ] Visual metrics battery green; contact sheet and `image_evaluator` verdict captured.
-- [ ] Replay trace reaches an equivalent normalized durable state, equivalent event outcomes, and
+Every item is executable by the manager or a subagent and is required for M22 closure.
+
+- [x] `./check_codebase.sh` passes with zero warnings.
+- [x] `source source_me.sh && python3 devel/verify_candidate.py` runs the full `pytest tests/`
+      suite through a disposable candidate projection, including ASCII, indentation, line-limit,
+      and Markdown-link checks, while preserving the real Git index.
+- [x] `./run_playwright_tests.sh --build --workers=1` passes, full playthrough included.
+- [x] `./build_github_pages.sh` produces `dist/` with `index.html`, `main.js`, `.nojekyll`.
+- [x] `source source_me.sh && python3 devel/verify_pages_workflow.py` validates the checked-in
+      Pages workflow contract, matching `deploy-pages.yml`, its canonical build step, and its
+      `dist/` upload projection.
+- [x] `output_balance/balance_report.json` written; `docs/BALANCE.md` summarizes all five bots.
+- [x] Prestige decision witnesses and balance review are recorded in `docs/BALANCE.md`.
+- [x] Visual metrics battery green; contact sheet at `output_visual/colony-contact-sheet/`,
+      renderer report at `output_visual/colony-rendering-verification/report.json`, and
+      `image_evaluator` verdict captured.
+- [x] Replay trace reaches an equivalent normalized durable state, equivalent event outcomes, and
       equivalent visible progression.
-- [ ] Copy guard green; `docs/active_plans/reports/copy_review.md` captured.
-- [ ] Screenshots captured at every stage, both ending states, and each prestige transition.
-- [ ] A pre-release fixture save loads under the release build.
-- [ ] `README.md` first paragraph written as GitHub About text, under 250 characters, pure prose.
-- [ ] `VERSION` and `package.json` version synchronized in CalVer.
-- [ ] `docs/CHANGELOG.md` updated; commit message drafted via `devel/commit_changelog.py`; changes
-      staged.
-- [ ] `docs/RELEASE_EVIDENCE.md` assembled and complete, including known limitations.
+- [x] Copy guard green; `docs/active_plans/reports/copy_review.md` captured.
+- [x] `node --import tsx tools/colony_contact_sheet.mjs` captures every registered stage across its
+      declared seeds,
+      viewports, and themes; the fixed-clock seven-frame capture covers opening,
+      hypoxic/necrotic, perfused, invasive, culture, network, and Chicago-continuation states.
+      Production Playwright owns transition behavior.
+- [x] A schema-current legal save generated through the canonical state builder and serializer
+      loads through the production build and proves its durable visible projection.
+- [x] `README.md` first paragraph written as GitHub About text, under 250 characters, pure prose.
+- [x] Zero-padded CalVer in `VERSION` and npm-compatible SemVer normalization in `package.json`
+      represent the same `26.08.0` release (`26.08.0` and `26.8.0`, respectively).
+- [x] `docs/CHANGELOG.md` updated; its candidate changes pass a read-only manifest and whitespace
+      check while the repository-maintainer workflow retains Git index ownership.
+- [x] `docs/RELEASE_EVIDENCE.md` and `docs/active_plans/reports/release_audit.md` use the standard
+      review schema and record a `PASS` final verdict.
 
-The final `git commit` and the deploy trigger remain the human's, by repo rule. That is approval
-of a finished candidate, not a gate the build waits on. If the human is asleep, the plan still
-reaches its terminal state.
+### Optional post-plan repository history and distribution
+
+These later operations preserve repository history or publish a completed candidate. They have no
+effect on milestone state, M22, or the autonomous release-evidence verdict.
+
+- A later repository-maintainer workflow may review the working tree, create repository history,
+  and publish the chosen candidate under the repository's Git ownership rules.
+- A remote Pages workflow may run after publication, and a live-site inspection may be captured as
+  supplemental distribution evidence.
+- A changelog-derived commit message may be prepared for that later repository-history operation.
+
+The manager records the working-tree candidate before these optional actions and reaches the same
+terminal state with the same evidence package while the owner is away.
 
 ## Documentation close-out requirements
 
 - Active plan / progress tracker: retain this authoritative plan at
   `docs/active_plans/implementation_plan.md`; the root `implementation_plan.md` symlink points to
-  it. Update `docs/active_plans/active/cancer_clicker_build_plan.md` as milestones close; archive
-  the execution ledger when M22 closes.
+  it. Update `docs/active_plans/active/cancer_clicker_build_plan.md` as milestones close and
+  record terminal `Complete` when M22 closes. A later repository-maintainer workflow may archive
+  the completed ledger as repository-history maintenance; archival does not alter the milestone
+  state or autonomous closeout verdict.
 - `docs/CHANGELOG.md`: one entry per milestone under the standard subsection headings, including
   `### Decisions and Failures` for approaches measured and rejected.
 - New durable docs: `docs/GAME_DESIGN.md` (stages, currencies, offline model, ending),
@@ -1323,8 +1412,11 @@ reaches its terminal state.
   `docs/MORPHOLOGY_REFERENCE.md` (biology to visual abstraction), `docs/ART_DIRECTION.md`
   (illustration technique, palette, omissions), `docs/BIGNUM_OPS.md` (operation inventory),
   `docs/BALANCE.md` (measured curves, five bots, reasoning), `docs/RELEASE_EVIDENCE.md`.
-- `docs/CODE_ARCHITECTURE.md` and `docs/FILE_STRUCTURE.md` generated by `arch-docs` at M22;
-  `README.md` by `readme-docs`.
+- The named `arch-docs` agent skill route refreshes `docs/CODE_ARCHITECTURE.md` and
+  `docs/FILE_STRUCTURE.md` at M22. The named `readme-docs` agent skill route refreshes `README.md`.
+  `docs/RELEASE_EVIDENCE.md` records each route, its output paths, and the executable candidate-aware
+  Markdown validation command `source source_me.sh && python3 devel/verify_candidate.py`; the
+  independent audit verifies those records and outputs.
 - `docs/DESIGN_DECISIONS.md` seeded with the resolved decisions below.
 
 ## Resolved decisions
@@ -1369,15 +1461,18 @@ Settled with the user; each becomes a `docs/DESIGN_DECISIONS.md` entry.
   domain may add an explicitly linked, documented, build-allowlisted stylesheet asset such as
   `src/prestige.css`; preflight/copy and production-browser proof keep it from silently dropping
   from `dist/`.
-- **Generated output at the repo root.** `output_balance/` per `docs/REPO_STYLE.md`; a nested
-  `tests/e2e/output/` would be tracked and would violate the root-scoped `/output*/` rule.
+- **Generated output at the repo root.** `output_balance/` and `output_visual/` follow
+  `docs/REPO_STYLE.md`; a nested `tests/e2e/output/` would be tracked and would violate the
+  root-scoped `/output*/` rule. Each visual tool clears and recreates only its named
+  `output_visual/` subdirectory.
 - **Durable names describe domains.** Milestone IDs remain in plans, changelog entries, and dated
   implementation evidence. Durable `src/`, `tests/`, and `tools/` paths name their enduring
   behavior or responsibility; a public schema version or scientific year remains when it carries
   domain meaning.
-- **No human in the execution path.** Every gate is a command, a metric, or an agent review with
-  written criteria. Human involvement is approval of a finished candidate via
-  `docs/RELEASE_EVIDENCE.md`.
+- **Manager-complete execution path.** Every gate is a command, a metric, or an agent review with
+  written criteria. `docs/RELEASE_EVIDENCE.md` is the autonomous closeout record: M22 ends at its
+  audited working-tree candidate, and the repository-maintainer workflow may later add
+  repository-history or distribution evidence.
 
 ## Open questions and decisions needed
 
@@ -1389,8 +1484,9 @@ None are execution-blocking. Each has an owner, an evidence rule, and a mileston
     whichever removes documented dead actions, permanent dominance, unreachable gates, or an
     exhausted decision surface while preserving the declared decision witnesses. Record the decision
     and its evidence under `### Decisions and Failures` in `docs/CHANGELOG.md`.
-- Non-blocking follow-up: whether the colony view earns a canvas renderer after M22. Decide on
-  measured framerate with SVG at the highest reachable cell count, not in advance.
+- Non-blocking follow-up: whether the colony view earns a canvas renderer after M22. A dated
+  optional renderer calibration at high reachable cell count can record node and performance
+  observations to inform that design decision; it establishes no release threshold.
 - Non-blocking follow-up: achievements. The `record_event` funnel and the replay format make this
   a later addition rather than a retrofit.
 - Non-blocking follow-up: audio. Out of scope; if added, muted by default with the preference
@@ -1398,15 +1494,15 @@ None are execution-blocking. Each has an owner, an evidence rule, and a mileston
 
 ## Notes for the implementer
 
-- Read `docs/REPO_STYLE.md` and `docs/TYPESCRIPT_STYLE.md` before the first patch. Tabs, ASCII
-  only, files under 1000 lines, `git mv` for renames, and human ownership of the Git index and
-  commits are the durable repository contract.
+- Read `docs/REPO_STYLE.md` and `docs/TYPESCRIPT_STYLE.md` before the first patch. Tabs,
+  ASCII-only source, files under 1000 lines, `git mv` for renames, and repository-maintainer
+  ownership of the Git index and commits are the durable repository contract.
 - The first patch must include a stub `.ts` under `tools/` or `tests/`, or `check_codebase.sh`
   step 2 fails with TS18003 on an empty include list.
 - `src/index.html` must contain `<script type="module" src="main.js"></script>` exactly, or the
   build warns and the page loads dead.
-- Every time-dependent system takes an injectable clock. Tests never sleep; the Playwright offline
-  check skews a fake clock rather than waiting.
+- Every time-dependent system takes an injectable clock. Tests advance the injected clock, and the
+  Playwright offline check uses a deterministic clock skew.
 - Ship debug fast-forward hooks behind a URL flag from M7 onward. The playthrough test, the balance
   laboratory, and the replay harness all depend on them, and they are what make an overnight
   unattended run possible.

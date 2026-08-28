@@ -75,7 +75,7 @@ Use the validation lane that matches the question you are asking:
 The balance simulator is a development review tool, not a player command. Its default aggregate
 run compares every tracked scenario against the five canonical policies `greedy-payback`,
 `naive-cheapest`, `hallmark-first`, `prestige-rush`, and `check-in-idle`, then writes one
-format-2 machine-readable report below the root `output_balance/` directory:
+format-3 machine-readable report below the root `output_balance/` directory:
 
 ```bash
 node --import tsx tools/balance_sim.mjs --suite \

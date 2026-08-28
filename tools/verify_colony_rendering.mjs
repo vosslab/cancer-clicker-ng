@@ -3,9 +3,11 @@
  * stage/seed corpus instead of making artistic variety and DOM budgets a fast
  * regression gate.
  */
+import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { mkdir, rm, writeFile } from "node:fs/promises";
-import { pathToFileURL } from "node:url";
+import path from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { build } from "esbuild";
 import { solidPlugin } from "esbuild-plugin-solid";
@@ -16,7 +18,17 @@ import { createInitialGameState } from "../src/state/game_state.ts";
 import { describeColonySvg } from "../src/svg/colony.tsx";
 import { createGameColonyScene } from "../src/svg/colony_visual_state.ts";
 
-const ARTIFACT_ROOT = "/private/tmp/cancer-clicker-ng.pTNth9/colony-rendering-verification";
+function repositoryRoot() {
+  const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
+  return execFileSync("git", ["rev-parse", "--show-toplevel"], {
+    cwd: scriptDirectory,
+    encoding: "utf8",
+  }).trim();
+}
+
+const REPOSITORY_ROOT = repositoryRoot();
+process.chdir(REPOSITORY_ROOT);
+const ARTIFACT_ROOT = path.join(REPOSITORY_ROOT, "output_visual", "colony-rendering-verification");
 const SSR_MODULE_PATH = `${ARTIFACT_ROOT}/colony-ssr.mjs`;
 const SEEDS = Object.freeze([17, 91, 2026]);
 
@@ -45,6 +57,7 @@ function requireFiniteSvgText(value, label) {
 
 async function renderServerScene(value) {
   await build({
+    absWorkingDir: REPOSITORY_ROOT,
     entryPoints: ["src/svg/colony.tsx"],
     bundle: true,
     format: "esm",

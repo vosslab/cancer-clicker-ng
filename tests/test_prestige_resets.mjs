@@ -55,6 +55,11 @@ test("metastasis reset preserves clocks and floor-halves hallmark levels", () =>
   assert.deepEqual(after.atp, bigNum(0, 0));
   assert.equal(after.currentStage, "transformed_cell");
   assert.equal(after.stageStartedAtMs, 100);
+  assert.deepEqual(after.lastStageTransition, {
+    from: "host_collapse",
+    to: "transformed_cell",
+    atMs: 100,
+  });
   assert.equal(after.activeTimeMs, 100);
   assert.equal(after.totalOfflineMs, 12);
   assert.deepEqual(after.regions, []);
@@ -205,6 +210,16 @@ test("host transfer clears prior host state and saves one deterministic draft", 
   assert.equal(after.hostTransfer.pendingDraft?.revealedCardIds.length, 4);
   assert.equal(after.lineageLedger.completedHostTransferCount, 1);
   assert.equal(after.lineageLedger.hostDraftSequence, 1);
+  assert.equal(after.currentStage, "transformed_cell");
+  assert.equal(after.stageStartedAtMs, 100);
+  assert.deepEqual(after.lastStageTransition, {
+    from: "host_collapse",
+    to: "transformed_cell",
+    atMs: 100,
+  });
+  const resetLoaded = parseSave(serializeGameState(after, 100));
+  assert.equal(resetLoaded.status, "loaded");
+  if (resetLoaded.status === "loaded") assert.deepEqual(resetLoaded.state, after);
   const draft = after.hostTransfer.pendingDraft;
   assert.deepEqual(after.lineageLedger.lineageBoonApplications, [
     { boonId: "extra_card_reveal", kind: "pre-draft", draftId: draft.id },

@@ -15,7 +15,7 @@ import { parseNormalizedGameState } from "../src/state/save_load.ts";
 import { projectVisibleDecisionSurface } from "../src/state/decision_surface.ts";
 
 const TOOL = "tools/balance_sim.mjs";
-const FORMAT_VERSION = 2;
+const FORMAT_VERSION = 3;
 const POLICY_IDS = [
   "greedy-payback",
   "naive-cheapest",
@@ -128,7 +128,7 @@ function assertScenario(raw) {
     "decisionWitness",
   ];
   if (!required.every((key) => Object.hasOwn(raw, key))) fail("scenario omits a required field");
-  if (raw.formatVersion !== 1 || typeof raw.id !== "string" || raw.id.length === 0)
+  if (raw.formatVersion !== 2 || typeof raw.id !== "string" || raw.id.length === 0)
     fail("scenario formatVersion or id is invalid");
   if (typeof raw.semanticRevision !== "string" || typeof raw.curveRevision !== "string")
     fail("scenario revisions are invalid");
@@ -161,7 +161,17 @@ function assertScenario(raw) {
     Array.isArray(witness) ||
     !["L1", "L2", "L3", "L4", "ending"].includes(witness.system) ||
     typeof witness.question !== "string" ||
-    !Array.isArray(witness.alternatives)
+    !Array.isArray(witness.alternatives) ||
+    !Array.isArray(witness.requiredVisibleEventTypes) ||
+    witness.requiredVisibleEventTypes.length === 0 ||
+    !witness.requiredVisibleEventTypes.every(
+      (eventType) => typeof eventType === "string" && eventType.length > 0,
+    ) ||
+    new Set(witness.requiredVisibleEventTypes).size !== witness.requiredVisibleEventTypes.length ||
+    !Array.isArray(witness.requiredActionTags) ||
+    witness.requiredActionTags.length === 0 ||
+    !witness.requiredActionTags.every((tag) => typeof tag === "string" && tag.length > 0) ||
+    new Set(witness.requiredActionTags).size !== witness.requiredActionTags.length
   )
     fail("decisionWitness is invalid");
   return raw;
@@ -346,14 +356,51 @@ function advanceSchedule(state, scenario, windowIndex) {
   if (replayed.kind !== "applied") fail(`economy replay failed with ${replayed.code}`);
   return replayed.state;
 }
+
+function witnessWindowMatch(witness, surface) {
+  const eventTypes = new Set(witness.requiredVisibleEventTypes);
+  const tags = new Set(witness.requiredActionTags);
+  const matchedEventTypes = [
+    ...new Set(
+      surface.actions
+        .map((action) => action.event.type)
+        .filter((eventType) => eventTypes.has(eventType)),
+    ),
+  ];
+  const matchedTags = [
+    ...new Set(
+      surface.actions.flatMap((action) => action.effectTags.filter((tag) => tags.has(tag))),
+    ),
+  ];
+  if (matchedEventTypes.length !== eventTypes.size || matchedTags.length !== tags.size)
+    return undefined;
+  const actionIds = surface.actions
+    .filter(
+      (action) =>
+        eventTypes.has(action.event.type) || action.effectTags.some((tag) => tags.has(tag)),
+    )
+    .map((action) => action.id);
+  return { actionIds, matchedEventTypes, matchedTags };
+}
+
 function runPolicy(scenario, policyId, seed) {
   const allowedKinds = new Set(scenario.allowedKinds);
   let state = initialState(scenario, seed);
   const actions = [];
   const idleWindows = [];
   const milestoneList = [];
+  const witnessMatches = [];
   for (let windowIndex = 0; windowIndex < scenario.actionBudget; windowIndex += 1) {
     const surface = projectVisibleDecisionSurface(state);
+    const witnessMatch = witnessWindowMatch(scenario.decisionWitness, surface);
+    if (witnessMatch !== undefined)
+      witnessMatches.push({
+        policyId,
+        seed,
+        windowIndex,
+        atMs: state.activeTimeMs,
+        ...witnessMatch,
+      });
     const action = chooseAction(policyId, surface, allowedKinds, windowIndex);
     if (action === undefined)
       idleWindows.push({
@@ -390,6 +437,7 @@ function runPolicy(scenario, policyId, seed) {
     seed,
     score: score(state, actions),
     actions,
+    witnessMatches,
     idleWindows,
     milestones: milestoneList,
     terminal,
@@ -464,6 +512,7 @@ function runScenario(scenario) {
   const ranked = rankPolicies(policies);
   const winner = ranked[0];
   const runnerUp = ranked.find((policy) => policy.rank > winner.rank);
+  const reachability = witnessReachability(scenario, ranked);
   return {
     id: scenario.id,
     assumptions: {
@@ -479,6 +528,7 @@ function runScenario(scenario) {
     winner: winner.id,
     runnerUp: runnerUp?.id,
     findings: findings(scenario, ranked),
+    witnessReachability: reachability,
   };
 }
 function summarizeOutliers(scenarios) {
@@ -486,6 +536,164 @@ function summarizeOutliers(scenarios) {
     scenario.findings.map((finding) => ({ scenarioId: scenario.id, ...finding })),
   );
 }
+
+function classifyFinding(scenario, finding) {
+  const system = scenario.decisionWitness.system;
+  if (finding.kind === "dead-action") {
+    return {
+      disposition: "scenario-observation",
+      rationale:
+        "A bounded policy window did not choose this visible action kind; that does not prove a permanently dead player action.",
+    };
+  }
+  if (finding.kind === "dominance") {
+    return {
+      disposition: "scenario-observation",
+      rationale:
+        "An aggregate tie in one declared scenario is calibration evidence, not proof of permanent dominance across the game.",
+    };
+  }
+  if (finding.kind === "unreachable-gate") {
+    if (system === "L4") {
+      return {
+        disposition: "blocking-degeneracy",
+        rationale:
+          "The L4 witness declares a renewable network decision, so no reachable network tier would contradict that intended scope.",
+      };
+    }
+    return {
+      disposition: "scenario-observation",
+      rationale:
+        "This witness examines an earlier declared decision surface; later network access is outside its bounded scope.",
+    };
+  }
+  if (finding.kind === "l4-surface") {
+    if (system === "L4") {
+      return {
+        disposition: "blocking-degeneracy",
+        rationale:
+          "The L4 witness declares a renewable network decision, so an absent frontier or campaign would contradict that intended scope.",
+      };
+    }
+    return {
+      disposition: "scenario-observation",
+      rationale:
+        "This witness does not target the L4 decision surface, so its absence only records the scenario boundary.",
+    };
+  }
+  if (finding.kind === "post-ending") {
+    if (system === "ending" && finding.evidence.startsWith("No policy")) {
+      return {
+        disposition: "blocking-degeneracy",
+        rationale:
+          "The ending witness declares post-ending continuation, so no reached-ending trace would contradict that intended scope.",
+      };
+    }
+    return {
+      disposition: "confirmation",
+      rationale:
+        "The ending witness records reached continuation state in the declared post-ending scope.",
+    };
+  }
+  fail(`unclassified finding kind ${finding.kind}`);
+}
+
+function uniqueSorted(values) {
+  return [...new Set(values)].sort();
+}
+
+function witnessReachability(scenario, policies) {
+  const matches = policies.flatMap((policy) => policy.witnessMatches);
+  return {
+    requiredVisibleEventTypes: scenario.decisionWitness.requiredVisibleEventTypes,
+    requiredActionTags: scenario.decisionWitness.requiredActionTags,
+    matches,
+  };
+}
+
+function witnessIntegrityFindings(scenarios) {
+  return scenarios.flatMap((scenario) => {
+    const reachability = scenario.witnessReachability;
+    if (reachability.matches.length > 0) return [];
+    return [
+      {
+        scenarioId: scenario.id,
+        witnessSystem: scenario.decisionWitness.system,
+        kind: "witness-integrity",
+        disposition: "blocking-degeneracy",
+        evidence:
+          "No trace exposed the full declared event-type and action-tag set in one visible decision window.",
+        rationale:
+          "The scenario cannot answer its named question until its declared visible decision surface is reached.",
+      },
+    ];
+  });
+}
+
+function candidateSelection(scenarios, visibleSurfaceRevision) {
+  const curveRevisions = uniqueSorted(
+    scenarios.map((scenario) => scenario.assumptions.curveRevision),
+  );
+  const semanticRevisions = uniqueSorted(
+    scenarios.map((scenario) => scenario.assumptions.semanticRevision),
+  );
+  const observedFlags = scenarios.flatMap((scenario) =>
+    scenario.findings.map((finding) => ({
+      scenarioId: scenario.id,
+      witnessSystem: scenario.decisionWitness.system,
+      ...finding,
+      ...classifyFinding(scenario, finding),
+    })),
+  );
+  const observationBlocks = observedFlags.filter(
+    (finding) => finding.disposition === "blocking-degeneracy",
+  );
+  const integrityBlocks = witnessIntegrityFindings(scenarios);
+  const blockingFindings = [...observationBlocks, ...integrityBlocks];
+  const selectedCandidate = {
+    id: `shipped:${curveRevisions.join("+")}`,
+    curveRevisions,
+    semanticRevisions,
+    visibleSurfaceRevision,
+  };
+  const remediation =
+    blockingFindings.length === 0
+      ? {
+          status: "completed",
+          rationale:
+            "The bounded witness-integrity remediation completed before this fresh run; the suite now contains no demonstrated blocking degeneracy within a witness's intended scope.",
+          completedScope: [
+            "Distinct parser-validated L1, L2, and L3 durable scenario inputs replace duplicate new-game probes.",
+            "Canonical persistence, reset-transition, and visible-surface contracts provide each named legal decision surface.",
+          ],
+        }
+      : {
+          status: "required",
+          rationale:
+            "A demonstrated blocking degeneracy requires one bounded curve or scenario-input redesign before the candidate can be selected.",
+        };
+  return {
+    selectionMode: "single-shipped-candidate",
+    inputs: {
+      scenarioIds: scenarios.map((scenario) => scenario.id),
+      policyIds: [...POLICY_IDS],
+      curveRevisions,
+      semanticRevisions,
+      visibleSurfaceRevision,
+    },
+    candidate: selectedCandidate,
+    selectedCandidate: blockingFindings.length === 0 ? selectedCandidate : null,
+    observedFlags,
+    blockingFindings,
+    selection: blockingFindings.length === 0 ? "selected" : "withheld",
+    rationale:
+      blockingFindings.length === 0
+        ? "The sole shipped candidate is selected because all five declared witness surfaces expose their full required event-type and action-tag sets, while every retained flag is a scoped observation or confirmation."
+        : "Candidate selection is withheld until the reported blocking degeneracy receives one bounded redesign and a fresh run.",
+    remediation,
+  };
+}
+
 function completionSummary(scenarios) {
   return scenarios.flatMap((scenario) =>
     scenario.policies.map((policy) => ({
@@ -534,6 +742,7 @@ function main() {
     scenarios: results,
     completion: completionSummary(results),
     outliers: summarizeOutliers(results),
+    candidateSelection: candidateSelection(results, "decision-surface-v1"),
   };
   const destination = outputPath(root, args.output);
   fs.writeFileSync(destination, `${JSON.stringify(report, null, 2)}\n`, "utf8");

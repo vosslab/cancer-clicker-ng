@@ -1,18 +1,316 @@
 {
-  "formatVersion": 1,
+  "formatVersion": 2,
   "semanticRevision": "p8-visible-surface-v1",
   "curveRevision": "catalog-2026-08-28",
-  "seeds": [0],
+  "seeds": [3315878642],
   "actionBudget": 12,
   "elapsedScheduleMs": [1000, 5000, 10000],
   "allowedKinds": ["divide", "producer", "hallmark", "stage", "prestige", "network", "allocation"],
   "id": "l2_portfolio_tradeoffs_v1",
   "initial": {
-    "kind": "new-game"
+    "kind": "durable-snapshot",
+    "state": {
+      "cells": {
+        "mantissa": 0,
+        "exponent": 0
+      },
+      "substrate": {
+        "mantissa": 0,
+        "exponent": 0
+      },
+      "atp": {
+        "mantissa": 0,
+        "exponent": 0
+      },
+      "producerLevels": [
+        {
+          "id": "producer",
+          "level": 0
+        },
+        {
+          "id": "cdk4",
+          "level": 0
+        },
+        {
+          "id": "myc",
+          "level": 0
+        },
+        {
+          "id": "ras",
+          "level": 0
+        },
+        {
+          "id": "telomerase",
+          "level": 0
+        },
+        {
+          "id": "egfr",
+          "level": 0
+        },
+        {
+          "id": "pi3k",
+          "level": 0
+        },
+        {
+          "id": "replication_fork",
+          "level": 0
+        }
+      ],
+      "hallmarkLevels": [
+        {
+          "id": "proliferative_signaling",
+          "level": 0
+        },
+        {
+          "id": "growth_suppressor_evasion",
+          "level": 0
+        },
+        {
+          "id": "cell_death_resistance",
+          "level": 0
+        },
+        {
+          "id": "replicative_immortality",
+          "level": 0
+        },
+        {
+          "id": "angiogenesis",
+          "level": 0
+        },
+        {
+          "id": "invasion_metastasis",
+          "level": 0
+        },
+        {
+          "id": "metabolic_deregulation",
+          "level": 0
+        },
+        {
+          "id": "immune_destruction_avoidance",
+          "level": 0
+        },
+        {
+          "id": "tumor_promoting_inflammation",
+          "level": 0
+        },
+        {
+          "id": "genome_instability_mutation",
+          "level": 0
+        },
+        {
+          "id": "phenotypic_plasticity",
+          "level": 0
+        },
+        {
+          "id": "epigenetic_reprogramming",
+          "level": 0
+        },
+        {
+          "id": "polymorphic_microbiomes",
+          "level": 0
+        },
+        {
+          "id": "senescent_cells",
+          "level": 0
+        }
+      ],
+      "currentStage": "transformed_cell",
+      "stageStartedAtMs": 100,
+      "activeTimeMs": 100,
+      "pendingProgression": [],
+      "stageProgress": 0,
+      "stageGateProgress": {},
+      "oxygenPressure": 0,
+      "damagePressure": 0,
+      "immunePressure": 0,
+      "contactPressure": 0,
+      "nutrientPressure": 0,
+      "signalingAllocation": "burst",
+      "manualDivisionCharge": 0,
+      "cycleFillRate": 0,
+      "bypassedCheckpoints": [],
+      "survivalCapacity": 0,
+      "regions": [],
+      "telomereReserveByRegion": {},
+      "telomeraseCharges": 0,
+      "reserveFloor": 0,
+      "vesselMaintenanceAtp": 0,
+      "committedCellCommitments": {},
+      "routeRiskById": {},
+      "seededSites": [],
+      "atpBudget": {},
+      "atpSinks": [],
+      "immuneVisibilityByRegion": {},
+      "concealmentTokens": 0,
+      "maskedRegions": [],
+      "inflammationEpisodes": [],
+      "regionalInflammation": {},
+      "routeDiscoveryProgress": 0,
+      "mutationOffers": [],
+      "chosenMutations": [],
+      "mutationLiabilities": [],
+      "genomeBurden": 0,
+      "lateHallmarks": {
+        "plasticity": {
+          "switchCooldownByRegion": {}
+        },
+        "epigenetic": {
+          "assignments": [],
+          "cooldownDeadlineMs": null
+        },
+        "microbiome": {
+          "activeComposition": null,
+          "pendingOffer": null,
+          "nextRotationDeadlineMs": null,
+          "rotationSequence": 0
+        },
+        "senescence": {
+          "pendingDecisions": [],
+          "retainedRegions": []
+        }
+      },
+      "lineageLedger": {
+        "lineageSeed": 517469844,
+        "hostRunSequence": 0,
+        "currentHostRunId": null,
+        "completedL1ResetCount": 3,
+        "completedHostTransferCount": 1,
+        "hostCollapseAfterTransferCount": 0,
+        "successfulTransitCount": 0,
+        "organTagsSeen": ["hepatic", "pulmonary"],
+        "chosenHallmarksAcrossLineage": [],
+        "usedLineageBoonIds": ["extra_card_reveal"],
+        "lineageBoonApplications": [
+          {
+            "boonId": "extra_card_reveal",
+            "kind": "pre-draft",
+            "draftId": "host-draft-v1:517469844:1"
+          }
+        ],
+        "terminalPreparation": null,
+        "hostDraftSequence": 1,
+        "networkSeed": null,
+        "frontierSequence": 0,
+        "stabilizedRewardedNodeIds": []
+      },
+      "metastasis": {
+        "metastaticPotential": {
+          "mantissa": 3,
+          "exponent": 1
+        },
+        "allocations": [
+          {
+            "siteId": "liver",
+            "rank": 1
+          }
+        ],
+        "programs": [
+          {
+            "siteId": "liver",
+            "programId": "exploit_niche"
+          }
+        ],
+        "activeNicheContext": {
+          "siteId": "liver",
+          "allocationRank": 1,
+          "programId": "exploit_niche"
+        }
+      },
+      "hostTransfer": {
+        "hostImprints": 5,
+        "purchasedBoons": [],
+        "activeHost": null,
+        "pendingDraft": {
+          "id": "host-draft-v1:517469844:1",
+          "sourceSeed": 3720436629,
+          "sourceEventSequence": 1,
+          "cards": [
+            {
+              "id": "host-draft-v1:517469844:1:0",
+              "immuneRegime": "immune-ordinary",
+              "tissueEcology": "ecology-fibrotic",
+              "hostHorizon": "horizon-durable"
+            },
+            {
+              "id": "host-draft-v1:517469844:1:1",
+              "immuneRegime": "immune-vigilant",
+              "tissueEcology": "ecology-vascular",
+              "hostHorizon": "horizon-durable"
+            },
+            {
+              "id": "host-draft-v1:517469844:1:2",
+              "immuneRegime": "immune-tolerant",
+              "tissueEcology": "ecology-vascular",
+              "hostHorizon": "horizon-durable"
+            },
+            {
+              "id": "host-draft-v1:517469844:1:3",
+              "immuneRegime": "immune-tolerant",
+              "tissueEcology": "ecology-fibrotic",
+              "hostHorizon": "horizon-ordinary"
+            }
+          ],
+          "revealPolicy": "extra-card-reveal",
+          "revealedCardIds": [
+            "host-draft-v1:517469844:1:0",
+            "host-draft-v1:517469844:1:1",
+            "host-draft-v1:517469844:1:2",
+            "host-draft-v1:517469844:1:3"
+          ],
+          "available": true,
+          "consumedCardId": null
+        }
+      },
+      "culture": {
+        "passages": 0,
+        "purchasedPassageUpgrades": [],
+        "cryobankProgram": null,
+        "queuedProducerAction": null
+      },
+      "network": {
+        "globalTier": 0,
+        "transmissionPressure": {
+          "mantissa": 0,
+          "exponent": 0
+        },
+        "nodes": [],
+        "edges": [],
+        "pendingFrontier": null,
+        "activeCampaign": null,
+        "completedCampaigns": [],
+        "containedNodeId": null
+      },
+      "pendingDamageEvents": [],
+      "pendingTransitEvents": [],
+      "deterministicSeed": 3315878642,
+      "eventSequence": 2,
+      "prestigeAvailability": [
+        {
+          "id": "L1",
+          "status": "earned"
+        },
+        {
+          "id": "L2",
+          "status": "earned"
+        }
+      ],
+      "totalOfflineMs": 12,
+      "numberFormat": "short",
+      "ending": {
+        "phase": "unreached"
+      },
+      "lastStageTransition": {
+        "from": "host_collapse",
+        "to": "transformed_cell",
+        "atMs": 100
+      }
+    }
   },
   "decisionWitness": {
     "system": "L2",
-    "question": "Which visible portfolio action beats a fixed cheapest choice?",
-    "alternatives": ["card fit", "fixed card"]
+    "question": "Which revealed host card is available from this transfer draft?",
+    "alternatives": ["revealed host cards"],
+    "requiredVisibleEventTypes": ["select-host-card"],
+    "requiredActionTags": ["host"]
   }
 }

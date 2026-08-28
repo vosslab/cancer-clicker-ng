@@ -49,6 +49,14 @@ Current-state parsing has no default-injection or partial-recovery path. A state
 complete current form or is rejected. This keeps replay and later additions grounded in one truthful
 schema instead of a mixture of inferred historical shapes.
 
+Prestige parsing recognizes one bounded planning shape: before the first L1 reset,
+`host_collapse` may retain a populated L1 allocation/program portfolio while
+`activeNicheContext` is null. After L1, a populated portfolio requires its exact selected context;
+null-context portfolio data rejects outside that pre-L1 phase. Reset projections also persist their
+target stage, timestamp, and transition coherently: L1/L2 target `transformed_cell`, L3 targets
+`immortalized_culture`, and a same-stage L4 campaign clears unrelated transition history. These are
+current canonical event/save round-trip rules, not legacy migration behavior.
+
 ## Protected recovery and fresh replacement
 
 `SAVE_KEY` is `cancer-clicker-ng.save.v2`. `loadFromStorage()` distinguishes a missing key, an
@@ -93,6 +101,7 @@ nor browser-storage transport, and it makes no byte, pixel, or timing equivalenc
 | `src/types/save.ts`                                  | Exact current save-envelope types and notice vocabulary.                           |
 | `src/state/save_load.ts` and `src/state/save_parse/` | Current DTO parsing, canonical serialization, and browser storage.                 |
 | `src/types/state.ts`                                 | Current `GameState` and `SoftEndingState` shape.                                   |
+| `src/prestige/reset.ts`                              | Complete reset projections, including stage and transition observations.           |
 | `src/state/event_parse.ts` and `src/state/events.ts` | Durable event acceptance and mutation.                                             |
 | `src/types/replay.ts` and `src/state/replay.ts`      | Schema-current development semantic replay.                                        |
 | `src/render/game_controller.ts`                      | Storage-aware player intents, protected recovery, and optional replay observation. |

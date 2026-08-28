@@ -31,6 +31,11 @@ state. The projection preserves only declared lineage facts and removes transien
 `src/prestige/reset.ts` owns pure projections. `src/state/events.ts` invokes them only after the
 event parser validates an explicit player action and current quote revision.
 
+Each projection owns its target stage, timestamp, and stage-transition record as one durable
+observation. L1 and L2 begin a `transformed_cell` run; L3 begins `immortalized_culture`; and an L4
+campaign remains at its current stage while clearing unrelated transition history. This keeps reset
+events, current saves, and semantic replay on the same state contract.
+
 ## L1 Metastasis
 
 L1 converts a prepared terminal primary state into Potential and an organ-site allocation. The
@@ -41,6 +46,12 @@ immune, pressure, and reserve effects through `src/prestige/effects.ts`.
 
 Historical allocations remain portfolio/currency history. They never infer a biological location or
 alter all producers. A future respec requires its own cost and current-state contract.
+
+Before the first accepted L1 reset, `host_collapse` may save a populated allocation/program planning
+portfolio with null `activeNicheContext`. That data represents an available plan, not a selected
+run. Once L1 is accepted, its exact site, allocation rank, and program form the required active
+context for selected-run effects. The strict save parser rejects populated null-context portfolios
+outside this pre-L1 planning phase.
 
 ## L2 Host Transfer
 
@@ -85,6 +96,10 @@ Prestige state belongs to the one current exact-key save shape: `version: 2` and
 the parser rejects a partial or incompatible shape rather than inferring a prior run. The current
 contract and protected fresh-replacement flow are owned by
 [STATE_PERSISTENCE.md](STATE_PERSISTENCE.md).
+
+These reset and selected-context rules are current schema semantics, not a compatibility migration:
+the writer produces them, the parser validates them, and replay reaches them through the same
+accepted events.
 
 `src/types/events.ts`, `src/state/event_parse.ts`, and `src/state/events.ts` own strict prestige
 events. Payloads carry selected stable IDs, event time, and quote revision; reducers recompute

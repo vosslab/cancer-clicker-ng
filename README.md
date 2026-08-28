@@ -118,11 +118,14 @@ its foundations without legacy-compatibility promises: saves use exactly the cur
 state-schema-8 contract. Other shapes enter the protected recovery flow instead of being adapted
 into invented history.
 
-The local game, source build, and semantic tests are distinct from human and remote release work.
-GitHub Pages publication, an independent visual acceptance review, release packaging, and human Git
-approval remain explicit follow-on evidence rather than claims made by this README. The forthcoming
-balance laboratory will compare player policies and report calibration observations; it does not
-declare a fixed numerical, byte, pixel, or machine-timing gate.
+The release candidate closes through reproducible local build, semantic and production-browser
+tests, `source source_me.sh && python3 devel/verify_candidate.py`, fixed-clock screenshots, an
+independent agent original-resolution image report, and a static Pages workflow contract. The
+candidate route writes ignored `output_release/candidate_manifest.json`, runs the full Python suite
+through disposable Git storage, and proves the real index unchanged. GitHub Pages publication is
+an optional distribution operation: it adds remote availability evidence without changing candidate
+completeness. The balance laboratory compares player policies and reports calibration observations;
+it does not declare a fixed numerical, byte, pixel, or machine-timing gate.
 
 ## Documentation
 
@@ -150,7 +153,7 @@ For architecture, persistence, and development work:
 - [docs/PLAYWRIGHT_USAGE.md](docs/PLAYWRIGHT_USAGE.md) - production-browser verification and the
   screenshot workflow.
 - [docs/active_plans/implementation_plan.md](docs/active_plans/implementation_plan.md) - the
-  durable implementation roadmap and acceptance ownership.
+  durable implementation roadmap and autonomous closure contract.
 
 ## License
 

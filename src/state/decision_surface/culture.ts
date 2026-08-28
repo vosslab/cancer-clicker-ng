@@ -2,9 +2,11 @@ import { quoteProducerPurchase } from "../../economy/costs.js";
 import { STAGE_ONE_PRODUCERS } from "../../economy/producers.js";
 import {
   CRYOBANK_PROGRAM_CATALOG,
+  cryobankProgramQuote,
   PASSAGE_UPGRADE_CATALOG,
   passageUpgradeQuote,
 } from "../../prestige/culture.js";
+import { projectL3Reset } from "../../prestige/reset.js";
 import type { GameState } from "../../types/state.js";
 import type { VisibleAction } from "./contracts.js";
 import { envelope, visibleAction } from "./builders.js";
@@ -26,31 +28,37 @@ export function buildCultureCandidates(state: GameState): readonly VisibleAction
         ),
       ];
     }),
-    ...CRYOBANK_PROGRAM_CATALOG.flatMap((program) => [
-      ...(state.currentStage === "host_collapse"
-        ? [
-            visibleAction(
-              "prestige",
-              { type: "perform-immortalization", cryobankProgramId: program.id, ...env },
-              "Perform immortalization.",
-              ["culture", program.id],
-            ),
-          ]
-        : []),
-      ...(state.culture.cryobankProgram !== program.id &&
-      state.culture.purchasedPassageUpgrades.some(
-        (purchase) => purchase.upgradeId === "cryobank" && purchase.rank > 0,
-      )
-        ? [
-            visibleAction(
-              "prestige",
-              { type: "select-cryobank-program", cryobankProgramId: program.id, ...env },
-              "Select a cryobank program.",
-              ["culture", program.id],
-            ),
-          ]
-        : []),
-    ]),
+    ...CRYOBANK_PROGRAM_CATALOG.flatMap((program) => {
+      const immortalizationEvent = {
+        type: "perform-immortalization" as const,
+        cryobankProgramId: program.id,
+        ...env,
+      };
+      const canImmortalize =
+        state.lineageLedger.networkSeed === null &&
+        projectL3Reset(state, immortalizationEvent) !== undefined;
+      const cryobankQuote = cryobankProgramQuote(state.culture, program.id);
+      return [
+        ...(canImmortalize
+          ? [
+              visibleAction("prestige", immortalizationEvent, "Perform immortalization.", [
+                "culture",
+                program.id,
+              ]),
+            ]
+          : []),
+        ...(state.culture.cryobankProgram !== program.id && cryobankQuote.available
+          ? [
+              visibleAction(
+                "prestige",
+                { type: "select-cryobank-program", cryobankProgramId: program.id, ...env },
+                "Select a cryobank program.",
+                ["culture", program.id],
+              ),
+            ]
+          : []),
+      ];
+    }),
     ...(state.culture.purchasedPassageUpgrades.some(
       (purchase) => purchase.upgradeId === "assay_discipline" && purchase.rank > 0,
     )

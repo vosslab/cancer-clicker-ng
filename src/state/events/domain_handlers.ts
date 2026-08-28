@@ -65,7 +65,14 @@ export function renewCompletedCampaign(
 export function next(state: GameState, change: Partial<GameState>): GameState {
   if (!natural(state.eventSequence) || state.eventSequence === Number.MAX_SAFE_INTEGER)
     throw new Error("Event sequence cannot advance safely.");
-  return { ...state, ...change, eventSequence: state.eventSequence + 1 };
+  const eventSequence = state.eventSequence + 1;
+  if (!Object.prototype.hasOwnProperty.call(change, "lastStageTransition"))
+    return { ...state, ...change, eventSequence };
+  const { lastStageTransition, ...changeWithoutTransition } = change;
+  if (lastStageTransition !== undefined)
+    return { ...state, ...changeWithoutTransition, lastStageTransition, eventSequence };
+  const { lastStageTransition: _discarded, ...stateWithoutTransition } = state;
+  return { ...stateWithoutTransition, ...changeWithoutTransition, eventSequence };
 }
 
 const HALLMARK_ORDER = [

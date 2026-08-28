@@ -6,7 +6,7 @@ import {
 } from "../../hallmarks/extended_hallmark_catalog.js";
 import type { SaveNotice } from "../../types/save.js";
 import type { GameState } from "../../types/state.js";
-import { isImmediateStageTransition, isStageId } from "../catalog.js";
+import { isRecordedStageTransition, isStageId } from "../catalog.js";
 import { array, exact, fraction, identifier, ids, natural, unique } from "./guards.js";
 
 export function parseRegions(
@@ -131,7 +131,7 @@ export function parseTransition(value: unknown): GameState["lastStageTransition"
     !identifier(value.to) ||
     !isStageId(value.from) ||
     !isStageId(value.to) ||
-    !isImmediateStageTransition(stageId(value.from), stageId(value.to)) ||
+    !isRecordedStageTransition(stageId(value.from), stageId(value.to)) ||
     !natural(value.atMs)
   )
     return undefined;

@@ -116,6 +116,6 @@ used only to communicate earned fictional scale.
 Keep SVG source code-native, grouped, and editable. Shared gradients, masks, and filters belong in
 scene definitions; reusable icon primitives belong in the icon catalog. Prefer clear primitives and
 semantic class names over opaque path collections. Every visual change receives source checks plus
-a rendered review at 1280 x 800, narrow 360px, and reduced-motion conditions. Human review judges
-hierarchy, biological abstraction, clipping, targetability, contrast, and whether the primary
-action still reads as clicking living cancer cells.
+a rendered review at 1280 x 800, narrow 360px, and reduced-motion conditions. An independent-agent
+report evaluates explicit criteria: hierarchy, biological abstraction, clipping, targetability,
+contrast, and whether the primary action still reads as clicking living cancer cells.

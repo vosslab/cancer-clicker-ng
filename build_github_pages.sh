@@ -8,8 +8,8 @@
 # Contract:
 #   - Wipes dist/ from scratch.
 #   - Type-checks via 'tsc --noEmit -p tsconfig.json'.
-#   - Resolves the entry: src/main.tsx preferred, src/main.ts legacy fallback.
-#     Aborts with an actionable error if neither exists.
+#   - Uses src/main.tsx as the required Solid bundle entry.
+#     Aborts with an actionable error when it is missing.
 #   - Verifies source HTML and named game stylesheets exist before copying;
 #     aborts with an actionable error if missing.
 #   - Verifies src/index.html references dist/main.js with a module script
@@ -25,18 +25,12 @@
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
-# Resolve entry point.
-# The Solid wrapper is the sole bundle implementation. This front door retains
-# the static asset and GitHub Pages responsibilities without a second esbuild call.
-if [ -f "src/main.tsx" ]; then
-	ENTRY="src/main.tsx"
-elif [ -f "src/main.ts" ]; then
-	ENTRY="src/main.ts"
-elif [ -f "src/init.ts" ]; then
-	ENTRY="src/init.ts"
-	echo "WARNING: using legacy src/init.ts. Rename to src/main.ts." >&2
-else
-	echo "ERROR: no entry point. Create src/main.tsx (preferred), src/main.ts, or src/init.ts." >&2
+# The Solid bootstrap is the authoritative bundle entry. This front door keeps
+# the static-asset and GitHub Pages responsibilities around that one bundle.
+ENTRY="src/main.tsx"
+if [ ! -f "$ENTRY" ]; then
+	echo "ERROR: required Solid bundle entry missing: $ENTRY" >&2
+	echo "  Create src/main.tsx with the Solid application bootstrap." >&2
 	exit 1
 fi
 
@@ -45,6 +39,7 @@ STATIC_STYLES=(
 	"style.css"
 	"game_ui.css"
 	"tumor_arena.css"
+	"tumor_arena_neutral_light.css"
 	"evolution_dock.css"
 	"upgrade_rack.css"
 	"prestige.css"

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { fromSafeInteger } from "../src/bignum/bignum.ts";
-import { hallmarkId } from "../src/brands.ts";
+import { hallmarkId, hostRunId, regionId, stageId } from "../src/brands.ts";
 import { producerPurchaseCellProductionBenefit } from "../src/economy/production.ts";
 import {
   projectVisibleDecisionSurface,
@@ -71,6 +71,33 @@ function signalingState() {
       { id: hallmarkId("proliferative_signaling"), level: 1 },
     ],
   };
+}
+
+function hostCollapseState(overrides = {}) {
+  const initial = createInitialGameState();
+  return {
+    ...initial,
+    cells: fromSafeInteger(10_000),
+    activeTimeMs: 80,
+    currentStage: stageId("host_collapse"),
+    regions: [
+      {
+        id: regionId("seed"),
+        capacity: 4,
+        viability: 1,
+        phenotype: "proliferative",
+        vesselLinkIds: [],
+        routeIds: [],
+      },
+    ],
+    seededSites: [regionId("seed")],
+    ...overrides,
+  };
+}
+
+function assertSurfaceActionsReduce(state) {
+  for (const candidate of projectVisibleDecisionSurface(state).actions)
+    assert.doesNotThrow(() => recordEvent(state, parseRuntimeEvent(candidate.event)));
 }
 
 test("visible actions are parser-valid reducer transitions from their projected state", () => {
@@ -213,4 +240,81 @@ test("surface composes stage advancement before hallmark allocation decisions", 
   assert.ok(stageIndex >= 0);
   assert.ok(allocationIndex >= 0);
   assert.ok(stageIndex < allocationIndex);
+});
+
+test("host-collapse surface exposes only reducer-accepted L1, L2, and L3 choices", () => {
+  const l1 = hostCollapseState({
+    prestigeAvailability: [{ id: "L1", status: "earned" }],
+    metastasis: {
+      ...createInitialGameState().metastasis,
+      allocations: [{ siteId: "liver", rank: 1 }],
+      programs: [{ siteId: "liver", programId: "exploit_niche" }],
+    },
+  });
+  const l2 = hostCollapseState({
+    prestigeAvailability: [{ id: "L2", status: "earned" }],
+    lineageLedger: {
+      ...createInitialGameState().lineageLedger,
+      completedL1ResetCount: 3,
+      organTagsSeen: ["hepatic", "pulmonary"],
+    },
+  });
+  const runId = hostRunId("host-run-v1:17:1");
+  const l3 = hostCollapseState({
+    prestigeAvailability: [{ id: "L3", status: "earned" }],
+    metastasis: {
+      ...createInitialGameState().metastasis,
+      activeNicheContext: { siteId: "liver", allocationRank: 1, programId: "exploit_niche" },
+    },
+    hostTransfer: {
+      ...createInitialGameState().hostTransfer,
+      activeHost: {
+        hostRunId: runId,
+        card: {
+          id: "host-card-v1",
+          immuneRegime: "immune-vigilant",
+          tissueEcology: "ecology-fibrotic",
+          hostHorizon: "horizon-brief",
+        },
+      },
+    },
+    lineageLedger: {
+      ...createInitialGameState().lineageLedger,
+      lineageSeed: 17,
+      currentHostRunId: runId,
+      completedHostTransferCount: 1,
+      usedLineageBoonIds: ["extra_card_reveal"],
+      chosenHallmarksAcrossLineage: ["proliferative_signaling"],
+      terminalPreparation: { hostRunId: runId, eligible: true, assessedAtActiveMs: 80 },
+    },
+  });
+
+  for (const [state, type] of [
+    [l1, "perform-metastasis-reset"],
+    [l2, "perform-host-transfer"],
+    [l3, "perform-immortalization"],
+  ]) {
+    const action = projectVisibleDecisionSurface(state).actions.find(
+      (candidate) => candidate.event.type === type,
+    );
+    assert.ok(action, `Expected ${type} in its eligible host-collapse state.`);
+    assertSurfaceActionsReduce(state);
+  }
+});
+
+test("host-collapse surface omits reset actions until their saved prerequisites exist", () => {
+  const unavailable = hostCollapseState({
+    prestigeAvailability: [
+      { id: "L1", status: "earned" },
+      { id: "L2", status: "earned" },
+      { id: "L3", status: "earned" },
+    ],
+  });
+  const types = projectVisibleDecisionSurface(unavailable).actions.map(
+    (candidate) => candidate.event.type,
+  );
+  assert.ok(!types.includes("perform-metastasis-reset"));
+  assert.ok(!types.includes("perform-host-transfer"));
+  assert.ok(!types.includes("perform-immortalization"));
+  assertSurfaceActionsReduce(unavailable);
 });

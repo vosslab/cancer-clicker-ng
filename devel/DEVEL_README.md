@@ -29,6 +29,8 @@ appropriate repo root or package.
 | [rotate_changelog.py](rotate_changelog.py) | Move old changelog day blocks into archive files. |
 | [flatten_broken_md_links.py](flatten_broken_md_links.py) | Repair or flatten broken Markdown links. |
 | [dist_clean.sh](dist_clean.sh) | Remove build artifacts, caches, and dependency installs. |
+| `verify_candidate.py` | Project the complete nonignored working tree into a disposable Git index/object store, write `output_release/candidate_manifest.json`, run the full Python suite, and prove the real index unchanged. |
+| `verify_pages_workflow.py` | Verify the local Pages workflow contract: template parity, build/upload/deploy order, permissions, and triggers. |
 
 ## Propagated devel scripts
 
@@ -54,6 +56,20 @@ For Python scripts, use the repo bootstrap environment:
 
 ```bash
 source source_me.sh && python3 devel/<script>.py
+```
+
+Verify the autonomous Pages workflow contract from the repository root:
+
+```bash
+source source_me.sh && python3 devel/verify_pages_workflow.py
+```
+
+Verify the complete local candidate without changing the real Git index. This route writes the
+ignored candidate manifest, projects the nonignored working tree into disposable Git storage, and
+runs the full Python suite against that projection:
+
+```bash
+source source_me.sh && python3 devel/verify_candidate.py
 ```
 
 Run individual scripts with `--help` for current options. Keep command details

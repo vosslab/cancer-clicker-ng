@@ -34,6 +34,14 @@ export function isImmediateStageTransition(fromStageId: StageId, toStageId: Stag
   return nextStageId(fromStageId) === toStageId;
 }
 
+/** Resets restart an owned run and are the only durable non-adjacent stage records. */
+export function isRecordedStageTransition(fromStageId: StageId, toStageId: StageId): boolean {
+  return (
+    isImmediateStageTransition(fromStageId, toStageId) ||
+    (fromStageId === "host_collapse" && toStageId === "transformed_cell")
+  );
+}
+
 export const HALLMARK_IDS = [
   "proliferative_signaling",
   "growth_suppressor_evasion",
