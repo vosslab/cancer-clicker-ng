@@ -1,6 +1,6 @@
 /**
  * Deterministic, drawing-free macro composition for colony illustrations.
- * Coordinates use the M16 plate frame: x 0..1000, y 0..700.  This module owns
+ * Coordinates use the colony plate frame: x 0..1000, y 0..700. This module owns
  * the closed-boundary containment and collision policy used before colony renderer renders.
  */
 import { STAGE_IDS } from "../state/catalog.js";
@@ -359,7 +359,7 @@ function isSimple(vertices: readonly Point[]): boolean {
 
 /**
  * Preserves a generated contour's proportions while fitting it to the bounded
- * M16 plate.  Multi-island stages share one environmental outline, so their
+ * colony plate. Multi-island stages share one environmental outline, so their
  * broadest lobe sets the scale for the complete silhouette rather than letting
  * individual vertices clip at an SVG edge.
  */

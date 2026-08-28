@@ -1,7 +1,7 @@
 import { stageId } from "../brands.js";
 import type { StageId } from "../types/ids.js";
 
-/** M2-owned stable identities. Later stage and hallmark modules import this registry. */
+/** The state catalog owns stable identities imported by later stage and hallmark modules. */
 export const STAGE_IDS = [
   "transformed_cell",
   "microcolony",

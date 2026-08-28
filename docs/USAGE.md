@@ -70,25 +70,30 @@ Use the validation lane that matches the question you are asking:
 
 ## Advanced balance experiment
 
-The balance simulator is a development review tool, not a player command. It accepts one tracked
-scenario and writes one machine-readable report below the root `output_balance/` directory:
+The balance simulator is a development review tool, not a player command. Its default aggregate
+run compares every tracked scenario against the five canonical policies `greedy-payback`,
+`naive-cheapest`, `hallmark-first`, `prestige-rush`, and `check-in-idle`, then writes one
+format-2 machine-readable report below the root `output_balance/` directory:
 
 ```bash
-node --import tsx tools/balance_sim.mjs \
-  --scenario tools/balance_scenarios/l4_mandate_sequence_v1.json \
+node --import tsx tools/balance_sim.mjs --suite \
   --output output_balance/balance_report.json
 ```
 
-The report records a deterministic policy comparison, its decision witness, assumptions, traces,
-and falsification signals. Use it to investigate a proposed tuning change alongside the scenario;
-keep final balance claims tied to the accepted balance review rather than to one generated report.
+With no selector, the same command runs the aggregate suite. Use
+`--scenario tools/balance_scenarios/<file>.json` for one focused question. `greedy-payback` uses
+the displayed producer cells cost divided by the same authoritative marginal `+cells/s` quote shown
+in the Store. The aggregate report records policy behavior, scenario assumptions, decision
+witnesses, traces, completions, idle windows, progression outcomes, and outliers. Use it to
+investigate a proposed tuning change; keep final balance claims tied to the accepted balance review
+rather than to one generated report.
 
 ## Related documentation
 
 - [GAME_DESIGN.md](GAME_DESIGN.md) explains the economy, offline clock, and player-facing model.
 - [PRESTIGE_DESIGN.md](PRESTIGE_DESIGN.md) explains the reset layers and durable culture/network
   decisions.
-- [STATE_PERSISTENCE.md](STATE_PERSISTENCE.md) defines save migration, recovery, and replay
+- [STATE_PERSISTENCE.md](STATE_PERSISTENCE.md) defines the current save, recovery, and replay
   ownership.
 - [PLAYWRIGHT_USAGE.md](PLAYWRIGHT_USAGE.md) explains browser-test and screenshot workflows.
 

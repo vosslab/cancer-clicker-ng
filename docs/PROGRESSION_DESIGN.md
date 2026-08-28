@@ -443,8 +443,8 @@ DOM state or copy:
   Pending damage/transit events include their `EventId`, source `RegionId` or `RouteId`, and
   recorded outcome before player resolution. Reducers and offline ticks consume this data and
   never reroll it.
-- A `progressionVersion` nested in the save payload so a later adjustment to a settled mechanic
-  can migrate intentionally before public release.
+- The current save envelope carries `stateSchemaVersion: 8`, so every durable aggregate is parsed
+  against one explicit current contract.
 
 The event funnel needs typed operations for allocation, checkpoint selection, triage, vessel and
 route selection, ATP budgeting, mutation selection, phenotype switching, program editing,

@@ -41,7 +41,7 @@ function collapseState(overrides = {}) {
   };
 }
 
-test("L1 performs a complete local reset, preserves clocks, and floor-halves hallmarks", () => {
+test("metastasis reset preserves clocks and floor-halves hallmark levels", () => {
   const before = collapseState();
   const after = recordEvent(before, {
     type: "perform-metastasis-reset",
@@ -75,7 +75,7 @@ test("L1 performs a complete local reset, preserves clocks, and floor-halves hal
   if (loaded.status === "loaded") assert.deepEqual(loaded.state, after);
 });
 
-test("stale L1 intent preserves original reference", () => {
+test("stale metastasis-reset intent preserves the original state", () => {
   const before = collapseState();
   assert.throws(
     () =>
@@ -99,7 +99,7 @@ test("stale L1 intent preserves original reference", () => {
   );
 });
 
-test("L1 reset requires the selected allocated site to carry exactly one program", () => {
+test("metastasis reset requires the selected allocated site to carry one program", () => {
   const before = collapseState({
     metastasis: {
       ...createInitialGameState().metastasis,
@@ -158,7 +158,7 @@ test("L1 reset requires the selected allocated site to carry exactly one program
   );
 });
 
-test("L2 clears old host state and saves exactly one deterministic draft", () => {
+test("host transfer clears prior host state and saves one deterministic draft", () => {
   const before = collapseState({
     metastasis: {
       ...collapseState().metastasis,
@@ -365,7 +365,7 @@ test("pre-draft boon purchases and their host-transfer applications use catalog 
   );
 });
 
-test("organ portfolios remain catalog ordered across multi-site commands and p6 save load", () => {
+test("organ portfolios remain catalog ordered across multi-site commands and save load", () => {
   const initial = createInitialGameState();
   const before = {
     ...initial,

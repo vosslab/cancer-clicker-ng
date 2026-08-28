@@ -4,7 +4,7 @@
 
 Cancer Clicker NG is a static SolidJS browser game. The browser renders a local game session;
 the framework-free TypeScript domain owns all durable rules, arithmetic, event validation,
-serialization, and replay semantics. The build emits a GitHub Pages-shaped [dist/](../dist/)
+serialization, and replay semantics. The build emits a GitHub Pages-shaped `dist/`
 artifact and does not introduce a server, account, or network-data boundary.
 
 The central ownership rule is simple: a player intent becomes a typed event, the domain accepts or
@@ -60,8 +60,8 @@ with one durable game state.
 
 ### Persistence and semantic replay
 
-- [src/state/save_load.ts](../src/state/save_load.ts) owns the current progression version,
-  canonical serialization, bounded migrations, parsing, and browser-storage reads and writes.
+- [src/state/save_load.ts](../src/state/save_load.ts) owns the current format-2/schema-8 envelope,
+  canonical serialization, strict parsing, and browser-storage reads and writes.
   Focused parser modules live under [src/state/save_parse/](../src/state/save_parse/).
 - [src/types/save.ts](../src/types/save.ts) declares the serialized form. The writer validates the
   data it creates with the current reader, forming a writer-reader closure without requiring
@@ -136,7 +136,7 @@ therefore checks decision semantics rather than DOM structure, formatted strings
 [tools/balance_sim.mjs](../tools/balance_sim.mjs) is a deterministic, headless calibration tool.
 It reads a tracked scenario from [tools/balance_scenarios/](../tools/balance_scenarios/), asks
 [src/state/decision_surface.ts](../src/state/decision_surface.ts) for legal actions, feeds selected
-events to the normal parser and reducer, and writes a report below [output_balance/](../output_balance/).
+events to the normal parser and reducer, and writes a report below `output_balance/`.
 The tool compares named policy profiles as design evidence; it is neither an in-game automation
 path nor a replacement for player-facing browser tests.
 
@@ -144,7 +144,7 @@ path nor a replacement for player-facing browser tests.
 
 - [check_codebase.sh](../check_codebase.sh) is the canonical fast gate. It runs source and wider
   TypeScript checks, ESLint, Prettier, and focused Node tests under [tests/](../tests/).
-- [tests/test_*.mjs](../tests/) exercise pure domain, reducer, persistence, replay, controller, and
+- [tests](../tests/) contains pure domain, reducer, persistence, replay, controller, and
   SVG structural behavior. Keep permanent tests deterministic, offline, and tied to a stable
   contract.
 - [tests/playwright/](../tests/playwright/) exercises the built browser surface, including
@@ -164,7 +164,7 @@ path nor a replacement for player-facing browser tests.
   [src/state/events.ts](../src/state/events.ts), and exposing it through the controller and owning
   panel.
 - Add a durable field in [src/types/state.ts](../src/types/state.ts), then update its initial value,
-  save parser, writer shape, migrations when evidence supports them, and focused semantic tests.
+  current save parser and writer shape, and focused semantic tests.
 - Add biology content to its catalog and effect module under [src/hallmarks/](../src/hallmarks/),
   [src/stages/](../src/stages/), or [src/prestige/](../src/prestige/) according to the aggregate it
   changes. Keep UI copy in [src/render/](../src/render/) or [src/content/](../src/content/).
@@ -173,7 +173,7 @@ path nor a replacement for player-facing browser tests.
   semantic IDs, accessibility descriptions, and direct-cell hit testing.
 - Add a balance investigation as a named scenario under
   [tools/balance_scenarios/](../tools/balance_scenarios/); keep generated reports in
-  [output_balance/](../output_balance/).
+  `output_balance/`.
 
 ## Known gaps
 

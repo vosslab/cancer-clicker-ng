@@ -22,7 +22,7 @@ export type TriageAction = "absorb" | "repair" | "lose-region";
 export type Phenotype = "proliferative" | "migratory" | "stress-tolerant";
 export type ProducerLevel = Readonly<{ id: ProducerId; level: number }>;
 export type HallmarkLevel = Readonly<{ id: HallmarkId; level: number }>;
-/** Declarative only: M13 owns currencies, rewards, and reset behavior. */
+/** Declarative only: the prestige domain owns currencies, rewards, and reset behavior. */
 export type PrestigeAvailability = Readonly<{ id: PrestigeId; status: "unavailable" | "earned" }>;
 export type PendingProgression =
   | Readonly<{ kind: "stage"; id: StageId; firstObservedAtActiveMs: number }>
@@ -70,7 +70,7 @@ export type GameState = Readonly<{
   stageStartedAtMs: number;
   /** Monotonic simulation time; never derived from a wall-clock save sample. */
   activeTimeMs: number;
-  /** Identity-only eligibility observations awaiting an explicit stage progression/M13 action. */
+  /** Identity-only eligibility observations awaiting an explicit stage or prestige action. */
   pendingProgression: readonly PendingProgression[];
   stageProgress: number;
   /** Saved per-stage gate progress; stage progression owns semantic gate evaluation. */

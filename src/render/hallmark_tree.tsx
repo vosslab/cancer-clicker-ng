@@ -43,6 +43,8 @@ import { LateProgramPanel } from "./late_program_panel.js";
 import { LateSenescencePanel } from "./late_senescence_panel.js";
 import type { CheckpointId, GameState, InflammationEpisode, TriageAction } from "../types/state.js";
 import type { HallmarkId, MutationId, OfferId, RouteId } from "../types/ids.js";
+import { ActionIcon } from "./action_icon.js";
+import type { SvgIconName } from "../svg/icons.js";
 
 type HallmarkTreeProps = Readonly<{
   game: GameState;
@@ -50,6 +52,26 @@ type HallmarkTreeProps = Readonly<{
 }>;
 
 type BranchStatus = "locked" | "available" | "acquired";
+
+function hallmarkIcon(id: string): SvgIconName {
+  const icons: Readonly<Record<string, SvgIconName>> = {
+    proliferative_signaling: "proliferative_signaling",
+    growth_suppressor_evasion: "growth_suppressor_evasion",
+    cell_death_resistance: "cell_death_resistance",
+    replicative_immortality: "replicative_immortality",
+    angiogenesis: "angiogenesis",
+    invasion_metastasis: "invasion_metastasis",
+    metabolic_deregulation: "metabolic_deregulation",
+    immune_destruction_avoidance: "immune_destruction_avoidance",
+    tumor_promoting_inflammation: "tumor_promoting_inflammation",
+    genome_instability_mutation: "genome_instability_mutation",
+    phenotypic_plasticity: "culture",
+    epigenetic_reprogramming: "culture",
+    polymorphic_microbiomes: "network_node",
+    senescent_cells: "replicative_immortality",
+  };
+  return icons[id] ?? "acquire";
+}
 
 const CHECKPOINTS = [
   "contact-inhibition",
@@ -825,7 +847,9 @@ export function HallmarkTree(props: HallmarkTreeProps): JSX.Element {
               <li class="hallmark-row">
                 <div class="hallmark-copy">
                   <p class="hallmark-index">Branch {index() + 1}</p>
-                  <h3>{definition.displayName}</h3>
+                  <h3>
+                    <ActionIcon name={hallmarkIcon(definition.id)} /> {definition.displayName}
+                  </h3>
                   <p>{mechanicSummary(definition)}</p>
                   <p class="hallmark-unlock">{unlockExplanation(definition)}</p>
                 </div>
@@ -837,7 +861,7 @@ export function HallmarkTree(props: HallmarkTreeProps): JSX.Element {
                       disabled={interactionDisabled(props)}
                       onClick={() => props.controller.purchaseHallmark(definition.id)}
                     >
-                      Acquire capability
+                      <ActionIcon name="acquire" /> Acquire capability
                     </button>
                   </Show>
                   <Show when={status() === "acquired"}>{AcquiredControls(props, definition)}</Show>
@@ -868,7 +892,9 @@ export function HallmarkTree(props: HallmarkTreeProps): JSX.Element {
               <li class="hallmark-row extended-hallmark-row">
                 <div class="hallmark-copy">
                   <p class="hallmark-index">Branch {index() + 7}</p>
-                  <h3>{definition.displayName}</h3>
+                  <h3>
+                    <ActionIcon name={hallmarkIcon(definition.id)} /> {definition.displayName}
+                  </h3>
                   <p>
                     {readableIdentifier(definition.mechanicClass)} with explicit costs and
                     consequences.
@@ -883,7 +909,7 @@ export function HallmarkTree(props: HallmarkTreeProps): JSX.Element {
                       disabled={interactionDisabled(props)}
                       onClick={() => props.controller.purchaseHallmark(definition.id)}
                     >
-                      Acquire capability
+                      <ActionIcon name="acquire" /> Acquire capability
                     </button>
                   </Show>
                   <Show when={status() === "acquired"}>
@@ -916,7 +942,9 @@ export function HallmarkTree(props: HallmarkTreeProps): JSX.Element {
               <li class="hallmark-row late-hallmark-row">
                 <div class="hallmark-copy">
                   <p class="hallmark-index">Branch {index() + 11}</p>
-                  <h3>{definition.displayName}</h3>
+                  <h3>
+                    <ActionIcon name={hallmarkIcon(definition.id)} /> {definition.displayName}
+                  </h3>
                   <p>{lateMechanicSummary(definition)}</p>
                   <p class="hallmark-unlock">{lateHallmarkUnlockExplanation(definition)}</p>
                 </div>
@@ -928,7 +956,7 @@ export function HallmarkTree(props: HallmarkTreeProps): JSX.Element {
                       disabled={interactionDisabled(props)}
                       onClick={() => props.controller.purchaseHallmark(definition.id)}
                     >
-                      Acquire capability
+                      <ActionIcon name="acquire" /> Acquire capability
                     </button>
                   </Show>
                   <Show when={status() === "acquired"}>

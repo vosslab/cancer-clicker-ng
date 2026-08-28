@@ -29,8 +29,8 @@ browser-storage, build, or validation problem. It complements [INSTALL.md](INSTA
 | The Offline progress panel mentions a cap or clock | The game recorded a safe bounded absence result. It does not spend cells or choose progression while away. | Continue with the presented cell balance and make the next stage, hallmark, or prestige choice explicitly.                      |
 
 The current save key is `cancer-clicker-ng.save.v2`. It is browser-local game data, not an account
-or cloud-save format. The save contract, supported migrations, and recovery vocabulary are defined
-in [STATE_PERSISTENCE.md](STATE_PERSISTENCE.md).
+or cloud-save format. The strict current-schema contract and recovery vocabulary are defined in
+[STATE_PERSISTENCE.md](STATE_PERSISTENCE.md).
 
 ## Gameplay and interface questions
 

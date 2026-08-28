@@ -1,10 +1,11 @@
 import { For, Show, createEffect, createMemo, createSignal, onCleanup } from "solid-js";
 import type { JSX } from "solid-js";
 
-import { culturePresentation } from "../prestige/m15_presentation.js";
+import { culturePresentation } from "../prestige/culture_network_presentation.js";
 import type { CryobankProgramId, PassageUpgradeId, ProducerId } from "../types/ids.js";
 import type { GameState } from "../types/state.js";
 import type { ApplyResult, GameController } from "./game_controller.js";
+import { ActionIcon } from "./action_icon.js";
 
 type CulturePanelProps = Readonly<{ game: GameState; controller: GameController }>;
 type Confirmation =
@@ -60,37 +61,42 @@ export function CulturePanel(props: CulturePanelProps): JSX.Element {
   }
 
   return (
-    <section class="panel m15-panel culture-panel" aria-labelledby="culture-title">
+    <section class="panel culture-network-panel culture-panel" aria-labelledby="culture-title">
       <div class="section-heading">
         <div>
-          <p class="eyebrow">L3 durable culture</p>
+          <p class="eyebrow">Durable culture</p>
           <h2 id="culture-title">Culture bench</h2>
         </div>
         <p id="culture-summary" class="section-note" tabindex="-1">
           {presentation().passages} Passages
         </p>
       </div>
-      <fieldset class="hallmark-fieldset m15-fieldset">
+      <fieldset class="hallmark-fieldset culture-network-fieldset">
         <legend>Immortalization translation</legend>
-        <p class="m15-readout">Current culture state: Immortalized culture.</p>
+        <p class="culture-network-readout">Current culture state: Immortalized culture.</p>
         <p>
-          An L3 choice clears host-local history, converts the active niche into one cryobank
-          program, and debits that cryobank rank from the new award in the same accepted event.
+          An immortalization choice clears host-local history, converts the active niche into one
+          cryobank program, and debits that cryobank rank from the new award in the same accepted
+          event.
         </p>
         <Show
           when={presentation().activeProgramLabel}
           fallback={
-            <p class="hallmark-disabled-note">An active niche program is required for L3.</p>
+            <p class="hallmark-disabled-note">
+              An active niche program is required for immortalization.
+            </p>
           }
         >
-          {(active) => <p class="m15-readout">Active niche translation: {active()}.</p>}
+          {(active) => <p class="culture-network-readout">Active niche translation: {active()}.</p>}
         </Show>
-        <ul class="m15-card-grid">
+        <ul class="culture-network-card-grid">
           <For each={presentation().programs}>
             {(program) => (
               <li>
-                <article class="m15-card">
-                  <h3>{program.label}</h3>
+                <article class="culture-network-card">
+                  <h3>
+                    <ActionIcon name="culture" /> {program.label}
+                  </h3>
                   <p>{program.detail}</p>
                   <button
                     type="button"
@@ -107,7 +113,7 @@ export function CulturePanel(props: CulturePanelProps): JSX.Element {
                       )
                     }
                   >
-                    Perform immortalization
+                    <ActionIcon name="culture" /> Perform immortalization
                   </button>
                 </article>
               </li>
@@ -115,14 +121,16 @@ export function CulturePanel(props: CulturePanelProps): JSX.Element {
           </For>
         </ul>
       </fieldset>
-      <fieldset class="hallmark-fieldset m15-fieldset">
+      <fieldset class="hallmark-fieldset culture-network-fieldset">
         <legend>Passage upgrades</legend>
-        <ul class="m15-card-grid">
+        <ul class="culture-network-card-grid">
           <For each={presentation().upgrades}>
             {(upgrade) => (
               <li>
-                <article class="m15-card">
-                  <h3>{upgrade.label}</h3>
+                <article class="culture-network-card">
+                  <h3>
+                    <ActionIcon name="cryobank" /> {upgrade.label}
+                  </h3>
                   <p>
                     Rank {upgrade.rank}/{upgrade.maximumRank}; {upgrade.detail}.
                   </p>
@@ -142,7 +150,7 @@ export function CulturePanel(props: CulturePanelProps): JSX.Element {
                       )
                     }
                   >
-                    Purchase passage upgrade
+                    <ActionIcon name="buy" /> Purchase passage upgrade
                   </button>
                 </article>
               </li>
@@ -150,7 +158,7 @@ export function CulturePanel(props: CulturePanelProps): JSX.Element {
           </For>
         </ul>
         <Show when={presentation().upgrades.some((entry) => entry.id === "cryobank")}>
-          <div class="m15-choices" aria-label="Cryobank program choices">
+          <div class="culture-network-choices" aria-label="Cryobank program choices">
             <p>Choose a purchased cryobank program for future culture translation.</p>
             <For each={presentation().programs}>
               {(program) => (
@@ -174,6 +182,7 @@ export function CulturePanel(props: CulturePanelProps): JSX.Element {
                     )
                   }
                 >
+                  <ActionIcon name="cryobank" />{" "}
                   {program.selected ? `${program.label} selected` : `Select ${program.label}`}
                 </button>
               )}
@@ -183,7 +192,7 @@ export function CulturePanel(props: CulturePanelProps): JSX.Element {
       </fieldset>
       <Show when={presentation().queuedAction}>
         {(queue) => (
-          <fieldset class="hallmark-fieldset m15-fieldset" aria-live="polite">
+          <fieldset class="hallmark-fieldset culture-network-fieldset" aria-live="polite">
             <legend>Assay discipline</legend>
             <p>
               Queued {queue().producerLabel}: next cost {queue().cost};{" "}
@@ -218,7 +227,7 @@ export function CulturePanel(props: CulturePanelProps): JSX.Element {
                   Cancel
                 </button>
                 <button type="button" onClick={confirm}>
-                  Confirm {action().title}
+                  <ActionIcon name="culture" /> Confirm {action().title}
                 </button>
               </form>
             </>

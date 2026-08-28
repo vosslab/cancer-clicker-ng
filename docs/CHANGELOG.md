@@ -1,6 +1,44 @@
 ## 2026-08-28
 
+### Fixes and Maintenance
+
+- Refocused the saved Chicago scale report around its earned state: the early transformed-cell board
+  now begins directly with the colony and Store, the global-laboratory boundary exposes the compact
+  report action, and the reached report presents an editable, decorative lakefront skyline cue
+  beside its readable metrics.
+
+- Established the pre-production current-schema-only documentation contract: the browser accepts
+  and writes exactly `version: 2` / `stateSchemaVersion: 8`; strict parsing rejects incompatible
+  data, protects rejected bytes, and offers explicit validated fresh replacement. Replay and
+  balance references now name their current schema boundaries rather than a retired migration
+  ladder.
+
+- Renamed the culture and dissemination presentation seam and its CSS hooks with durable domain
+  vocabulary, and moved the editable Chicago colony-overlay rules into the ending stylesheet.
+  Base, prestige, and ending styles now each retain a focused ownership boundary below the source
+  file-size limit.
+
+- Kept the permanent Node suite organized by behavioral contracts: core-hallmark economy,
+  elapsed effects, catalog/funnel, metabolic conversion, immune inflammation, mutation drafting,
+  controller persistence, and decision outcomes now use durable domain filenames. Historical
+  milestone-style test-file references are removed from active documentation.
+
 ### Additions and New Features
+
+- Installed the shipped GitHub Pages workflow at `.github/workflows/deploy-pages.yml` as an exact
+  parity copy of the root template. The workflow builds `dist/`, uploads the Pages artifact, and
+  deploys it with the required Pages permissions and serialized publication concurrency.
+
+- Added an editable inline biological action-icon system. Shared 24 by 24 SVG geometry now gives
+  producer, hallmark, progression, prestige, culture, network, transit, and scale-report controls
+  compact family marks while native text labels retain their accessible control names.
+
+- Strengthened the deterministic balance laboratory with five canonical visible-state policy
+  identities, friendly display names, a schedule-driven check-in model, and a default aggregate
+  suite report covering every tracked scenario, completion, progression outcome, stall, and
+  outlier. Producer actions now disclose their exact marginal `+cells/s` quote beside Store cost;
+  `greedy-payback` uses that same visible cost-to-benefit relation. `docs/BALANCE.md` records the
+  calibration contract and tuning questions; generated reports remain one-time ignored output.
 
 - Added a deterministic headless balance laboratory with five visible-state-only profile policies,
   versioned scenario inputs, current-p8 snapshot validation, parser/reducer action traces, shared
@@ -147,6 +185,10 @@
 
 ### Behavior or Interface Changes
 
+- Adopted one pre-production durable save contract: envelope version 2 and state schema 8. Current
+  parsing now rejects older or incomplete payloads instead of synthesizing migration defaults, while
+  protected corrupt-save and storage-read recovery remains available.
+
 - Core-hallmark outcomes now change real producer quotes, debits, and live/offline production
   behavior. The hallmark tree exposes locked, available, and acquired states with native controls
   and durable outcome readouts.
@@ -155,6 +197,25 @@
   round-trips exactly, and documented recoverable leaves emit typed visible recovery notices.
 
 ### Fixes and Maintenance
+
+- Split the visible decision projection into typed producer, hallmark, regional, reset, culture,
+  network, and ending builders. Its single composition boundary preserves the established catalog
+  and saved-choice ordering while keeping parser and reducer validation authoritative.
+
+- Split the event reducer into a public facade and a domain-handler module. The canonical
+  `reduceGameEvent` and `recordEvent` contracts retain their parser-to-reducer behavior while
+  hallmark and durable-ledger projections now have one focused owner.
+
+- Split strict prestige save parsing into focused shared-guard, culture, ending, and network
+  boundary modules while retaining the established p8 parser facade and validation behavior.
+
+- Renamed permanent SVG subsystem comments, validation messages, and render-contract test language
+  around the durable morphology grammar and accepted colony-layout boundary. Stable seeded stream
+  identifiers and rendered geometry remain unchanged.
+
+- Synchronized the release marker as `26.08.0` in `VERSION` and `26.8.0` in npm manifests;
+  both forms identify the August 2026 patch-zero release while preserving the zero-padded month
+  in the human-facing CalVer record and npm's valid numeric SemVer identifiers.
 
 - Repaired the reached Chicago overlay's Solid reactivity so a newly accepted scale report mounts
   its live colony-to-city SVG transformation immediately, instead of retaining the prior
@@ -258,12 +319,12 @@
   layout provenance own future vessel/route and tumor-world visuals; animation supplements durable
   state. Production-dist behavior proof is permanent, while contact sheets and visual walkthroughs
   remain one-time acceptance evidence without pixel, byte, or timing thresholds.
-- Replaced M11's synthetic all-four purchase-ranking exit with direct authoritative hallmark
+- Replaced the synthetic all-four purchase-ranking exit with direct authoritative hallmark
   outcomes: conversion moves substrate into ATP without creating cells, masking stays regional,
   inflammation changes and then restores a real outcome, and saved mutation selection applies a
   named effect or rejects atomically. Multi-card/rank searches and broad balance experiments are
-  one-time acceptance evidence. The test-residency cleanup retires
-  `tests/test_m11_all_four_decisions.mjs` after semantic re-acceptance.
+  one-time acceptance evidence. The test-residency cleanup retires the synthetic ranking check
+  after semantic re-acceptance.
 - Announced M11's frozen-contract amendment after M10 acceptance: exactly three new event
   discriminants (`convert-substrate`, `set-region-mask`, and `activate-inflammation`) name their
   parser, reducer/sequence, save/load, controller, SolidJS, production-browser, test, and M20

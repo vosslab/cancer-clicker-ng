@@ -1,56 +1,53 @@
 # File formats
 
-This reference describes the JSON contracts that cross the browser-storage, development-replay,
-and balance-laboratory boundaries. It is for maintainers who create a fixture, inspect a recovery
-result, or review generated calibration evidence. The source parser remains authoritative for all
-field-level validation.
+This reference covers the JSON contracts crossing browser storage, development semantic replay, and
+the balance laboratory. Source parsers remain authoritative for exact field validation.
 
 ## Browser save files
 
-The browser stores one JSON document at the `cancer-clicker-ng.save.v2` key. Current writers emit
-exactly this V2/p8 envelope:
+The browser stores one JSON document at `cancer-clicker-ng.save.v2`. The only accepted envelope is
+the current format:
 
 ```json
 {
   "version": 2,
   "savedAtMs": 1724889600000,
-  "progressionVersion": 8,
-  "state": { "...": "current durable game state" }
+  "stateSchemaVersion": 8,
+  "state": { "...": "complete current durable game state" }
 }
 ```
 
-| Field                | Contract                                                                                                                                       |
-| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `version`            | Envelope version. Current writers use the literal integer `2`.                                                                                 |
-| `savedAtMs`          | Nonnegative safe integer timestamp supplied by the storage boundary.                                                                           |
-| `progressionVersion` | Current durable-state schema. Writers use the literal integer `8`.                                                                             |
-| `state`              | Exact current durable `GameState` DTO; its required keys, IDs, collections, and cross-field invariants are parsed in `src/state/save_load.ts`. |
+| Field                | Contract                                                                                                                           |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `version`            | Literal integer `2`.                                                                                                               |
+| `savedAtMs`          | Nonnegative safe integer supplied by the storage boundary.                                                                         |
+| `stateSchemaVersion` | Literal integer `8`.                                                                                                               |
+| `state`              | Exact current `GameState` DTO. Required keys, IDs, collections, and cross-field invariants are parsed in `src/state/save_load.ts`. |
 
-`serializeGameState()` writes the envelope only after its encoded DTO round-trips through the same
-strict parser without recovery notices. `parseSave()` treats storage as untrusted input, limits a
-save to 250,000 bytes, copies only allowlisted own properties, and reports one of these outcomes:
+`serializeGameState()` writes only after its encoded state round-trips through the same strict
+parser. `parseSave()` limits raw input to 250,000 bytes, requires exact own keys, and accepts a
+complete current state or rejects it. It reports `absent`, `loaded`, or `rejected`; rejection uses a
+`save-rejected` or `storage-error` notice. Parsed rejected text is retained for protected recovery.
+No migration, default injection, or partial field repair participates in the current format.
 
-- `absent` when the storage key has no value.
-- `loaded` with the reconstructed current state and zero or more `field-defaulted` notices.
-- `rejected` with a `save-rejected` notice and, for parsed raw input, the retained raw text.
-- A storage read or write failure uses a `storage-error` notice.
+## Protected storage recovery
 
-The parser currently reads its defined V1 and V2/p1 through V2/p7 historical inputs only to migrate
-them into V2/p8, then validates the result as a current state. Unknown or future versions reject.
-Those reads are bounded migration behavior, not a promise of open-ended legacy compatibility. New
-code should create and consume V2/p8 only. See [STATE_PERSISTENCE.md](STATE_PERSISTENCE.md) for
-recovery behavior and the current state owner.
+A missing key starts fresh. A malformed value or failed storage read enters recovery protection and
+leaves stored progress untouched. The recovery interface offers an explicit fresh replacement; it
+writes a newly created format-2/schema-8 save through the validated writer. Normal game actions,
+offline handling, and failed writes preserve the protected state. See
+[STATE_PERSISTENCE.md](STATE_PERSISTENCE.md) for the player-facing flow and owners.
 
 ## Development replay logs
 
-A replay log is a development diagnostic, not a player save or an offline-economy record. It
-captures accepted reducer events and semantic outcomes under named executable revisions:
+A replay log is a development diagnostic, not a player save or offline-economy record. It records
+accepted reducer events and semantic outcomes under the current executable schema:
 
 ```json
 {
   "source": {
     "formatVersion": 1,
-    "progressionVersion": 8,
+    "stateSchemaVersion": 8,
     "semanticRevision": "replay-semantics-v1",
     "sourceRevision": "local-build"
   },
@@ -64,32 +61,28 @@ captures accepted reducer events and semantic outcomes under named executable re
       "outcome": {
         "eventSequence": 1,
         "normalizedDurableState": { "...": "state after the event" },
-        "visibleProgression": { "...": "small DOM-free progression projection" }
+        "visibleProgression": { "...": "DOM-free progression projection" }
       }
     }
   ]
 }
 ```
 
-`formatVersion` is currently `1`. `source` identifies the replay format, durable progression
-version, semantic revision, and source revision. The parser requires exact plain-data records,
-monotonic nonnegative offsets, an initial state's seed equal to the top-level `seed`, and at most
-10,000 entries. Every event must pass the normal runtime-event parser.
+`formatVersion` is `1`. `source` names the trace format, current durable schema, semantic revision,
+and source revision. The parser requires exact plain-data records, monotonic nonnegative offsets, a
+seed matching the initial state, and at most 10,000 entries. The initial state and every event pass
+the normal current-state and runtime-event boundaries.
 
-The `outcome` records an event sequence, a normalized current durable state, and a deliberately
-small visible-progression projection. The latter contains current stage and ending phase, pending
-stage/prestige choices, earned prestige IDs, host-draft state, culture selections, and network
-tiers/frontier/campaign/node/edge status. It deliberately excludes formatting and layout.
-
-`replayLog()` re-enters the normal event parser and reducer for every entry. It compares semantic
-state and visible progression structurally, not serialized bytes. A stale source, mismatched seed,
-invalid event, rejected event, malformed state, or differing recorded outcome returns a typed
-rejection code. The replay API does not persist logs or execute browser storage.
+Each outcome includes the event sequence, normalized current durable state, and visible progression:
+current stage and ending phase; pending stage and prestige choices; earned prestige; host draft;
+culture selections; and network tier, frontier, campaign, node, and edge status. Layout and number
+formatting stay outside the log. `replayLog()` compares semantic data structurally and reports typed
+rejections for stale traces, source mismatch, malformed input, event rejection, or altered outcomes.
 
 ## Balance scenarios
 
-Tracked balance inputs live under `tools/balance_scenarios/`. The development runner accepts one
-scenario at a time and accepts only a `.json` path contained in that directory:
+Tracked balance inputs live under `tools/balance_scenarios/`. A scenario declares one bounded
+calibration question:
 
 ```json
 {
@@ -110,58 +103,41 @@ scenario at a time and accepts only a `.json` path contained in that directory:
 }
 ```
 
-| Field                                     | Contract                                                                                                                       |
-| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `formatVersion`                           | Literal integer `1`.                                                                                                           |
-| `id`, `semanticRevision`, `curveRevision` | Nonempty scenario provenance strings.                                                                                          |
-| `seeds`                                   | Nonempty array of nonnegative safe integers.                                                                                   |
-| `actionBudget`                            | Positive safe integer.                                                                                                         |
-| `elapsedScheduleMs`                       | Array of nonnegative safe integers, cycled after each accepted action.                                                         |
-| `allowedKinds`                            | Nonempty array drawn from the visible action kinds in the example.                                                             |
-| `initial`                                 | `{ "kind": "new-game" }` or `{ "kind": "durable-snapshot", "state": ... }`; a snapshot must pass the current p8 save boundary. |
-| `decisionWitness`                         | A bounded `L1`, `L2`, `L3`, `L4`, or `ending` question with an alternatives array.                                             |
+| Field                                     | Contract                                                                         |
+| ----------------------------------------- | -------------------------------------------------------------------------------- |
+| `formatVersion`                           | Literal integer `1`.                                                             |
+| `id`, `semanticRevision`, `curveRevision` | Nonempty provenance strings.                                                     |
+| `seeds`                                   | Nonempty array of nonnegative safe integers.                                     |
+| `actionBudget`                            | Positive safe integer.                                                           |
+| `elapsedScheduleMs`                       | Nonnegative safe integers, cycled after accepted actions.                        |
+| `allowedKinds`                            | Nonempty subset of visible action kinds.                                         |
+| `initial`                                 | A new game or a durable snapshot passing the current format-2/schema-8 boundary. |
+| `decisionWitness`                         | A bounded L1, L2, L3, L4, or ending question with alternatives.                  |
 
-The simulator selects from `projectVisibleDecisionSurface()`, parses each selected event, sends it
-through the reducer, and advances time through the shared offline-economy adapter. It is a
-deterministic review tool, not a player command, in-game bot, benchmark, or a substitute for human
-balance judgment.
+The runner projects `projectVisibleDecisionSurface()`, chooses only displayed actions, validates each
+through the event parser and reducer, and advances time through the shared offline-economy adapter.
+`greedy-payback` ranks a producer by its displayed cells cost divided by its authoritative displayed
+marginal `+cells/s` benefit; the Store shows that same quote. It is deterministic development
+evidence, never an in-game bot or a substitute for human balance judgment. `docs/BALANCE.md` owns
+the policy contract and command guidance.
 
-## Balance reports and generated outputs
+## Balance reports and validation
 
-The runner writes a machine-readable report below `output_balance/`; that directory is ignored by
-Git. The default command is:
+Reports are generated below ignored `output_balance/`. With no selector, the tool runs its default
+suite: five tracked scenarios times five canonical policies. It writes one aggregate format-2
+report; a `--scenario` command writes one focused format-2 report:
 
 ```bash
-node --import tsx tools/balance_sim.mjs \
-  --scenario tools/balance_scenarios/l1_route_tradeoffs_v1.json \
+node --import tsx tools/balance_sim.mjs --suite \
   --output output_balance/balance_report.json
 ```
 
-The current report has `formatVersion: 1`, plus:
+The report contains tool/input provenance, policy catalog, scenario assumptions and witnesses,
+per-policy traces, completions, outliers, and falsification observations. Generated reports are
+one-time calibration evidence. Keep the input scenario, command, accepted review, and a written
+conclusion together when tuning. Permanent tests cover parser, reducer, and replay behavior rather
+than a preferred bot rank or generated report.
 
-- `generatedBy`: tool path, Node version, input scenario ID, and semantic/curve revisions.
-- `assumptions`: seeds, action budget, elapsed schedule, and visible-surface revision.
-- `scenarios`: one result for the supplied scenario in the current command shape.
-- `falsification`: named observations derived from that result, including whether selected
-  decision witnesses were observed.
-
-Each scenario result includes its `id`, `decisionWitness`, ranked per-profile/per-seed traces,
-winner and runner-up profile IDs, and findings. A profile trace records its score dimensions and
-aggregate, rank, selected visible action IDs/kinds/reasons, milestone timestamps, and terminal
-visible progression. Findings flag observed dead action kinds, ties, unreachable gates, retained
-network surface, and post-ending continuation. They are evidence to inspect, not pass/fail release
-criteria or an instruction to tune toward a bot.
-
-Generated reports are one-time calibration evidence. Keep the scenario input, command, and accepted
-review together when making a tuning claim; permanent tests should continue to cover durable parser,
-reducer, and replay behavior. [USAGE.md](USAGE.md) provides the maintained command entry point.
-
-## Validation boundaries
-
-- Run `./check_codebase.sh` for the canonical TypeScript, formatting, lint, and deterministic
-  behavior gate.
-- Run a balance scenario when reviewing its specific curve question; it creates an ignored report
-  and does not belong in the permanent test suite.
-- Use `parseSave()`, `parseNormalizedGameState()`, and `parseReplayLog()` rather than hand-rolling
-  an import path for untrusted JSON. Their source contracts are the final authority when this page
-  and implementation differ.
+Run `./check_codebase.sh` for the canonical TypeScript and deterministic behavior gate. Use
+`parseSave()`, `parseNormalizedGameState()`, and `parseReplayLog()` rather than a hand-written
+untrusted JSON importer.

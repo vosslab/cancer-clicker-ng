@@ -127,7 +127,7 @@ function sameMetrics(scene: ColonySceneRequest): boolean {
 
 function assertAcceptedGeometry(scene: ColonySceneRequest): void {
   if (!sameMetrics(scene))
-    throw new Error("Scene layout metrics must match accepted M17 geometry.");
+    throw new Error("Scene layout metrics must match accepted colony geometry.");
   const geometry = suppressedDetailGeometry(scene.layout);
   if (!Object.isFrozen(geometry) || geometry.length === 0 || !geometry.every(Number.isFinite)) {
     throw new Error("Scene suppressed-detail geometry must be finite.");

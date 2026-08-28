@@ -14,6 +14,22 @@ export const SVG_ICON_NAMES = [
   "tumor_promoting_inflammation",
   "genome_instability_mutation",
   "producer",
+  "buy",
+  "assay",
+  "stage_advance",
+  "acquire",
+  "lineage_reset",
+  "organ_site",
+  "boon",
+  "host_transfer",
+  "culture",
+  "cryobank",
+  "network_node",
+  "network_edge",
+  "containment",
+  "campaign",
+  "transit",
+  "scale_report",
   "cdk4",
   "myc",
   "ras",
@@ -110,6 +126,80 @@ const ICONS: Readonly<Record<SvgIconName, SvgIconModel>> = Object.freeze({
   producer: icon("producer", [
     primitive("circle", stroked({ cx: 12, cy: 12, r: 7 })),
     primitive("path", stroked({ d: "M12 8v8M8 12h8" })),
+  ]),
+  buy: icon("buy", [
+    primitive("circle", stroked({ cx: 12, cy: 12, r: 8 })),
+    primitive(
+      "path",
+      stroked({
+        d: "M12 7v10M8.5 10.2c.4-1.3 1.5-2.2 3.5-2.2 2.2 0 3.5 1 3.5 2.5 0 3.7-7 1.8-7 5.2 0 1.4 1.3 2.3 3.5 2.3 1.9 0 3.2-.8 3.6-2.1",
+      }),
+    ),
+  ]),
+  assay: icon("assay", [
+    primitive("path", stroked({ d: "M8 3v7l-3 8a2 2 0 0 0 2 3h10a2 2 0 0 0 2-3l-3-8V3" })),
+    primitive("line", stroked({ x1: 8, y1: 3, x2: 16, y2: 3 })),
+    primitive("path", stroked({ d: "M8 15h8" })),
+  ]),
+  stage_advance: icon("stage_advance", [
+    primitive("path", stroked({ d: "M4 12h14M13 6l6 6-6 6" })),
+    primitive("circle", stroked({ cx: 5, cy: 12, r: 2 })),
+  ]),
+  acquire: icon("acquire", [
+    primitive("circle", stroked({ cx: 12, cy: 12, r: 8 })),
+    primitive("path", stroked({ d: "M12 7v10M7 12h10" })),
+  ]),
+  lineage_reset: icon("lineage_reset", [
+    primitive("path", stroked({ d: "M19 8a8 8 0 1 0 1 6" })),
+    primitive("polyline", stroked({ points: "19 3 19 8 14 8" })),
+  ]),
+  organ_site: icon("organ_site", [
+    primitive(
+      "path",
+      stroked({ d: "M12 21s7-5.1 7-11a4 4 0 0 0-7-2.7A4 4 0 0 0 5 10c0 5.9 7 11 7 11z" }),
+    ),
+    primitive("circle", stroked({ cx: 12, cy: 11, r: 1.8 })),
+  ]),
+  boon: icon("boon", [
+    primitive("path", stroked({ d: "m12 3 1.9 5.5L20 10l-6.1 1.5L12 17l-1.9-5.5L4 10l6.1-1.5z" })),
+  ]),
+  host_transfer: icon("host_transfer", [
+    primitive("circle", stroked({ cx: 7, cy: 12, r: 3 })),
+    primitive("circle", stroked({ cx: 17, cy: 12, r: 3 })),
+    primitive("path", stroked({ d: "M10 9h6M14 6l3 3-3 3M14 15l3 3-3 3" })),
+  ]),
+  culture: icon("culture", [
+    primitive("circle", stroked({ cx: 12, cy: 12, r: 8 })),
+    primitive("circle", stroked({ cx: 9, cy: 10, r: 1.3 })),
+    primitive("circle", stroked({ cx: 15, cy: 13, r: 2.2 })),
+  ]),
+  cryobank: icon("cryobank", [
+    primitive("rect", stroked({ x: 6, y: 5, width: 12, height: 15, rx: 2 })),
+    primitive("path", stroked({ d: "M12 8v9M9 10h6M9 14h6" })),
+  ]),
+  network_node: icon("network_node", [
+    primitive("circle", stroked({ cx: 6, cy: 12, r: 2.5 })),
+    primitive("circle", stroked({ cx: 17, cy: 6, r: 2.5 })),
+    primitive("circle", stroked({ cx: 17, cy: 18, r: 2.5 })),
+    primitive("path", stroked({ d: "M8.2 10.7 14.8 7.3M8.2 13.3l6.6 3.4" })),
+  ]),
+  network_edge: icon("network_edge", [
+    primitive("circle", stroked({ cx: 5, cy: 12, r: 2.2 })),
+    primitive("circle", stroked({ cx: 19, cy: 12, r: 2.2 })),
+    primitive("path", stroked({ d: "M7.5 12h9" })),
+  ]),
+  containment: icon("containment", [
+    primitive("path", stroked({ d: "M12 3 20 7v5c0 5-3.4 8-8 9-4.6-1-8-4-8-9V7z" })),
+    primitive("circle", stroked({ cx: 12, cy: 12, r: 2.4 })),
+  ]),
+  campaign: icon("campaign", [primitive("path", stroked({ d: "M5 20V5m0 1h10l-1.5 3L15 12H5" }))]),
+  transit: icon("transit", [
+    primitive("path", stroked({ d: "M4 12h13M13 6l6 6-6 6" })),
+    primitive("circle", stroked({ cx: 5, cy: 12, r: 2 })),
+  ]),
+  scale_report: icon("scale_report", [
+    primitive("rect", stroked({ x: 5, y: 4, width: 14, height: 16, rx: 2 })),
+    primitive("path", stroked({ d: "M8 16v-3M12 16V9M16 16v-5M8 8h8" })),
   ]),
   cdk4: icon("cdk4", [
     primitive("circle", stroked({ cx: 9, cy: 12, r: 4 })),

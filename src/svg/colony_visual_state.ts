@@ -1,7 +1,7 @@
 /**
  * Pure adapter from authoritative game state to an immutable living-tumor
- * scene model. This module declares meaning; M16 resolves grammar and M17
- * supplies the only accepted geometry.
+ * scene model. This module declares meaning; morphology grammar resolves form and
+ * the colony-layout subsystem supplies the accepted geometry.
  */
 import {
   MORPHOLOGY_AXES,
@@ -218,12 +218,12 @@ function cloneContribution(contribution: MorphologyContribution): MorphologyCont
   });
 }
 
-/** Narrows the authoritative stage grammar to the closed M16 visual fixture vocabulary. */
+/** Narrows the authoritative stage grammar to the closed visual-fixture vocabulary. */
 function morphologyStageId(stageId: GameState["currentStage"]): StageVisualId {
   for (const fixture of Object.values(STAGE_MORPHOLOGY_FIXTURES)) {
     if (fixture.stageId === stageId) return fixture.stageId;
   }
-  throw new Error("Current stage has no M16 morphology fixture.");
+  throw new Error("Current stage has no morphology grammar fixture.");
 }
 
 function cloneContributions(
@@ -408,7 +408,7 @@ function overlaysFor(game: GameState, layout: ColonyLayout): readonly ColonyRegi
   return freeze(overlays);
 }
 
-/** Resolves the semantic model after M17 has accepted the geometry correspondence. */
+/** Resolves the semantic model after the colony layout establishes geometry correspondence. */
 export function resolveColonyVisualState(game: GameState, layout: ColonyLayout): ColonyVisualState {
   const effects = effectsFor(game);
   const declarations = declarationsFor(game, effects);
@@ -646,7 +646,7 @@ export function assertColonyVisualState(
     throw new Error("Colony visual state must be a frozen exact record.");
   }
   if (!isDeclarations(value.declarations)) {
-    throw new Error("Colony visual declarations must retain the M16 layer contract.");
+    throw new Error("Colony visual declarations must retain the morphology layer contract.");
   }
   if (!isSystemicInvasion(value.invasion)) {
     throw new Error("Colony systemic invasion state must be frozen and exact.");

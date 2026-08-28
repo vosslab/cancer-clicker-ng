@@ -1,5 +1,5 @@
 /**
- * Data-only boundary between accepted M16/M17 scene data and the colony renderer SVG
+ * Data-only boundary between accepted morphology and colony-layout data and the renderer SVG
  * components. Rendering may project this immutable description, but never
  * changes the accepted colony layout or resolves another morphology.
  */
@@ -136,7 +136,7 @@ function requireStage(value: unknown): StageId {
 
 function requireLayout(value: unknown): ColonyLayout {
   if (!hasExactDataKeys(value, LAYOUT_KEYS))
-    throw new Error("Scene layout must be a frozen M17 layout.");
+    throw new Error("Scene layout must be a frozen accepted colony layout.");
   if (
     typeof value.stageId !== "string" ||
     typeof value.sceneKey !== "string" ||
@@ -150,7 +150,7 @@ function requireLayout(value: unknown): ColonyLayout {
 
 function requireMorphology(value: unknown): MorphologyResolution {
   if (!hasExactDataKeys(value, MORPHOLOGY_KEYS)) {
-    throw new Error("Scene morphology must be a frozen M16 resolution.");
+    throw new Error("Scene morphology must be a frozen morphology-grammar resolution.");
   }
   if (!isUint32(value.seed) || !Object.isFrozen(value.params) || !Object.isFrozen(value.traits)) {
     throw new Error("Scene morphology fields are invalid.");
@@ -222,7 +222,7 @@ export function createColonySceneRequest(value: unknown): ColonySceneRequest {
   for (const slot of layout.slots) {
     if (!validFiniteSlot(slot, sceneSeed)) {
       throw new Error(
-        "Scene slots must retain finite accepted M17 geometry and morphology identity.",
+        "Scene slots must retain finite accepted colony geometry and morphology identity.",
       );
     }
   }
@@ -241,7 +241,7 @@ function requireMitosis(value: unknown): MitosisRenderModel | undefined {
       value.placement !== "offset" &&
       value.placement !== "peripheral")
   ) {
-    throw new Error("Mitosis model is outside the M16 discrete vocabulary.");
+    throw new Error("Mitosis model is outside the morphology grammar vocabulary.");
   }
   return Object.freeze({ motif: value.motif, placement: value.placement });
 }

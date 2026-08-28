@@ -110,6 +110,21 @@ biological distinction always pairs color with contour, gap, shape, density, pat
 visible text. Color is never the sole indicator of hypoxia, necrosis, depth, stage, hallmark,
 selection, or an available player action.
 
+## Action icon language
+
+The action surface uses compact, editable inline SVG marks beside retained text labels. The source
+catalog is `src/svg/icons.ts`; `src/render/action_icon.tsx` provides the one decorative embed
+contract. Every icon has a `0 0 24 24` viewBox, semantic primitive groups, rounded `currentColor`
+strokes, and a small-scale line hierarchy with one clear outer silhouette before interior detail.
+Producer, hallmark, stage, lineage, culture, network, transit, and scale-report families receive
+distinct marks; routine confirmation and cancellation retain concise text to avoid visual noise.
+
+The icons are decorative (`aria-hidden`, unfocusable) because the adjacent native label is the
+accessible control name. Their density and spacing preserve the first-view 1280 x 800 board. This
+contract follows the local SVG references on viewBox/viewport scaling, reusable grouped elements,
+and biological-illustration clarity: communicate the durable action, then stop before detail turns
+into texture.
+
 ## SVG structure and editing policy
 
 The SVG is code-native and editable. The colony panel owns one native `button type="button"` named
@@ -174,6 +189,17 @@ Existing global reduced-motion handling therefore presents the same final routes
 immediately at desktop and narrow widths. Screen-reader copy names the transformation only after
 the reached semantic state is present; the interactive colony control keeps its existing keyboard
 and direct-cell-click ownership.
+
+## Reached-report lakefront scale cue
+
+The early transformed-cell board retains its direct colony-and-Store loop without a Chicago report
+surface. At the global-laboratory availability boundary, the report becomes a compact action. Once
+earned, the report adds `ChicagoScaleGraphic`: an original, editable inline 260 by 132 lakefront
+and skyline cue beside the saved metrics. Its near skyline uses darker, heavier outlines, restrained
+gold landmarks, a pale dashed shoreline, a cool lake edge, and a quiet signal route so the graphic
+reads at 1280 by 800 without adding vertical bulk. It is decorative (`aria-hidden`) because the
+adjacent text names the report, values, and continued-play outcome. The component has no motion;
+the report retains the existing reduced-motion behavior.
 
 ## Performance and motion policy
 

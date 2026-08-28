@@ -1,6 +1,6 @@
 /**
  * Deterministic SVG overlay projection for a validated living-colony scene.
- * Geometry comes only from the accepted M17 layout; biological meaning comes
+ * Geometry comes only from the accepted colony layout; biological meaning comes
  * only from ColonySceneRequest.visual.
  */
 import { For } from "solid-js";

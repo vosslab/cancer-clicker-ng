@@ -6,6 +6,11 @@ import { serializeGameState } from "../../src/state/save_load.ts";
 import { generateNetworkFrontierV1 } from "../../src/prestige/network.ts";
 
 const SAVE_KEY = "cancer-clicker-ng.save.v2";
+const FIXED_CLOCK_MS = 1_750_000_000_000;
+
+async function installFixedClock(page) {
+  await page.clock.install({ time: FIXED_CLOCK_MS });
+}
 
 function installDiagnostics(page) {
   const failures = [];
@@ -63,8 +68,8 @@ function hostCollapseState({
 }
 
 function currentFixture(options) {
-  const envelope = JSON.parse(serializeGameState(hostCollapseState(options), Date.now()));
-  envelope.savedAtMs = Date.now();
+  const envelope = JSON.parse(serializeGameState(hostCollapseState(options), FIXED_CLOCK_MS));
+  envelope.savedAtMs = FIXED_CLOCK_MS;
   return JSON.stringify(envelope);
 }
 
@@ -100,7 +105,7 @@ function networkFixture() {
     lineageLedger: { ...initial.lineageLedger, networkSeed: 17 },
     network: { ...initial.network, pendingFrontier: frontier },
   };
-  const savedAtMs = Date.now() + 60_000;
+  const savedAtMs = FIXED_CLOCK_MS;
   const envelope = JSON.parse(serializeGameState(state, savedAtMs));
   envelope.savedAtMs = savedAtMs;
   return JSON.stringify(envelope);
@@ -136,8 +141,8 @@ async function seedQueuedAssayFixture(page) {
       },
     },
   };
-  const envelope = JSON.parse(serializeGameState(state, Date.now()));
-  envelope.savedAtMs = Date.now();
+  const envelope = JSON.parse(serializeGameState(state, FIXED_CLOCK_MS));
+  envelope.savedAtMs = FIXED_CLOCK_MS;
   await page.addInitScript(
     ({ key, raw }) => {
       if (sessionStorage.getItem("queued-assay-browser-fixture-seeded") !== "1") {
@@ -168,6 +173,7 @@ async function confirm(page, title) {
 test("prestige metastasis confirmation cancels safely then persists one deliberate L1 reset", async ({
   page,
 }) => {
+  await installFixedClock(page);
   const diagnostics = installDiagnostics(page);
   await seedFixture(page, { l1: true, preparedLung: true });
   await page.goto("/");
@@ -213,6 +219,7 @@ test("prestige metastasis confirmation cancels safely then persists one delibera
 test("prestige host transfer preserves a revealed deterministic draft through reload and keyboard choice", async ({
   page,
 }) => {
+  await installFixedClock(page);
   const diagnostics = installDiagnostics(page);
   await seedFixture(page, {
     l2: true,
@@ -307,6 +314,7 @@ test("prestige host transfer preserves a revealed deterministic draft through re
 test("prestige confirmation keeps on-screen and raw state retryable after a scoped storage write fault", async ({
   page,
 }) => {
+  await installFixedClock(page);
   const diagnostics = installDiagnostics(page);
   await page.addInitScript((key) => {
     const originalSetItem = Storage.prototype.setItem;
@@ -350,6 +358,7 @@ test("prestige terminal confirmation remains reachable at 360px with reduced mot
   });
   try {
     const page = await context.newPage();
+    await installFixedClock(page);
     const diagnostics = installDiagnostics(page);
     await seedFixture(page, { l1: true, preparedLung: true });
     await page.goto("/");
@@ -381,6 +390,7 @@ test("prestige terminal confirmation remains reachable at 360px with reduced mot
 test("network frontier confirms one saved campaign and retires its alternatives", async ({
   page,
 }) => {
+  await installFixedClock(page);
   const diagnostics = installDiagnostics(page);
   await seedNetworkFixture(page);
   await page.goto("/");
@@ -405,6 +415,7 @@ test("network frontier confirms one saved campaign and retires its alternatives"
 test("producer rail labels a queued assay target and its explicit replacement", async ({
   page,
 }) => {
+  await installFixedClock(page);
   const diagnostics = installDiagnostics(page);
   await seedQueuedAssayFixture(page);
   await page.goto("/");

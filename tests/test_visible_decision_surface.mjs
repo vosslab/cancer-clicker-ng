@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { fromSafeInteger } from "../src/bignum/bignum.ts";
 import { hallmarkId } from "../src/brands.ts";
+import { producerPurchaseCellProductionBenefit } from "../src/economy/production.ts";
 import {
   projectVisibleDecisionSurface,
   projectVisibleProgression,
@@ -97,6 +98,23 @@ test("producer candidates retain catalog order while legal quantities reflect cu
   assert.ok(producerIds.includes("cdk4"));
 });
 
+test("producer candidates disclose the same marginal rate shown by the production authority", () => {
+  const state = fundedState();
+  const candidate = projectVisibleDecisionSurface(state).actions.find(
+    (action) => action.kind === "producer" && action.event.type === "purchase-producer",
+  );
+  if (!candidate || candidate.event.type !== "purchase-producer")
+    throw new Error("Expected a visible producer purchase.");
+  assert.deepEqual(candidate.displayedBenefit, {
+    metric: "cells-per-second",
+    value: producerPurchaseCellProductionBenefit(
+      state,
+      candidate.event.producerId,
+      candidate.event.quantity === "max" ? 0 : candidate.event.quantity,
+    ),
+  });
+});
+
 test("surface presents player decisions and keeps runtime/presentation events outside policy input", () => {
   const types = projectVisibleDecisionSurface(fundedState()).actions.map(
     (candidate) => candidate.event.type,
@@ -176,4 +194,23 @@ test("reprojecting after an accepted allocation offers the alternate state-chang
   );
   for (const candidate of allocations)
     assert.doesNotThrow(() => recordEvent(afterCycle, parseRuntimeEvent(candidate.event)));
+});
+
+test("surface composes stage advancement before hallmark allocation decisions", () => {
+  const initial = fundedState();
+  const state = {
+    ...initial,
+    hallmarkLevels: [
+      ...initial.hallmarkLevels,
+      { id: hallmarkId("proliferative_signaling"), level: 1 },
+    ],
+  };
+  const actionTypes = projectVisibleDecisionSurface(state).actions.map(
+    (candidate) => candidate.event.type,
+  );
+  const stageIndex = actionTypes.indexOf("advance-stage");
+  const allocationIndex = actionTypes.indexOf("set-signaling-allocation");
+  assert.ok(stageIndex >= 0);
+  assert.ok(allocationIndex >= 0);
+  assert.ok(stageIndex < allocationIndex);
 });

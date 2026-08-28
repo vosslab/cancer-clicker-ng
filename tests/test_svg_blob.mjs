@@ -15,7 +15,7 @@ function fixture(stageId, seed = 17) {
     detail: "representative",
   });
   const slot = layout.slots[0];
-  assert.ok(slot, `${stageId} has an accepted M17 slot`);
+  assert.ok(slot, `${stageId} has an accepted colony-layout slot`);
   return { morphology, slot };
 }
 

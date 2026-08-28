@@ -6,7 +6,7 @@ export const REPLAY_FORMAT_VERSION = 1 as const;
 /** Identifies the executable semantics that produced a development replay trace. */
 export type ReplaySource = Readonly<{
   formatVersion: typeof REPLAY_FORMAT_VERSION;
-  progressionVersion: number;
+  stateSchemaVersion: number;
   semanticRevision: string;
   sourceRevision: string;
 }>;

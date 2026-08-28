@@ -2,135 +2,102 @@
 
 ## Purpose and owner
 
-The browser-local save boundary preserves anonymous game progress. `src/state/game_state.ts`
-creates defaults, `src/state/save_load.ts` owns serialization and storage, and
-`src/state/events.ts` owns durable mutation. The UI supplies typed intent through the
-controller; it neither reconstructs saved state nor writes it directly.
+Cancer Clicker NG stores anonymous browser-local progress. `src/state/game_state.ts` creates a
+fresh state, `src/state/save_load.ts` owns the exact save boundary and browser-storage calls, and
+`src/state/events.ts` owns durable mutation. Rendered controls send typed intent through the game
+controller; they neither reconstruct a save nor write browser storage themselves.
 
-The feature stores no account, credential, payment, personal, or clinical data. Browser storage is
-untrusted input, including when the game previously wrote it.
+The game stores no account, credential, payment, personal, or clinical data. Every browser-storage
+value is untrusted input, including data written by an earlier build.
 
-## Versions and outcomes
+## Accepted save contract
 
-| Input                                      | Result                                                                                   |
-| ------------------------------------------ | ---------------------------------------------------------------------------------------- |
-| Valid V2/p8 envelope and state             | Reconstruct the current canonical `GameState`.                                           |
-| Valid supported legacy input               | Apply its bounded migration, then validate the resulting p8 state.                       |
-| Unknown version or invalid structural core | Reject, retain raw text, and return one generic `save-rejected` notice.                  |
-| Recoverable current leaf                   | Preserve independent siblings, use its documented default, and return `field-defaulted`. |
+There is one accepted and produced save envelope in this pre-production project:
 
-The envelope version remains V2. `CURRENT_PROGRESSION_VERSION` is 8, and V2/p8 is the only writer
-shape. V1 and V2/p1 through p7 are read-and-migrate inputs only; each is accepted only where its
-specific migration can establish the current structural contract. Unknown future versions reject.
+| Input                                                                           | Result                                                   |
+| ------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| Exact `version: 2`, `stateSchemaVersion: 8` envelope with a valid current state | Load the canonical `GameState`.                          |
+| Missing storage key                                                             | Start a fresh in-memory state.                           |
+| Any other envelope, schema, or invalid state                                    | Reject the input and protect the existing storage bytes. |
 
-P6 migration initializes the Culture and Network aggregates required by their later contracts. P7
-is the strict legacy Culture/Network shape: it carries `endingReached: boolean`. P7-to-p8 creates
-`ending: { phase: "unreached" }` for every accepted input. It never invents evidence that a player
-reached the optional Chicago presentation. `endingReached` belongs solely to that bounded legacy
-migration, never to a current `GameState`.
+`CURRENT_STATE_SCHEMA_VERSION` is `8`. The envelope has exactly four own enumerable keys:
+`version`, `savedAtMs`, `stateSchemaVersion`, and `state`. `version` is the literal integer `2`;
+`savedAtMs` is a nonnegative safe integer; and `state` is the exact current durable DTO. Earlier
+schema shapes are intentionally outside this contract. A changed durable schema is a deliberate
+source change: update the current DTO, parser, writer, fixtures, and documentation together.
 
-The writer and current reader form one closed boundary. Before storage, the writer validates its
-encoded p8 data through the strict current parser. A successful write therefore reloads with no
-recovery notices. This is a serialization invariant, not a replay or player-facing byte-equality
-requirement. The writer also applies the raw-size limit, so an otherwise valid dense graph cannot
-create an unreadable browser save.
+The writer and reader form a closed boundary. `serializeGameState()` encodes the current DTO, then
+validates the bytes through `parseSave()` before browser storage receives them. This proves current
+writer-reader compatibility. It does not impose byte equality on replay, rendering, or gameplay.
 
-## Reconstruction policy
+## Strict parsing
 
-`parseSave` validates the versioned envelope before it copies allowlisted own properties into a
-fresh state. It never spreads an untrusted record. `STATE_KEYS` is checked against `keyof
-GameState`, so a durable field change requires parser and writer ownership at TypeScript compile
-time.
+`parseSave()` limits input to 250,000 bytes, parses ordinary JSON only, requires the exact envelope
+keys, and rebuilds allowlisted own data into a fresh `GameState`. It validates safe counters,
+canonical BigNums, stable catalog IDs, collection bounds, unique durable identities, and
+cross-domain relations such as regions, routes, culture, network, and ending evidence. Inherited,
+accessor, symbol, reserved-key, malformed, oversized, or inconsistent data rejects as a whole.
 
-Current p8 reads require the structural core: safe progression and simulation counters, catalog
-identities, canonical BigNums, ordered unique producer levels, complete Culture and Network
-relations, and a valid `SoftEndingState`. A reached ending contains safe active-time and event
-sequence evidence plus canonical cells and the reached network tier. An unreached ending contains
-only its phase. Malformed structural data rejects instead of manufacturing simulation history.
+The parser returns only these result shapes:
 
-Recoverable leaves are local data that can safely return to their initial-state value, including
-documented scalar, BigNum, collection, and selected nested leaves. A recovery is visible through
-`field-defaulted` and preserves unrelated state. Structural invalidity rejects: malformed
-envelopes, unknown or reserved keys, unsafe counters, noncanonical BigNums, duplicate durable
-identities, oversized input, or broken graph relations would otherwise make later reduction and
-semantic replay ambiguous.
+- `absent` for a missing storage key;
+- `loaded` with a fully valid current state and no notices;
+- `rejected` with a `save-rejected` notice and retained raw text when parsing received raw text;
+- `rejected` with a `storage-error` notice when browser storage cannot be read.
 
-`lastStageTransition` is optional. A malformed transition is omitted with one recovery notice;
-the current stage remains authoritative. A malformed optional region senescence reference removes
-only its dependent clearance edge.
+Current-state parsing has no default-injection or partial-recovery path. A state is accepted in its
+complete current form or is rejected. This keeps replay and later additions grounded in one truthful
+schema instead of a mixture of inferred historical shapes.
 
-## Data integrity rules
+## Protected recovery and fresh replacement
 
-The parser accepts ordinary JSON records with exact enumerable keys. It rejects inherited,
-accessor, symbol, and reserved-key data; bounds raw input at 250,000 characters and collections at
-`MAX_COLLECTION`; and accepts safe numeric counters and canonical serialized BigNums only.
+`SAVE_KEY` is `cancer-clicker-ng.save.v2`. `loadFromStorage()` distinguishes a missing key, an
+unreadable stored value, and a storage-read failure. A rejected raw value is retained as evidence;
+the controller enters recovery protection and disables ordinary mutations. The game never replaces
+those bytes as a side effect of loading, ticking, or a rejected action.
 
-The persisted graph maintains these relations:
+The player can explicitly choose the recovery panel's fresh-start replacement action. That action
+creates a new current state and writes it through the same validated save boundary. Only a
+successful validated write clears recovery protection. A storage-write failure leaves the visible
+durable state and protection state intact.
 
-- Durable `EventId` values remain globally unique.
-- Region and route references point to surviving owned records.
-- Program, mutation-offer, microbiome, clearance, Culture, and Network selections remain
-  internally consistent with their saved pools, plans, and queues.
-- Network frontier, active campaign, and completed campaigns retain source tuples and exact
-  generated topology, so parser validation can reject dangling, duplicate, or forged relations.
-- A reached ending remains evidence for the accepted reach event; it never changes economy,
-  producer, or prestige balances.
+## Event and ending integrity
 
-## Event funnel
+Every durable mutation enters `recordEvent()` in `src/state/events.ts`. `src/state/event_parse.ts`
+first rebuilds exact runtime event records, then the reducer applies an accepted event immutably.
+Rejected input leaves state and `eventSequence` unchanged; an accepted event increments the sequence
+once.
 
-Every durable mutation enters `recordEvent` in `src/state/events.ts` as `unknown` input.
-`src/state/event_parse.ts` rebuilds an exact plain discriminated record before
-`src/state/events.ts` reduces it immutably. Unknown discriminants or keys, inherited
-data, accessors, invalid payloads, unsafe timestamps, and invalid identifiers fail before state or
-`eventSequence` changes. Accepted events increment the sequence once; rejected events are atomic.
+`reach-soft-ending` is an explicit accepted event. It records the optional Chicago-scale
+presentation only after the required current stage, dissemination tier, and modeled cell scale are
+present. The event changes presentation evidence, not the producer economy or the player's ability
+to continue direct cell action and progression.
 
-`reach-soft-ending` is one parsed, reducer-recorded event. It records the optional Chicago-scale
-presentation only after its stage, network-tier, and cell-scale conditions are true. The controller
-routes its intent through persistence before reconciliation, so a reached presentation always has
-the same durable event funnel as any other player action. Direct cancer-cell play, producer
-economics, offline accrual, and network decisions continue afterward.
-
-`apply-offline-accrual` remains the single recorded offline resource mutation. Its exact payload
-holds bounded elapsed time, the current simulation timestamp, a canonical resource snapshot, and
-new queue additions. The controller constructs a resource-only projection, and the reducer guards
-the trusted event boundary.
-
-## Browser storage flow
-
-`SAVE_KEY` is `cancer-clicker-ng.save.v2`. `loadFromStorage` returns `absent` without a notice for
-a missing key, parser output for present text, and a generic `storage-error` notice for read
-failure. `saveToStorage` is the sole write boundary and returns no notices on success.
-
-Rejected input retains raw text for an intentional recovery flow. A parse-rejected payload and a
-storage read failure remain distinct visible conditions. The UI starts fresh only through the same
-validated persistence boundary.
-
-## Semantic replay and evidence
+## Development semantic replay
 
 `src/state/replay.ts` and `src/types/replay.ts` own a development-only `ReplayLog`. Its recorder
-observes only an event that the controller has already persisted and
-reconciled. A diagnostic observer cannot turn that successful player action into a failure.
+observes an event only after the controller has parsed, reduced, persisted, and reconciled the
+accepted state. The log stores schema-current source metadata, the deterministic seed, a normalized
+current initial state, and semantic outcomes for accepted events.
 
-The hostile-log parser bounds and validates plain data, re-enters `parseRuntimeEvent()` and
-`recordEvent()`, and compares normalized durable state plus visible progression. It is not a public
-save, transport, or wire format. Replay therefore proves semantic behavior without requiring
-serialized-byte equality, visual pixel equality, or a timing threshold.
-
-Focused domain-named Node/tsx tests exercise migrations, hostile saves, event atomicity, soft-ending
-evidence, prestige persistence, and semantic replay. `./check_codebase.sh` is the canonical
-aggregate TypeScript gate. Production build/browser capture and visual inspection are separately
-named one-time acceptance evidence when a UI change needs it.
+Replay re-enters the normal event parser and reducer for each entry. It compares event sequence,
+normalized durable state, and the small DOM-free visible-progression projection structurally. A
+stale schema or semantics revision, source revision mismatch, malformed record, rejected event,
+seed mismatch, or altered outcome returns a typed rejection. Replay is neither player-save format
+nor browser-storage transport, and it makes no byte, pixel, or timing equivalence claim.
 
 ## Durable ownership
 
-- `src/state/save_load.ts` owns progression versions, parsing, migration, serialization, and
-  browser storage.
-- `src/types/state.ts` owns the current `GameState` and `SoftEndingState` shape.
-- `src/state/events.ts` and `src/state/event_parse.ts` own durable event acceptance.
-- `src/state/replay.ts` and `src/types/replay.ts` own development semantic replay.
-- Future balance calibration owns dated policy-comparison evidence, not persistence or replay
-  acceptance rules.
+| Owner                                                | Responsibility                                                                     |
+| ---------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `src/types/save.ts`                                  | Exact current save-envelope types and notice vocabulary.                           |
+| `src/state/save_load.ts` and `src/state/save_parse/` | Current DTO parsing, canonical serialization, and browser storage.                 |
+| `src/types/state.ts`                                 | Current `GameState` and `SoftEndingState` shape.                                   |
+| `src/state/event_parse.ts` and `src/state/events.ts` | Durable event acceptance and mutation.                                             |
+| `src/types/replay.ts` and `src/state/replay.ts`      | Schema-current development semantic replay.                                        |
+| `src/render/game_controller.ts`                      | Storage-aware player intents, protected recovery, and optional replay observation. |
 
-Future durable-state changes update these owners, their focused behavioral tests, and the TypeScript
-checks before acceptance. Dated implementation history belongs in [CHANGELOG.md](CHANGELOG.md),
-and in-flight work belongs in `docs/active_plans/`.
+Run `./check_codebase.sh` for the permanent TypeScript and deterministic behavior gate. A production
+build, browser journey, or rendered visual review is separately named one-time evidence when a
+change needs it. Dated implementation history belongs in [CHANGELOG.md](CHANGELOG.md); active work
+belongs in `docs/active_plans/`.

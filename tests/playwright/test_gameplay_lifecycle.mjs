@@ -135,7 +135,7 @@ test("gameplay lifecycle production dist is playable, persistent, accessible, an
   );
   expect(storage.value).not.toBeNull();
   const envelope = JSON.parse(storage.value);
-  expect(envelope).toMatchObject({ version: 2, progressionVersion: 8 });
+  expect(envelope).toMatchObject({ version: 2, stateSchemaVersion: 8 });
   expect(storage.keys).toEqual([SAVE_KEY]);
   expect(JSON.stringify(envelope)).not.toContain('"password"');
   expect(JSON.stringify(envelope)).not.toContain('"token"');

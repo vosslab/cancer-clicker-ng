@@ -94,6 +94,6 @@ test("loaded current result has the closed progression contract", () => {
   const loaded = parseSave(raw);
   assert.equal(loaded.status, "loaded");
   if (loaded.status !== "loaded") throw new Error("Expected current save to load.");
-  assert.equal(loaded.progressionVersion, 8);
+  assert.equal(loaded.stateSchemaVersion, 8);
   assert.equal(loaded.version, 2);
 });

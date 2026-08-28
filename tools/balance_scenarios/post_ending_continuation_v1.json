@@ -120,6 +120,11 @@
       "pendingProgression": [],
       "stageProgress": 0,
       "stageGateProgress": {},
+      "lastStageTransition": {
+        "from": "immortalized_culture",
+        "to": "global_lab_contamination",
+        "atMs": 900
+      },
       "oxygenPressure": 0,
       "damagePressure": 0,
       "immunePressure": 0,

@@ -21,7 +21,7 @@ export const MAX_REPLAY_ENTRIES = 10_000;
 const RESERVED_KEYS = new Set(["__proto__", "prototype", "constructor"]);
 
 export type ReplayRuntime = Readonly<{
-  progressionVersion: number;
+  stateSchemaVersion: number;
   semanticRevision: string;
   sourceRevision: string;
 }>;
@@ -131,7 +131,7 @@ function structurallyEqual(left: unknown, right: unknown): boolean {
 function replaySource(runtime: ReplayRuntime): ReplaySource {
   return Object.freeze({
     formatVersion: REPLAY_FORMAT_VERSION,
-    progressionVersion: runtime.progressionVersion,
+    stateSchemaVersion: runtime.stateSchemaVersion,
     semanticRevision: runtime.semanticRevision,
     sourceRevision: runtime.sourceRevision,
   });
@@ -139,7 +139,7 @@ function replaySource(runtime: ReplayRuntime): ReplaySource {
 
 function validRuntime(runtime: ReplayRuntime): boolean {
   return (
-    isNatural(runtime.progressionVersion) &&
+    isNatural(runtime.stateSchemaVersion) &&
     typeof runtime.semanticRevision === "string" &&
     runtime.semanticRevision.length > 0 &&
     typeof runtime.sourceRevision === "string" &&
@@ -150,7 +150,7 @@ function validRuntime(runtime: ReplayRuntime): boolean {
 function runtimeRejection(source: ReplaySource, runtime: ReplayRuntime): ReplayResult | undefined {
   if (
     source.formatVersion !== REPLAY_FORMAT_VERSION ||
-    source.progressionVersion !== runtime.progressionVersion ||
+    source.stateSchemaVersion !== runtime.stateSchemaVersion ||
     source.semanticRevision !== runtime.semanticRevision
   ) {
     return { kind: "rejected", code: "stale-trace" };
@@ -219,7 +219,7 @@ function parseSource(raw: unknown): ReplaySource | undefined {
   if (
     !hasExactKeys(raw, [
       "formatVersion",
-      "progressionVersion",
+      "stateSchemaVersion",
       "semanticRevision",
       "sourceRevision",
     ])
@@ -227,7 +227,7 @@ function parseSource(raw: unknown): ReplaySource | undefined {
     return undefined;
   if (
     raw.formatVersion !== REPLAY_FORMAT_VERSION ||
-    !isNatural(raw.progressionVersion) ||
+    !isNatural(raw.stateSchemaVersion) ||
     typeof raw.semanticRevision !== "string" ||
     raw.semanticRevision.length === 0 ||
     typeof raw.sourceRevision !== "string" ||
@@ -237,7 +237,7 @@ function parseSource(raw: unknown): ReplaySource | undefined {
   }
   return Object.freeze({
     formatVersion: REPLAY_FORMAT_VERSION,
-    progressionVersion: raw.progressionVersion,
+    stateSchemaVersion: raw.stateSchemaVersion,
     semanticRevision: raw.semanticRevision,
     sourceRevision: raw.sourceRevision,
   });

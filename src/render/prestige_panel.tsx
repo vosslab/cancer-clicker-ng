@@ -22,6 +22,7 @@ import type {
 } from "../types/ids.js";
 import type { GameState } from "../types/state.js";
 import type { ApplyResult, GameController } from "./game_controller.js";
+import { ActionIcon } from "./action_icon.js";
 
 type PrestigePanelProps = Readonly<{ game: GameState; controller: GameController }>;
 const PRE_DRAFT_BOON_IDS = ["extra_card_reveal", "protected_route_affinity"] as const;
@@ -81,7 +82,7 @@ function reasonText(reason: PrestigeReason): string {
   return exhaustive;
 }
 
-/** A deliberate UI shell over trusted M14 quotes; no reset formula or draft generation lives here. */
+/** A deliberate UI shell over trusted prestige quotes; reset formulae and draft generation stay domain-owned. */
 export function PrestigePanel(props: PrestigePanelProps): JSX.Element {
   const [pending, setPending] = createSignal<PendingConfirmation>();
   const [resetSiteId, setResetSiteId] = createSignal<OrganSiteId>();
@@ -234,7 +235,7 @@ export function PrestigePanel(props: PrestigePanelProps): JSX.Element {
               );
             }}
           >
-            Begin metastasis reset
+            <ActionIcon name="lineage_reset" /> Begin metastasis reset
           </button>
         </Show>
       </fieldset>
@@ -248,7 +249,9 @@ export function PrestigePanel(props: PrestigePanelProps): JSX.Element {
               return (
                 <li>
                   <article class="prestige-card">
-                    <h3>{allocation().title}</h3>
+                    <h3>
+                      <ActionIcon name="organ_site" /> {allocation().title}
+                    </h3>
                     <p id={`organ-site-${site.id}-status`} tabindex="-1">
                       Rank {allocation().rank}; next debit {allocation().nextCost ?? "complete"}{" "}
                       Potential.
@@ -273,7 +276,7 @@ export function PrestigePanel(props: PrestigePanelProps): JSX.Element {
                         )
                       }
                     >
-                      Allocate rank
+                      <ActionIcon name="organ_site" /> Allocate rank
                     </button>
                     <Show when={!allocation().available}>
                       <p class="hallmark-disabled-note">{reasonText(allocation().reason)}</p>
@@ -311,7 +314,7 @@ export function PrestigePanel(props: PrestigePanelProps): JSX.Element {
                                   )
                                 }
                               >
-                                Choose {quote().title}
+                                <ActionIcon name="culture" /> Choose {quote().title}
                               </button>
                               <Show when={!quote().available}>
                                 <p class="hallmark-disabled-note">{reasonText(quote().reason)}</p>
@@ -353,7 +356,7 @@ export function PrestigePanel(props: PrestigePanelProps): JSX.Element {
               )
             }
           >
-            Perform host transfer
+            <ActionIcon name="host_transfer" /> Perform host transfer
           </button>
         </Show>
         <ul class="prestige-card-grid">
@@ -365,7 +368,9 @@ export function PrestigePanel(props: PrestigePanelProps): JSX.Element {
               return (
                 <li>
                   <article class="prestige-card">
-                    <h3>{quote().title}</h3>
+                    <h3>
+                      <ActionIcon name="boon" /> {quote().title}
+                    </h3>
                     <p id={`lineage-boon-${boonId}-status`} tabindex="-1">
                       {quote().available
                         ? `Debit ${quote().cost} Imprints.`
@@ -390,7 +395,7 @@ export function PrestigePanel(props: PrestigePanelProps): JSX.Element {
                         )
                       }
                     >
-                      Purchase boon
+                      <ActionIcon name="boon" /> Purchase boon
                     </button>
                     <Show when={!quote().available}>
                       <p class="hallmark-disabled-note">{reasonText(quote().reason)}</p>
@@ -455,7 +460,7 @@ export function PrestigePanel(props: PrestigePanelProps): JSX.Element {
                                   );
                               }}
                             >
-                              Choose this host
+                              <ActionIcon name="host_transfer" /> Choose this host
                             </button>
                           </Show>
                         </article>
@@ -520,7 +525,7 @@ export function PrestigePanel(props: PrestigePanelProps): JSX.Element {
                           )
                         }
                       >
-                        Reduce liability
+                        <ActionIcon name="boon" /> Reduce liability
                       </button>
                       <Show when={!quote().available}>
                         <p class="hallmark-disabled-note">{reasonText(quote().reason)}</p>
@@ -558,7 +563,7 @@ export function PrestigePanel(props: PrestigePanelProps): JSX.Element {
                   Cancel
                 </button>
                 <button type="button" onClick={confirm}>
-                  Confirm {action().title}
+                  <ActionIcon name="lineage_reset" /> Confirm {action().title}
                 </button>
               </form>
             </>

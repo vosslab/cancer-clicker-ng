@@ -4,7 +4,6 @@ import test from "node:test";
 import { organTagId } from "../src/brands.ts";
 import { createInitialGameState } from "../src/state/game_state.ts";
 import { recordEvent } from "../src/state/events.ts";
-import { deriveSeedV1 } from "../src/state/deterministic_random.ts";
 import { generateHostDraftV1 } from "../src/prestige/hosts.ts";
 import {
   AUTHORED_NETWORK_NODE_CATALOG,
@@ -29,7 +28,7 @@ test("current saves round-trip without notices and keep empty prestige, culture,
   const loaded = parseSave(raw);
   assert.equal(loaded.status, "loaded");
   if (loaded.status !== "loaded") throw new Error("Expected current save to load.");
-  assert.equal(loaded.progressionVersion, 8);
+  assert.equal(loaded.stateSchemaVersion, 8);
   assert.deepEqual(loaded.notices, []);
   assert.deepEqual(loaded.state.lineageLedger, state.lineageLedger);
   assert.deepEqual(loaded.state.metastasis, state.metastasis);
@@ -38,7 +37,7 @@ test("current saves round-trip without notices and keep empty prestige, culture,
   assert.deepEqual(loaded.state.network, state.network);
 });
 
-test("p6 permits a null active niche only for the canonical empty pre-L1 aggregate", () => {
+test("current prestige persistence permits a null active niche only in the empty aggregate", () => {
   const empty = createInitialGameState();
   assert.equal(empty.metastasis.activeNicheContext, null);
   assert.equal(parseSave(serializeGameState(empty, 19)).status, "loaded");
@@ -57,9 +56,9 @@ test("p6 permits a null active niche only for the canonical empty pre-L1 aggrega
   assert.equal(parseSave(JSON.stringify(raw)).status, "rejected");
 });
 
-test("accepted historical saves receive empty prestige, culture, network, and ending defaults", () => {
+test("current parser rejects a prior state schema without fabricating defaults", () => {
   const envelope = currentEnvelope();
-  envelope.progressionVersion = 5;
+  envelope.stateSchemaVersion = 5;
   delete envelope.state.lineageLedger;
   delete envelope.state.metastasis;
   delete envelope.state.hostTransfer;
@@ -69,48 +68,22 @@ test("accepted historical saves receive empty prestige, culture, network, and en
   envelope.state.endingReached = false;
   envelope.state.deterministicSeed = 41;
   envelope.state.eventSequence = 9;
-  const loaded = parseSave(JSON.stringify(envelope));
-  assert.equal(loaded.status, "loaded");
-  if (loaded.status !== "loaded") throw new Error("Expected accepted p5 to migrate.");
-  assert.equal(loaded.progressionVersion, 8);
-  assert.deepEqual(
-    loaded.notices.map((notice) => notice.field),
-    ["lineageLedger", "metastasis", "hostTransfer", "culture", "network", "ending"],
-  );
-  assert.equal(loaded.state.lineageLedger.lineageSeed, deriveSeedV1("lineage-v1", 41, 9));
-  assert.deepEqual(loaded.state.metastasis, createInitialGameState().metastasis);
-  assert.deepEqual(loaded.state.hostTransfer, createInitialGameState().hostTransfer);
-  assert.deepEqual(loaded.state.culture, createInitialGameState().culture);
-  assert.deepEqual(loaded.state.network, createInitialGameState().network);
-  assert.deepEqual(loaded.state.ending, createInitialGameState().ending);
+  assert.equal(parseSave(JSON.stringify(envelope)).status, "rejected");
 });
 
-test("accepted legacy prestige saves retain provenance and receive ending defaults", () => {
+test("current parser rejects a prior prestige state schema without synthetic ending data", () => {
   const state = createInitialGameState();
   state.lineageLedger = { ...state.lineageLedger, completedL1ResetCount: 2 };
   const envelope = currentEnvelope(state);
-  envelope.progressionVersion = 6;
+  envelope.stateSchemaVersion = 6;
   delete envelope.state.culture;
   delete envelope.state.network;
   delete envelope.state.ending;
   envelope.state.endingReached = false;
-  const loaded = parseSave(JSON.stringify(envelope));
-  assert.equal(loaded.status, "loaded");
-  if (loaded.status !== "loaded") throw new Error("Expected accepted p6 to migrate.");
-  assert.equal(loaded.progressionVersion, 8);
-  assert.deepEqual(
-    loaded.notices.map((notice) => notice.field),
-    ["culture", "network", "ending"],
-  );
-  assert.deepEqual(loaded.state.lineageLedger, state.lineageLedger);
-  assert.deepEqual(loaded.state.metastasis, state.metastasis);
-  assert.deepEqual(loaded.state.hostTransfer, state.hostTransfer);
-  assert.deepEqual(loaded.state.culture, createInitialGameState().culture);
-  assert.deepEqual(loaded.state.network, createInitialGameState().network);
-  assert.deepEqual(loaded.state.ending, createInitialGameState().ending);
+  assert.equal(parseSave(JSON.stringify(envelope)).status, "rejected");
 });
 
-test("p7 culture accepts catalog-ranked cryobank ownership and rejects an ungated program", () => {
+test("culture persistence accepts catalog-ranked cryobank ownership and rejects an ungated program", () => {
   const state = createInitialGameState();
   state.culture = {
     passages: 1,
@@ -136,7 +109,7 @@ test("p7 culture accepts catalog-ranked cryobank ownership and rejects an ungate
   });
 });
 
-test("p7 assay queue carries one catalog producer with saved event and simulation provenance", () => {
+test("assay queue persistence carries one catalog producer with event and simulation provenance", () => {
   const state = createInitialGameState();
   state.culture = {
     passages: 0,
@@ -160,7 +133,7 @@ test("p7 assay queue carries one catalog producer with saved event and simulatio
   });
 });
 
-test("p7 preserves an exact saved frontier and rejects forged plan endpoints or dangling graph records", () => {
+test("network persistence preserves an exact frontier and rejects forged or dangling graph records", () => {
   const state = createInitialGameState();
   const networkSeed = 47;
   const frontier = generateNetworkFrontierV1({
@@ -222,7 +195,7 @@ test("p7 preserves an exact saved frontier and rejects forged plan endpoints or 
   assert.equal(parseSave(JSON.stringify(dangling)).status, "rejected");
 });
 
-test("p7 reloads a retained selected campaign with its saved plan", () => {
+test("network persistence reloads a retained selected campaign with its saved plan", () => {
   const initial = createInitialGameState();
   let state = {
     ...initial,
@@ -286,7 +259,7 @@ test("p7 reloads a retained selected campaign with its saved plan", () => {
   assert.equal(parseSave(JSON.stringify(forgedArchive)).status, "rejected");
 });
 
-test("p6 prestige records reject hostile keys, unsafe identity, and noncanonical balances", () => {
+test("prestige persistence rejects hostile keys, unsafe identity, and noncanonical balances", () => {
   rejectsCurrent((state) => {
     state.lineageLedger.extra = true;
   });
@@ -307,7 +280,7 @@ test("p6 prestige records reject hostile keys, unsafe identity, and noncanonical
   });
 });
 
-test("p6 accepts canonical multi-site ranks and a saved four-reveal draft after its boon clears", () => {
+test("prestige persistence accepts canonical site ranks and a saved four-reveal draft", () => {
   const state = createInitialGameState();
   state.metastasis = {
     ...state.metastasis,
@@ -392,7 +365,7 @@ test("p6 accepts canonical multi-site ranks and a saved four-reveal draft after 
   });
 });
 
-test("p6 rejects a no-boon draft whose saved three-card reveal is escalated to four", () => {
+test("prestige persistence rejects a no-boon draft escalated from three to four reveals", () => {
   const state = createInitialGameState();
   state.lineageLedger = { ...state.lineageLedger, hostDraftSequence: 1 };
   state.eventSequence = 4;
@@ -412,7 +385,7 @@ test("p6 rejects a no-boon draft whose saved three-card reveal is escalated to f
   assert.equal(parseSave(JSON.stringify(envelope)).status, "rejected");
 });
 
-test("p6 active hosts require their retained consumed draft and identical selected card", () => {
+test("active host persistence requires its retained consumed draft and selected card", () => {
   const state = createInitialGameState();
   state.lineageLedger = {
     ...state.lineageLedger,
@@ -445,7 +418,7 @@ test("p6 active hosts require their retained consumed draft and identical select
   });
 });
 
-test("p6 effects records require a matching active niche context and typed targeted provenance", () => {
+test("prestige effects require matching niche context and typed targeted provenance", () => {
   const state = createInitialGameState();
   state.metastasis = {
     ...state.metastasis,
@@ -514,7 +487,7 @@ test("p6 effects records require a matching active niche context and typed targe
   assert.equal(parseSave(JSON.stringify(wrongDraft)).status, "rejected");
 });
 
-test("p6 retains a valid targeted application from a prior host run without rewriting its provenance", () => {
+test("prestige persistence retains a valid prior-host application without rewriting provenance", () => {
   const state = createInitialGameState();
   const seed = state.lineageLedger.lineageSeed;
   const priorDraftId = `host-draft-v1:${seed}:1`;
@@ -602,7 +575,7 @@ test("prestige parsing and writer validation reject accessors without invoking t
   assert.equal(reads, 0);
 });
 
-test("p6 prestige catalog lists and host graph reject noncanonical or incoherent relations", () => {
+test("prestige catalog lists and host graph reject noncanonical or incoherent relations", () => {
   rejectsCurrent((state) => {
     state.lineageLedger.organTagsSeen = [organTagId("pulmonary"), organTagId("hepatic")];
   });

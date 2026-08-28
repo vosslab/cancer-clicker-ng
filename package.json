@@ -1,6 +1,6 @@
 {
 	"name": "cancer-clicker-ng",
-	"version": "2026.08.0",
+	"version": "26.8.0",
 	"type": "module",
 	"private": true,
 	"scripts": {

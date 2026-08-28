@@ -72,7 +72,7 @@ function assertRouteCommitment(context: HallmarkEffectContext<CommitRouteOperati
 /**
  * Commits one exact parcel from the primary balance. A zero-risk revealed route is local
  * expansion; a nonzero risk is a future dissemination attempt. Both leave seeded sites untouched:
- * only the later transit outcome can establish a destination, and M13 owns organ allocation.
+ * only the later transit outcome can establish a destination, and the prestige domain owns organ allocation.
  */
 export function applyRouteCommitment(
   context: HallmarkEffectContext<CommitRouteOperation>,

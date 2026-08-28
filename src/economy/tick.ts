@@ -46,7 +46,7 @@ export type EconomyStepResult = Readonly<{
   stateProjection?: ElapsedHallmarkDurableProjection;
   /** extended-hallmark is independently verified by offline replay before these three durable fields are merged. */
   extendedHallmarkProjection?: ExtendedHallmarkDurableTickProjection;
-  /** M12 owns only the microbiome offer/deadline/sequence aggregate projection. */
+  /** The late-hallmark projection owns microbiome offers, deadlines, and sequence updates. */
   lateHallmarkProjection?: LateHallmarkDurableTickProjection;
 }>;
 export type OfflineStepResult = EconomyStepResult;
@@ -70,7 +70,7 @@ function extendedHallmarkProjectionCreatesOffer(
   return before.mutationOffers.length === 0 && projection.mutationOffers.length === 1;
 }
 
-/** The single production formula used by both live and M5 offline replay. */
+/** The single production formula used by both live and offline replay. */
 export const applyEconomyTick: EconomyTick = function applyEconomyTick(
   state: GameState,
   elapsedMs: number,

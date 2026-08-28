@@ -8,6 +8,7 @@ import { stageOperationalChange } from "../stages/effects.js";
 import { stageGateResult } from "../stages/gates.js";
 import type { GameState } from "../types/state.js";
 import type { StageDefinition, StageGateResult, StageUiMode } from "../stages/stage_types.js";
+import { ActionIcon } from "./action_icon.js";
 
 type StagePanelProps = Readonly<{
   game: GameState;
@@ -235,7 +236,7 @@ export function StagePanel(props: StagePanelProps): JSX.Element {
               aria-describedby="stage-gate-title"
               onClick={props.onAdvance}
             >
-              Advance to {nextStage().title}
+              <ActionIcon name="stage_advance" /> Advance to {nextStage().title}
             </button>
           </div>
         )}

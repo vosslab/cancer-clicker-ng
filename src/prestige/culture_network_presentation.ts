@@ -57,7 +57,7 @@ export type CulturePresentation = Readonly<{
   queuedAction: Readonly<{ producerLabel: string; cost: string; affordable: boolean }> | null;
 }>;
 
-/** A pure read model for culture choices; the reducer remains the only ledger writer. */
+/** A pure culture-choice read model; the reducer remains the only ledger writer. */
 export function culturePresentation(state: GameState): CulturePresentation {
   const activeProgramId = state.metastasis.activeNicheContext?.programId ?? null;
   const immortalization = immortalizationQuoteV1(state.lineageLedger, state.eventSequence);

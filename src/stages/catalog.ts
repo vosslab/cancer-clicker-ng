@@ -280,7 +280,7 @@ const DEFINITIONS = [
 
 export const STAGE_DEFINITIONS: readonly StageDefinition[] = DEFINITIONS;
 
-/** M21 may tune inside these conservative provisional envelopes, never to non-finite economics. */
+/** Balance calibration may tune these conservative provisional envelopes while preserving finite economics. */
 export const STAGE_ECONOMY_ENVELOPE = {
   productionMultiplier: { minimum: 1, maximum: 2 },
   favoredProducerCostMultiplier: { minimum: 0.5, maximum: 1 },
@@ -326,7 +326,7 @@ export function assertStageEconomyCatalog(
     transformed.operationalChange.economy.favoredProducerCostMultiplier !== 1 ||
     transformed.operationalChange.economy.favoredProducerRateMultiplier !== 1
   )
-    throw new Error("Transformed-cell M6 economy must remain neutral.");
+    throw new Error("Transformed-cell opening economy must remain neutral.");
 }
 
 function sameStageOrder(): boolean {

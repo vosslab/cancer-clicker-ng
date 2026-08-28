@@ -56,7 +56,7 @@ function reach(state) {
   });
 }
 
-test("soft ending requires the one L4 tier, Chicago scale, and explicit event", () => {
+test("soft ending requires the network tier, Chicago scale, and explicit event", () => {
   const initial = createInitialGameState();
   assert.deepEqual(softEndingEligibility(initial), { available: false, reason: "stage" });
   const atStage = { ...initial, currentStage: "global_lab_contamination" };
@@ -98,7 +98,7 @@ test("soft ending transition rejects stale, duplicate, and malformed intent atom
   assert.deepEqual(reached, reachedSnapshot);
 });
 
-test("p8 ending evidence round-trips and forged evidence rejects", () => {
+test("current ending evidence round-trips and forged evidence rejects", () => {
   const reached = reach(eligibleState());
   const raw = serializeGameState(reached, 1234);
   const loaded = parseSave(raw);
@@ -118,9 +118,9 @@ test("p8 ending evidence round-trips and forged evidence rejects", () => {
   assert.equal(parseSave(JSON.stringify(forged)).status, "rejected");
 });
 
-test("p7 provisional ending flags migrate to unreached without fabricated evidence", () => {
+test("historical provisional ending flags migrate to unreached without fabricated evidence", () => {
   const raw = JSON.parse(serializeGameState(eligibleState(), 1200));
-  raw.progressionVersion = 7;
+  raw.stateSchemaVersion = 7;
   raw.state.endingReached = true;
   delete raw.state.ending;
   const loaded = parseSave(JSON.stringify(raw));

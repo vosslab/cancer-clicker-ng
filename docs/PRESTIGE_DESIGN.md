@@ -40,7 +40,7 @@ context persists into the host run and supplies catalog-backed metabolic, perfus
 immune, pressure, and reserve effects through `src/prestige/effects.ts`.
 
 Historical allocations remain portfolio/currency history. They never infer a biological location or
-alter all producers. A future respec requires its own cost and migration contract.
+alter all producers. A future respec requires its own cost and current-state contract.
 
 ## L2 Host Transfer
 
@@ -80,10 +80,11 @@ credit comes from the one accepted node claim and remains idempotent across save
 
 ## Persistence and replay
 
-P8 is the current exact-key save shape. P6 and p7 are bounded legacy inputs. The p7 Culture/Network
-shape carries `endingReached`; its migration creates only `ending: { phase: "unreached" }` and never
-fabricates Chicago-scale reach evidence. [STATE_PERSISTENCE.md](STATE_PERSISTENCE.md) owns the full
-progression migration matrix.
+Prestige state belongs to the one current exact-key save shape: `version: 2` and
+`stateSchemaVersion: 8`. Culture, network, and ending evidence are required current aggregates;
+the parser rejects a partial or incompatible shape rather than inferring a prior run. The current
+contract and protected fresh-replacement flow are owned by
+[STATE_PERSISTENCE.md](STATE_PERSISTENCE.md).
 
 `src/types/events.ts`, `src/state/event_parse.ts`, and `src/state/events.ts` own strict prestige
 events. Payloads carry selected stable IDs, event time, and quote revision; reducers recompute
@@ -99,7 +100,7 @@ Replay is not a public transport or player save format.
 | `src/prestige/reset.ts`, `seeding.ts`, `hosts.ts`, `layers.ts` | L1/L2 projection, catalog choices, lineage facts, and deterministic host drafts.    |
 | `src/prestige/culture.ts` and `network.ts`                     | L3/L4 projections, culture, frontier, campaign, containment, and Pressure behavior. |
 | `src/prestige/effects.ts`                                      | Pure composition of selected niche and host effects for named mechanics consumers.  |
-| `src/state/save_load.ts` and `save_parse/prestige.ts`          | Current persistence and bounded prestige migration.                                 |
+| `src/state/save_load.ts` and `save_parse/prestige.ts`          | Current prestige persistence and strict aggregate validation.                       |
 | `src/state/events.ts` and `event_parse.ts`                     | Exact durable prestige event funnel.                                                |
 | `src/state/replay.ts` and `types/replay.ts`                    | Development semantic replay through the event funnel.                               |
 
@@ -108,11 +109,13 @@ browser proof and visual inspection are separately named acceptance evidence for
 
 ## Balance laboratory
 
-The balance laboratory compares visible-state-only policies `local_growth`, `stealth_seeder`,
-`adaptive_drafter`, and `network_architect` on declared seeds and equal budgets. It reports winner,
-score, runner-up, actions, assumptions, tradeoffs, and observed rank reversals. Its witnesses vary a
-named cause while holding independent inputs fixed, then confirm a player-visible quote, action
-availability, or durable semantic outcome changes as declared.
+The balance laboratory compares five visible-state-only policies on declared seeds and equal
+budgets. `greedy-payback` uses the displayed marginal-production quote and displayed cost;
+`naive-cheapest`, `hallmark-first`, `prestige-rush`, and `check-in-idle` each express a distinct
+visible decision posture. It reports winner, score, runner-up, actions, assumptions, tradeoffs, and
+observed rank reversals. Its witnesses vary a named cause while holding independent inputs fixed,
+then confirm a player-visible quote, action availability, or durable semantic outcome changes as
+declared. `docs/BALANCE.md` owns the precise policy vocabulary.
 
 This work produces dated calibration evidence. It can tune catalog prices, trait magnitudes,
 thresholds, and score bands without changing caller ownership. It does not impose a permanent rank,

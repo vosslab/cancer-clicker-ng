@@ -59,6 +59,29 @@ button:disabled {
   cursor: not-allowed;
 }
 
+/* Inline glyphs mark durable action families while the adjacent label remains the control name. */
+.action-icon {
+  display: inline-block;
+  width: 1.05em;
+  height: 1.05em;
+  margin-inline-end: 0.28em;
+  vertical-align: -0.16em;
+  overflow: visible;
+  color: currentcolor;
+  flex: 0 0 auto;
+}
+
+h3 > .action-icon,
+h4 > .action-icon {
+  width: 1.12em;
+  height: 1.12em;
+  color: var(--growth-bright);
+}
+
+button > .action-icon {
+  stroke-width: 2.05;
+}
+
 button:focus-visible,
 input:focus-visible,
 select:focus-visible {
@@ -517,72 +540,6 @@ polygon.colony-figure__outline {
 .colony-figure__seed-anchor {
   fill: #ffd078;
   stroke: #fff1b0;
-  stroke-width: 2;
-}
-
-/* Reached M19 scale layer: an editable fictional Chicago volume analogy behind living tissue. */
-.colony-ending-overlay {
-  opacity: 0.82;
-}
-
-.colony-ending-overlay__lake path:first-child {
-  fill: rgb(77 145 168 / 40%);
-}
-
-.colony-ending-overlay__shore {
-  fill: none;
-  stroke: rgb(177 235 238 / 88%);
-  stroke-width: 3;
-  stroke-dasharray: 3 7;
-}
-
-.colony-ending-overlay__grid path {
-  fill: none;
-  stroke: rgb(237 220 166 / 28%);
-  stroke-width: 1.25;
-}
-
-.colony-ending-overlay__river {
-  stroke: rgb(147 220 224 / 72%) !important;
-  stroke-width: 8 !important;
-  stroke-linecap: round;
-  stroke-dasharray: 18 7;
-}
-
-.colony-ending-overlay__route {
-  fill: none;
-  stroke: rgb(243 139 144 / 74%);
-  stroke-width: 3.5;
-  stroke-linecap: round;
-  stroke-dasharray: 4 7;
-}
-
-.colony-ending-overlay__tower-face {
-  fill: rgb(84 93 109 / 72%);
-  stroke: rgb(222 239 212 / 52%);
-  stroke-width: 1.5;
-}
-
-.colony-ending-overlay__tower-side {
-  fill: rgb(42 51 68 / 78%);
-  stroke: rgb(185 207 201 / 42%);
-  stroke-width: 1.25;
-}
-
-.colony-ending-overlay__tower-roof {
-  fill: rgb(136 156 159 / 66%);
-  stroke: rgb(232 246 202 / 62%);
-  stroke-width: 1.25;
-}
-
-.colony-ending-overlay__tower--connected .colony-ending-overlay__tower-face {
-  stroke: rgb(255 224 126 / 88%);
-  stroke-width: 2.5;
-}
-
-.colony-ending-overlay__site-marker {
-  fill: #ffd078;
-  stroke: #fff4c4;
   stroke-width: 2;
 }
 

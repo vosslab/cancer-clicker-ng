@@ -170,7 +170,7 @@ export const MORPHOLOGY_RULES: Readonly<{
 const BASELINE_SOURCE: MorphologySource = Object.freeze({
   layer: "baseline",
   contributorId: "baseline:morphology-v1",
-  label: "M16 morphology baseline",
+  label: "Morphology grammar baseline",
   referenceRowId: "morphology:baseline",
 });
 

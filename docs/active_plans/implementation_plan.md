@@ -537,7 +537,7 @@ Twenty-two milestones. Each reaches green independently. No milestone waits on a
   relations. M12 imports the L3 immortalization activation predicate through one small adapter;
   M15 replaces that adapter implementation with its ledger-owned activation while retaining the
   M12 state, event, save, and UI contract.
-- Save contract: advance `CURRENT_PROGRESSION_VERSION` from p4 to p5. `parseLateHallmarks`
+- Save contract: advance `CURRENT_STATE_SCHEMA_VERSION` from p4 to p5. `parseLateHallmarks`
   validates bounded/canonical/unique catalog relations, exact saved composition cards, timestamps,
   region links, ownership, and offer deadlines. The p4-to-p5 migration constructs an empty
   aggregate and drops provisional late-hallmark scaffold data. Earlier migrations then enter p5.
@@ -1184,15 +1184,16 @@ refactor. Tests use inline inputs or a local builder; regular tests run offline.
 "Time to prestige" is meaningful only with a declared player model. Five declared bots are all
 reported as calibration evidence:
 
-- **Greedy payback**: always buys the shortest payback time.
+- **Greedy payback**: selects the producer with the shortest disclosed cell-cost-per-marginal-
+  cells-per-second payback, using the same visible cost and benefit quote as the Store.
 - **Naive cheapest**: always buys the cheapest affordable item. The lower bound on competent play.
 - **Hallmark-first**: prioritizes hallmark branches over producers. Detects a tree that is too
   strong or too weak relative to raw production.
 - **Prestige-rush**: resets at the earliest viable threshold. Detects prestige thresholds that are
   degenerate in either direction.
-- **Check-in idle**: acts only every four simulated hours, then spends everything. Models the
-  away-and-return player the genre is built around, and validates that offline accrual feels
-  worthwhile.
+- **Check-in idle**: advances through each scenario's declared elapsed schedule and acts only on
+  every third decision window when a visible route, network, or prestige action exists. Models the
+  away-and-return player without inventing an arbitrary universal hour threshold.
 
 Adoption rule: the design owner compares the strategy observations with the declared decision
 witnesses, records the curve version and tradeoffs in `docs/BALANCE.md`, and chooses the curve that

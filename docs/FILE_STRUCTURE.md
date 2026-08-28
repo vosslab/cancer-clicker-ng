@@ -72,7 +72,7 @@ graphify-out/                 Generated repository-navigation map
 
 ## Tests and tools
 
-- [tests/test_*.mjs](../tests/) are focused Node tests for domain behavior, persistence, replay,
+- [tests](../tests/) contains focused Node tests for domain behavior, persistence, replay,
   controller behavior, and SVG structure. Use a stable domain name for each new test file.
 - [tests/playwright/](../tests/playwright/) contains production-browser journeys. Add browser
   behavior and visual interaction checks here when they require built SolidJS output.
@@ -91,15 +91,15 @@ graphify-out/                 Generated repository-navigation map
 
 ## Generated artifacts
 
-- [dist/](../dist/) is rebuilt by [build_github_pages.sh](../build_github_pages.sh). It contains
+- `dist/` is rebuilt by [build_github_pages.sh](../build_github_pages.sh). It contains
   `main.js`, copied authored CSS, `index.html`, source maps, and `.nojekyll`; edit [src/](../src/)
   rather than this directory.
-- [output_balance/](../output_balance/) receives calibration reports from
+- `output_balance/` receives calibration reports from
   [tools/balance_sim.mjs](../tools/balance_sim.mjs). Scenarios are source; reports are generated
   evidence and can be recreated.
-- [graphify-out/](../graphify-out/) holds a generated navigation graph. Use it to narrow source
+- `graphify-out/` holds a generated navigation graph. Use it to narrow source
   investigation, then confirm conclusions in the current files and tests.
-- [test-results/](../test-results/) and Playwright report directories are transient browser-test
+- `test-results/` and Playwright report directories are transient browser-test
   outputs.
 
 ## Documentation map
@@ -107,8 +107,8 @@ graphify-out/                 Generated repository-navigation map
 - [README.md](../README.md) introduces the game and first playable loop.
 - [docs/CODE_ARCHITECTURE.md](CODE_ARCHITECTURE.md) describes ownership boundaries and data flow.
 - [docs/SOLID_MODEL.md](SOLID_MODEL.md) defines the client-only SolidJS model.
-- [docs/STATE_PERSISTENCE.md](STATE_PERSISTENCE.md) defines local save, migration, and replay
-  contracts.
+- [docs/STATE_PERSISTENCE.md](STATE_PERSISTENCE.md) defines the current local-save, recovery, and
+  replay contracts.
 - [docs/GAME_DESIGN.md](GAME_DESIGN.md), [docs/PROGRESSION_DESIGN.md](PROGRESSION_DESIGN.md), and
   [docs/PRESTIGE_DESIGN.md](PRESTIGE_DESIGN.md) describe player-facing systems.
 - [docs/ART_DIRECTION.md](ART_DIRECTION.md) and
@@ -130,11 +130,11 @@ graphify-out/                 Generated repository-navigation map
   state and a typed controller callback.
 - Add an SVG motif in [src/svg/](../src/svg/) after defining the visual-state and scene-request
   facts it consumes. Add reusable small icons to [src/svg/icons.ts](../src/svg/icons.ts).
-- Add deterministic domain evidence as a focused [tests/test_*.mjs](../tests/) file; add real
+- Add deterministic domain evidence as a focused [tests](../tests/) file; add real
   browser behavior to [tests/playwright/](../tests/playwright/). Keep temporary visual inspection
   artifacts outside permanent tests.
 - Add a calibration input to [tools/balance_scenarios/](../tools/balance_scenarios/) and retain
-  generated output under [output_balance/](../output_balance/).
+  generated output under `output_balance/`.
 - Add durable reference documentation under [docs/](.), following
   [docs/MARKDOWN_STYLE.md](MARKDOWN_STYLE.md); put implementation-time material in the appropriate
   [docs/active_plans/](active_plans/) subdirectory.
@@ -142,5 +142,5 @@ graphify-out/                 Generated repository-navigation map
 ## Known gaps
 
 - Verify future generated artifacts only after running their owning command. The repository does
-  not treat a pre-existing [dist/](../dist/) or [output_balance/](../output_balance/) directory as
+  not treat a pre-existing `dist/` or `output_balance/` directory as
   proof that it matches the current source.

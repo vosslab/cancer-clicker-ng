@@ -16,7 +16,7 @@ function fixture(stage) {
   return createGameColonyScene(game);
 }
 
-test("the render contract accepts every frozen M16/M17 stage fixture without changing either source", () => {
+test("the render contract accepts every frozen morphology and layout fixture without changing either source", () => {
   for (const stageId of STAGE_IDS) {
     const source = fixture(stageId);
     const beforeLayout = structuredClone(source.layout);

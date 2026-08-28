@@ -51,7 +51,7 @@ test("save recovery protects rejected raw storage until an accessible explicit r
   const validRaw = await page.evaluate((key) => localStorage.getItem(key), SAVE_KEY);
   expect(validRaw).not.toBeNull();
   expect(validRaw).not.toBe(CORRUPT_RAW);
-  expect(JSON.parse(validRaw)).toMatchObject({ version: 2, progressionVersion: 8 });
+  expect(JSON.parse(validRaw)).toMatchObject({ version: 2, stateSchemaVersion: 8 });
 
   await divide.focus();
   await divide.press("Enter");
@@ -59,7 +59,7 @@ test("save recovery protects rejected raw storage until an accessible explicit r
   expect(cellsAfterFirstSavedDivide).not.toBe(initialCells);
   const savedRaw = await page.evaluate((key) => localStorage.getItem(key), SAVE_KEY);
   expect(savedRaw).not.toBeNull();
-  expect(JSON.parse(savedRaw)).toMatchObject({ version: 2, progressionVersion: 8 });
+  expect(JSON.parse(savedRaw)).toMatchObject({ version: 2, stateSchemaVersion: 8 });
 
   await page.reload();
   await expect(page.locator("#recovery-notice")).toHaveCount(0);
@@ -68,7 +68,7 @@ test("save recovery protects rejected raw storage until an accessible explicit r
   const reloadedRaw = await page.evaluate((key) => localStorage.getItem(key), SAVE_KEY);
   expect(reloadedRaw).not.toBeNull();
   expect(reloadedRaw).not.toBe(CORRUPT_RAW);
-  expect(JSON.parse(reloadedRaw)).toMatchObject({ version: 2, progressionVersion: 8 });
+  expect(JSON.parse(reloadedRaw)).toMatchObject({ version: 2, stateSchemaVersion: 8 });
 
   await divide.focus();
   await divide.press("Enter");

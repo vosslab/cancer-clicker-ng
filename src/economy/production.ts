@@ -1,4 +1,4 @@
-import { multiplyByNumber, sum, zero } from "../bignum/bignum.js";
+import { multiplyByNumber, subtract, sum, zero } from "../bignum/bignum.js";
 import type { BigNum } from "../types/bignum.js";
 import type { ProducerId } from "../types/ids.js";
 import type { GameState, ProducerLevel } from "../types/state.js";
@@ -73,6 +73,28 @@ export function producerCellProductionRate(state: GameState, id: ProducerId): Bi
   );
   if (!production) throw new Error("Producer production is invalid.");
   return production.cellsPerSecond;
+}
+
+/** Quotes a purchase's marginal rate through the same modifier path as simulation ticks. */
+export function producerPurchaseCellProductionBenefit(
+  state: GameState,
+  id: ProducerId,
+  quantity: number,
+): BigNum {
+  if (!Number.isSafeInteger(quantity) || quantity <= 0)
+    throw new Error("Producer purchase quantity is invalid.");
+  const producer = producerDefinition(id);
+  const level = assertCanonicalProducerLevels(state.producerLevels).find(
+    (candidate) => candidate.id === id,
+  );
+  if (!level || level.level > Number.MAX_SAFE_INTEGER - quantity)
+    throw new Error("Producer purchase quantity is invalid.");
+  const current = producerCellProduction(state, producer, level);
+  const purchased = producerCellProduction(state, producer, {
+    ...level,
+    level: level.level + quantity,
+  });
+  return subtract(purchased, current);
 }
 
 /** The authoritative total cell-production rate in cells per second. */

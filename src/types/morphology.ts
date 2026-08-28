@@ -1,5 +1,5 @@
 /**
- * The deliberately provisional state-to-art contract. M16 specifies combination
+ * The deliberately provisional state-to-art contract. The morphology grammar specifies combination
  * semantics and biological ranges before any SVG drawing code consumes it.
  */
 export type MorphologyParams = Readonly<{

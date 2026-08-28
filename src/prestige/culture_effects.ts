@@ -1,6 +1,6 @@
 /**
- * Pure L3 culture modifiers. Culture is the only source for these effects:
- * L1 allocation and site state have intentionally been cleared before this
+ * Pure culture modifiers. Culture is the only source for these effects:
+ * Earlier reset-local allocation and site state have intentionally been cleared before this
  * adapter is consulted.
  */
 import { passageUpgradeId } from "../brands.js";
@@ -57,7 +57,7 @@ export function cultureEffects(state: GameState): CultureEffects {
   });
 }
 
-/** Applies culture after M14's current-run conversion contribution. */
+/** Applies saved culture translation after current-run conversion contributions. */
 export function cultureSubstrateConversion(state: GameState, baseMultiplier: number): number {
   return clamp(
     requireFinite(baseMultiplier, "Base substrate conversion") *

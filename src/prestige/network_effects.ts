@@ -21,7 +21,7 @@ const NEUTRAL_NETWORK_LOCAL_EFFECTS: NetworkLocalEffects = Object.freeze({
   adjacencyTags: Object.freeze([]),
 });
 
-/** M21 may tune bounded local credit weights without changing reducer ownership. */
+/** Balance calibration may tune bounded local credit weights without changing reducer ownership. */
 export const NETWORK_CREDIT_TUNING = Object.freeze({
   detectionMultiplierMinimum: 0.5,
   detectionMultiplierMaximum: 1.5,

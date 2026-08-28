@@ -8,6 +8,11 @@ import { recordEvent } from "../../src/state/events.ts";
 import { serializeGameState } from "../../src/state/save_load.ts";
 
 const SAVE_KEY = "cancer-clicker-ng.save.v2";
+const FIXED_CLOCK_MS = 1_750_000_000_000;
+
+async function installFixedClock(page) {
+  await page.clock.install({ time: FIXED_CLOCK_MS });
+}
 
 function networkEvent(state, type, fields) {
   return recordEvent(state, {
@@ -45,7 +50,7 @@ function availableEndingFixture() {
   state = networkEvent(state, "stabilize-network-node", { nodeId });
   const raw = serializeGameState(
     { ...state, cells: CHICAGO_SKYSCRAPER_CELL_EQUIVALENT },
-    Date.now(),
+    FIXED_CLOCK_MS,
   );
   return raw;
 }
@@ -63,6 +68,20 @@ async function seedAvailableEnding(page) {
   );
 }
 
+async function seedGlobalLaboratory(page) {
+  const initial = createInitialGameState();
+  const raw = serializeGameState(
+    { ...initial, currentStage: stageId("global_lab_contamination") },
+    FIXED_CLOCK_MS,
+  );
+  await page.addInitScript(
+    ({ key, value }) => {
+      localStorage.setItem(key, value);
+    },
+    { key: SAVE_KEY, value: raw },
+  );
+}
+
 function diagnostics(page) {
   const failures = [];
   page.on("pageerror", (error) => failures.push(`pageerror: ${error.message}`));
@@ -72,9 +91,39 @@ function diagnostics(page) {
   return failures;
 }
 
+test("early transformed-cell board keeps the Chicago report out of the primary loop", async ({
+  page,
+}) => {
+  await installFixedClock(page);
+  const failures = diagnostics(page);
+  await page.goto("/");
+
+  await expect(page.locator(".ending-view")).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: /Chicago scale report/i })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /Chicago scale report/i })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Divide cell" })).toBeVisible();
+  await expect(page.getByRole("complementary", { name: "Division apparatus store" })).toBeVisible();
+  expect(failures).toEqual([]);
+});
+
+test("global laboratory introduces the scale report before its final action is available", async ({
+  page,
+}) => {
+  await installFixedClock(page);
+  const failures = diagnostics(page);
+  await seedGlobalLaboratory(page);
+  await page.goto("/");
+
+  await expect(page.locator(".ending-view")).toBeVisible();
+  await expect(page.locator(".ending-view")).toContainText("Complete one dissemination campaign tier.");
+  await expect(page.getByRole("button", { name: /Open the Chicago scale report/i })).toHaveCount(0);
+  expect(failures).toEqual([]);
+});
+
 test("Chicago report is keyboard-openable, persisted, scale-aware, and leaves the game playable", async ({
   page,
 }) => {
+  await installFixedClock(page);
   const failures = diagnostics(page);
   await seedAvailableEnding(page);
   await page.goto("/?debug=1");
@@ -88,6 +137,14 @@ test("Chicago report is keyboard-openable, persisted, scale-aware, and leaves th
   await expect(page.getByRole("heading", { name: "Chicago scale report open" })).toBeFocused();
   await expect(report).toContainText("Chicago high-rise volumes");
   await expect(report).toContainText("Cells, producers, offline accrual");
+  const scaleGraphic = report.locator(".chicago-scale-graphic");
+  await expect(scaleGraphic).toBeVisible();
+  await expect(scaleGraphic).toHaveAttribute("viewBox", "0 0 260 132");
+  await expect(scaleGraphic).toHaveAttribute("aria-hidden", "true");
+  await expect(scaleGraphic).toHaveAttribute("tabindex", "-1");
+  await expect(scaleGraphic.locator(".chicago-scale-graphic__lake")).toHaveCount(1);
+  await expect(scaleGraphic.locator(".chicago-scale-graphic__skyline")).toHaveCount(1);
+  await expect(page.getByRole("img")).toHaveCount(0);
 
   await page.getByRole("button", { name: /Use full names/ }).click();
   await expect(report).toContainText("septillion cells");
@@ -129,6 +186,7 @@ test("Chicago report is keyboard-openable, persisted, scale-aware, and leaves th
 test("earned Chicago scale renders a structural city overlay behind the living colony", async ({
   page,
 }) => {
+  await installFixedClock(page);
   const failures = diagnostics(page);
   await seedAvailableEnding(page);
   await page.goto("/");
@@ -209,6 +267,7 @@ test("Chicago report remains readable and motion-free at the narrow reduced-moti
   });
   try {
     const page = await context.newPage();
+    await installFixedClock(page);
     const failures = diagnostics(page);
     await seedAvailableEnding(page);
     await page.goto("/");

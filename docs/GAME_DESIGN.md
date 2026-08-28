@@ -65,9 +65,9 @@ prior save for invalid clock input.
 
 ### Progression persistence
 
-Gameplay writes V2/p8 saves. [STATE_PERSISTENCE.md](STATE_PERSISTENCE.md) is the authoritative
-current migration contract. P7 Culture/Network input migrates its legacy `endingReached` field to
-an unreached ending; migration never fabricates a reached Chicago-scale presentation.
+Gameplay writes the one current save envelope: `version: 2` and `stateSchemaVersion: 8`.
+[STATE_PERSISTENCE.md](STATE_PERSISTENCE.md) owns strict parsing, protected rejected storage, and
+the explicit fresh-replacement flow.
 
 Current writer revalidation gives a zero-notice reload and stable canonical serialization. This is
 a persistence invariant, not a requirement that offline or development replay match serialized
@@ -85,7 +85,7 @@ revalidate an entry when the player acts and can show that it is no longer avail
 | Evidence           | Owner and semantic result                                                                                                                       |
 | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
 | Offline behavior   | Domain-named Node/tsx tests cover clock inputs, bounded steps, partitions, queues, projection boundaries, atomic failures, and BigNum extremes. |
-| Persistence        | `src/state/save_load.ts` and its tests cover supported migration, hostile structural rejection, and current writer revalidation.                |
+| Persistence        | `src/state/save_load.ts` and its tests cover strict current-schema rejection and writer revalidation.                                           |
 | Development replay | `src/state/replay.ts` compares normalized durable state and visible progression; it is distinct from offline economy replay.                    |
 | Browser behavior   | Production-dist Playwright covers actual controls, storage lifecycle, accessibility, reduced motion, and responsive layout.                     |
 
@@ -98,7 +98,7 @@ not introduce a fixed percentage, rank, pixel, byte, or machine-timing gate.
 
 - `src/economy/tick.ts` owns the shared economy formula.
 - `src/state/offline.ts` owns bounded absence orchestration and return reporting data.
-- `src/state/save_load.ts` owns current save lifecycle and migrations.
+- `src/state/save_load.ts` owns the current save lifecycle and exact parser/writer boundary.
 - `src/state/events.ts` owns accepted durable mutations.
 - `src/render/game_controller.ts` owns storage-aware player intents and visible return handling.
 - Stage and prestige modules own explicit progression action and revalidation.

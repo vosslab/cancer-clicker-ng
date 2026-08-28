@@ -1,5 +1,5 @@
 /**
- * Decorative projection for one already accepted M16/M17 cell model.
+ * Decorative projection for one accepted morphology and colony-layout cell model.
  *
  * The parent colony group owns accessibility and scene ordering. This component
  * only maps trusted local paths and inline-scene shared definitions to SVG nodes.

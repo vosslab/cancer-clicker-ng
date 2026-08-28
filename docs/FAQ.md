@@ -47,7 +47,7 @@ progress; a different local server port is a different browser origin. A missing
 game. When stored data cannot be read safely, the game preserves it and presents an explicit
 replacement choice instead of silently discarding it.
 
-The save contract, recovery behavior, and current-format migration rules are described in
+The current save contract, recovery behavior, and explicit fresh-replacement flow are described in
 [STATE_PERSISTENCE.md](STATE_PERSISTENCE.md).
 
 ## What happens while I am away?

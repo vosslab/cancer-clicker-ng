@@ -34,8 +34,11 @@ snapshots, parser/reducer funnel, and shared offline economy adapter to write ve
 second action catalog, hidden-state bot, browser dependency, or a permanent tuned-winner test.
 
 **Consequence.** `tools/balance_sim.mjs` keeps policies restricted to displayed actions and values.
-Scenario JSON stays versioned under `tools/balance_scenarios/`; generated reports stay ignored in
-`output_balance/`. Scenario conclusions remain calibration observations, not performance or rank gates.
+The `greedy-payback` policy divides the displayed producer cost by the authoritative marginal
+production quote that the Store also renders. Scenario JSON stays versioned under
+`tools/balance_scenarios/`; the default five-by-five suite writes an aggregate format-2 report
+under ignored `output_balance/`. Scenario conclusions remain calibration observations, not
+performance or rank gates.
 
 **Owner.** `tools/balance_sim.mjs` and `tools/balance_scenarios/`
 
@@ -62,24 +65,30 @@ the catalog-owned cell-scale reference. It changes presentation and scale vocabu
 The existing economy, direct cell clicking, and prestige network continue to provide the next
 meaningful actions after the scale report opens.
 
-**Consequence.** Current saves use p8 exact ending records. p7 provisional flags migrate to
-`unreached`; no migration invents a Chicago-scale timestamp, resource snapshot, or network tier.
-The formatter remains the one BigNum number grammar for cell counts, volume, and scale ratio.
+**Consequence.** Current saves use exact format-2/schema-8 ending records. The strict parser
+requires the complete current shape, so reached evidence always comes from the accepted event rather
+than inferred storage. The formatter remains the one BigNum number grammar for cell counts, volume,
+and scale ratio.
 
 **Owner.** `src/ending/trigger.ts`, `src/ending/sequence.ts`, and `src/state/save_parse/ending.ts`
 
 ### Persisted Chicago-report interaction
 
-**Decision.** The Chicago scale report is a compact Solid leaf above the live board. It shows the
-remaining stage, dissemination-tier, or modeled-cell-scale condition before availability; an
-available native button sends one typed controller intent; and a reached report keeps the live cell
-count, modeled volume, Chicago high-rise ratio, and next network action in ordinary reading order.
+**Decision.** The Chicago scale report is a compact Solid leaf above the live board only once the
+global-laboratory scale boundary makes it relevant. An available native button sends one typed
+controller intent; a reached report keeps the live cell count, modeled volume, Chicago high-rise
+ratio, and next network action in ordinary reading order beside a silent, editable lakefront-scale
+graphic.
 
-**Why.** The player needs an earned scale payoff without losing the incremental game's ongoing
-cell-click, producer, and network loop. A saved report can be revisited after reload, while
-ephemeral focus and one accepted-transition announcement remain UI concerns.
+**Why.** The early transformed-cell board needs a clear direct-cell and Store loop. The city-scale
+analogy earns its space only after the relevant global-laboratory boundary, then provides a fast
+visual scale cue without competing with the report's numbers or the live colony.
 
-**Consequence.** `EndingView` consumes the pure presentation and eligibility helpers. The
+**Consequence.** `EndingView` consumes the pure presentation and eligibility helpers. It leaves no
+report surface in the unavailable early state, exposes the compact available state at the boundary,
+and mounts `ChicagoScaleGraphic` only in the reached report. The inline SVG has a stable 260 by 132
+viewBox, grouped lake, shoreline, grid, skyline, and signal geometry, no embedded text, and is
+`aria-hidden` because the adjacent report contains the semantic scale information. The
 controller routes `reachSoftEnding()` through parse/reduce/persist/reconcile; it exposes no UI
 state or DOM work. The presentation honors shared reduced motion and uses intrinsic responsive
 layout at 1280 x 800 and narrow widths. A newly accepted source sequence focuses the report
@@ -88,8 +97,9 @@ reached report is local presentation state only; its mounted reopen control rece
 the saved `SoftEndingState` stays unchanged. `NumberDisplay.unitPresentation` owns alternate
 scientific unit vocabulary without importing ending state.
 
-**Owner.** `src/render/ending_view.tsx`, `src/render/app.tsx`, `src/render/game_controller.ts`,
-`src/content/ending_copy.ts`, and `src/ending.css`
+**Owner.** `src/render/ending_view.tsx`, `src/render/chicago_scale_graphic.tsx`,
+`src/render/app.tsx`, `src/render/game_controller.ts`, `src/content/ending_copy.ts`, and
+`src/ending.css`
 
 ### Headless semantic replay boundary
 
@@ -174,9 +184,9 @@ event funnel.
 storage as untrusted input; exact state and event contracts make recovery and later replay
 auditable.
 
-**Consequence.** Schema or event changes update the forward migration, fixture corpus, drift
-guards, [STATE_PERSISTENCE.md](STATE_PERSISTENCE.md), and focused acceptance gates. Rejected raw
-saves remain untrusted, and boot-level recovery protection prevents automatic overwrite.
+**Consequence.** Schema or event changes update the current parser/writer pair, fixture corpus,
+drift guards, [STATE_PERSISTENCE.md](STATE_PERSISTENCE.md), and focused acceptance gates. Rejected
+raw saves remain untrusted, and boot-level recovery protection prevents automatic overwrite.
 
 **Owner.** [STATE_PERSISTENCE.md](STATE_PERSISTENCE.md)
 
@@ -218,10 +228,10 @@ choices; history never duplicates either. Terminal rewards are transient trusted
 the sole versioned seed derivation API, and `generateHostDraftV1` saves one complete ordered
 four-card draft before display, including its reveal list and source revision. One complete-state
 projection module owns all L1/L2/L3/L4 resets; helpers return projections while
-`recordEvent()` remains the exclusive durable-mutation and sequence owner. The p6-to-p7 migration
-adds empty culture and network aggregates only to accepted p6 state; current p8 saves add the
-explicit ending record through the next bounded migration. `ReplayLog` records accepted events and
-proves normalized durable state plus visible progression through the same parser and reducer.
+`recordEvent()` remains the exclusive durable-mutation and sequence owner. The current
+format-2/schema-8 state requires culture, network, and ending aggregates together. `ReplayLog`
+records accepted events and proves normalized durable state plus visible progression through the
+same parser and reducer.
 UI confirmation sends stable IDs and revision only, then preserves the controller's
 persist-before-reconcile rule. Balance work reviews decision witnesses and tuning observations
 rather than accepting cosmetic layer variation.
@@ -248,9 +258,8 @@ manual provenance. `activeCampaign` stores the selected mandate plan, its source
 and selection time. Completion appends the same retained topology to completedCampaigns, increments
 globalTier, and creates the next saved deepen/widen/reroute frontier. Each planned edge stores its
 ID and endpoints. `containedNodeId` applies lower detection and reduced throughput only at the
-selected established or stable node. The p7 legacy parser regenerates and deep-compares every
-retained generated topology before migration; the current parser validates the closed aggregates
-and ending record exactly.
+selected established or stable node. The current parser validates the closed culture, network, and
+ending aggregates exactly.
 
 **Owner.** `src/prestige/culture.ts`, `src/prestige/network.ts`, and
 `src/state/save_parse/prestige.ts`
@@ -286,8 +295,8 @@ independently at named mechanics consumers.
 **Why.** L1 clears local regions, so historic allocations cannot honestly identify a current
 biological location. A universal portfolio multiplier would erase site/program/host tradeoffs.
 
-**Consequence.** The p6 parser, writer, migration, and reset projection own exact active-niche
-validity and lifecycle. `src/prestige/effects.ts` is fully neutral only when both niche and active
+**Consequence.** The current parser, writer, and reset projection own exact active-niche validity
+and lifecycle. `src/prestige/effects.ts` is fully neutral only when both niche and active
 host are absent; protected-route affinity additionally requires matching active-niche site and
 active-host draft/card provenance. Metabolism, vessel upkeep/capacity, route risk, visibility,
 pressure, and reserve consumers compose bounded named effects while renderer code remains
@@ -432,13 +441,12 @@ without inventing measurements.
 
 **Consequence.** Reducer dispatch advances sequence once after accepted handling. Catalog/state
 handlers own their named mutation or deadline; a single elapsed projection owns microbiome offer
-rotation for both live and offline simulation. The p4-to-p5 migration installs an empty aggregate
-and drops scaffold data, with no current-state compatibility field. Prestige activation passes
-through one adapter, whose L3 implementation reads the lineage ledger.
+rotation for both live and offline simulation. The current parser requires the complete aggregate.
+Prestige activation passes through one adapter, whose L3 implementation reads the lineage ledger.
 The frozen visual projection maps phenotype variance, chromatin program, microbiome surface, and
 retained senescence to named provenance rows. Durable tests cover operation relations, atomicity,
-saved offers, normalized live/offline equivalence, migration, and frozen provenance; tuning,
-fuzzing, contact sheets, and 1280 x 800 inspection remain dated evidence.
+saved offers, normalized live/offline equivalence, and frozen provenance; tuning, fuzzing, contact
+sheets, and 1280 x 800 inspection remain dated evidence.
 
 **Owner.** `src/hallmarks/late_hallmark_types.ts`, `src/hallmarks/late_hallmark_tick.ts`, and
 `src/state/events.ts`
@@ -493,13 +501,30 @@ evidence. A public schema version or scientific year remains when it communicate
 **Why.** A durable path should teach a future maintainer what the module provides, independent of
 the implementation schedule.
 
-**Consequence.** Migration work classifies every milestone-looking identifier as history, public
-compatibility, scientific nomenclature, or temporary leakage. It renames leakage to behavior
-terms, updates imports, and favors inline setup or one shared legal-state builder over test-only
-fixture files.
+**Consequence.** Schema and domain work classifies every milestone-looking identifier as history,
+public compatibility, scientific nomenclature, or temporary leakage. It renames leakage to
+behavior terms, updates imports, and favors inline setup or one shared legal-state builder over
+test-only fixture files.
 
 **Owner.** [REPO_STYLE.md](REPO_STYLE.md)
 
 ## Dependencies
+
+### Decorative biological action icons
+
+**Decision.** Action controls use a shared inline SVG catalog and one Solid renderer. Each glyph is
+decorative, fixed to a 24 by 24 viewBox, inherits its nearby control color, and appears beside the
+native text label rather than replacing it.
+
+**Why.** The living-tumor game needs quick recognition across producer, hallmark, progression,
+lineage, culture, network, transit, and scale-report actions. Text remains the accessible name and
+keeps a dense upgrade surface understandable for first-time and returning players.
+
+**Consequence.** `src/svg/icons.ts` owns editable geometry, while `src/render/action_icon.tsx`
+owns inline rendering. Components select a recognizable family mark only for meaningful action or
+status groups. The glyphs are `aria-hidden` and unfocusable, so keyboard order and native labels
+remain the interaction contract.
+
+**Owner.** `src/svg/icons.ts`, `src/render/action_icon.tsx`, and `docs/ART_DIRECTION.md`
 
 ## Generated artifacts

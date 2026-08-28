@@ -85,20 +85,24 @@ The development replay record is not a player save or public transport format. I
 events through the normal parser and reducer, comparing normalized durable state and visible
 progression. [STATE_PERSISTENCE.md](STATE_PERSISTENCE.md) defines the save and replay contract.
 
-## Run a balance scenario
+## Run the balance suite
 
-Run one tracked scenario with the headless visible-state-only policy comparison:
+Run all tracked scenarios with the headless visible-state-only comparison. The aggregate report
+uses the five canonical policy IDs `greedy-payback`, `naive-cheapest`, `hallmark-first`,
+`prestige-rush`, and `check-in-idle`:
 
 ```bash
-node --import tsx tools/balance_sim.mjs \
-  --scenario tools/balance_scenarios/l4_mandate_sequence_v1.json \
+node --import tsx tools/balance_sim.mjs --suite \
   --output output_balance/balance_report.json
 ```
 
 - Keep scenario inputs in `tools/balance_scenarios/`.
 - Read the generated JSON from `output_balance/`; it is intentionally ignored output.
-- Compare the declared decision witness, action traces, assumptions, ranks, and falsification
-  observations before changing tuning.
+- Compare policy behavior, declared decision witnesses, traces, completions, and outliers before
+  changing tuning.
+
+Use `--scenario tools/balance_scenarios/<file>.json` when one decision witness needs a focused
+report. The one-scenario command retains the same format-2 report shape.
 
 The simulator is a one-time calibration tool, not a fixed performance or ranking gate. See
 [PRESTIGE_DESIGN.md](PRESTIGE_DESIGN.md) for its design boundary and

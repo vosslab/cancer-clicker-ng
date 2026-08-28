@@ -89,9 +89,9 @@ function loaded(raw) {
   return result.state;
 }
 
-test("p4 saves migrate through current empty prestige and ending aggregates", () => {
+test("prior state schemas are rejected before they can fabricate current aggregates", () => {
   const current = JSON.parse(serializeGameState(populatedP5State(), 11));
-  current.progressionVersion = 4;
+  current.stateSchemaVersion = 4;
   const {
     lateHallmarks: _p5Aggregate,
     lineageLedger: _lineageLedger,
@@ -129,27 +129,19 @@ test("p4 saves migrate through current empty prestige and ending aggregates", ()
     secretoryEffects: {},
     clearanceQueue: [],
   };
-  const state = loaded(JSON.stringify(current));
-  assert.deepEqual(state.lateHallmarks, createInitialGameState().lateHallmarks);
-  assert.deepEqual(state.metastasis, createInitialGameState().metastasis);
-  assert.deepEqual(state.hostTransfer, createInitialGameState().hostTransfer);
-  assert.deepEqual(state.culture, createInitialGameState().culture);
-  assert.deepEqual(state.network, createInitialGameState().network);
-  assert.deepEqual(state.ending, createInitialGameState().ending);
-  assert.ok(state.lineageLedger.lineageSeed > 0);
-  assert.ok(!("senescenceEventId" in state.regions[0]));
+  assert.equal(parseSave(JSON.stringify(current)).status, "rejected");
 });
 
 test("populated current late hallmark state round-trips with exact writer version", () => {
   const state = populatedP5State();
   const raw = serializeGameState(state, 11);
   const envelope = JSON.parse(raw);
-  assert.equal(envelope.progressionVersion, 8);
+  assert.equal(envelope.stateSchemaVersion, 8);
   assert.deepEqual(loaded(raw), state);
   assert.equal(serializeGameState(loaded(raw), 11), raw);
 });
 
-test("p5 reader and writer reject hostile aggregate shapes without recovery", () => {
+test("late-hallmark reader and writer reject hostile aggregate shapes without recovery", () => {
   const raw = JSON.parse(serializeGameState(populatedP5State(), 11));
   raw.state.lateHallmarks.microbiome.pendingOffer.compositions[0].niches[0].label = "forged";
   assert.equal(parseSave(JSON.stringify(raw)).status, "rejected");
@@ -175,7 +167,7 @@ function assertCurrentReaderAndWriterReject(state, mutate) {
   assert.throws(() => serializeGameState(hostile, 11), /Current save state is invalid/);
 }
 
-test("p5 rejects plasticity cooldowns attached to pending or retained senescence regions", () => {
+test("late-hallmark persistence rejects plasticity cooldowns on pending or retained regions", () => {
   assertCurrentReaderAndWriterReject(populatedP5State(), (lateHallmarks) => {
     lateHallmarks.plasticity.switchCooldownByRegion = { senescent: 15 };
   });
@@ -202,7 +194,7 @@ test("p5 rejects plasticity cooldowns attached to pending or retained senescence
   });
 });
 
-test("p5 rejects reordered assignments and senescence records while preserving canonical arrays", () => {
+test("late-hallmark persistence rejects reordered canonical assignments and senescence records", () => {
   const ordered = populatedP5State();
   ordered.lateHallmarks = {
     ...ordered.lateHallmarks,

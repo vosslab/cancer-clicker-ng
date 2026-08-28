@@ -1,5 +1,5 @@
 import { hallmarkId, mutationId, prestigeId, regionId, routeId, stageId } from "../brands.js";
-import type { CurrentSaveFileV2, SaveNotice, SerializedGameState } from "../types/save.js";
+import type { CurrentSaveFile, SaveNotice, SerializedGameState } from "../types/save.js";
 import type { GameState } from "../types/state.js";
 import { isHallmarkId, isPrestigeId, isStageId } from "./catalog.js";
 import { createInitialGameState } from "./game_state.js";
@@ -19,12 +19,7 @@ import { parseLateHallmarks } from "./save_parse/late_hallmarks.js";
 import { parseCulture, parseNetwork, parsePrestige } from "./save_parse/prestige.js";
 import { parseEnding } from "./save_parse/ending.js";
 import { parsePendingProgression } from "./save_parse/progression.js";
-import { deriveSeedV1 } from "./deterministic_random.js";
-import {
-  hasDuplicateRecordIds,
-  normalizeParsedLegacyProducerLevels,
-  parseCanonicalProducerLevels,
-} from "./save_parse/producers.js";
+import { hasDuplicateRecordIds, parseCanonicalProducerLevels } from "./save_parse/producers.js";
 import {
   array,
   exact,
@@ -37,14 +32,13 @@ import {
   numberValue,
   numericRecord,
   object,
-  serial,
   serialGameState,
   unique,
 } from "./save_parse/guards.js";
 export { MAX_COLLECTION } from "./save_parse/guards.js";
 
 export const SAVE_KEY = "cancer-clicker-ng.save.v2";
-export const CURRENT_PROGRESSION_VERSION = 8;
+export const CURRENT_STATE_SCHEMA_VERSION = 8;
 const MAX_SAVE_BYTES = 250_000;
 const STATE_KEYS = [
   "cells",
@@ -125,7 +119,7 @@ export type LoadResult =
       notices: readonly SaveNotice[];
       version: 2;
       savedAtMs: number;
-      progressionVersion: 8;
+      stateSchemaVersion: 8;
     }>
   | Readonly<{
       status: "rejected";
@@ -136,18 +130,13 @@ export type LoadResult =
 function field<T>(
   source: Record<string, unknown>,
   name: string,
-  fallback: T,
+  _fallback: T,
   parse: (v: unknown) => T | undefined,
-  notices: SaveNotice[],
+  _notices: SaveNotice[],
 ): T {
   const result = parse(source[name]);
   if (result !== undefined) return result;
-  notices.push({
-    code: "field-defaulted",
-    field: name,
-    message: `Recovered ${name} with its safe default.`,
-  });
-  return fallback;
+  throw new Error(`Save field is invalid: ${name}`);
 }
 export function serializeGameState(state: GameState, savedAtMs: number): string {
   if (!natural(savedAtMs)) throw new Error("Save metadata is invalid.");
@@ -165,9 +154,9 @@ export function normalizeCurrentGameState(state: GameState): SerializedGameState
   const raw = JSON.stringify({
     version: 2,
     savedAtMs: 0,
-    progressionVersion: CURRENT_PROGRESSION_VERSION,
+    stateSchemaVersion: CURRENT_STATE_SCHEMA_VERSION,
     state: serialized,
-  } satisfies CurrentSaveFileV2);
+  } satisfies CurrentSaveFile);
   const parsed = parseSave(raw);
   if (parsed.status !== "loaded" || parsed.notices.length !== 0)
     throw new Error("Current game state is invalid.");
@@ -182,9 +171,9 @@ export function parseNormalizedGameState(raw: unknown): GameState | undefined {
   const envelope = JSON.stringify({
     version: 2,
     savedAtMs: 0,
-    progressionVersion: CURRENT_PROGRESSION_VERSION,
+    stateSchemaVersion: CURRENT_STATE_SCHEMA_VERSION,
     state: raw,
-  } satisfies CurrentSaveFileV2);
+  } satisfies CurrentSaveFile);
   const parsed = parseSave(envelope);
   return parsed.status === "loaded" && parsed.notices.length === 0 ? parsed.state : undefined;
 }
@@ -193,9 +182,9 @@ function encodeCurrentP8Envelope(state: GameState, savedAtMs: number): string {
   const encoded = {
     version: 2,
     savedAtMs,
-    progressionVersion: CURRENT_PROGRESSION_VERSION,
+    stateSchemaVersion: CURRENT_STATE_SCHEMA_VERSION,
     state: serialGameState(state),
-  } satisfies CurrentSaveFileV2;
+  } satisfies CurrentSaveFile;
   return JSON.stringify(encoded);
 }
 function parseState(
@@ -241,12 +230,7 @@ function parseState(
     source.lastStageTransition === undefined
       ? undefined
       : parseTransition(source.lastStageTransition);
-  if (source.lastStageTransition !== undefined && transition === undefined)
-    notices.push({
-      code: "field-defaulted",
-      field: "lastStageTransition",
-      message: "Recovered lastStageTransition with its safe default.",
-    });
+  if (source.lastStageTransition !== undefined && transition === undefined) return undefined;
   let state: GameState = {
     ...i,
     cells: field(source, "cells", i.cells, numberValue, notices),
@@ -576,15 +560,8 @@ function parseState(
     state.lastStageTransition !== undefined &&
     (state.lastStageTransition.to !== state.currentStage ||
       state.lastStageTransition.atMs !== state.stageStartedAtMs)
-  ) {
-    const { lastStageTransition: _discardedTransition, ...withoutTransition } = state;
-    state = withoutTransition;
-    notices.push({
-      code: "field-defaulted",
-      field: "lastStageTransition",
-      message: "Recovered lastStageTransition with its safe default.",
-    });
-  }
+  )
+    return undefined;
   const lateHallmarks = parseLateHallmarks(source.lateHallmarks, state);
   if (lateHallmarks === undefined) return undefined;
   state = { ...state, lateHallmarks };
@@ -662,156 +639,6 @@ function parseState(
   return state.activeTimeMs < state.stageStartedAtMs ? undefined : state;
 }
 
-const P7_STATE_KEYS = [...STATE_KEYS.filter((key) => key !== "ending"), "endingReached"] as const;
-const P6_STATE_KEYS = P7_STATE_KEYS.filter((key) => key !== "culture" && key !== "network");
-const P5_STATE_KEYS = P6_STATE_KEYS.filter(
-  (key) => key !== "lineageLedger" && key !== "metastasis" && key !== "hostTransfer",
-);
-const P4_RETIRED_STATE_KEYS = [
-  "phenotypeCooldowns",
-  "regionalModifiers",
-  "programs",
-  "microbiome",
-  "senescentRegions",
-  "secretoryEffects",
-  "clearanceQueue",
-] as const;
-const P4_STATE_KEYS = P5_STATE_KEYS.flatMap((key) =>
-  key === "lateHallmarks" ? P4_RETIRED_STATE_KEYS : [key],
-);
-function migrateLegacyState(
-  source: Record<string, unknown>,
-  progressionVersion: 1 | 2 | 3 | 4,
-): SerializedGameState | undefined {
-  const legacyKeys = P4_STATE_KEYS.filter(
-    (key) => key !== "activeTimeMs" && key !== "pendingProgression",
-  );
-  const expectedKeys =
-    progressionVersion === 3 || progressionVersion === 4 ? P4_STATE_KEYS : legacyKeys;
-  if (!exact(source, expectedKeys) || !natural(source.stageStartedAtMs)) return undefined;
-  const producerLevels = normalizeParsedLegacyProducerLevels(source.producerLevels);
-  if (producerLevels === undefined) return undefined;
-  const migrated: Record<string, unknown> = {};
-  for (const key of expectedKeys) {
-    if (Object.prototype.hasOwnProperty.call(source, key)) migrated[key] = source[key];
-  }
-  migrated.producerLevels = producerLevels;
-  // extended-hallmark closes formerly provisional ATP/visibility/mutation placeholders. Historical p1-p3
-  // saves cannot contain an extended-hallmark offer snapshot, so migrate them to the one canonical empty state.
-  const initial = createInitialGameState();
-  migrated.atpBudget = initial.atpBudget;
-  migrated.atpSinks = initial.atpSinks;
-  migrated.immuneVisibilityByRegion = initial.immuneVisibilityByRegion;
-  migrated.concealmentTokens = initial.concealmentTokens;
-  migrated.maskedRegions = initial.maskedRegions;
-  migrated.inflammationEpisodes = initial.inflammationEpisodes;
-  migrated.regionalInflammation = initial.regionalInflammation;
-  migrated.mutationOffers = initial.mutationOffers;
-  migrated.chosenMutations = initial.chosenMutations;
-  migrated.mutationLiabilities = initial.mutationLiabilities;
-  migrated.genomeBurden = initial.genomeBurden;
-  delete migrated.phenotypeCooldowns;
-  delete migrated.regionalModifiers;
-  delete migrated.programs;
-  delete migrated.microbiome;
-  delete migrated.senescentRegions;
-  delete migrated.secretoryEffects;
-  delete migrated.clearanceQueue;
-  const legacyRegions = migrated.regions;
-  if (!Array.isArray(legacyRegions)) return undefined;
-  const currentRegions: unknown[] = [];
-  for (const legacyRegion of legacyRegions) {
-    if (!object(legacyRegion)) return undefined;
-    const currentRegion: Record<string, unknown> = {};
-    for (const [key, field] of Object.entries(legacyRegion)) {
-      if (key !== "senescenceEventId") currentRegion[key] = field;
-    }
-    currentRegions.push(currentRegion);
-  }
-  migrated.regions = currentRegions;
-  migrated.lateHallmarks = initial.lateHallmarks;
-  if (progressionVersion !== 3) {
-    migrated.activeTimeMs = source.stageStartedAtMs;
-    migrated.pendingProgression = [];
-  }
-  return migrated;
-}
-
-/** p6 is the only place historic p5 state may receive empty prestige records. */
-function migrateP5ToP6(
-  source: SerializedGameState,
-  notices: SaveNotice[],
-): SerializedGameState | undefined {
-  if (typeof source.endingReached !== "boolean") return undefined;
-  const p5State = parseState(source, [], P5_STATE_KEYS);
-  if (p5State === undefined) return undefined;
-  const initial = createInitialGameState();
-  const lineageSeed = deriveSeedV1("lineage-v1", p5State.deterministicSeed, p5State.eventSequence);
-  const serializedWithInitialL3L4 = serialGameState({
-    ...p5State,
-    lineageLedger: { ...initial.lineageLedger, lineageSeed },
-    metastasis: initial.metastasis,
-    hostTransfer: initial.hostTransfer,
-  });
-  const {
-    culture: _culture,
-    network: _network,
-    ending: _ending,
-    ...withoutEnding
-  } = serializedWithInitialL3L4;
-  const migrated = serial({ ...withoutEnding, endingReached: source.endingReached });
-  for (const field of ["lineageLedger", "metastasis", "hostTransfer"]) {
-    notices.push({
-      code: "field-defaulted",
-      field,
-      message: `Recovered ${field} with its safe default during p6 migration.`,
-    });
-  }
-  // serialGameState deliberately uses null-prototype records for output. Reparse the locally built
-  // projection through JSON so this in-memory migration follows the same ordinary-record boundary.
-  return JSON.parse(JSON.stringify(migrated)) as SerializedGameState;
-}
-/** p7 is the only place accepted p6 state receives empty L3/L4 aggregates. */
-function migrateP6ToP7(
-  source: SerializedGameState,
-  notices: SaveNotice[],
-): SerializedGameState | undefined {
-  const p6State = parseState(source, [], P6_STATE_KEYS);
-  if (p6State === undefined) return undefined;
-  if (typeof source.endingReached !== "boolean") return undefined;
-  const initial = createInitialGameState();
-  const { ending: _ending, ...withoutEnding } = p6State;
-  const migrated = serial({
-    ...withoutEnding,
-    culture: initial.culture,
-    network: initial.network,
-    endingReached: source.endingReached,
-  }) as SerializedGameState;
-  for (const field of ["culture", "network"]) {
-    notices.push({
-      code: "field-defaulted",
-      field,
-      message: `Recovered ${field} with its safe default during p7 migration.`,
-    });
-  }
-  return JSON.parse(JSON.stringify(migrated)) as SerializedGameState;
-}
-function migrateP7ToP8(
-  source: SerializedGameState,
-  notices: SaveNotice[],
-): SerializedGameState | undefined {
-  if (typeof source.endingReached !== "boolean") return undefined;
-  const p7State = parseState(source, [], P7_STATE_KEYS);
-  if (p7State === undefined) return undefined;
-  const { ending: _ending, ...withoutEnding } = p7State;
-  const migrated = serial({ ...withoutEnding, ending: { phase: "unreached" } });
-  notices.push({
-    code: "field-defaulted",
-    field: "ending",
-    message: "Recovered ending with its safe default during p8 migration.",
-  });
-  return JSON.parse(JSON.stringify(migrated)) as SerializedGameState;
-}
 function reject(raw: string, field: string, message: string): LoadResult {
   return {
     status: "rejected",
@@ -819,109 +646,41 @@ function reject(raw: string, field: string, message: string): LoadResult {
     retainedRaw: raw,
   };
 }
-/** ASVS 1.5.2, 2.1.1/2.1.2, 2.2.1/2.2.2, 16.5.3: bounded allowlisted reconstruction. */
+
+/** Parses the only accepted pre-production save envelope and its exact current state schema. */
 export function parseSave(raw: string): LoadResult {
   if (raw.length > MAX_SAVE_BYTES)
     return reject(raw, "envelope", "Save data is too large to load safely.");
-  let e: unknown;
+  let envelope: unknown;
   try {
-    e = JSON.parse(raw);
+    envelope = JSON.parse(raw);
   } catch {
     return reject(raw, "envelope", "Save data is invalid.");
   }
-  if (!object(e) || !natural(e.version) || !natural(e.savedAtMs) || !object(e.state))
-    return reject(raw, "envelope", "Save envelope is invalid.");
-  let current: CurrentSaveFileV2;
-  const migrationNotices: SaveNotice[] = [];
-  if (e.version === 1) {
-    if (
-      !exact(e, ["version", "savedAtMs", "state"]) ||
-      !exact(e.state, ["cells", "atp", "stageId", "eventSequence"]) ||
-      !numberValue(e.state.cells) ||
-      !numberValue(e.state.atp) ||
-      !identifier(e.state.stageId) ||
-      !isStageId(e.state.stageId) ||
-      !natural(e.state.eventSequence)
-    )
-      return reject(raw, "envelope", "Save version is unsupported.");
-    const initializedState = JSON.parse(
-      JSON.stringify(
-        serial({
-          ...createInitialGameState(),
-          cells: numberValue(e.state.cells),
-          atp: numberValue(e.state.atp),
-          currentStage: stageId(e.state.stageId),
-          eventSequence: e.state.eventSequence,
-        }),
-      ),
-    ) as SerializedGameState;
-    const {
-      activeTimeMs: _activeTimeMs,
-      pendingProgression: _pendingProgression,
-      ...p1State
-    } = initializedState;
-    const migratedState = migrateLegacyState(p1State, 1);
-    if (migratedState === undefined) return reject(raw, "state", "Save state is invalid.");
-    const p6State = migrateP5ToP6(migratedState, migrationNotices);
-    if (p6State === undefined) return reject(raw, "state", "Save state is invalid.");
-    const p7State = migrateP6ToP7(p6State, migrationNotices);
-    if (p7State === undefined) return reject(raw, "state", "Save state is invalid.");
-    const p8State = migrateP7ToP8(p7State, migrationNotices);
-    if (p8State === undefined) return reject(raw, "state", "Save state is invalid.");
-    current = {
-      version: 2,
-      savedAtMs: e.savedAtMs,
-      progressionVersion: CURRENT_PROGRESSION_VERSION,
-      state: p8State,
-    };
-  } else if (
-    e.version === 2 &&
-    exact(e, ["version", "savedAtMs", "progressionVersion", "state"]) &&
-    natural(e.progressionVersion) &&
-    e.progressionVersion >= 1 &&
-    e.progressionVersion <= CURRENT_PROGRESSION_VERSION
-  ) {
-    let state: SerializedGameState | undefined;
-    if (e.progressionVersion === CURRENT_PROGRESSION_VERSION) state = e.state;
-    else if (e.progressionVersion === 1) state = migrateLegacyState(e.state, 1);
-    else if (e.progressionVersion === 2) state = migrateLegacyState(e.state, 2);
-    else if (e.progressionVersion === 3) state = migrateLegacyState(e.state, 3);
-    else if (e.progressionVersion === 4) state = migrateLegacyState(e.state, 4);
-    else if (e.progressionVersion === 5) state = e.state;
-    else if (e.progressionVersion === 6 || e.progressionVersion === 7) state = e.state;
-    else return reject(raw, "envelope", "Save version is unsupported.");
-    if (state === undefined) return reject(raw, "state", "Save state is invalid.");
-    if (e.progressionVersion <= 5) {
-      state = migrateP5ToP6(state, migrationNotices);
-      if (state === undefined) return reject(raw, "state", "Save state is invalid.");
-    }
-    if (e.progressionVersion <= 6) {
-      state = migrateP6ToP7(state, migrationNotices);
-      if (state === undefined) return reject(raw, "state", "Save state is invalid.");
-    }
-    if (e.progressionVersion <= 7) {
-      state = migrateP7ToP8(state, migrationNotices);
-      if (state === undefined) return reject(raw, "state", "Save state is invalid.");
-    }
-    current = {
-      version: 2,
-      savedAtMs: e.savedAtMs,
-      progressionVersion: CURRENT_PROGRESSION_VERSION,
-      state,
-    };
-  } else return reject(raw, "envelope", "Save version is unsupported.");
-  const notices: SaveNotice[] = [...migrationNotices];
-  const state = parseState(current.state, notices);
-  return state === undefined
-    ? reject(raw, "state", "Save state is invalid.")
-    : {
-        status: "loaded",
-        state,
-        notices,
-        version: 2,
-        savedAtMs: current.savedAtMs,
-        progressionVersion: current.progressionVersion,
-      };
+  if (
+    !object(envelope) ||
+    !exact(envelope, ["version", "savedAtMs", "stateSchemaVersion", "state"]) ||
+    envelope.version !== 2 ||
+    !natural(envelope.savedAtMs) ||
+    envelope.stateSchemaVersion !== CURRENT_STATE_SCHEMA_VERSION ||
+    !object(envelope.state)
+  )
+    return reject(raw, "envelope", "Save envelope is not the current schema.");
+  let state: GameState | undefined;
+  try {
+    state = parseState(envelope.state, []);
+  } catch {
+    state = undefined;
+  }
+  if (state === undefined) return reject(raw, "state", "Save state is invalid.");
+  return {
+    status: "loaded",
+    state,
+    notices: [],
+    version: 2,
+    savedAtMs: envelope.savedAtMs,
+    stateSchemaVersion: CURRENT_STATE_SCHEMA_VERSION,
+  };
 }
 
 /** ASVS 1.5.2 and 2.2.1: validate the complete writer envelope without recursion. */
@@ -933,7 +692,7 @@ function validateCurrentP8Envelope(raw: string, savedAtMs: number): void {
     loadedState === undefined ||
     result.notices.length !== 0 ||
     result.savedAtMs !== savedAtMs ||
-    result.progressionVersion !== CURRENT_PROGRESSION_VERSION ||
+    result.stateSchemaVersion !== CURRENT_STATE_SCHEMA_VERSION ||
     encodeCurrentP8Envelope(loadedState, savedAtMs) !== raw
   )
     throw new Error("Current save state is invalid.");

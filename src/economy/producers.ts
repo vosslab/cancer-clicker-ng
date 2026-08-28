@@ -13,7 +13,7 @@ export type ProducerDefinition = Readonly<{
 }>;
 
 /**
- * Opening-economy values are deliberately provisional: M21 tunes these data,
+ * Opening-economy values are deliberately provisional: balance calibration tunes these data,
  * never the purchasing or production algorithms.
  */
 export const STAGE_ONE_PRODUCERS = [

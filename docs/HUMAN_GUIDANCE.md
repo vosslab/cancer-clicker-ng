@@ -30,6 +30,8 @@ origin belongs there too. Rules: [REPO_STYLE.md](REPO_STYLE.md).
   each producer's owned count, next cost, affordability, and production contribution. Hover or
   focus can reveal richer stats; locked future content stays discoverable with its biological
   unlock condition, while purchases become actionable when their real requirements are met.
+- I want fewer plain buttons and more small icons. Use a coherent biological icon language to make
+  important action families easier to recognize while keeping each control's text label clear.
 
 ## Review expectations
 

@@ -8,7 +8,7 @@ import {
 } from "./microbiome_catalog.js";
 import type { MicrobiomeOfferSnapshot } from "./late_hallmark_types.js";
 
-/** Deliberately narrow: M12 rotation cannot replace any other late-hallmark relation. */
+/** Deliberately narrow: microbiome rotation cannot replace any other late-hallmark relation. */
 export type LateHallmarkDurableTickProjection = Readonly<{
   microbiome: GameState["lateHallmarks"]["microbiome"];
 }>;

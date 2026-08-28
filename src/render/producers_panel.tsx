@@ -3,7 +3,10 @@ import type { JSX } from "solid-js";
 
 import { formatBigNum } from "../bignum/format.js";
 import { quoteProducerPurchase } from "../economy/costs.js";
-import { producerCellProductionRate } from "../economy/production.js";
+import {
+  producerCellProductionRate,
+  producerPurchaseCellProductionBenefit,
+} from "../economy/production.js";
 import { STAGE_ONE_PRODUCERS } from "../economy/producers.js";
 import { stageDefinition, stageDefinitionsInOrder } from "../stages/catalog.js";
 import { passageUpgradeId } from "../brands.js";
@@ -12,6 +15,7 @@ import type { PurchaseQuantity } from "../economy/costs.js";
 import type { ProducerDefinition } from "../economy/producers.js";
 import type { ProducerId } from "../types/ids.js";
 import type { GameState } from "../types/state.js";
+import { ActionIcon } from "./action_icon.js";
 
 type ProducersPanelProps = Readonly<{
   game: GameState;
@@ -79,7 +83,7 @@ export function ProducersPanel(props: ProducersPanelProps): JSX.Element {
               disabled={props.disabled}
               onClick={() => setQuantity(candidate)}
             >
-              {quantityLabel(candidate)}
+              <ActionIcon name="buy" /> {quantityLabel(candidate)}
             </button>
           )}
         </For>
@@ -96,6 +100,14 @@ export function ProducersPanel(props: ProducersPanelProps): JSX.Element {
                 props.game.numberFormat,
                 2,
               );
+            const marginalBenefit = (): string => {
+              const quote = selectedQuote();
+              return formatBigNum(
+                producerPurchaseCellProductionBenefit(props.game, producer.id, quote.quantity),
+                props.game.numberFormat,
+                2,
+              );
+            };
             const unlockStage = (): string => stageDefinition(producer.unlockStage).title;
             const assayLabel = (): string => {
               const queued = queuedAssay();
@@ -120,7 +132,9 @@ export function ProducersPanel(props: ProducersPanelProps): JSX.Element {
                 data-producer-id={producer.id}
               >
                 <div class="producer-row__summary">
-                  <h3>{producer.displayName}</h3>
+                  <h3>
+                    <ActionIcon name="producer" /> {producer.displayName}
+                  </h3>
                   <p>
                     Owned level {levelFor(props.game, producer.id)} · {contribution()} cells/s
                   </p>
@@ -144,7 +158,7 @@ export function ProducersPanel(props: ProducersPanelProps): JSX.Element {
                     disabled={props.disabled || !unlocked() || !selectedQuote().affordable}
                     onClick={() => props.onPurchase(producer.id, quantity())}
                   >
-                    Buy {quantityLabel(quantity())}
+                    <ActionIcon name="buy" /> Buy {quantityLabel(quantity())}
                   </button>
                   <Show when={assayDiscipline()}>
                     <button
@@ -158,12 +172,13 @@ export function ProducersPanel(props: ProducersPanelProps): JSX.Element {
                       }
                       onClick={() => props.onQueueAssay?.(producer.id)}
                     >
-                      {assayLabel()}
+                      <ActionIcon name="assay" /> {assayLabel()}
                     </button>
                   </Show>
                   <span class="cost-note">
                     Next {quantityLabel(quantity())} cost:{" "}
                     {formatBigNum(selectedQuote().debit, props.game.numberFormat, 2)}
+                    {" · "}+{marginalBenefit()} cells/s
                     {selectedQuote().affordable && unlocked() ? " · affordable" : " · unavailable"}
                   </span>
                 </div>

@@ -1,5 +1,5 @@
 /**
- * One accessible, noninteractive SVG projection of an accepted M17 colony.
+ * One accessible, noninteractive SVG projection of an accepted colony layout.
  *
  * This module deliberately consumes the frozen scene boundary: it makes no
  * placement, depth, morphology, or random decisions of its own.
@@ -55,7 +55,7 @@ function estimateNodeCount(cells: readonly CellRenderModel[]): number {
 
 /**
  * Produces ordered renderer data without adding, moving, or otherwise changing
- * accepted M17 slots.  This pure model is also the structural-test seam.
+ * accepted colony-layout slots. This pure model is also the structural-test seam.
  */
 export function describeColonySvg(value: ColonySceneRequest): ColonySvgModel {
   const scene = createColonySceneRequest(value);

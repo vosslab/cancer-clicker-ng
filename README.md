@@ -32,6 +32,11 @@ The board takes inspiration from the satisfying always-upgradable structure of C
 uses an original, editable SVG tumor vocabulary and a scientific, nonclinical art direction.
 
 <!-- screenshots:begin (managed by screenshot-docs) -->
+
+![Cancer Clicker NG board with a direct cancer-cell action, live cell count and production rate, tumor progression, and the Division apparatus store](docs/screenshots/cancer_clicker_ng_board.png)
+![Cancer Clicker NG angiogenic primary with a perfused multicellular tumor, visible blood-supply branches, meaningful growth, and producer upgrades](docs/screenshots/cancer_clicker_ng_perfused_tumor.png)
+![Cancer Clicker NG advanced systems view with icon-led culture choices, a renewable dissemination network frontier, and the persistent living tumor board](docs/screenshots/cancer_clicker_ng_culture_network.png)
+![Cancer Clicker NG earned Chicago scale report over the living colony, retaining the direct cell action and continued-play context](docs/screenshots/cancer_clicker_ng_chicago_scale.png)
 <!-- screenshots:end -->
 
 ## What you can explore

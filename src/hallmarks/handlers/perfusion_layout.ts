@@ -6,7 +6,7 @@ import type { GameState, RegionState } from "../../types/state.js";
 
 /** One region can carry one deliberate vessel link; the choice remains regional, not scalar. */
 export const MAX_VESSEL_LINKS_PER_REGION = 1;
-/** Small core-six cap; M21 network progression may tune it through a later owned projection. */
+/** Small core-six cap; network progression can tune it through a later owned projection. */
 export const MAX_ACTIVE_VESSEL_LINKS = 3;
 export const MAX_PERFUSED_REGION_CAPACITY = 8;
 export const PERFUSION_CAPACITY_DELTA = 2;

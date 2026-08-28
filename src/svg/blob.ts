@@ -1,4 +1,4 @@
-/** Pure, local SVG contours for one accepted M17 cell slot. */
+/** Pure, local SVG contours for one accepted colony-layout cell slot. */
 import type { CellSlot } from "./colony_layout.js";
 import type { MorphologyResolution } from "./morphology.js";
 import { fbm_2d, hash_seed } from "./noise.js";
@@ -40,7 +40,7 @@ function requireUnit(value: unknown, label: string): number {
 
 function requireFrozenSlot(value: unknown): CellSlot {
   if (typeof value !== "object" || value === null || !Object.isFrozen(value)) {
-    throw new Error("Cell contour requires a frozen M17 slot.");
+    throw new Error("Cell contour requires a frozen colony-layout slot.");
   }
   const slot = value as CellSlot;
   if (
@@ -63,7 +63,7 @@ function requireFrozenSlot(value: unknown): CellSlot {
 
 function requireFrozenMorphology(value: unknown): MorphologyResolution {
   if (typeof value !== "object" || value === null || !Object.isFrozen(value)) {
-    throw new Error("Cell contour requires a frozen M16 morphology resolution.");
+    throw new Error("Cell contour requires a frozen morphology-grammar resolution.");
   }
   const morphology = value as MorphologyResolution;
   if (
@@ -89,7 +89,7 @@ function requireFrozenMorphology(value: unknown): MorphologyResolution {
     ) ||
     !["none", "central", "offset", "peripheral"].includes(morphology.traits.mitosis.placement)
   ) {
-    throw new Error("Morphology discrete traits are outside the M16 vocabulary.");
+    throw new Error("Morphology discrete traits are outside the accepted grammar vocabulary.");
   }
   if (
     (morphology.traits.mitosis.motif === "none") !==
@@ -161,7 +161,7 @@ function radialContour(
 }
 
 /**
- * Builds local membrane and nucleus paths from immutable M16/M17 inputs.
+ * Builds local membrane and nucleus paths from immutable morphology and layout inputs.
  * Position, transform, depth, IDs, and scene ownership remain render_types.ts responsibilities.
  */
 export function createCellBlobPaths(

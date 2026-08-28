@@ -2,10 +2,11 @@ import { For, Show, createEffect, createMemo, createSignal, onCleanup } from "so
 import type { JSX } from "solid-js";
 
 import { AUTHORED_NETWORK_EDGE_CATALOG } from "../prestige/network.js";
-import { networkPresentation } from "../prestige/m15_presentation.js";
+import { networkPresentation } from "../prestige/culture_network_presentation.js";
 import type { DisseminationMandateId, NetworkNodeId } from "../types/ids.js";
 import type { GameState } from "../types/state.js";
 import type { ApplyResult, GameController } from "./game_controller.js";
+import { ActionIcon } from "./action_icon.js";
 
 type NetworkPanelProps = Readonly<{ game: GameState; controller: GameController }>;
 type Confirmation =
@@ -59,28 +60,30 @@ export function NetworkPanel(props: NetworkPanelProps): JSX.Element {
   }
 
   return (
-    <section class="panel m15-panel network-panel" aria-labelledby="network-title">
+    <section class="panel culture-network-panel network-panel" aria-labelledby="network-title">
       <div class="section-heading">
         <div>
-          <p class="eyebrow">L4 local topology</p>
+          <p class="eyebrow">Local dissemination topology</p>
           <h2 id="network-title">Contamination network</h2>
         </div>
         <p id="network-summary" class="section-note" tabindex="-1">
           Tier {presentation().globalTier}; Pressure {presentation().pressure}
         </p>
       </div>
-      <fieldset class="hallmark-fieldset m15-fieldset">
+      <fieldset class="hallmark-fieldset culture-network-fieldset">
         <legend>Authored node map</legend>
         <p>
           Each node changes local throughput and detection. Stabilize a node, then collect its one
           durable Pressure credit.
         </p>
-        <ul class="m15-card-grid">
+        <ul class="culture-network-card-grid">
           <For each={presentation().nodes}>
             {(node) => (
               <li>
-                <article class="m15-card">
-                  <h3>{node.label}</h3>
+                <article class="culture-network-card">
+                  <h3>
+                    <ActionIcon name="network_node" /> {node.label}
+                  </h3>
                   <p>
                     Throughput ×{node.throughput.toFixed(2)}; detection{" "}
                     {node.detection >= 0 ? "+" : ""}
@@ -101,6 +104,7 @@ export function NetworkPanel(props: NetworkPanelProps): JSX.Element {
                     }
                     onClick={() => nodeAction(node.id, node.established, node.stable)}
                   >
+                    <ActionIcon name="network_node" />{" "}
                     {node.stable
                       ? "Collect Pressure"
                       : node.established
@@ -123,7 +127,7 @@ export function NetworkPanel(props: NetworkPanelProps): JSX.Element {
                         )
                       }
                     >
-                      Select containment
+                      <ActionIcon name="containment" /> Select containment
                     </button>
                   </Show>
                 </article>
@@ -131,14 +135,14 @@ export function NetworkPanel(props: NetworkPanelProps): JSX.Element {
             )}
           </For>
         </ul>
-        <p class="m15-readout">
+        <p class="culture-network-readout">
           Containment: {presentation().containment.selected ?? "none"}.{" "}
           {presentation().containment.effect}
         </p>
       </fieldset>
-      <fieldset class="hallmark-fieldset m15-fieldset">
+      <fieldset class="hallmark-fieldset culture-network-fieldset">
         <legend>Topology links</legend>
-        <ul class="m15-link-list">
+        <ul class="culture-network-link-list">
           <For each={AUTHORED_NETWORK_EDGE_CATALOG}>
             {(edge) => {
               const committed = (): boolean =>
@@ -163,7 +167,7 @@ export function NetworkPanel(props: NetworkPanelProps): JSX.Element {
                     }
                     onClick={() => props.controller.commitDisseminationEdge(edge.id)}
                   >
-                    {committed() ? "Committed" : "Commit edge"}
+                    <ActionIcon name="network_edge" /> {committed() ? "Committed" : "Commit edge"}
                   </button>
                 </li>
               );
@@ -173,12 +177,14 @@ export function NetworkPanel(props: NetworkPanelProps): JSX.Element {
       </fieldset>
       <Show when={presentation().activeCampaign}>
         {(campaign) => (
-          <fieldset class="hallmark-fieldset m15-fieldset">
+          <fieldset class="hallmark-fieldset culture-network-fieldset">
             <legend>Active {campaign().category} campaign</legend>
             <p>{campaign().progress}</p>
             <p>{campaign().effects}</p>
-            <p class="m15-readout">Retired alternatives: {campaign().retiredAlternatives}.</p>
-            <ul class="m15-link-list">
+            <p class="culture-network-readout">
+              Retired alternatives: {campaign().retiredAlternatives}.
+            </p>
+            <ul class="culture-network-link-list">
               <For
                 each={props.game.network.nodes.filter(
                   (node) =>
@@ -195,7 +201,7 @@ export function NetworkPanel(props: NetworkPanelProps): JSX.Element {
                       disabled={props.controller.recoveryBlocked() || node.status !== "established"}
                       onClick={() => props.controller.stabilizeNetworkNode(node.id)}
                     >
-                      Stabilize campaign node
+                      <ActionIcon name="network_node" /> Stabilize campaign node
                     </button>
                   </li>
                 )}
@@ -216,7 +222,7 @@ export function NetworkPanel(props: NetworkPanelProps): JSX.Element {
                       type="button"
                       onClick={() => props.controller.commitDisseminationEdge(edge.id)}
                     >
-                      Commit campaign edge
+                      <ActionIcon name="network_edge" /> Commit campaign edge
                     </button>
                   </li>
                 )}
@@ -227,18 +233,20 @@ export function NetworkPanel(props: NetworkPanelProps): JSX.Element {
       </Show>
       <Show when={presentation().frontier}>
         {(frontier) => (
-          <fieldset class="hallmark-fieldset m15-fieldset">
+          <fieldset class="hallmark-fieldset culture-network-fieldset">
             <legend>Renewable campaign frontier</legend>
             <p>
               Choose one deliberate route. The remaining Deepen, Widen, and Reroute alternatives
               retire from this saved frontier.
             </p>
-            <ul class="m15-card-grid">
+            <ul class="culture-network-card-grid">
               <For each={frontier()}>
                 {(mandate) => (
                   <li>
-                    <article class="m15-card">
-                      <h3>{mandate.category}</h3>
+                    <article class="culture-network-card">
+                      <h3>
+                        <ActionIcon name="campaign" /> {mandate.category}
+                      </h3>
                       <p>{mandate.effects}</p>
                       <button
                         type="button"
@@ -255,7 +263,7 @@ export function NetworkPanel(props: NetworkPanelProps): JSX.Element {
                           )
                         }
                       >
-                        Choose {mandate.category}
+                        <ActionIcon name="campaign" /> Choose {mandate.category}
                       </button>
                     </article>
                   </li>
@@ -289,7 +297,7 @@ export function NetworkPanel(props: NetworkPanelProps): JSX.Element {
                   Cancel
                 </button>
                 <button type="button" onClick={confirm}>
-                  Confirm {action().title}
+                  <ActionIcon name="campaign" /> Confirm {action().title}
                 </button>
               </form>
             </>

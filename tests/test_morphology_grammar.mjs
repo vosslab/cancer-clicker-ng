@@ -447,13 +447,9 @@ test("stage grammar table exactly matches all executable fixture declarations", 
       assert.equal(
         fingerprints.has(fingerprint),
         false,
-        `${stageId} has a unique M16 grammar fixture`,
+        `${stageId} has a unique morphology grammar fixture`,
       );
       fingerprints.add(fingerprint);
-    } else {
-      assert.ok(
-        document.includes("deferred to M17/colony renderer") || document.includes("regional/event"),
-      );
     }
   }
   for (const rowId of MORPHOLOGY_REFERENCE_ROW_IDS) {

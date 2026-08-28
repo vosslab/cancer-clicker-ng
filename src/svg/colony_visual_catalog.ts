@@ -354,7 +354,7 @@ export const EXTENDED_HALLMARK_COLONY_VISUAL_CATALOG = {
   Record<ExtendedHallmarkKey, ColonyVisualCatalogRow<ExtendedHallmarkKey>>
 >;
 
-/** Late-hallmark rows project only published p5 aggregate evidence into M16 provenance. */
+/** Late-hallmark rows project published aggregate evidence into morphology provenance. */
 export const LATE_HALLMARK_COLONY_VISUAL_CATALOG = {
   phenotypic_plasticity: {
     key: "phenotypic_plasticity",

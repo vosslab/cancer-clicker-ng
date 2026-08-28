@@ -4,6 +4,7 @@ import type { JSX } from "solid-js";
 import { transitPresentation } from "../prestige/presentation.js";
 import type { GameState } from "../types/state.js";
 import type { GameController } from "./game_controller.js";
+import { ActionIcon } from "./action_icon.js";
 
 type TransitPanelProps = Readonly<{ game: GameState; controller: GameController }>;
 
@@ -24,7 +25,10 @@ export function TransitPanel(props: TransitPanelProps): JSX.Element {
             {(transit) => (
               <li>
                 <article class="prestige-card">
-                  <h3>{transit.outcome === "arrived" ? "Arrived transit" : "Lost transit"}</h3>
+                  <h3>
+                    <ActionIcon name="transit" />{" "}
+                    {transit.outcome === "arrived" ? "Arrived transit" : "Lost transit"}
+                  </h3>
                   <p>
                     {transit.outcome === "arrived"
                       ? "Resolve this successful transit at one compatible organ site."
@@ -40,7 +44,7 @@ export function TransitPanel(props: TransitPanelProps): JSX.Element {
                             props.controller.resolveTransit(transit.eventId, destination.siteId)
                           }
                         >
-                          Resolve at {destination.title}
+                          <ActionIcon name="transit" /> Resolve at {destination.title}
                         </button>
                       )}
                     </For>

@@ -1,4 +1,4 @@
-/* M14 terminal decisions: scoped separately so the foundational board stylesheet stays compact. */
+/* Terminal decisions stay scoped separately so the foundational board stylesheet stays compact. */
 .prestige-panel,
 .transit-panel {
   display: grid;
@@ -243,8 +243,8 @@
   }
 }
 
-/* M15 culture and dissemination choices stay legible inside the established progression rail. */
-.m15-panel {
+/* Culture and dissemination choices stay legible inside the established progression rail. */
+.culture-network-panel {
   gap: 0.7rem;
   border-color: rgb(120 211 186 / 55%);
   background:
@@ -259,7 +259,7 @@
     var(--surface);
 }
 
-.m15-fieldset {
+.culture-network-fieldset {
   display: grid;
   gap: 0.55rem;
   min-inline-size: 0;
@@ -268,13 +268,13 @@
   background: rgb(5 27 22 / 44%);
 }
 
-.network-panel .m15-fieldset {
+.network-panel .culture-network-fieldset {
   border-color: rgb(149 207 239 / 42%);
   background: rgb(7 25 33 / 48%);
 }
 
-.m15-fieldset > p,
-.m15-card > p {
+.culture-network-fieldset > p,
+.culture-network-card > p {
   margin: 0;
   color: var(--muted);
   font-size: 0.8rem;
@@ -282,7 +282,7 @@
   overflow-wrap: anywhere;
 }
 
-.m15-card-grid {
+.culture-network-card-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 12.5rem), 1fr));
   gap: 0.5rem;
@@ -291,7 +291,7 @@
   list-style: none;
 }
 
-.m15-card {
+.culture-network-card {
   display: grid;
   align-content: start;
   gap: 0.45rem;
@@ -302,12 +302,12 @@
   background: linear-gradient(145deg, rgb(32 82 63 / 48%), rgb(6 29 24 / 78%));
 }
 
-.network-panel .m15-card {
+.network-panel .culture-network-card {
   border-color: rgb(146 207 239 / 44%);
   background: linear-gradient(145deg, rgb(31 68 88 / 52%), rgb(7 27 34 / 82%));
 }
 
-.m15-card h3 {
+.culture-network-card h3 {
   margin: 0;
   color: #d8fff0;
   font-size: 0.92rem;
@@ -315,15 +315,15 @@
   overflow-wrap: anywhere;
 }
 
-.m15-card button,
-.m15-choices button,
-.m15-link-list button {
+.culture-network-card button,
+.culture-network-choices button,
+.culture-network-link-list button {
   min-block-size: 2.75rem;
   padding: 0.48rem 0.6rem;
   text-align: start;
 }
 
-.m15-readout {
+.culture-network-readout {
   padding: 0.5rem 0.6rem;
   border-inline-start: 3px solid #8ee7c3;
   border-radius: 0.35rem;
@@ -331,17 +331,17 @@
   background: rgb(42 126 93 / 22%);
 }
 
-.m15-choices {
+.culture-network-choices {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
   gap: 0.45rem;
 }
 
-.m15-choices > p {
+.culture-network-choices > p {
   grid-column: 1 / -1;
 }
 
-.m15-link-list {
+.culture-network-link-list {
   display: grid;
   gap: 0.4rem;
   margin: 0;
@@ -349,7 +349,7 @@
   list-style: none;
 }
 
-.m15-link-list li {
+.culture-network-link-list li {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 0.5rem;
@@ -363,16 +363,16 @@
 }
 
 @media (max-width: 48rem) {
-  .m15-card-grid,
-  .m15-choices {
+  .culture-network-card-grid,
+  .culture-network-choices {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .m15-link-list li {
+  .culture-network-link-list li {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .m15-link-list button {
+  .culture-network-link-list button {
     inline-size: 100%;
   }
 }

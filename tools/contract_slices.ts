@@ -113,12 +113,12 @@ export const LOAD_RESULT_CONTRACT_PROBE = {
   notices: [],
   version: 2,
   savedAtMs: 0,
-  progressionVersion: 8,
+  stateSchemaVersion: 8,
 } satisfies LoadResult;
 const _LEGACY_LOADED_RESULT_PROBE = {
   ...LOAD_RESULT_CONTRACT_PROBE,
-  // @ts-expect-error A loaded current save cannot present a legacy progression version.
-  progressionVersion: 3,
+  // @ts-expect-error A loaded current save uses the settled state schema.
+  stateSchemaVersion: 3,
 } satisfies LoadResult;
 void _LEGACY_LOADED_RESULT_PROBE;
 const _REJECTED_WITH_STATE_PROBE = {

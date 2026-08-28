@@ -13,7 +13,7 @@ import {
 import { AUTHORED_NETWORK_NODE_CATALOG } from "../src/prestige/network.ts";
 import { generateHostDraftV1 } from "../src/prestige/hosts.ts";
 import { createInitialGameState } from "../src/state/game_state.ts";
-import { CURRENT_PROGRESSION_VERSION } from "../src/state/save_load.ts";
+import { CURRENT_STATE_SCHEMA_VERSION } from "../src/state/save_load.ts";
 import {
   createReplayRecorder,
   MAX_REPLAY_ENTRIES,
@@ -23,7 +23,7 @@ import {
 import { recordEvent } from "../src/state/events.ts";
 
 const RUNTIME = Object.freeze({
-  progressionVersion: CURRENT_PROGRESSION_VERSION,
+  stateSchemaVersion: CURRENT_STATE_SCHEMA_VERSION,
   semanticRevision: "replay-semantic-v1",
   sourceRevision: "replay-test-build-v1",
 });
@@ -276,7 +276,7 @@ test("replay parser accepts data reordered independently from semantic object or
     source: {
       sourceRevision: log.source.sourceRevision,
       semanticRevision: log.source.semanticRevision,
-      progressionVersion: log.source.progressionVersion,
+      stateSchemaVersion: log.source.stateSchemaVersion,
       formatVersion: log.source.formatVersion,
     },
   };
@@ -362,4 +362,12 @@ test("replay reports stale behavior, build source, seed, and semantic outcome mi
     ],
   };
   assert.equal(replayLog(forged, RUNTIME).code, "outcome-mismatch");
+
+  const forgedDurableState = structuredClone(log);
+  const firstOutcome = forgedDurableState.entries[0].outcome;
+  firstOutcome.normalizedDurableState.cells = {
+    ...firstOutcome.normalizedDurableState.cells,
+    mantissa: firstOutcome.normalizedDurableState.cells.mantissa + 1,
+  };
+  assert.equal(replayLog(forgedDurableState, RUNTIME).code, "outcome-mismatch");
 });
