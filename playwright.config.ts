@@ -5,15 +5,7 @@ const PORT = process.env["PW_PORT"] ?? "4173";
 
 export default defineConfig({
   testDir: "tests/playwright",
-  testMatch: [
-    "**/*.spec.ts",
-    "**/m7_*.mjs",
-    "**/m8_*.mjs",
-    "**/m9_*.mjs",
-    "**/m10_*.mjs",
-    "**/m11_*.mjs",
-    "**/m18_*.mjs",
-  ],
+  testMatch: ["**/*.spec.ts", "**/test_*.mjs"],
   testIgnore: ["**/_temp*", "**/dist_*/**"],
   timeout: 30_000,
   fullyParallel: true,

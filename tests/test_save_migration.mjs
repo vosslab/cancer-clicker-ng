@@ -1,5 +1,4 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
 import test from "node:test";
 import { bigNum, hallmarkId, routeId, stageId } from "../src/brands.ts";
 import { fromSafeInteger, subtract } from "../src/bignum/bignum.ts";
@@ -14,24 +13,236 @@ import {
   serializeGameState,
 } from "../src/state/save_load.ts";
 
-const fixtureUrl = new URL("./fixtures/m4_populated_v2.json", import.meta.url);
-const legacyUrl = new URL("./fixtures/m4_legacy_v1.json", import.meta.url);
-const hostileManifestUrl = new URL("./fixtures/m4_hostile_manifest.json", import.meta.url);
+const POPULATED_V2_RECORD = {
+  version: 2,
+  savedAtMs: 101,
+  progressionVersion: 2,
+  state: {
+    cells: {
+      mantissa: 2.5,
+      exponent: 8,
+    },
+    substrate: {
+      mantissa: 3,
+      exponent: 4,
+    },
+    atp: {
+      mantissa: 4,
+      exponent: 5,
+    },
+    producerLevels: [
+      {
+        id: "producer",
+        level: 2,
+      },
+    ],
+    hallmarkLevels: [
+      {
+        id: "proliferative_signaling",
+        level: 3,
+      },
+    ],
+    currentStage: "microcolony",
+    stageStartedAtMs: 2,
+    stageProgress: 3,
+    stageGateProgress: {
+      microcolony: 4,
+    },
+    lastStageTransition: {
+      from: "transformed_cell",
+      to: "microcolony",
+      atMs: 2,
+    },
+    oxygenPressure: 1,
+    damagePressure: 2,
+    immunePressure: 3,
+    contactPressure: 4,
+    nutrientPressure: 5,
+    signalingAllocation: "cycle",
+    manualDivisionCharge: 1,
+    cycleFillRate: 2,
+    bypassedCheckpoints: ["damage-arrest"],
+    survivalCapacity: 2,
+    regions: [
+      {
+        id: "r",
+        capacity: 3,
+        viability: 1,
+        phenotype: "migratory",
+        vesselLinkIds: ["vessel"],
+        routeIds: ["route"],
+        senescenceEventId: "sen",
+      },
+    ],
+    telomereReserveByRegion: {
+      r: 2,
+    },
+    telomeraseCharges: 1,
+    reserveFloor: 1,
+    vesselMaintenanceAtp: 1,
+    committedCellCommitments: {
+      route: 2,
+    },
+    routeRiskById: {
+      route: 1,
+    },
+    seededSites: ["r"],
+    atpBudget: {
+      vessel: 1,
+    },
+    atpSinks: ["vessel"],
+    immuneVisibilityByRegion: {
+      r: 1,
+    },
+    concealmentTokens: 1,
+    maskedRegions: ["r"],
+    inflammationEpisodes: [
+      {
+        id: "episode",
+        regionId: "r",
+        deadlineMs: 6,
+      },
+    ],
+    regionalInflammation: {
+      r: 1,
+    },
+    routeDiscoveryProgress: 1,
+    mutationOffers: [
+      {
+        id: "mutation-offer",
+        poolId: "pool",
+        mutationIds: ["mutation"],
+        sourceSeed: 1,
+        sourceSequence: 1,
+      },
+    ],
+    chosenMutations: ["chosen"],
+    mutationLiabilities: ["liability"],
+    genomeBurden: 1,
+    phenotypeCooldowns: {
+      r: 7,
+    },
+    regionalModifiers: {
+      r: 1,
+    },
+    programs: {
+      allowedByHallmark: {
+        proliferative_signaling: ["cycle"],
+      },
+      selectedByHallmark: {
+        proliferative_signaling: "cycle",
+      },
+      eligibleHallmarks: ["proliferative_signaling"],
+      cooldownDeadlineMs: 8,
+    },
+    microbiome: {
+      poolId: "micro-pool",
+      offerIds: ["microbe-c"],
+      seed: 1,
+      sequence: 2,
+      rotationCounter: 3,
+      rotationDeadlineMs: 9,
+      pendingCompatibility: "compatible",
+      selectedNiches: ["microbe-a", "microbe-b"],
+      compatibilitySnapshot: ["microbe-a", "microbe-b"],
+    },
+    senescentRegions: ["r"],
+    secretoryEffects: {
+      r: 1,
+    },
+    clearanceQueue: ["sen"],
+    pendingDamageEvents: [
+      {
+        id: "damage",
+        regionId: "r",
+        outcome: "repairable",
+      },
+    ],
+    pendingTransitEvents: [
+      {
+        id: "transit",
+        routeId: "route",
+        outcome: "arrived",
+      },
+    ],
+    deterministicSeed: 2,
+    eventSequence: 3,
+    prestigeAvailability: [
+      {
+        id: "L1",
+        status: "earned",
+      },
+    ],
+    totalOfflineMs: 4,
+    numberFormat: "full",
+    endingReached: true,
+  },
+};
+const LEGACY_V1_RECORD = {
+  version: 1,
+  savedAtMs: 120,
+  state: {
+    cells: {
+      mantissa: 4.2,
+      exponent: 3,
+    },
+    atp: {
+      mantissa: 1,
+      exponent: 2,
+    },
+    stageId: "microcolony",
+    eventSequence: 7,
+  },
+};
+const HOSTILE_CASE_NAMES = [
+  "malformed-json",
+  "unsupported-version",
+  "non-object-envelope",
+  "bad-envelope",
+  "unknown-envelope-key",
+  "reserved-envelope-key",
+  "oversized-raw",
+  "oversized-collection",
+  "unsafe-numeric",
+  "noncanonical-bignum",
+  "unknown-state-key",
+  "reserved-state-key",
+  "unknown-nested-key",
+  "reserved-nested-key",
+  "unknown-program-key",
+  "reserved-program-key",
+  "unknown-microbiome-key",
+  "reserved-microbiome-key",
+  "duplicate-offer",
+  "duplicate-event",
+  "cross-collection-event-collision",
+  "dangling-region",
+  "dangling-route",
+  "orphan-clearance",
+  "program-relation",
+  "microbiome-relation",
+  "prototype-pollution",
+  "reserved-map-key",
+];
 
-function fixtureRaw() {
-  return readFileSync(fixtureUrl, "utf8");
+function populatedV2Record() {
+  return structuredClone(POPULATED_V2_RECORD);
 }
 
-function fixtureRecord() {
-  return JSON.parse(fixtureRaw());
+function populatedV2Raw() {
+  return JSON.stringify(populatedV2Record());
+}
+
+function legacyV1Raw() {
+  return JSON.stringify(LEGACY_V1_RECORD);
 }
 
 function loadedFixture() {
-  const result = parseSave(fixtureRaw());
+  const result = parseSave(populatedV2Raw());
   assert.equal(result.status, "loaded");
   assert.deepEqual(result.notices, []);
   assert.deepEqual(result.state, {
-    ...fixtureRecord().state,
+    ...populatedV2Record().state,
     producerLevels: createInitialGameState().producerLevels.map((entry) =>
       entry.id === "producer" ? { ...entry, level: 2 } : entry,
     ),
@@ -46,7 +257,7 @@ function loadedFixture() {
     chosenMutations: [],
     mutationLiabilities: [],
     genomeBurden: 0,
-    activeTimeMs: fixtureRecord().state.stageStartedAtMs,
+    activeTimeMs: populatedV2Record().state.stageStartedAtMs,
     pendingProgression: [],
   });
   return result;
@@ -87,7 +298,7 @@ function mutateRaw(mutator) {
 }
 
 function legacyMutateRaw(mutator) {
-  const record = fixtureRecord();
+  const record = populatedV2Record();
   mutator(record);
   return JSON.stringify(record);
 }
@@ -149,7 +360,7 @@ function routeDiscoveryState() {
   };
 }
 
-test("external populated V2 fixture round-trips with exact metadata and stable serialization", () => {
+test("populated V2 save round-trips with exact metadata and stable serialization", () => {
   const first = loadedFixture();
   assert.equal(first.version, 2);
   assert.equal(first.savedAtMs, 101);
@@ -235,8 +446,8 @@ test("route discovery relations reject orphans and preserve protected recovery o
   assert.equal(protectedStorage.raw(), orphanRaw);
 });
 
-test("V1 fixture migration has an exact whole-state result and stable V2 reserialization", () => {
-  const result = parseSave(readFileSync(legacyUrl, "utf8"));
+test("V1 migration has an exact whole-state result and stable V2 reserialization", () => {
+  const result = parseSave(legacyV1Raw());
   const expected = {
     ...createInitialGameState(),
     cells: { mantissa: 4.2, exponent: 3 },
@@ -396,8 +607,7 @@ test("impossible persisted transition histories default only the optional transi
   }
 });
 
-test("named hostile fixture corpus rejects exact raw without prototype pollution", () => {
-  const manifest = JSON.parse(readFileSync(hostileManifestUrl, "utf8"));
+test("named hostile save corpus rejects exact raw without prototype pollution", () => {
   const cases = {
     "malformed-json": "{",
     "unsupported-version": mutateRaw((r) => (r.version = 3)),
@@ -440,10 +650,10 @@ test("named hostile fixture corpus rejects exact raw without prototype pollution
       '{"version":2,"savedAtMs":1,"progressionVersion":1,"state":{"__proto__":{"polluted":true}}}',
     "reserved-map-key": mutateRaw((r) => (r.state.atpBudget.constructor = 1)),
   };
-  assert.deepEqual(Object.keys(cases).sort(), manifest.rejected.slice().sort());
+  assert.deepEqual(Object.keys(cases).sort(), HOSTILE_CASE_NAMES.slice().sort());
   for (const [name, raw] of Object.entries(cases)) expectRejected(raw, name);
   const recovered = {};
-  assert.deepEqual(Object.keys(recovered).sort(), manifest.recovered.slice().sort());
+  assert.deepEqual(Object.keys(recovered).sort(), []);
   for (const [name, [raw, state, field]] of Object.entries(recovered)) {
     expectRecovered(raw, state, field, name);
   }

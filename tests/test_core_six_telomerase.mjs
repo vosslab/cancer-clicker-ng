@@ -65,7 +65,7 @@ function rejectsAtomically(state, operation, message, appliedAtMs = state.active
   assert.deepEqual(state, before, "rejected operation must not mutate durable state");
 }
 
-test("M10 replicative budget offers mutually distinct local rescue and one host-run reserve bank", () => {
+test("core-six replicative budget offers mutually distinct local rescue and one host-run reserve bank", () => {
   const state = eligibleState({ charges: 3 });
   const rescued = applyReplicativeBudget(state, refill(regionId("a"), 2), 40);
   assert.equal(rescued.telomeraseCharges, 1);
@@ -82,7 +82,7 @@ test("M10 replicative budget offers mutually distinct local rescue and one host-
   assert.equal(REPLICATIVE_BUDGET_EFFECT.hallmarkId, hallmarkId("replicative_immortality"));
 });
 
-test("M10 refill has a bounded deterministic effect and resolves the selected warning", () => {
+test("core-six refill has a bounded deterministic effect and resolves the selected warning", () => {
   const state = eligibleState({ charges: 1 });
   const next = applyReplicativeBudget(state, refill(), 40);
   assert.equal(next.telomereReserveByRegion.a, 2);
@@ -90,7 +90,7 @@ test("M10 refill has a bounded deterministic effect and resolves the selected wa
   rejectsAtomically(next, refill(), /insufficient/);
 });
 
-test("M10 replicative handler rejects hostile, stale, locked, spent, unknown, and insufficient inputs atomically", () => {
+test("core-six replicative handler rejects hostile, stale, locked, spent, unknown, and insufficient inputs atomically", () => {
   const base = eligibleState();
   const hostileOperations = [
     [refill(regionId("missing")), /unavailable/],
@@ -120,7 +120,7 @@ test("M10 replicative handler rejects hostile, stale, locked, spent, unknown, an
   rejectsAtomically(spentBank, bank(), /already banked/);
 });
 
-test("M10 warnings require a viable region and banking consumes one strategic opportunity", () => {
+test("core-six warnings require a viable region and banking consumes one strategic opportunity", () => {
   const noWarning = eligibleState({ regions: [warnedRegion("a", 2)] });
   rejectsAtomically(noWarning, refill(), /unavailable/);
   rejectsAtomically(noWarning, bank(), /requires a division-limit warning/);
@@ -141,7 +141,7 @@ test("M10 warnings require a viable region and banking consumes one strategic op
   assert.equal(durable.telomereReserveByRegion.front, 0);
 });
 
-test("M10 banking inverts exhausted-warning semantics without changing the saved state shape", () => {
+test("core-six banking inverts exhausted-warning semantics without changing the saved state shape", () => {
   const state = eligibleState({ charges: 2, regions: [warnedRegion("a", 0)] });
   assert.equal(hasDivisionLimitWarning(state, state.regions[0]), true);
   assert.equal(effectiveTelomereReserve(state, "a"), 0);

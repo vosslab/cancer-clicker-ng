@@ -8,7 +8,7 @@ import { eligibleNextStage } from "../stages/gates.js";
 import { assertStageTransition } from "../stages/transitions.js";
 import { recordEvent } from "../state/events.js";
 import { saveToStorage } from "../state/save_load.js";
-import { parsePositiveCanonicalBigNumDto } from "../hallmarks/m11_types.js";
+import { parsePositiveCanonicalBigNumDto } from "../hallmarks/extended_hallmark_types.js";
 import type { StorageLike } from "../state/save_load.js";
 import type { PurchaseQuantity } from "../economy/costs.js";
 import type {
@@ -20,7 +20,7 @@ import type {
   RegionId,
   RouteId,
 } from "../types/ids.js";
-import type { AtpSinkId, CanonicalBigNumDto } from "../hallmarks/m11_types.js";
+import type { AtpSinkId, CanonicalBigNumDto } from "../hallmarks/extended_hallmark_types.js";
 import type { SaveNotice } from "../types/save.js";
 import type {
   CheckpointId,
@@ -109,7 +109,7 @@ function normalNow(clock: ActiveClock): number {
   return now;
 }
 
-/** M10 commands bind to durable simulation time, never a browser or wall-clock sample. */
+/** core-six commands bind to durable simulation time, never a browser or wall-clock sample. */
 function simulationNow(state: GameState): number {
   const now = state.activeTimeMs;
   if (!Number.isSafeInteger(now) || now < 0) throw new Error("Simulation time is invalid.");

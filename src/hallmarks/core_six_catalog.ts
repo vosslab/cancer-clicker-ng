@@ -144,7 +144,7 @@ export function assertCoreSixCatalog(
   for (const definition of definitions) {
     const stageCapability = stageDefinition(definition.unlock.stageId).operationalChange.actionId;
     if (stageCapability !== definition.unlock.capability) {
-      throw new Error("Core-six catalog capability must match its M9 unlock stage.");
+      throw new Error("Core-six catalog capability must match its stage progression unlock stage.");
     }
     if (
       definition.purchase.initialLevel !== 1 ||

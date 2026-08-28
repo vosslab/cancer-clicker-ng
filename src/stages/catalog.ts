@@ -61,7 +61,8 @@ const DEFINITIONS = [
       actionId: "atp-budget",
       availability: "deferred",
       summary: "ATP budgeting is declared now and implemented with metabolism.",
-      feasibilityRule: "ATP budget actions stay unavailable until their M11 owner lands.",
+      feasibilityRule:
+        "ATP budget actions stay unavailable until their extended-hallmark owner lands.",
       economy: {
         productionMultiplier: 1.1,
         favoredProducerId: producerId("producer"),
@@ -290,7 +291,7 @@ function boundedFinite(value: number, minimum: number, maximum: number): boolean
   return Number.isFinite(value) && value >= minimum && value <= maximum;
 }
 
-/** Reject malformed or unbounded M9 economy data before either tick or quote code can consume it. */
+/** Reject malformed or unbounded stage progression economy data before either tick or quote code can consume it. */
 export function assertStageEconomyCatalog(
   definitions: readonly StageDefinition[] = STAGE_DEFINITIONS,
 ): void {
@@ -314,7 +315,7 @@ export function assertStageEconomyCatalog(
       )
     )
       throw new Error(
-        "Stage economy values must be finite and inside the M9 provisional envelope.",
+        "Stage economy values must be finite and inside the stage progression provisional envelope.",
       );
   }
   const transformed = definitions[0];

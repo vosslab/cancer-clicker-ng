@@ -20,8 +20,8 @@ import type {
   TrackedResourceSnapshot,
 } from "./state.js";
 import type { PurchaseQuantity } from "../economy/costs.js";
-import type { CanonicalBigNumDto } from "../hallmarks/m11_types.js";
-import type { AtpSinkId } from "../hallmarks/m11_types.js";
+import type { CanonicalBigNumDto } from "../hallmarks/extended_hallmark_types.js";
+import type { AtpSinkId } from "../hallmarks/extended_hallmark_types.js";
 
 export type ClickDivideEvent = Readonly<{
   type: "click-divide";

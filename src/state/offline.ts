@@ -16,9 +16,9 @@ import {
   type ElapsedHallmarkDurableProjection,
 } from "../hallmarks/elapsed_effects.js";
 import {
-  projectM11DurableTickEffects,
-  type M11DurableTickProjection,
-} from "../hallmarks/m11_tick_effects.js";
+  projectExtendedHallmarkDurableTickEffects,
+  type ExtendedHallmarkDurableTickProjection,
+} from "../hallmarks/extended_hallmark_tick.js";
 
 export const OFFLINE_STEP_MS = 60_000;
 export const MAX_OFFLINE_MS = 604_800_000;
@@ -117,15 +117,17 @@ function projectElapsedHallmarkProjection(
   return expected;
 }
 
-/** ASVS 1.5.2/2.2.1/2.2.3/2.3.3/15.3.3/15.3.5/15.3.6/16.5.3: exact M11 allowlist. */
-function projectM11Projection(
+/** ASVS 1.5.2/2.2.1/2.2.3/2.3.3/15.3.3/15.3.5/15.3.6/16.5.3: exact extended-hallmark allowlist. */
+function projectExtendedHallmarkProjection(
   raw: unknown,
   prior: GameState,
   duration: number,
-): M11DurableTickProjection {
-  const expected = projectM11DurableTickEffects(prior, duration);
+): ExtendedHallmarkDurableTickProjection {
+  const expected = projectExtendedHallmarkDurableTickEffects(prior, duration);
   if (!exactDataEqual(raw, expected)) {
-    throw new Error("Offline M11 projection does not match the expected durable effect.");
+    throw new Error(
+      "Offline extended-hallmark projection does not match the expected durable effect.",
+    );
   }
   return expected;
 }
@@ -135,7 +137,7 @@ type TrustedStepResult = Readonly<{
   stageEligibility: unknown;
   prestigeEligibility: unknown;
   stateProjection?: unknown;
-  m11Projection?: unknown;
+  extendedHallmarkProjection?: unknown;
 }>;
 
 /** ASVS 15.3.3/15.3.5/15.3.6/16.5.3: reject unsafe adapter records before any field is read. */
@@ -144,8 +146,8 @@ function trustedStepResult(raw: unknown): TrustedStepResult {
   const candidates: ReadonlyArray<readonly string[]> = [
     baseKeys,
     [...baseKeys, "stateProjection"],
-    [...baseKeys, "m11Projection"],
-    [...baseKeys, "stateProjection", "m11Projection"],
+    [...baseKeys, "extendedHallmarkProjection"],
+    [...baseKeys, "stateProjection", "extendedHallmarkProjection"],
   ];
   let withProjection: Record<string, unknown> | undefined;
   for (const keys of candidates) {
@@ -161,7 +163,7 @@ function trustedStepResult(raw: unknown): TrustedStepResult {
     stageEligibility: withProjection.stageEligibility,
     prestigeEligibility: withProjection.prestigeEligibility,
     stateProjection: withProjection.stateProjection,
-    m11Projection: withProjection.m11Projection,
+    extendedHallmarkProjection: withProjection.extendedHallmarkProjection,
   };
 }
 
@@ -417,13 +419,25 @@ export function replayOffline(
               ...working,
               ...projectElapsedHallmarkProjection(result.stateProjection, working, duration),
             };
-      const m11Projected =
-        result.m11Projection === undefined
+      const extendedHallmarkProjected =
+        result.extendedHallmarkProjection === undefined
           ? projected
-          : { ...projected, ...projectM11Projection(result.m11Projection, working, duration) };
+          : {
+              ...projected,
+              ...projectExtendedHallmarkProjection(
+                result.extendedHallmarkProjection,
+                working,
+                duration,
+              ),
+            };
       const elapsedSoFar = working.totalOfflineMs + duration;
       if (!natural(elapsedSoFar)) throw new Error("Offline elapsed state is invalid.");
-      working = { ...working, ...m11Projected, ...resourceSnapshot, totalOfflineMs: elapsedSoFar };
+      working = {
+        ...working,
+        ...extendedHallmarkProjected,
+        ...resourceSnapshot,
+        totalOfflineMs: elapsedSoFar,
+      };
     };
     for (let index = 0; index < fullSteps; index += 1) applyStep(OFFLINE_STEP_MS);
     if (remainder > 0) applyStep(remainder);

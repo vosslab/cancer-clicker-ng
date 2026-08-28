@@ -11,22 +11,25 @@ import {
 } from "../hallmarks/handlers/replicative_budget.js";
 import {
   ATP_SINK_CATALOG,
-  M11_HALLMARK_CATALOG,
-  hasReachedM11Unlock,
-} from "../hallmarks/m11_catalog.js";
-import { MAX_TOTAL_ATP_BUDGET } from "../hallmarks/m11_catalog.js";
-import { atpBudgetForSink, hasFundedAtpAcceleration } from "../hallmarks/m11_economy.js";
-import { regionalVisibilityEfficiency } from "../hallmarks/m11_timeline.js";
+  EXTENDED_HALLMARK_CATALOG,
+  hasReachedExtendedHallmarkUnlock,
+} from "../hallmarks/extended_hallmark_catalog.js";
+import { MAX_TOTAL_ATP_BUDGET } from "../hallmarks/extended_hallmark_catalog.js";
+import { atpBudgetForSink, hasFundedAtpAcceleration } from "../hallmarks/atp_allocation.js";
+import { regionalVisibilityEfficiency } from "../hallmarks/inflammation_timeline.js";
 import {
-  effectiveM11Pressures,
-  m11MaskTokenCost,
-  m11RouteDiscoveryGainPerSecond,
-} from "../hallmarks/m11_authoritative_effects.js";
+  effectiveExtendedHallmarkPressures,
+  extendedHallmarkMaskTokenCost,
+  extendedHallmarkRouteDiscoveryGainPerSecond,
+} from "../hallmarks/extended_hallmark_effects.js";
 import { compare, fromSafeInteger } from "../bignum/bignum.js";
 import { stageDefinition } from "../stages/catalog.js";
 import { formatQuantity } from "../bignum/format.js";
 import type { CoreSixHallmarkDefinition } from "../hallmarks/core_six_types.js";
-import type { CanonicalBigNumDto, M11HallmarkDefinition } from "../hallmarks/m11_types.js";
+import type {
+  CanonicalBigNumDto,
+  ExtendedHallmarkDefinition,
+} from "../hallmarks/extended_hallmark_types.js";
 import type { GameController } from "./game_controller.js";
 import type { CheckpointId, GameState, InflammationEpisode, TriageAction } from "../types/state.js";
 import type { HallmarkId, MutationId, OfferId, RouteId } from "../types/ids.js";
@@ -80,9 +83,14 @@ function branchStatus(game: GameState, definition: CoreSixHallmarkDefinition): B
   return hasReachedCoreSixUnlock(game.currentStage, definition.key) ? "available" : "locked";
 }
 
-function m11BranchStatus(game: GameState, definition: M11HallmarkDefinition): BranchStatus {
+function extendedHallmarkBranchStatus(
+  game: GameState,
+  definition: ExtendedHallmarkDefinition,
+): BranchStatus {
   if (ownsHallmark(game, definition.id)) return "acquired";
-  return hasReachedM11Unlock(game.currentStage, definition.key) ? "available" : "locked";
+  return hasReachedExtendedHallmarkUnlock(game.currentStage, definition.key)
+    ? "available"
+    : "locked";
 }
 
 function unlockExplanation(definition: CoreSixHallmarkDefinition): string {
@@ -91,7 +99,7 @@ function unlockExplanation(definition: CoreSixHallmarkDefinition): string {
   return `Unlocks at ${stage.title}: ${capability}.`;
 }
 
-function m11UnlockExplanation(definition: M11HallmarkDefinition): string {
+function extendedHallmarkUnlockExplanation(definition: ExtendedHallmarkDefinition): string {
   const stage = stageDefinition(definition.unlock.stageId);
   const capability = readableIdentifier(definition.unlock.capability);
   return `Unlocks at ${stage.title}: ${capability}.`;
@@ -420,7 +428,7 @@ function MetabolismControls(props: HallmarkTreeProps): JSX.Element {
   const [exponent, setExponent] = createSignal(0);
   const amount = (): CanonicalBigNumDto => ({ mantissa: mantissa(), exponent: exponent() });
   return (
-    <fieldset class="hallmark-fieldset m11-metabolism-controls">
+    <fieldset class="hallmark-fieldset metabolism-controls">
       <legend>Substrate to ATP conversion</legend>
       <p class="hallmark-readout">
         ATP is a separate metabolic reserve. Conversion trades the exact substrate amount for the
@@ -475,13 +483,13 @@ function AtpBudgetControls(props: HallmarkTreeProps): JSX.Element {
   const total = (): number =>
     ATP_SINK_CATALOG.reduce((sum, sink) => sum + (props.game.atpBudget[sink.id] ?? 0), 0);
   return (
-    <fieldset class="hallmark-fieldset m11-atp-controls">
+    <fieldset class="hallmark-fieldset atp-allocation-controls">
       <legend>ATP sink allocation</legend>
       <p class="hallmark-readout">
         Allocated {total()} / {MAX_TOTAL_ATP_BUDGET}. A reservation enables only the named sink when
         its own rule and ATP balance are satisfied.
       </p>
-      <div class="m11-sink-grid">
+      <div class="atp-sink-grid">
         <For each={ATP_SINK_CATALOG}>
           {(sink) => {
             const allocation = (): number => props.game.atpBudget[sink.id] ?? 0;
@@ -534,7 +542,7 @@ function AtpBudgetControls(props: HallmarkTreeProps): JSX.Element {
               return "Any positive reservation may accelerate producers only when ATP can cover vessel maintenance first and the acceleration debit second.";
             };
             return (
-              <label class="hallmark-input-label m11-sink-row">
+              <label class="hallmark-input-label atp-sink-row">
                 <span>
                   {sink.displayName}: {status()}
                 </span>
@@ -564,8 +572,8 @@ function AtpBudgetControls(props: HallmarkTreeProps): JSX.Element {
 }
 
 function ImmuneVisibilityControls(props: HallmarkTreeProps): JSX.Element {
-  const pressures = (): ReturnType<typeof effectiveM11Pressures> =>
-    effectiveM11Pressures(props.game);
+  const pressures = (): ReturnType<typeof effectiveExtendedHallmarkPressures> =>
+    effectiveExtendedHallmarkPressures(props.game);
   return (
     <fieldset class="hallmark-fieldset">
       <legend>Immune visibility</legend>
@@ -578,13 +586,13 @@ function ImmuneVisibilityControls(props: HallmarkTreeProps): JSX.Element {
           {(region, index) => {
             const masked = (): boolean => props.game.maskedRegions.includes(region.id);
             return (
-              <div class="m11-region-control">
+              <div class="regional-hallmark-control">
                 <p>
                   Region {index() + 1}: {masked() ? "concealed" : "immune-visible"}; local producer
                   contribution {regionalVisibilityEfficiency(props.game, region.id).toFixed(1)}x.{" "}
-                  Masking costs {m11MaskTokenCost(props.game)} token
-                  {m11MaskTokenCost(props.game) === 1 ? "" : "s"} and lowers effective immune
-                  pressure by one while the region remains masked.
+                  Masking costs {extendedHallmarkMaskTokenCost(props.game)} token
+                  {extendedHallmarkMaskTokenCost(props.game) === 1 ? "" : "s"} and lowers effective
+                  immune pressure by one while the region remains masked.
                 </p>
                 <button
                   type="button"
@@ -610,9 +618,10 @@ function InflammationControls(props: HallmarkTreeProps): JSX.Element {
       <legend>Inflammatory episodes</legend>
       <p class="hallmark-readout">
         Active episodes use a 1.2x regional producer contribution and add one route-discovery
-        progress per second. Effective pressure: {effectiveM11Pressures(props.game).damage} damage /{" "}
-        {effectiveM11Pressures(props.game).immune} immune; current route gain:{" "}
-        {m11RouteDiscoveryGainPerSecond(props.game)} per second.
+        progress per second. Effective pressure:{" "}
+        {effectiveExtendedHallmarkPressures(props.game).damage} damage /{" "}
+        {effectiveExtendedHallmarkPressures(props.game).immune} immune; current route gain:{" "}
+        {extendedHallmarkRouteDiscoveryGainPerSecond(props.game)} per second.
       </p>
       <For each={props.game.regions}>
         {(region, index) => {
@@ -622,7 +631,7 @@ function InflammationControls(props: HallmarkTreeProps): JSX.Element {
             region.vesselLinkIds.length > 0 &&
             !props.game.maskedRegions.includes(region.id);
           return (
-            <div class="m11-region-control m11-inflammation-control">
+            <div class="regional-hallmark-control inflammation-control">
               <p>
                 Region {index() + 1}:{" "}
                 {episode() ? `active through ${episode()?.deadlineMs} ms` : "no active episode"}.{" "}
@@ -689,10 +698,10 @@ function MutationOfferControls(props: HallmarkTreeProps): JSX.Element {
             <Show when={selectionReason()}>
               {(reason) => <p class="hallmark-disabled-note">{reason()}</p>}
             </Show>
-            <div class="m11-mutation-cards" aria-label="Deterministic mutation offer">
+            <div class="mutation-offer-cards" aria-label="Deterministic mutation offer">
               <For each={currentOffer().cards}>
                 {(card) => (
-                  <article class="m11-mutation-card">
+                  <article class="mutation-offer-card">
                     <h4>{card.displayName}</h4>
                     <p>
                       <strong>{card.benefit.label}:</strong> {card.benefit.effect}
@@ -718,9 +727,9 @@ function MutationOfferControls(props: HallmarkTreeProps): JSX.Element {
   );
 }
 
-function M11AcquiredControls(
+function ExtendedHallmarkAcquiredControls(
   props: HallmarkTreeProps,
-  definition: M11HallmarkDefinition,
+  definition: ExtendedHallmarkDefinition,
 ): JSX.Element {
   switch (definition.mechanicClass) {
     case "energy-budgeting":
@@ -739,7 +748,7 @@ function M11AcquiredControls(
   }
 }
 
-/** Catalog-driven M10 controls: rendering observes durable state; the controller owns all mutation. */
+/** Catalog-driven core-six controls: rendering observes durable state; the controller owns all mutation. */
 export function HallmarkTree(props: HallmarkTreeProps): JSX.Element {
   return (
     <section class="panel hallmark-tree" aria-labelledby="hallmark-tree-title">
@@ -786,7 +795,7 @@ export function HallmarkTree(props: HallmarkTreeProps): JSX.Element {
           }}
         </For>
       </ol>
-      <div class="section-heading m11-heading">
+      <div class="section-heading extended-hallmarks-heading">
         <div>
           <p class="eyebrow">2011 expansion</p>
           <h2>Metabolism, immunity, inflammation, and mutation</h2>
@@ -796,12 +805,12 @@ export function HallmarkTree(props: HallmarkTreeProps): JSX.Element {
         </p>
       </div>
       <ol class="hallmark-list" start="7">
-        <For each={M11_HALLMARK_CATALOG}>
+        <For each={EXTENDED_HALLMARK_CATALOG}>
           {(definition, index) => {
-            const status = (): BranchStatus => m11BranchStatus(props.game, definition);
+            const status = (): BranchStatus => extendedHallmarkBranchStatus(props.game, definition);
             const explanation = (): string | undefined => controlExplanation(props, status());
             return (
-              <li class="hallmark-row m11-hallmark-row">
+              <li class="hallmark-row extended-hallmark-row">
                 <div class="hallmark-copy">
                   <p class="hallmark-index">Branch {index() + 7}</p>
                   <h3>{definition.displayName}</h3>
@@ -809,7 +818,7 @@ export function HallmarkTree(props: HallmarkTreeProps): JSX.Element {
                     {readableIdentifier(definition.mechanicClass)} with explicit costs and
                     consequences.
                   </p>
-                  <p class="hallmark-unlock">{m11UnlockExplanation(definition)}</p>
+                  <p class="hallmark-unlock">{extendedHallmarkUnlockExplanation(definition)}</p>
                 </div>
                 <div class="hallmark-action">
                   <p class={`hallmark-status is-${status()}`}>{readableIdentifier(status())}</p>
@@ -823,7 +832,7 @@ export function HallmarkTree(props: HallmarkTreeProps): JSX.Element {
                     </button>
                   </Show>
                   <Show when={status() === "acquired"}>
-                    {M11AcquiredControls(props, definition)}
+                    {ExtendedHallmarkAcquiredControls(props, definition)}
                   </Show>
                   <Show when={explanation()}>
                     {(message) => <p class="hallmark-disabled-note">{message()}</p>}

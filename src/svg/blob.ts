@@ -109,7 +109,7 @@ function requireFrozenMorphology(value: unknown): MorphologyResolution {
 }
 
 function contourSamples(seed: number): number {
-  return MIN_CONTOUR_SAMPLES + (hash_seed([seed, "m18:contour-count-v1"]) % 15);
+  return MIN_CONTOUR_SAMPLES + (hash_seed([seed, "colony:contour-count-v1"]) % 15);
 }
 
 function formatCoordinate(value: number): string {
@@ -184,7 +184,7 @@ export function createCellBlobPaths(
   const membraneY = localRy * (1 - params.elongation * 0.16);
   const phase = (morphology.traits.polarityOrientation.angleDegrees * Math.PI) / 180;
   const membrane = radialContour(
-    hash_seed([slot.seed, morphology.seed, "m18:membrane-v1"]),
+    hash_seed([slot.seed, morphology.seed, "colony:membrane-v1"]),
     samples,
     membraneX,
     membraneY,
@@ -197,7 +197,7 @@ export function createCellBlobPaths(
   const nucleusY = membraneY * nucleusScale * (1 - params.nuclearEccentricity * 0.08);
   const eccentricity = params.nuclearEccentricity * Math.min(membraneX, membraneY) * 0.22;
   const nucleus = radialContour(
-    hash_seed([slot.seed, morphology.seed, "m18:nucleus-v1"]),
+    hash_seed([slot.seed, morphology.seed, "colony:nucleus-v1"]),
     samples,
     nucleusX,
     nucleusY,

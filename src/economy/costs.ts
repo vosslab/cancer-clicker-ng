@@ -6,11 +6,11 @@ import type { GameState } from "../types/state.js";
 import { assertCanonicalProducerLevels, producerDefinition } from "./producers.js";
 import { stageEconomyModifier } from "../stages/effects.js";
 import { composeEconomyModifiers, hallmarkEconomyModifier } from "../hallmarks/economy_effects.js";
-import { atpAccelerationEconomyModifier } from "../hallmarks/m11_economy.js";
+import { atpAccelerationEconomyModifier } from "../hallmarks/atp_allocation.js";
 import {
-  m11MutationProducerModifier,
-  m11RegionalProducerModifier,
-} from "../hallmarks/m11_authoritative_effects.js";
+  mutationDraftProducerModifier,
+  extendedHallmarkRegionalProducerModifier,
+} from "../hallmarks/extended_hallmark_effects.js";
 
 export type PurchaseQuantity = 1 | 10 | 100 | "max";
 export type PurchaseQuote = Readonly<{
@@ -50,8 +50,8 @@ function quoteExactProducerPurchase(
   const maximum = Number.MAX_SAFE_INTEGER - owned;
   if (!natural(quantity) || quantity > maximum) throw new Error("Producer quantity is invalid.");
   const acceleration = atpAccelerationEconomyModifier(state, id);
-  const regional = m11RegionalProducerModifier(state, id);
-  const mutation = m11MutationProducerModifier(state, id);
+  const regional = extendedHallmarkRegionalProducerModifier(state, id);
+  const mutation = mutationDraftProducerModifier(state, id);
   const unmodifiedDebit =
     quantity === 0
       ? zero()
@@ -80,8 +80,8 @@ export function quoteProducerPurchase(
   const owned = inventory(state).get(id);
   if (owned === undefined) throw new Error("Producer state inventory is invalid.");
   const acceleration = atpAccelerationEconomyModifier(state, id);
-  const regional = m11RegionalProducerModifier(state, id);
-  const mutation = m11MutationProducerModifier(state, id);
+  const regional = extendedHallmarkRegionalProducerModifier(state, id);
+  const mutation = mutationDraftProducerModifier(state, id);
   const count = maxAffordable(
     state.cells,
     multiplyByNumber(

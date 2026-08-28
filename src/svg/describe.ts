@@ -1,5 +1,5 @@
 /**
- * Accessible, non-diagnostic language for the immutable M18 colony scene.
+ * Accessible, non-diagnostic language for the immutable colony renderer colony scene.
  * Copy describes the already accepted macro geometry; it never changes it.
  */
 import { stageId } from "../brands.js";

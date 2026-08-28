@@ -1,12 +1,19 @@
 import { eventId } from "../../brands.js";
-import { hasReachedM11Unlock, m11HallmarkDefinition } from "../m11_catalog.js";
+import {
+  hasReachedExtendedHallmarkUnlock,
+  extendedHallmarkDefinition,
+} from "../extended_hallmark_catalog.js";
 import {
   INFLAMMATION_DURATION_MS,
   MAX_ACTIVE_INFLAMMATION_EPISODES,
-  projectM11InflammationTimeline,
-} from "../m11_timeline.js";
-import { m11ElapsedClock } from "../m11_tick_effects.js";
-import type { ActivateInflammationOperation, M11Handler, M11HandlerResult } from "../m11_types.js";
+  projectInflammationTimeline,
+} from "../inflammation_timeline.js";
+import { extendedHallmarkElapsedClock } from "../extended_hallmark_tick.js";
+import type {
+  ActivateInflammationOperation,
+  ExtendedHallmarkHandler,
+  ExtendedHallmarkHandlerResult,
+} from "../extended_hallmark_types.js";
 import type { GameState, RegionState } from "../../types/state.js";
 
 function natural(value: unknown): value is number {
@@ -14,11 +21,11 @@ function natural(value: unknown): value is number {
 }
 
 function requireOwnedAndUnlocked(state: GameState): void {
-  const definition = m11HallmarkDefinition("tumor_promoting_inflammation");
+  const definition = extendedHallmarkDefinition("tumor_promoting_inflammation");
   const owned = state.hallmarkLevels.some(
     (level) => level.id === definition.id && natural(level.level) && level.level >= 1,
   );
-  if (!owned || !hasReachedM11Unlock(state.currentStage, definition.key)) {
+  if (!owned || !hasReachedExtendedHallmarkUnlock(state.currentStage, definition.key)) {
     throw new Error("Inflammation is locked.");
   }
 }
@@ -69,7 +76,7 @@ function canonicalPreconditions(state: GameState, appliedAtMs: number): void {
   ) {
     throw new Error("Inflammation regional state is invalid.");
   }
-  const projection = projectM11InflammationTimeline(state, 0);
+  const projection = projectInflammationTimeline(state, 0);
   if (projection.episodes.length !== state.inflammationEpisodes.length) {
     throw new Error("Inflammation episode is expired.");
   }
@@ -94,7 +101,7 @@ export function applyInflammation(
     operation: ActivateInflammationOperation;
     appliedAtMs: number;
   }>,
-): M11HandlerResult {
+): ExtendedHallmarkHandlerResult {
   const { state, operation, appliedAtMs } = context;
   if (
     operation.type !== "activate-inflammation" ||
@@ -108,7 +115,7 @@ export function applyInflammation(
   if (state.inflammationEpisodes.some((episode) => episode.regionId === region.id)) {
     throw new Error("Inflammation episode is already active.");
   }
-  const deadlineClock = m11ElapsedClock(state);
+  const deadlineClock = extendedHallmarkElapsedClock(state);
   if (deadlineClock > Number.MAX_SAFE_INTEGER - INFLAMMATION_DURATION_MS) {
     throw new Error("Inflammation deadline cannot advance safely.");
   }
@@ -123,11 +130,11 @@ export function applyInflammation(
     regionalInflammation: { ...state.regionalInflammation, [region.id]: 1 },
   };
   if (next.eventSequence !== state.eventSequence)
-    throw new Error("M11 handlers cannot sequence events.");
+    throw new Error("extended-hallmark handlers cannot sequence events.");
   return next;
 }
 
-export const INFLAMMATION_HANDLER: M11Handler<ActivateInflammationOperation> = {
+export const INFLAMMATION_HANDLER: ExtendedHallmarkHandler<ActivateInflammationOperation> = {
   hallmark: "tumor_promoting_inflammation",
   apply: applyInflammation,
 };

@@ -47,7 +47,7 @@ function invalid(state, route, cells, label) {
   assert.deepEqual(state, before, label);
 }
 
-test("M10 invasion commits exact available biomass without advancing the reducer sequence", () => {
+test("core-six invasion commits exact available biomass without advancing the reducer sequence", () => {
   const state = readyState();
   const after = apply(state, "venous-exit", 5);
   assert.equal(after.committedCellCommitments["venous-exit"], 5);
@@ -56,7 +56,7 @@ test("M10 invasion commits exact available biomass without advancing the reducer
   assert.deepEqual(state.committedCellCommitments, {});
 });
 
-test("M10 invasion distinguishes local expansion from risky dissemination without premature seeding", () => {
+test("core-six invasion distinguishes local expansion from risky dissemination without premature seeding", () => {
   const state = readyState();
   const local = apply(state, "local-front", 2);
   const dissemination = apply(local, "venous-exit", 3);
@@ -65,7 +65,7 @@ test("M10 invasion distinguishes local expansion from risky dissemination withou
   assert.deepEqual(dissemination.seededSites, ["existing-site"]);
 });
 
-test("M10 invasion rejects unavailable, stale, unknown, duplicate, invalid, and overcommitted parcels atomically", () => {
+test("core-six invasion rejects unavailable, stale, unknown, duplicate, invalid, and overcommitted parcels atomically", () => {
   const unavailable = { ...readyState(), hallmarkLevels: [] };
   invalid(unavailable, "venous-exit", 1, "unowned hallmark");
   const stale = { ...readyState(), currentStage: stageId("angiogenic_primary") };

@@ -71,7 +71,7 @@ function apply(state, action) {
   });
 }
 
-test("M10 cell-death resistance makes absorb, repair, and regional loss distinct decisions", () => {
+test("core-six cell-death resistance makes absorb, repair, and regional loss distinct decisions", () => {
   const absorbBefore = triageState();
   const absorbAfter = apply(absorbBefore, "absorb");
   assert.equal(absorbAfter.survivalCapacity, 2);
@@ -116,7 +116,7 @@ test("M10 cell-death resistance makes absorb, repair, and regional loss distinct
   }
 });
 
-test("M10 cell-death loss remains a capacity-free substrate recovery choice", () => {
+test("core-six cell-death loss remains a capacity-free substrate recovery choice", () => {
   const before = triageState({ survivalCapacity: 0 });
   const after = apply(before, "lose-region");
   const target = before.regions[0];
@@ -127,7 +127,7 @@ test("M10 cell-death loss remains a capacity-free substrate recovery choice", ()
   assert.deepEqual(before, triageState({ survivalCapacity: 0 }));
 });
 
-test("M10 cell-death loss uses the single destructive-region projection", () => {
+test("core-six cell-death loss uses the single destructive-region projection", () => {
   const after = apply(triageState(), "lose-region");
   assert.deepEqual(after.seededSites, []);
   assert.deepEqual(after.maskedRegions, []);
@@ -147,7 +147,7 @@ test("M10 cell-death loss uses the single destructive-region projection", () => 
   ]);
 });
 
-test("M10 cell-death resistance rejects locked, unowned, hostile, and capacity-invalid choices atomically", () => {
+test("core-six cell-death resistance rejects locked, unowned, hostile, and capacity-invalid choices atomically", () => {
   const cases = [
     [triageState({ currentStage: stageId("microcolony") }), "absorb", /not owned or unlocked/],
     [triageState({ hallmarkLevels: [] }), "absorb", /not owned or unlocked/],

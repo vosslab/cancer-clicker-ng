@@ -192,7 +192,7 @@ function invasionModifier(state: GameState, producerId: ProducerId): EconomyModi
 }
 
 /**
- * Projects durable M10 mechanic outcomes onto producer-specific economy terms.
+ * Projects durable core-six mechanic outcomes onto producer-specific economy terms.
  * It intentionally does not consult UI copy, catalog text, or a generic hallmark level scalar.
  */
 export function hallmarkEconomyModifier(state: GameState, producerId: ProducerId): EconomyModifier {

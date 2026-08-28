@@ -37,8 +37,8 @@ biology expressed as systems rather than larger numbers layered onto a good open
   in depth rather than arriving all at once.
 - Model the 14 hallmarks as 14 mechanically distinct branches, where "distinct" means each
   changes a player decision, specified in writing before implementation.
-- Provide four prestige layers that are four different strategic systems, proven by showing that
-  no single purchasing strategy is optimal across all four.
+- Provide four prestige layers that are four different strategic systems, each with a reachable
+  decision witness and a balance review that checks its tradeoff remains meaningful.
 - Represent arbitrarily large quantities with correct short suffixes and full Latin illion names,
   with arithmetic proven against the operations the economy actually performs.
 - Make every stage-dependent visual change traceable to a documented biological rationale.
@@ -81,7 +81,7 @@ Cites **Design for adaptability** and **Atomic task decomposition**.
   pacing). Each gets a named artifact before dispatch and a measurement afterward. The strategy
   laboratory (M21) measures pacing against five declared player models, so no curve is adopted on
   one hidden purchasing heuristic. Deterministic replay (M20) makes any balance or save finding
-  reproducible exactly.
+  reproducible as an equivalent normalized durable state and visible progression.
 
 ## Scope
 
@@ -101,8 +101,8 @@ Cites **Design for adaptability** and **Atomic task decomposition**.
   visual transformation, prestige interaction, and post-ending continuation.
 - Build a deterministic replay format and a five-strategy balance laboratory.
 - Write the satirical copy pass with an automated tone and safety guard.
-- Add Node unit tests, Playwright smoke and playthrough tests, and a computed visual-metrics
-  battery.
+- Add permanent Node and Playwright behavior tests, plus one-time visual, balance, and performance
+  calibration artifacts.
 - Produce `docs/RELEASE_EVIDENCE.md`: one compact package a human can approve from, plus the full
   durable documentation set.
 
@@ -296,8 +296,8 @@ Twenty-two milestones. Each reaches green independently. No milestone waits on a
     resource, unlock or gate, resource conversion, risk and tradeoff toggle, automation, offline
     behavior, cost-curve reshaping, scaling-exponent change, morphology and synergy), and for
     each of the 14 hallmarks a record of: player-facing mechanic, resource interaction, unlock
-    condition, visible consequence, and why it is distinct from every other branch. Rules: at
-    most two branches may share a mechanic class; each branch carries a sentence of the form
+    condition, visible consequence, and why it is distinct from every other branch. Each branch
+    carries a sentence of the form
     "before this branch the player did X; after it the player decides Y." A branch whose sentence
     reduces to "the same decision with bigger numbers" is redesigned before dispatch.
   - **Synergy and tension.** Fourteen individually good mechanics can still be a menu rather than
@@ -307,7 +307,7 @@ Twenty-two milestones. Each reaches green independently. No milestone waits on a
     instability with immune evasion (more neoantigens, more visibility), senescence with
     replicative immortality, plasticity with everything. Success condition: the player sometimes
     picks branch A **because** branch B is developed, rather than ranking all 14 independently.
-    Tensions matter as much as synergies; at least three pairs must pull against each other.
+    Every named tension identifies the affected resource or constraint and a reachable example.
   - **Stage gameplay identity.** For each of the 12 stages, the new pressure, opportunity,
     resource relationship, or constraint that appears. The bar is "I play differently because I
     entered this stage," not "the UI and the tumor changed." A stage with no gameplay identity is
@@ -335,13 +335,16 @@ Twenty-two milestones. Each reaches green independently. No milestone waits on a
 ### Milestone: M4 state and persistence
 
 - Depends on: M2, M3.
-- Deliverables: `src/state/game_state.ts`, `events.ts`, `save_load.ts`,
-  `tests/test_save_migration.mjs`, fixture saves under `tests/fixtures/`.
+- Deliverables: `src/state/game_state.ts`, `events.ts`, `save_load.ts`, and
+  `tests/test_save_migration.mjs` using inline records and a test-local legal-state builder.
 - Workstreams: B.
 - Entry criteria: progression design written, so the schema knows what it must hold.
-- Exit criteria: save round-trips exactly; an old fixture save migrates forward; an unresolvable
-  field restores a safe default and logs visibly rather than discarding the save; `record_event`
-  is the single funnel and the compiler enforces a handler for every event variant.
+- Exit criteria: save round-trips to an equivalent normalized durable state; a representative
+  prior-schema record migrates forward; an unresolvable field restores a safe default and logs
+  visibly rather than discarding the save; the event registry owns parse schema, reducer handler,
+  save rule, and replay applicability for every registered event and rejects unknown types. A
+  committed fixture is added only for a shipped compatibility artifact or approved shared
+  infrastructure.
 - Parallel-plan ready: no. One state owner.
 
 ### Milestone: M5 offline semantics
@@ -359,10 +362,12 @@ Twenty-two milestones. Each reaches green independently. No milestone waits on a
   effects behave the same offline as online. Hallmark effects and nonlinear production are
   simulated. No purchases are made automatically. Stage transitions and prestige availability
   crossed while away are queued as pending advances and resolved on return through the offline
-  report. Temporary effects do not tick down while away. Verification: an offline replay of N
-  hours and a live tick loop over the same simulated N hours agree within 2 percent on every
-  tracked resource. This invariant is what stops offline from silently diverging once hallmarks
-  add nonlinearity.
+  report. Temporary effects do not tick down while away. Equal scheduled boundaries produce
+  equivalent normalized durable projections. When an intentional macro-step approximation affects
+  display values, `docs/GAME_DESIGN.md` defines a calibrated display-level error envelope against
+  a fine-step reference at nonlinear changes, resource exhaustion, stage boundaries, and temporary
+  deadlines. This protects the player promise without treating one universal percentage as a law
+  of every future economy.
 - Parallel-plan ready: no.
 
 ### Milestone: M6 economy and tick
@@ -401,9 +406,11 @@ Twenty-two milestones. Each reaches green independently. No milestone waits on a
 - Entry criteria: M6 exit met.
 - Exit criteria: a player can click, buy, idle, reload, and see offline gains. Playwright asserts
   page load with zero console errors, first click increments, save survives reload, and an offline
-  grant appears after a clock-skewed reload. The controller clones `unwrap` snapshots before every
-  `recordEvent`, persists an isolated accepted next snapshot before reconciling the store, and
-  keeps parser/reducer/storage failures visibly honest. A nonempty `saveToStorage` notice or a
+  grant appears after a clock-skewed reload. The controller applies an accepted command once
+  through the event funnel, persists an isolated accepted next snapshot before reconciling the
+  store, and keeps parser/reducer/storage failures visibly honest. A rejected command leaves
+  durable and visible state unchanged and communicates recoverable status. A nonempty
+  `saveToStorage` notice or a
   thrown save-clock/adapter call retains the old visible store and sets unsaved status; only an
   intentional reissue after recovery retries the action. Node/tsx tests import only
   `game_controller.ts` and prove clone/BigNum integrity, hostile-raw no-persist, one event funnel,
@@ -433,9 +440,8 @@ Twenty-two milestones. Each reaches green independently. No milestone waits on a
 - Entry criteria: contracts frozen.
 - Exit criteria: all twelve stages reachable in a fast-forwarded run; each stage declares its
   gate, its UI mode, what it retires from the previous stage, and the gameplay identity assigned
-  in `docs/PROGRESSION_DESIGN.md`. A stage that changes only the UI fails review; the balance
-  laboratory must show that the optimal purchase ordering differs across stage boundaries, which
-  is the automated proxy for "I play differently now."
+  in `docs/PROGRESSION_DESIGN.md`. A stage that changes only the UI fails review; its decision
+  witness identifies the reachable alternatives and changed tradeoff that make play different.
 - Parallel-plan ready: yes.
 
 ### Milestone: M10 hallmarks, core six
@@ -446,14 +452,16 @@ Twenty-two milestones. Each reaches green independently. No milestone waits on a
   metastasis; `src/render/hallmark_tree.tsx`.
 - Workstreams: D, F.
 - Entry criteria: `docs/PROGRESSION_DESIGN.md` complete.
-- Frozen-contract amendment: before source implementation, activate `HallmarkEffect` and add
-  exactly one closed `spend-telomerase` `GameEvent`. The D3 owner inventories parser, reducer,
+- Frozen-contract amendment: before source implementation, activate `HallmarkEffect` and register
+  the `spend-telomerase` `GameEvent` through parser, reducer, save, and replay rules. The D3 owner
+  inventories parser, reducer,
   save, controller, UI, test, and M20 replay consumers; hostile requests must leave debit, effect,
   event queue, persistence, and protected recovery untouched. Full static, Node, build, and
   production-dist Playwright reruns are required before dependent work resumes.
-- Exit criteria: each branch implements its assigned mechanic class as specified; the balance
-  laboratory shows that acquiring each branch measurably changes the optimal purchase order,
-  which is the automated proxy for "it changed a decision."
+- Exit criteria: each branch implements its assigned mechanic class as specified and has a
+  documented decision witness: a reachable state, two or more legal alternatives, and an observed
+  tradeoff or changed action through the real event, quote, debit, tick, or gate path. A control
+  state with absent preconditions verifies the same action remains unavailable or unchanged.
 - Parallel-plan ready: yes. Six branches, one class each.
 
 ### Milestone: M11 hallmarks, 2011 four
@@ -463,21 +471,101 @@ Twenty-two milestones. Each reaches green independently. No milestone waits on a
   tumor-promoting inflammation, genome instability and mutation.
 - Workstreams: D, F.
 - Entry criteria: M10 exit met.
-- Exit criteria: ATP is a real second resource with its own sink, not a display; the
-  purchase-order test passes for all four.
+- Exit criteria: ATP is a real second resource with its own sink, not a display, and each
+  2011 hallmark changes a direct authoritative outcome through the closed event funnel:
+  - `convert-substrate` debits substrate, credits ATP, and leaves cells unchanged.
+  - `set-region-mask` changes the selected region's durable visibility contribution to the
+    authoritative weighted global producer quote while an unaffected region retains its prior
+    contribution; the public quote remains global rather than becoming a region-parameterized API.
+  - `activate-inflammation` changes a real route, tick, or host-gate outcome, and expiry reverses
+    the temporary effect.
+  - Selecting a valid saved mutation changes that descriptor's named quote, conversion, pressure,
+    or route effect; malformed or invalid selection preserves state atomically.
+  - Permanent domain tests bind these named outcomes.
+  - A bounded multi-card or rank exploration and broad balance experiment provide one-time
+    acceptance evidence outside the permanent suite; they inform tuning without prescribing a
+    synthetic purchase-ranking implementation.
 - Parallel-plan ready: yes.
 
 ### Milestone: M12 hallmarks, 2022 four
 
 - Depends on: M11, M16.
-- Deliverables: unlocking phenotypic plasticity, nonmutational epigenetic reprogramming,
-  polymorphic microbiomes, senescent cells. These four also write `MorphologyParams`.
+- Deliverables: the closed p5 late-hallmark state and save migration; unlocking phenotypic
+  plasticity, nonmutational epigenetic reprogramming, polymorphic microbiomes, and senescent
+  cells; typed catalog/effect/tick projections; four player intents; and biology-backed morphology
+  contributions where a hallmark has a visible consequence.
 - Workstreams: D, G.
-- Entry criteria: M11 exit met and the morphology contract in use.
-- Exit criteria: the tree is complete at 14; the four late branches gate behind prestige layers;
-  each writes at least one morphology parameter, so the upgrade is visible in the colony rather
-  than only in a tooltip.
-- Parallel-plan ready: yes.
+- Entry criteria: M11 exit met, the morphology contract is in use, and the p5 schema migration
+  plus accepted late-hallmark catalog are written before event, UI, or SVG implementation.
+- State contract: `GameState.lateHallmarks` is the one required aggregate for this domain. It owns
+  plasticity switch cooldowns by region; epigenetic program assignments and cooldown; microbiome
+  active composition, pending offer, rotation deadline, and rotation sequence; and senescence
+  pending decisions plus retained records. `RegionState.phenotype` remains canonical local state.
+  The aggregate replaces provisional phenotype-cooldown, regional-modifier, program, microbiome,
+  senescent-region, secretory-effect, and clearance records; `RegionState.senescenceEventId` is
+  removed because each pending or retained senescence record owns its region relation. Catalog-owned
+  functions derive effects rather than storing opaque modifier keys.
+- Catalog and identity contract: use distinct branded `LateProgramOptionId`,
+  `MicrobiomeCommunityId`, `MicrobiomeCompositionId`, `MicrobiomeNicheId`, and
+  `MicrobiomeOfferId`; retain `MicrobiomePoolId` and reserve `OfferId` for the mutation draft. The
+  catalog closes the four branches, three phenotype choices, six allowed programs, one
+  `global-contamination` pool, four communities, four composition IDs, and senescence causes and
+  actions. A saved microbiome offer is one three-composition decision: every candidate saves its
+  two named niche/community/effect rows and explicit compatibility result, plus offer ID, pool,
+  source seed/sequence/stage, and expiry. An installed composition retains its exact selected
+  snapshot. Reload and replay therefore retain the displayed choice without redrawing or
+  recomputing it.
+- Event and ownership contract: replace provisional late-hallmark variants with exactly these
+  four `GameEvent` rows: `assign-region-phenotype`, `reconfigure-hallmark-program`,
+  `install-microbiome-composition`, and `resolve-senescence-decision`. Each contains only player
+  intent and authoritative `atMs`; exact parsing admits known branded IDs, natural timestamps, and
+  no extra keys. `reduceGameEvent` advances `eventSequence` once after accepted dispatch.
+  Dedicated handlers are the single writers for phenotype/deadline, program assignment/cooldown,
+  microbiome installation, and senescence resolution respectively. The rotation projection is the
+  sole writer of pending microbiome offer, rotation deadline, and sequence; a senescence factory
+  creates pending decisions, while resolution retains one record or removes the region projection.
+  Controller methods provide the four named intents with `simulationNow(game)` supplying `atMs`.
+- Clock, economy, and prestige seam: one pure late-hallmark tick projection uses
+  `activeTimeMs + totalOfflineMs`. It crosses every offer-expiry boundary deterministically with
+  seed plus rotation sequence plus pool identity; it preserves a pre-expiry offer and an installed
+  composition. Cooldowns remain deadline comparisons and senescence has no deadline. Live tick
+  overlays this projection, and offline replay independently verifies its normalized durable
+  result after existing core-six and M11 elapsed projections. Named effect functions feed only
+  documented production, route, pressure, ATP, inflammation, immune-visibility, and stage-gate
+  relations. M12 imports the L3 immortalization activation predicate through one small adapter;
+  M15 replaces that adapter implementation with its ledger-owned activation while retaining the
+  M12 state, event, save, and UI contract.
+- Save contract: advance `CURRENT_PROGRESSION_VERSION` from p4 to p5. `parseLateHallmarks`
+  validates bounded/canonical/unique catalog relations, exact saved composition cards, timestamps,
+  region links, ownership, and offer deadlines. The p4-to-p5 migration constructs an empty
+  aggregate and drops provisional late-hallmark scaffold data. Earlier migrations then enter p5.
+  The current state has no reader-side compatibility field or shim for the retired scaffolding.
+- Living-tumor contract: after the state model is accepted, the frozen visual adapter adds
+  `phenotype-variance`, `chromatin-program`, `microbiome-surface`, and `senescent-region`, each
+  with a named hallmark and morphology provenance row. It can overlay an existing stylized region;
+  it does not claim literal microbiome topology, chromatin distribution, clone proportion,
+  secretome concentration, or cell count. The renderer consumes frozen visual effects, never
+  `GameState` or mechanics maps.
+- Dispatch order: D.6 closes types, brands, catalogs, activation adapter, and pure effects; D.7
+  adds events, parser, reducer, and senescence factory; B/C.6 add p5 parse/migration and the shared
+  live/offline tick projection; C/D.8 connect named operation and gate effects; F.12 adds the four
+  controller/UI intents and visible composition, compatibility, cooldown, and status; G.11 follows
+  the catalog API with frozen provenance effects; I.11 adds durable event/save/offline/browser
+  evidence. Each lane imports the prior public seam and keeps its ownership boundary.
+- Exit criteria: the tree is complete at 14 and the four late branches gate behind prestige
+  layers. Every event has an eligible operation relation and invalid, missing, stale, or expired
+  input is atomic; a real phenotype/program changes its named behavior; a saved microbiome offer
+  reloads with its three exact candidates and accepts only one; keep and clear have distinct real
+  senescence outcomes; p4 migration produces the canonical empty aggregate; and normalized
+  live/offline durable state agrees across an offer rotation. A visible branch traces its
+  biology-backed morphology contribution from catalog through frozen scene provenance, while a
+  branch without a visible consequence records the rationale in the design document. Production
+  browser evidence covers pointer/keyboard intent, disabled/persistence states, and visible
+  composition/cooldown status. Small semantic, save, atomicity, normalized replay, and frozen
+  provenance tests are permanent; candidate distributions, compatibility weights, price/duration
+  tuning, long fuzzing, contact sheets, and 1280 x 800 visual inspection are dated calibration or
+  acceptance evidence.
+- Parallel-plan ready: yes, in the declared dispatch order.
 
 ### Milestone: M13 prestige design
 
@@ -514,7 +602,7 @@ Twenty-two milestones. Each reaches green independently. No milestone waits on a
   as graph expansion, harder generated regions, procedural branches, or repeating global tiers.
   The success condition is that **L4 keeps producing decisions forever**, not just currency. This
   matters more than a fifth prestige layer would.
-- **Cross-system interactions.** `docs/SYSTEM_INTERACTIONS.md` names 10 to 20 high-value
+- **Cross-system interactions.** `docs/SYSTEM_INTERACTIONS.md` names the high-value
   interactions where hallmarks, stages, organ sites, host traits, passage upgrades, and
   dissemination routes change each other's value. Not an exhaustive matrix. The success condition
   is that prestige choices change which hallmark strategies are attractive, rather than prestige
@@ -522,9 +610,9 @@ Twenty-two milestones. Each reaches green independently. No milestone waits on a
   opportunity in the design: every system is individually specified, and the emergent game lives
   in how they reach into each other.
 
-- Validation, deferred to M21: the strategy laboratory runs the same purchasing strategy against
-  all four layers and demonstrates it is **not** optimal in all four. If one strategy wins
-  everywhere, the layers are four resets wearing different names and the design is revised.
+- Validation, deferred to M21: each layer has a decision witness showing a reachable state,
+  alternatives, and a changed tradeoff. The balance laboratory supports design review by exposing
+  permanently dominant actions or a non-renewing L4 decision surface.
 - Parallel-plan ready: no.
 
 ### Milestone: M14 prestige layers 1 and 2
@@ -534,9 +622,9 @@ Twenty-two milestones. Each reaches green independently. No milestone waits on a
   `src/render/prestige_panel.tsx`; `tests/test_prestige_reset.mjs`.
 - Workstreams: E, F.
 - Entry criteria: `docs/PRESTIGE_DESIGN.md` complete.
-- Exit criteria: each reset function is unit-tested for exactly what it clears and preserves; a
-  simulated run completes three L1 cycles and one L2 cycle; the confirm modal cannot fire
-  accidentally.
+- Exit criteria: a declarative reset policy names retained and reset domains, reducer output
+  realizes that policy, and a representative cycle for each reset type proves its semantics. The
+  confirmation surface requires a visible deliberate action in the production build.
 - Parallel-plan ready: yes.
 
 ### Milestone: M15 prestige layers 3 and 4
@@ -545,8 +633,9 @@ Twenty-two milestones. Each reaches green independently. No milestone waits on a
 - Deliverables: `culture.ts`, `network.ts`, their panels, extended simulation coverage.
 - Workstreams: E, F, I.
 - Entry criteria: M14 exit met.
-- Exit criteria: simulation reaches L4 and shows post-L4 progression still accelerating. Flat
-  post-L4 progression fails the milestone, because it means the game is not endless.
+- Exit criteria: a reachable L4 scenario exposes a renewable decision surface after authored
+  nodes stabilize. The evidence names open alternatives and the tradeoff they change; the balance
+  laboratory records longer-run observations for later curve review.
 - Parallel-plan ready: yes.
 
 ### Milestone: M16 morphology reference
@@ -587,22 +676,19 @@ Twenty-two milestones. Each reaches green independently. No milestone waits on a
 - Entry criteria: M16 exit met.
 - Exit criteria: layout owns macro-silhouette, regional density, negative-space topology, depth
   strata, invasive fronts, and focal regions, and produces a data structure that carries no
-  drawing. Generation order is silhouette, then regions, then clusters, then cell slots, and the
-  module makes any other order impossible. The decisive test: contact sheets rendered with all
+  drawing. Its public request/result boundary is data-only and immutable; internal passes may
+  evolve while preserving finite geometry, declared containment, clearance, and occlusion. The
+  decisive test: contact sheets rendered with all
   internal cell detail suppressed remain stage-distinguishable. If the stages only differ once
   cells are drawn, the layout layer is not carrying its weight.
-- Binding construction and budgets: private opaque phase brands make the only construction order
-  `silhouette -> regions -> clusters -> cell slots`; the convenient entry point calls all four
-  phases. Deterministic, bounded jittered-lattice allocation uses at most 24 candidates per slot,
-  caps representative/inspection scenes at 180/240 slots, and reports valid partial layouts as
-  `underfilled` rather than clipping, overlap, or unbounded retry. M17 measures finite occupancy,
-  components, voids, gaps, asymmetry, depth, collision/clearance, and normalized macro
-  fingerprints. Its Node oracle proves all twelve fixtures, fixed seeds, independent O(n^2)
-  collision agreement, stage-family coherence (mean >= 0.88; individual >= 0.78), and stage
-  separation (adjacent >= 0.18; nonadjacent >= 0.28 except the declared void-fraction pair).
+- Permanent geometry evidence proves finite values, immutable inputs/outputs, declared
+  containment and clearance, deterministic result for the same request, meaningful seed
+  variation, and no renderer-owned layout decision. A one-time calibration sweep records
+  candidate allocation, slot/detail sampling, macro-separation, and corpus measurements in dated
+  evidence; those tunable values guide art revisions without becoming public layout contracts.
 - M18 handoff: M17 delivers slot geometry and a suppressed-detail serialization only. M18 consumes
   it at 320x224, 560x392, and 1000x700, owns actual inline SVG/DOM rendering and accessibility,
-  and records the initial 1,050-elements-per-colony ceiling. Neither milestone uses pixel
+  and validates figure fit, accessibility, and readable composition. Neither milestone uses pixel
   equivalence as an acceptance substitute.
 - Parallel-plan ready: no. This is the shared upstream for M18.
 
@@ -610,19 +696,43 @@ Twenty-two milestones. Each reaches green independently. No milestone waits on a
 
 - Depends on: M17.
 - Deliverables: `blob.ts`, `cell.ts`, `colony.ts`, `defs.ts`, `describe.ts`, `icons.ts`, and
-  `src/render/colony_panel.tsx`; the full visual-metrics battery.
-- Workstreams: G.
+  `src/render/colony_panel.tsx`; the cell-click board and its durable browser interaction proof.
+- Workstreams: F, G, I.
 - Entry criteria: M17 exit met.
 - `src/render/colony_panel.tsx` is the dedicated M18 UI integration owner: it consumes accepted
-  layout and cell contracts, supplies accessible SVG naming and consumer-size presentation, and
-  does not redefine morphology, layout, or shared `<defs>` semantics.
+  layout and cell contracts, supplies one named native colony button, authoritative count/rate,
+  instruction, visible stage caption, feedback, and consumer-size presentation, and does not
+  redefine morphology, layout, or shared `<defs>` semantics. `App` supplies its existing typed
+  `onDivide` intent and disabled/recovery state; it supplies no store setter.
+- Frozen-contract amendment: visible cell geometry delegates pointer/touch input through
+  `colony.ts` to one typed action; the native colony button owns Enter/Space and the sole keyboard
+  focus target. Both paths call the established controller divide intent once. Local cell keys
+  never become event, save, reducer, or game-state data.
+- Board contract: target the 1280 x 800 (16:10) first view with colony action left, living
+  tumor/progression world middle, and store right. It exposes the large clickable colony with
+  count/rate, active stage/hallmark progression, producer quantity controls, and save/status
+  without scroll-to-discover. The right rail keeps producer rows discoverable with owned count,
+  next cost, affordability, and production contribution; hover/focus exposes richer derived
+  statistics. Locked future content states its biological unlock condition and becomes actionable
+  when its real requirements are met. Wider boards scale; compact widths retain colony action,
+  progression, then store.
 - Exit criteria: cells render as volumes (silhouette, irregular nucleus offset from center,
   cytoplasmic value variation, restrained cross-contour marks following the local membrane,
-  overlap, directional light). One thousand generated cells are unique by path hash, while cells
-  from the same stage remain a recognizable visual family, measured as within-stage parameter
-  variance below a threshold and between-stage separation above one. Shared gradients, filters,
-  masks, and motifs live in `<defs>`; repeated styling goes through CSS classes rather than
-  per-node attributes; node count stays under budget by representative sampling.
+  overlap, directional light). Cells vary deterministically with a seed while retaining recognizable
+  stage-family cues. Shared gradients, masks, and motifs live in `<defs>`; repeated styling goes
+  through CSS classes rather than per-node attributes; representative sampling keeps the figure
+  visibly usable at supported consumer sizes. Production
+  Playwright proves visible-cell pointer activation, Enter/Space, one focus target, count/rate and
+  status feedback, discoverable right-rail producer data, locked-content explanation,
+  save-failure/recovery state, reduced-motion feedback, caption, responsive order, and zero page
+  errors through the built output. The 1280 x 800 task walkthrough also proves that its primary
+  elements are discoverable together. Screenshot matrices, heuristic walkthroughs,
+  and contact sheets are one-time acceptance evidence; no pixel, byte, or arbitrary timing
+  threshold is a release gate.
+- Dispatch order: F.10 defines the typed panel handoff and 16:10 shell; G.10 adds local visible-
+  cell delegation and data-derived living-tumor layers; F.11 adds focus, feedback, and responsive
+  styling; I.10 adds the durable `tests/playwright/test_colony_interaction.mjs` player journey; the
+  image-evaluation lane records representative evidence after the built interaction is available.
 - Parallel-plan ready: yes, after `colony.ts` lands.
 
 ### Milestone: M19 soft ending
@@ -645,31 +755,34 @@ Twenty-two milestones. Each reaches green independently. No milestone waits on a
 ### Milestone: M20 deterministic replay
 
 - Depends on: M15.
-- Deliverables: `src/types/replay.ts`, `src/state/replay.ts`, `tests/test_replay.mjs`, recorded
-  fixture logs.
+- Deliverables: `src/types/replay.ts`, `src/state/replay.ts`, and `tests/test_replay.mjs` with
+  inline traces or a legal-state builder.
 - Workstreams: B and I jointly.
 - Entry criteria: the event funnel carries every gameplay action.
 - Exit criteria: a development-only replay format records seed, purchases, stage transitions,
-  prestige actions, and timestamps. One test replays a recorded sequence and reaches the same
-  canonical final state, byte-identical after serialization. The funnel already exists, which is
-  what makes this cheap; the payoff is that every later balance or save finding is reproducible
-  exactly rather than described approximately.
+  prestige actions, and timestamps. One test replays a recorded sequence to an equivalent
+  normalized durable state, equivalent event outcomes, and equivalent visible progression. Canonical
+  JSON bytes become an assertion only when the serialized replay is explicitly published as a wire
+  contract. The funnel already exists, which makes every later balance or save finding reproducible
+  without coupling it to object-key or serializer implementation detail.
 - Parallel-plan ready: no.
 
 ### Milestone: M21 balance laboratory
 
 - Depends on: M19, M20.
-- Deliverables: `tests/e2e/e2e_balance_sim.mjs`; machine-readable report under `output_balance/`;
+- Deliverables: `tools/balance_sim.mjs`; a machine-readable report under `output_balance/`;
   `docs/BALANCE.md`; tuned curve tables as data edits.
 - Workstreams: I leads; C, D, E apply tuning.
 - Entry criteria: M19 and M20 exit met.
 - Exit criteria: five declared strategy bots run headless with no DOM (see
   `## Simulator player-strategy model`); the report is machine-readable JSON at
-  `output_balance/balance_report.json` plus a human-readable summary in `docs/BALANCE.md`; pacing
-  lands inside the target bands for the primary bot; the M13 prestige-distinctness validation
-  passes, meaning no single strategy is optimal across all four layers; the check-in bot's return
-  is never empty. `output_balance/` is root-scoped per `docs/REPO_STYLE.md` and covered by the
-  `/output*/` ignore rule.
+  `output_balance/balance_report.json` plus a human-readable summary in `docs/BALANCE.md`; the
+  report publishes assumptions, curve version, observed pacing, dead actions, dominant actions,
+  reachable gates, and L4 decision-surface observations. Each stage, hallmark, and prestige review
+  links its reachable decision witness. The design owner selects or revises a curve from that
+  evidence; bot ranks and elapsed time inform review rather than becoming CI pass/fail targets.
+  `output_balance/` is root-scoped per `docs/REPO_STYLE.md` and covered by the `/output*/` ignore
+  rule.
 - Parallel-plan ready: no. Tuning is one measurement loop; parallel curve edits conflict.
 
 ### Milestone: M22 release evidence package
@@ -680,7 +793,8 @@ Twenty-two milestones. Each reaches green independently. No milestone waits on a
 - Workstreams: I assembles; the orchestrator stages.
 - Entry criteria: every prior milestone green.
 - Exit criteria: `docs/RELEASE_EVIDENCE.md` contains, in one place: every gate result with its
-  exact command and output line; balance checkpoints for all five bots; screenshots and the art
+  command, exit status, relevant tool version, concise behavior summary, and artifact link;
+  balance observations for all five bots; screenshots and the art
   contact sheet; save-migration evidence; accessibility output (contrast measurements, reduced
   motion, the colony's `<title>`/`<desc>` text); SVG node-count and framerate measurements; the
   copy-guard and copy-review verdicts; and a written known-limitations section.
@@ -724,7 +838,8 @@ host death -> immortalized culture -> global contamination -> Chicago ending -> 
 - Goal: one canonical state, one event funnel, trustworthy saves, one offline model, exact replay.
 - Owner: one agent.
 - Work packages: WP-B.1 `game_state.ts`; WP-B.2 `record_event` funnel; WP-B.3 versioned
-  `save_load.ts`; WP-B.4 `offline.ts`; WP-B.5 fixture saves; WP-B.6 `replay.ts`.
+  `save_load.ts`; WP-B.4 `offline.ts`; WP-B.5 legal-state builder and inline records; WP-B.6
+  `replay.ts`.
 - Needs: A0, A, and `docs/PROGRESSION_DESIGN.md`.
 - Provides: state and persistence to C, D, E, F, I.
 - Review boundary: sole owner of `localStorage`.
@@ -768,7 +883,8 @@ host death -> immortalized culture -> global contamination -> Chicago ending -> 
 - Owner: two agents across milestones, invoking `css-creative-expert` and `ui-ux-engineer`.
 - Work packages: WP-F.1 shell and `index.html`; WP-F.2 producers panel; WP-F.3 hallmark tree;
   WP-F.4 stage panel; WP-F.5 prestige panels and confirm modals; WP-F.6 offline report;
-  WP-F.7 event log; WP-F.8 theme CSS and motion; WP-F.9 ending view.
+  WP-F.7 event log; WP-F.8 theme CSS and motion; WP-F.9 ending view; WP-F.10 colony action
+  handoff and 1280 x 800 board; WP-F.11 colony focus, feedback, and responsive fallbacks.
 - Needs: all logic workstreams; G for art.
 - Provides: the playable surface.
 - Review boundary: only DOM owner, only owner of `src/style.css`. Never sets `innerHTML` from
@@ -792,6 +908,8 @@ host death -> immortalized culture -> global contamination -> Chicago ending -> 
   - WP-G.7 `defs.ts` and the SVG performance budget.
   - WP-G.8 `describe.ts` accessible description.
   - WP-G.9 glyph set.
+  - WP-G.10 visible-cell geometry markers, typed pointer/touch delegation, and data-derived
+    vessel/route layer integration after their contracts are accepted.
 - Needs: `src/types/morphology.ts` and a seed. Nothing else from game logic.
 - Provides: SVG nodes to F; the consumer side of the morphology contract D writes into.
 - Review boundary: pure producers, no state reads, no `localStorage`, no timers.
@@ -865,7 +983,7 @@ showing a labeled normal-cell diagram, and why the opening must not already look
 - Owner: `tester` class agents.
 - Work packages: WP-I.1 unit suites per milestone; WP-I.2 Playwright smoke per milestone; WP-I.3
   full playthrough; WP-I.4 the five-bot strategy laboratory; WP-I.5 the visual-metrics battery;
-  WP-I.6 replay fixtures; WP-I.7 `docs/RELEASE_EVIDENCE.md` assembly.
+  WP-I.6 replay traces; WP-I.7 `docs/RELEASE_EVIDENCE.md` assembly.
 - Needs: whatever exists at each gate.
 - Provides: the measurements that tune C, D, E.
 - Review boundary: never edits `src/`; writes only under `tests/`, `output_balance/`, and `docs/`.
@@ -923,9 +1041,9 @@ a gate the build waits on.
 
 ## Acceptance criteria and gates
 
-- Per-patch gate: the coding agent runs `npx tsc --noEmit -p tsconfig.json` on its own change and
-  quotes the exact command and exact success line (`exit 0`, no diagnostic output). A `DONE`
-  without that evidence is a false-green claim and is re-dispatched.
+- Per-patch gate: the coding agent runs the relevant canonical command and reports command, exit
+  status, relevant tool version when useful, concise behavior summary, and artifact link when the
+  command creates one.
 - Integration gate: after every milestone, the orchestrator runs `./check_codebase.sh`, then
   `./build_github_pages.sh`, then that milestone's Playwright check. A failing gate triggers a fix
   agent, not a retry.
@@ -937,39 +1055,46 @@ a gate the build waits on.
 
 ## Test and verification strategy
 
-Six layers, all automated, none requiring a human.
+Three evidence classes keep durable contracts strong and calibration flexible. Each new test must
+meet the permanence checklist in `docs/PYTEST_STYLE.md`: it protects a stable
+semantic, mathematical, safety, or shipped user-visible behavior and survives a reasonable
+refactor. Tests use inline inputs or a local builder; regular tests run offline.
 
-- **Node unit tests** (`tests/test_*.mjs`, run by `check_codebase.sh`): BigNum operations from the
-  derived inventory; save round-trip and forward migration from captured fixtures; each prestige
-  reset's exact clear-and-preserve set; morphology grammar determinism and family coherence; cost
-  and bulk-buy math against hand-computed values; offline-versus-live equivalence within 2
-  percent; replay determinism; the copy guard.
-- **Playwright** (`tests/playwright/`, run by `./run_playwright_tests.sh`): per-milestone smoke;
-  save round-trip across reload; offline grant after a clock-skewed reload driven by an injectable
-  clock rather than real waiting; a full scripted playthrough at M22 reaching the soft ending via
-  the debug fast-forward hooks. Authored per `docs/PLAYWRIGHT_TEST_STYLE.md`.
-- **Balance laboratory** (`tests/e2e/e2e_balance_sim.mjs`, run directly, excluded from pytest):
-  headless fast-forward with no DOM, five strategy bots, JSON report to `output_balance/`.
-- **Deterministic replay**: recorded logs replay to a byte-identical canonical final state, so any
-  finding is reproducible rather than described.
-- **Visual metrics battery** (computed on generated SVG, no human eye required): silhouette
-  distinctness across stages; squint test (after heavy blur, major masses and focal regions remain
-  distinguishable); negative-space structure (fraction occupied, median gap area, gap
-  fragmentation, perimeter-to-area ratio, radial asymmetry, all trending correctly); depth
-  separation (stroke-weight and contrast distributions form three clusters); suppressed-detail
-  test (stages remain distinguishable with internal cell detail removed, which is the M17 exit
-  criterion); uniqueness and family coherence (1000 cells unique by path hash, within-stage
-  variance below threshold, between-stage separation above it). `image_evaluator` reviews the
-  rendered contact sheet as a second opinion on top of the metrics.
-- **Repo gates** (`pytest tests/`): shipped Python checks for ASCII, indentation, line limit,
-  markdown links, and vendored headers keep passing.
+- **Permanent regression** (`tests/test_*.mjs`, `tests/playwright/`): Node protects BigNum
+  invariants, normalized save/replay semantics, registered-event coverage, reset-policy semantics,
+  direct hallmark outcomes, atomicity, and declared geometry containment/clearance. Built-output
+  Playwright protects visible cell activation, keyboard access, figure fit at 1280 x 800 and compact
+  supported sizes, reduced motion, reload/offline behavior, and accessible description. Canonical
+  commands are `./check_codebase.sh`, `./build_github_pages.sh`, and
+  `./run_playwright_tests.sh` as the change requires.
+- **One-time calibration** (`tools/`, `output_*/`, session evidence): `tools/balance_sim.mjs`,
+  `tools/colony_contact_sheet.mjs`, visual corpus sweeps, and profiler captures record their input
+  corpus, environment, measurements, conclusion, and reproduce command. They calibrate art detail,
+  balance, and performance without turning path hashes, slot counts, pixels, byte counts, or timing
+  samples into permanent limits.
+- **Design review** (owning `docs/*.md` plus dated report): each hallmark, stage, and prestige
+  system carries a decision witness with reachable state, alternatives, observed tradeoff, and its
+  design rationale. Provenance is required where biology creates a visible consequence; a declared
+  absence has a rationale. Independent review traces the claim to the actual behavior.
+- **Repo hygiene** (`pytest tests/`): shipped Python checks keep ASCII, indentation, source-size,
+  Markdown-link, and vendored-header rules healthy.
+
+### Evidence task dispatch
+
+| Task                            | Owner                           | Target artifact                                                                   | Success criterion                                                                                                                                | Canonical command                                                                                         |
+| ------------------------------- | ------------------------------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------- |
+| Offline model calibration       | State owner with reviewer       | `docs/GAME_DESIGN.md` and dated offline report                                    | Exact segments preserve normalized durable outcomes; any display approximation has a named measured envelope                                     | `./check_codebase.sh` plus focused offline Node test and production-dist scenario                         |
+| Geometry and render calibration | SVG creator and image evaluator | `tools/colony_contact_sheet.mjs` and dated visual report                          | Contact sheet covers registered stages, representative seeds, supported sizes, themes, and reduced motion; review traces visible fit and biology | `./build_github_pages.sh`, `./run_playwright_tests.sh`, contact-sheet command                             |
+| Balance design review           | Balance owner with planner      | `tools/balance_sim.mjs`, `output_balance/balance_report.json`, `docs/BALANCE.md`  | Report links strategies to decision witnesses and identifies dead actions, dominance, gates, and L4 renewal                                      | `node tools/balance_sim.mjs`                                                                              |
+| Release evidence                | Integrator and docs owner       | `docs/RELEASE_EVIDENCE.md`                                                        | Each release claim has command, status, behavior summary, relevant version, and artifact link                                                    | `./check_codebase.sh`, `./build_github_pages.sh`, `./run_playwright_tests.sh`, `pytest tests/`            |
+| Durable naming migration        | Maintainer with tester review   | domain-named `src/`, `tests/`, and `tools/` paths plus `docs/DESIGN_DECISIONS.md` | Implementation milestone labels leave durable paths; valid schema-version and scientific identifiers remain                                      | `./check_codebase.sh`, `./build_github_pages.sh`, applicable `./run_playwright_tests.sh`, `pytest tests/` |
 
 ### Simulator player-strategy model
 
-"Time to prestige" is meaningless without saying who is playing. Five declared bots, all reported:
+"Time to prestige" is meaningful only with a declared player model. Five declared bots are all
+reported as calibration evidence:
 
-- **Greedy payback** (primary): always buys the shortest payback time. Target bands are measured
-  against this bot.
+- **Greedy payback**: always buys the shortest payback time.
 - **Naive cheapest**: always buys the cheapest affordable item. The lower bound on competent play.
 - **Hallmark-first**: prioritizes hallmark branches over producers. Detects a tree that is too
   strong or too weak relative to raw production.
@@ -979,10 +1104,10 @@ Six layers, all automated, none requiring a human.
   away-and-return player the genre is built around, and validates that offline accrual feels
   worthwhile.
 
-Adoption rules: a curve is adopted only if it lands the primary bot inside the bands, keeps the
-check-in bot's return non-empty (every return has at least one affordable purchase that changes
-the rate), and no single bot dominates every prestige layer, which is the M13 distinctness
-validation.
+Adoption rule: the design owner compares the strategy observations with the declared decision
+witnesses, records the curve version and tradeoffs in `docs/BALANCE.md`, and chooses the curve that
+removes demonstrated dead actions, permanent dominance, unreachable gates, or an exhausted L4
+surface. The review records unresolved questions as evidence to gather in the next calibration.
 
 **Bots are evidence, not the definition of fun.** Tuning until the simulator shows one cleanly
 correct build per situation would optimize the game for bot behavior and strip out the
@@ -1002,23 +1127,16 @@ gameplay. M21 therefore reports decision-availability metrics across prolonged L
 - whether the bots' strategies keep diverging over successive long runs, or converge to one line
 - whether any single action becomes permanently dominant, and if so, when
 
-Fail condition: any of these collapses to a constant. The requirement stays behavior-focused, with
-no arbitrary play-duration ceiling; the question is whether the decision surface renews itself,
-not how many hours it survives.
+The review flags a constant decision surface for redesign. The requirement stays behavior-focused,
+with no arbitrary play-duration ceiling; the question is whether the decision surface renews
+itself, not how many hours it survives.
 
-### Target pacing bands
+### Pacing calibration
 
-Falsifiable claims, measured against the greedy-payback bot at M21.
-
-| Checkpoint                      | Target elapsed active play      | Fail condition                                    |
-| ------------------------------- | ------------------------------- | ------------------------------------------------- |
-| First producer purchase         | under 15 seconds                | over 30 seconds; the opening feels dead           |
-| First hallmark unlocked         | 2 to 5 minutes                  | over 10 minutes                                   |
-| Stage 4, carcinoma in situ      | 20 to 40 minutes                | over 90 minutes                                   |
-| First prestige, Metastasis      | 1.5 to 3 hours                  | over 6 hours; the reset arrives too late to teach |
-| Second prestige layer reachable | within 3 runs of the first      | more than 6 runs                                  |
-| Soft ending                     | reachable, presentation changes | an economic wall appears at the ending            |
-| Post-ending and post-L4         | still accelerating              | flat, which means it is not endless               |
+M21 records elapsed observations at first producer, first hallmark, stage progression, prestige,
+soft ending, and prolonged L4 for each declared strategy. These observations guide design review;
+they are not universal time targets. The enduring success condition is a reachable next decision
+with a documented tradeoff, including after the ending and through L4 renewal.
 
 ## Migration and compatibility policy
 
@@ -1026,36 +1144,38 @@ Falsifiable claims, measured against the greedy-payback bot at M21.
   union over version plus a forward migration chain; the parser validates and migrates, never
   trusts, and uses no unchecked `as` cast outside the guarded boundary.
 - Save shape may change freely before the first public deploy. After M22, every schema change ships
-  with its migration step and a fixture save.
+  with its migration step and one minimal fixture per supported published schema version. Before
+  deploy, migration tests use inline records or a local builder so an internal snapshot never
+  blocks a stronger schema.
 - Losing progress is the one unrecoverable failure in an idle game. A migration that cannot resolve
   a field restores a safe default and logs it visibly rather than discarding the save.
 
 ## Risk register
 
-| Risk                                                | Impact                                                                   | Trigger                                                | Owner        | Mitigation                                                                                       |
-| --------------------------------------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------ | ------------ | ------------------------------------------------------------------------------------------------ |
-| Contracts frozen before evidence                    | Every lane rebases; parallelism advantage evaporates                     | A feature agent needs a shape that does not exist      | A0           | Freeze moved to M8; five compile-only slices at M1                                               |
-| Save schema designed before mechanics are known     | Migration churn on a live schema                                         | Progression design written after M4                    | J            | `docs/PROGRESSION_DESIGN.md` is M2, before state                                                 |
-| Float drift in BigNum at extreme exponents          | Wrong numbers, broken late game                                          | Mantissa denormalizes past 10^300                      | A            | Normalize every operation; test the economy's real operations                                    |
-| Offline diverges from live once nonlinearity lands  | Player returns to wrong numbers; trust gone                              | A hallmark makes production non-constant               | B            | Coarse-step replay through the real tick; 2 percent equivalence test from M5                     |
-| 14 hallmarks collapse into 14 multipliers           | The content spine is hollow                                              | Handlers all reduce to scaling a rate                  | D            | M2 specification gates dispatch; purchase-order test per branch                                  |
-| Four prestige layers feel like one repeated reset   | The "endless depth" claim fails                                          | Layers differ only in cost                             | E            | M13 identity document; M21 proves no single strategy wins all four                               |
-| Balance measured against an arbitrary bot           | Pacing numbers are meaningless                                           | Simulator hardcodes one purchase rule                  | I            | Five declared bots; bands stated against the primary, cross-checked against the rest             |
-| A balance or save bug cannot be reproduced          | Debugging becomes guesswork                                              | Nondeterministic run reports a symptom                 | B, I         | Deterministic replay at M20                                                                      |
-| Colony reads as uniform noise                       | Art effort produces an unreadable field                                  | Cells generated before composition                     | G            | `colony_layout.ts` split makes layout-first structural; suppressed-detail test                   |
-| Art invents plausible-looking but wrong biology     | Loses the science-accurate premise                                       | Generator tuned by eye alone                           | G            | `docs/MORPHOLOGY_REFERENCE.md` gates all drawing code; every visual change cites a row           |
-| Cells unique but visually unrelated                 | The colony looks like a sticker sheet                                    | Per-cell parameters drawn independently                | G            | Family-coherence metric: within-stage variance bounded, between-stage separation required        |
-| SVG node count tanks framerate                      | Colony stutters late game                                                | Cell count exceeds a few thousand nodes                | G            | Representative sampling, `<defs>` reuse, CSS-class styling, explicit node budget                 |
-| Systems are individually strong but do not interact | A pile of good subsystems, no emergent game                              | Each lane validated only against itself                | J, D, E      | `docs/SYSTEM_INTERACTIONS.md` at M13; M21 checks prestige changes which hallmarks are attractive |
-| Hallmark tree is a menu, not a tree                 | Player ranks 14 branches independently and always buys in the same order | No specified synergies or tensions                     | D            | M2 requires named synergies and at least three tensions; purchase-order divergence measured      |
-| Stages are reskins                                  | The clearest progression signal carries no gameplay                      | Stage spec is visual only                              | D, J         | M2 assigns each stage a gameplay identity; M9 requires purchase-order change across boundaries   |
-| L4 network gets solved                              | The endless engine stops producing decisions; only currency rises        | Authored graph fully conquered                         | E            | M13 specifies the renewal mechanism; M21 measures decision availability, not just acceleration   |
-| Early L1 runs feel repetitive                       | Player quits before the L2 draft supplies variety                        | Organ-site allocation is the only early variable       | E            | M13 must answer whether L1 supplies real variation, and deepen organ sites if not                |
-| `MorphologyParams` becomes a dumping ground         | Later visual features silently overwrite earlier ones                    | Multiple systems write the same parameter              | A0, G, D     | Named resolution chain, per-parameter combination rule, clamps, contributor provenance           |
-| Tuning to the bots                                  | Mechanics optimized for the simulator, experimentation stripped out      | One correct build per situation is treated as the goal | I, J         | Bots report degeneracy; near-optimal ties are left alone                                         |
-| The ending is a text screen                         | The payoff undersells the whole game                                     | Ending treated as copy                                 | E, J         | M19 specifies it as a system with its own milestone and validation                               |
-| Tone lands wrong                                    | Satire reads as mocking patients                                         | Copy drifts toward the disease rather than the cell    | H            | Automated copy guard plus `reviewer` checklist; versioned boundary statement                     |
-| A milestone stalls waiting on a person              | The plan cannot finish overnight                                         | Any gate phrased as human judgment                     | Orchestrator | Every gate is a command, a metric, or an agent review with written criteria                      |
+| Risk                                                | Impact                                                                   | Trigger                                                | Owner        | Mitigation                                                                                                         |
+| --------------------------------------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------ | ------------ | ------------------------------------------------------------------------------------------------------------------ |
+| Contracts frozen before evidence                    | Every lane rebases; parallelism advantage evaporates                     | A feature agent needs a shape that does not exist      | A0           | Freeze moved to M8; five compile-only slices at M1                                                                 |
+| Save schema designed before mechanics are known     | Migration churn on a live schema                                         | Progression design written after M4                    | J            | `docs/PROGRESSION_DESIGN.md` is M2, before state                                                                   |
+| Float drift in BigNum at extreme exponents          | Wrong numbers, broken late game                                          | Mantissa denormalizes past 10^300                      | A            | Normalize every operation; test the economy's real operations                                                      |
+| Offline diverges from live once nonlinearity lands  | Player returns to wrong numbers; trust gone                              | A hallmark makes production non-constant               | B            | Document simulation/queue/pause boundaries; compare equal scheduled boundaries and calibrate display approximation |
+| 14 hallmarks collapse into 14 multipliers           | The content spine is hollow                                              | Handlers all reduce to scaling a rate                  | D            | M2 specification gates dispatch; direct decision witness per branch                                                |
+| Four prestige layers feel like one repeated reset   | The "endless depth" claim fails                                          | Layers differ only in cost                             | E            | M13 identity document; reset policy and decision witness per layer                                                 |
+| Balance measured against an arbitrary bot           | Pacing numbers are misleading                                            | Simulator hardcodes one purchase rule                  | I            | Five declared bots; recorded assumptions and independent design review                                             |
+| A balance or save bug cannot be reproduced          | Debugging becomes guesswork                                              | Nondeterministic run reports a symptom                 | B, I         | Deterministic replay at M20                                                                                        |
+| Colony reads as uniform noise                       | Art effort produces an unreadable field                                  | Cells generated before composition                     | G            | `colony_layout.ts` split makes layout-first structural; suppressed-detail test                                     |
+| Art invents plausible-looking but wrong biology     | Loses the science-accurate premise                                       | Generator tuned by eye alone                           | G            | `docs/MORPHOLOGY_REFERENCE.md` gates all drawing code; every visual change cites a row                             |
+| Cells unique but visually unrelated                 | The colony looks like a sticker sheet                                    | Per-cell parameters drawn independently                | G            | Family-coherence metric: within-stage variance bounded, between-stage separation required                          |
+| SVG node count tanks framerate                      | Colony stutters late game                                                | Cell count exceeds a few thousand nodes                | G            | Representative sampling, `<defs>` reuse, CSS-class styling, explicit node budget                                   |
+| Systems are individually strong but do not interact | A pile of good subsystems, no emergent game                              | Each lane validated only against itself                | J, D, E      | `docs/SYSTEM_INTERACTIONS.md` at M13; M21 checks prestige changes which hallmarks are attractive                   |
+| Hallmark tree is a menu, not a tree                 | Player ranks 14 branches independently and always buys in the same order | No specified synergies or tensions                     | D            | M2 requires named synergies, tensions, and direct decision witnesses                                               |
+| Stages are reskins                                  | The clearest progression signal carries no gameplay                      | Stage spec is visual only                              | D, J         | M2 assigns each stage a gameplay identity and decision witness                                                     |
+| L4 network gets solved                              | The endless engine stops producing decisions; only currency rises        | Authored graph fully conquered                         | E            | M13 specifies the renewal mechanism; M21 measures decision availability, not just acceleration                     |
+| Early L1 runs feel repetitive                       | Player quits before the L2 draft supplies variety                        | Organ-site allocation is the only early variable       | E            | M13 must answer whether L1 supplies real variation, and deepen organ sites if not                                  |
+| `MorphologyParams` becomes a dumping ground         | Later visual features silently overwrite earlier ones                    | Multiple systems write the same parameter              | A0, G, D     | Named resolution chain, per-parameter combination rule, clamps, contributor provenance                             |
+| Tuning to the bots                                  | Mechanics optimized for the simulator, experimentation stripped out      | One correct build per situation is treated as the goal | I, J         | Bots report degeneracy; near-optimal ties are left alone                                                           |
+| The ending is a text screen                         | The payoff undersells the whole game                                     | Ending treated as copy                                 | E, J         | M19 specifies it as a system with its own milestone and validation                                                 |
+| Tone lands wrong                                    | Satire reads as mocking patients                                         | Copy drifts toward the disease rather than the cell    | H            | Automated copy guard plus `reviewer` checklist; versioned boundary statement                                       |
+| A milestone stalls waiting on a person              | The plan cannot finish overnight                                         | Any gate phrased as human judgment                     | Orchestrator | Every gate is a command, a metric, or an agent review with written criteria                                        |
 
 ## Rollout and release checklist
 
@@ -1067,9 +1187,10 @@ Every item is executable by the manager or a subagent.
 - [ ] `./build_github_pages.sh` produces `dist/` with `index.html`, `main.js`, `.nojekyll`.
 - [ ] `.github/workflows/deploy-pages.yml` installed from the shipped `deploy-pages.yml`.
 - [ ] `output_balance/balance_report.json` written; `docs/BALANCE.md` summarizes all five bots.
-- [ ] Prestige distinctness validated: no single strategy optimal across all four layers.
+- [ ] Prestige decision witnesses and balance review are recorded in `docs/BALANCE.md`.
 - [ ] Visual metrics battery green; contact sheet and `image_evaluator` verdict captured.
-- [ ] Replay fixture replays to a byte-identical canonical state.
+- [ ] Replay trace reaches an equivalent normalized durable state, equivalent event outcomes, and
+      equivalent visible progression.
 - [ ] Copy guard green; `docs/active_plans/reports/copy_review.md` captured.
 - [ ] Screenshots captured at every stage, both ending states, and each prestige transition.
 - [ ] A pre-release fixture save loads under the release build.
@@ -1085,15 +1206,16 @@ reaches its terminal state.
 
 ## Documentation close-out requirements
 
-- Active plan / progress tracker: copy this plan to
-  `docs/active_plans/active/cancer_clicker_build_plan.md` at execution start; update its milestone
-  table as milestones close; `git mv` it to `docs/archive/` when M22 closes.
+- Active plan / progress tracker: retain this authoritative plan at
+  `docs/active_plans/implementation_plan.md`; the root `implementation_plan.md` symlink points to
+  it. Update `docs/active_plans/active/cancer_clicker_build_plan.md` as milestones close; archive
+  the execution ledger when M22 closes.
 - `docs/CHANGELOG.md`: one entry per milestone under the standard subsection headings, including
   `### Decisions and Failures` for approaches measured and rejected.
 - New durable docs: `docs/GAME_DESIGN.md` (stages, currencies, offline model, ending),
   `docs/PROGRESSION_DESIGN.md` (the 14 hallmarks, their synergies and tensions, and the 12 stage
   gameplay identities), `docs/PRESTIGE_DESIGN.md` (the four layers),
-  `docs/SYSTEM_INTERACTIONS.md` (10 to 20 cross-system interactions),
+  `docs/SYSTEM_INTERACTIONS.md` (high-value cross-system interactions),
   `docs/MORPHOLOGY_REFERENCE.md` (biology to visual abstraction), `docs/ART_DIRECTION.md`
   (illustration technique, palette, omissions), `docs/BIGNUM_OPS.md` (operation inventory),
   `docs/BALANCE.md` (measured curves, five bots, reasoning), `docs/RELEASE_EVIDENCE.md`.
@@ -1117,8 +1239,8 @@ Settled with the user; each becomes a `docs/DESIGN_DECISIONS.md` entry.
   are specified in writing before their code is dispatched. This is the difference between a game
   whose biology drives its mechanics and one where biology is a skin.
 - **Four prestige layers, four different systems.** Metastasis is allocation, Host Transfer is a
-  draft, Immortalization is persistence, Dissemination is a network. Proven by showing no single
-  strategy is optimal across all four.
+  draft, Immortalization is persistence, Dissemination is a network. Each layer has a reachable
+  decision witness; the balance laboratory reviews whether tuning preserves those tradeoffs.
 - **Depth over breadth after M13.** Scope is frozen at the current system set. The emergent game
   lives in cross-system interactions, not in a fifteenth hallmark. `docs/SYSTEM_INTERACTIONS.md`
   is where that value is captured.
@@ -1128,9 +1250,9 @@ Settled with the user; each becomes a `docs/DESIGN_DECISIONS.md` entry.
 - **Custom BigNum, no runtime math dependency; SolidJS is the sole deliberate UI runtime.**
   `{mantissa, exponent}` plus Conway-Wechsler illion names satisfy the stated full-name feature;
   `docs/SOLID_MODEL.md` keeps the UI runtime at the DOM boundary.
-- **Offline is bounded coarse-step replay through the real tick.** Not `rate * elapsed`. Chosen so
-  nonlinear hallmark effects behave identically online and offline; verified by a 2 percent
-  equivalence test.
+- **Offline is bounded coarse-step replay through the real tick.** It is selected so nonlinear
+  hallmark effects share the live model. Equal scheduled boundaries use normalized durable-state
+  equivalence; any intentional display approximation has a calibrated documented envelope.
 - **Layout before rendering, structurally.** `colony_layout.ts` owns macro composition and
   produces data; `colony.ts` renders it and makes no layout decisions. Bottom-up cell scattering
   is rejected because it cannot express invasive fronts, necrotic centers, or structured negative
@@ -1143,6 +1265,10 @@ Settled with the user; each becomes a `docs/DESIGN_DECISIONS.md` entry.
   silently drop rules from `dist/`.
 - **Generated output at the repo root.** `output_balance/` per `docs/REPO_STYLE.md`; a nested
   `tests/e2e/output/` would be tracked and would violate the root-scoped `/output*/` rule.
+- **Durable names describe domains.** Milestone IDs remain in plans, changelog entries, and dated
+  implementation evidence. Durable `src/`, `tests/`, and `tools/` paths name their enduring
+  behavior or responsibility; a public schema version or scientific year remains when it carries
+  domain meaning.
 - **No human in the execution path.** Every gate is a command, a metric, or an agent review with
   written criteria. Human involvement is approval of a finished candidate via
   `docs/RELEASE_EVIDENCE.md`.
@@ -1154,8 +1280,9 @@ None are execution-blocking. Each has an owner, an evidence rule, and a mileston
 - Cost-curve shape (pure exponential per Cookie Clicker versus tiered soft caps).
   - Decision owner: J designs the experiment; I measures; the orchestrator rules. Milestone M21.
   - Evidence and decision rule: build both as data tables, run all five bots against each, adopt
-    whichever lands more checkpoints inside the bands while keeping the check-in bot's return
-    non-empty. Record the loser under `### Decisions and Failures` in `docs/CHANGELOG.md`.
+    whichever removes documented dead actions, permanent dominance, unreachable gates, or an
+    exhausted decision surface while preserving the declared decision witnesses. Record the decision
+    and its evidence under `### Decisions and Failures` in `docs/CHANGELOG.md`.
 - Non-blocking follow-up: whether the colony view earns a canvas renderer after M22. Decide on
   measured framerate with SVG at the highest reachable cell count, not in advance.
 - Non-blocking follow-up: achievements. The `record_event` funnel and the replay format make this

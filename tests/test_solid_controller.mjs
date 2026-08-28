@@ -307,7 +307,7 @@ test("storage adapter persists only complete game progress and reports write fai
   });
 });
 
-test("M10 typed controller intents share record-persist-reconcile with canonical simulation time", () => {
+test("core-six typed controller intents share record-persist-reconcile with canonical simulation time", () => {
   for (const intent of controllerIntentCases()) {
     const persisted = [];
     const controller = createGameController(
@@ -332,7 +332,7 @@ test("M10 typed controller intents share record-persist-reconcile with canonical
   }
 });
 
-test("M10 recovery protection prevents every typed intent from writing or mutating", () => {
+test("core-six recovery protection prevents every typed intent from writing or mutating", () => {
   for (const intent of controllerIntentCases()) {
     let writes = 0;
     const controller = createGameController(
@@ -357,7 +357,7 @@ test("M10 recovery protection prevents every typed intent from writing or mutati
   }
 });
 
-test("M10 telomerase persistence failure preserves sequence until the player intentionally reissues", () => {
+test("core-six telomerase persistence failure preserves sequence until the player intentionally reissues", () => {
   let healthy = false;
   const telomerase = controllerIntentCases().find((intent) => intent.name === "spend-telomerase");
   assert.ok(telomerase);

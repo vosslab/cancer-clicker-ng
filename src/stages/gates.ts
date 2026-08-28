@@ -5,7 +5,7 @@ import type { GameState } from "../types/state.js";
 import type { StageId } from "../types/ids.js";
 import { stageDefinition } from "./catalog.js";
 import type { StageGateResult } from "./stage_types.js";
-import { effectiveM11Pressures } from "../hallmarks/m11_authoritative_effects.js";
+import { effectiveExtendedHallmarkPressures } from "../hallmarks/extended_hallmark_effects.js";
 
 function atLeast(value: number, required: number, label: string): StageGateResult {
   return { eligible: value >= required, current: value, required, label };
@@ -86,7 +86,7 @@ export function stageGateResult(state: GameState, id: StageId): StageGateResult 
     }
     case "host-tolerance": {
       const burden = cellsAtLeast(state, gate.threshold, gate.label);
-      const effective = effectiveM11Pressures(state);
+      const effective = effectiveExtendedHallmarkPressures(state);
       const pressure = state.oxygenPressure + effective.damage + effective.immune;
       return { ...burden, eligible: burden.eligible && pressure >= 1 };
     }

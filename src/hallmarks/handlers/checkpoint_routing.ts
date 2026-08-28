@@ -116,7 +116,7 @@ function applyCheckpointRouting(
   };
 }
 
-/** Pure M10 checkpoint-board projection. The sole reducer remains responsible for event sequence. */
+/** Pure core-six checkpoint-board projection. The sole reducer remains responsible for event sequence. */
 export const CHECKPOINT_ROUTING_HANDLER: CoreSixHandler<SelectCheckpointOperation> = {
   hallmark: "growth_suppressor_evasion",
   apply: applyCheckpointRouting,

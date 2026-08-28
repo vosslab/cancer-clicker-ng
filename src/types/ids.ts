@@ -14,3 +14,10 @@ export type RouteId = string & Readonly<{ readonly __brand: "RouteId" }>;
 export type MutationId = string & Readonly<{ readonly __brand: "MutationId" }>;
 export type ProgramOptionId = string & Readonly<{ readonly __brand: "ProgramOptionId" }>;
 export type MicrobiomePoolId = string & Readonly<{ readonly __brand: "MicrobiomePoolId" }>;
+export type LateProgramOptionId = string & Readonly<{ readonly __brand: "LateProgramOptionId" }>;
+export type MicrobiomeCommunityId = string &
+  Readonly<{ readonly __brand: "MicrobiomeCommunityId" }>;
+export type MicrobiomeCompositionId = string &
+  Readonly<{ readonly __brand: "MicrobiomeCompositionId" }>;
+export type MicrobiomeNicheId = string & Readonly<{ readonly __brand: "MicrobiomeNicheId" }>;
+export type MicrobiomeOfferId = string & Readonly<{ readonly __brand: "MicrobiomeOfferId" }>;

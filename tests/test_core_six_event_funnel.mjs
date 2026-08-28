@@ -1,5 +1,4 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
 import test from "node:test";
 
 import { bigNum, eventId, hallmarkId, regionId, routeId, stageId } from "../src/brands.ts";
@@ -9,10 +8,174 @@ import { createInitialGameState } from "../src/state/game_state.ts";
 import { parseSave, serializeGameState } from "../src/state/save_load.ts";
 import { stageGateFixture } from "./stage_fixture.mjs";
 
-const fixtureUrl = new URL("./fixtures/m4_populated_v2.json", import.meta.url);
+const POPULATED_V2_RECORD = {
+  version: 2,
+  savedAtMs: 101,
+  progressionVersion: 2,
+  state: {
+    cells: {
+      mantissa: 2.5,
+      exponent: 8,
+    },
+    substrate: {
+      mantissa: 3,
+      exponent: 4,
+    },
+    atp: {
+      mantissa: 4,
+      exponent: 5,
+    },
+    producerLevels: [
+      {
+        id: "producer",
+        level: 2,
+      },
+    ],
+    hallmarkLevels: [
+      {
+        id: "proliferative_signaling",
+        level: 3,
+      },
+    ],
+    currentStage: "microcolony",
+    stageStartedAtMs: 2,
+    stageProgress: 3,
+    stageGateProgress: {
+      microcolony: 4,
+    },
+    lastStageTransition: {
+      from: "transformed_cell",
+      to: "microcolony",
+      atMs: 2,
+    },
+    oxygenPressure: 1,
+    damagePressure: 2,
+    immunePressure: 3,
+    contactPressure: 4,
+    nutrientPressure: 5,
+    signalingAllocation: "cycle",
+    manualDivisionCharge: 1,
+    cycleFillRate: 2,
+    bypassedCheckpoints: ["damage-arrest"],
+    survivalCapacity: 2,
+    regions: [
+      {
+        id: "r",
+        capacity: 3,
+        viability: 1,
+        phenotype: "migratory",
+        vesselLinkIds: ["vessel"],
+        routeIds: ["route"],
+        senescenceEventId: "sen",
+      },
+    ],
+    telomereReserveByRegion: {
+      r: 2,
+    },
+    telomeraseCharges: 1,
+    reserveFloor: 1,
+    vesselMaintenanceAtp: 1,
+    committedCellCommitments: {
+      route: 2,
+    },
+    routeRiskById: {
+      route: 1,
+    },
+    seededSites: ["r"],
+    atpBudget: {
+      vessel: 1,
+    },
+    atpSinks: ["vessel"],
+    immuneVisibilityByRegion: {
+      r: 1,
+    },
+    concealmentTokens: 1,
+    maskedRegions: ["r"],
+    inflammationEpisodes: [
+      {
+        id: "episode",
+        regionId: "r",
+        deadlineMs: 6,
+      },
+    ],
+    regionalInflammation: {
+      r: 1,
+    },
+    routeDiscoveryProgress: 1,
+    mutationOffers: [
+      {
+        id: "mutation-offer",
+        poolId: "pool",
+        mutationIds: ["mutation"],
+        sourceSeed: 1,
+        sourceSequence: 1,
+      },
+    ],
+    chosenMutations: ["chosen"],
+    mutationLiabilities: ["liability"],
+    genomeBurden: 1,
+    phenotypeCooldowns: {
+      r: 7,
+    },
+    regionalModifiers: {
+      r: 1,
+    },
+    programs: {
+      allowedByHallmark: {
+        proliferative_signaling: ["cycle"],
+      },
+      selectedByHallmark: {
+        proliferative_signaling: "cycle",
+      },
+      eligibleHallmarks: ["proliferative_signaling"],
+      cooldownDeadlineMs: 8,
+    },
+    microbiome: {
+      poolId: "micro-pool",
+      offerIds: ["microbe-c"],
+      seed: 1,
+      sequence: 2,
+      rotationCounter: 3,
+      rotationDeadlineMs: 9,
+      pendingCompatibility: "compatible",
+      selectedNiches: ["microbe-a", "microbe-b"],
+      compatibilitySnapshot: ["microbe-a", "microbe-b"],
+    },
+    senescentRegions: ["r"],
+    secretoryEffects: {
+      r: 1,
+    },
+    clearanceQueue: ["sen"],
+    pendingDamageEvents: [
+      {
+        id: "damage",
+        regionId: "r",
+        outcome: "repairable",
+      },
+    ],
+    pendingTransitEvents: [
+      {
+        id: "transit",
+        routeId: "route",
+        outcome: "arrived",
+      },
+    ],
+    deterministicSeed: 2,
+    eventSequence: 3,
+    prestigeAvailability: [
+      {
+        id: "L1",
+        status: "earned",
+      },
+    ],
+    totalOfflineMs: 4,
+    numberFormat: "full",
+    endingReached: true,
+  },
+};
 
 function baseState() {
-  const result = parseSave(readFileSync(fixtureUrl, "utf8"));
+  const result = parseSave(JSON.stringify(structuredClone(POPULATED_V2_RECORD)));
   assert.equal(result.status, "loaded");
   return result.state;
 }
@@ -42,7 +205,7 @@ function assertRejected(state, raw, label) {
   assert.deepEqual(state, before, label);
 }
 
-test("M10 routes every core-six event through one pure projection and one sequence advance", () => {
+test("core-six routes every core-six event through one pure projection and one sequence advance", () => {
   const division = withHallmark(
     { ...baseState(), currentStage: stageId("transformed_cell"), signalingAllocation: "cycle" },
     "proliferative_signaling",

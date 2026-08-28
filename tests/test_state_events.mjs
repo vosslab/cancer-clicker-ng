@@ -1,5 +1,4 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
 import test from "node:test";
 import {
   eventId,
@@ -21,7 +20,6 @@ import { parseSave, serializeGameState } from "../src/state/save_load.ts";
 import { CONTRACT_SLICE_LABELS } from "../tools/contract_slices.ts";
 import { stageGateFixture } from "./stage_fixture.mjs";
 
-const fixtureUrl = new URL("./fixtures/m4_populated_v2.json", import.meta.url);
 const expectedTypes = [
   "click-divide",
   "purchase-producer",
@@ -47,8 +45,174 @@ const expectedTypes = [
   "resolve-senescence",
 ];
 
+const POPULATED_V2_RECORD = {
+  version: 2,
+  savedAtMs: 101,
+  progressionVersion: 2,
+  state: {
+    cells: {
+      mantissa: 2.5,
+      exponent: 8,
+    },
+    substrate: {
+      mantissa: 3,
+      exponent: 4,
+    },
+    atp: {
+      mantissa: 4,
+      exponent: 5,
+    },
+    producerLevels: [
+      {
+        id: "producer",
+        level: 2,
+      },
+    ],
+    hallmarkLevels: [
+      {
+        id: "proliferative_signaling",
+        level: 3,
+      },
+    ],
+    currentStage: "microcolony",
+    stageStartedAtMs: 2,
+    stageProgress: 3,
+    stageGateProgress: {
+      microcolony: 4,
+    },
+    lastStageTransition: {
+      from: "transformed_cell",
+      to: "microcolony",
+      atMs: 2,
+    },
+    oxygenPressure: 1,
+    damagePressure: 2,
+    immunePressure: 3,
+    contactPressure: 4,
+    nutrientPressure: 5,
+    signalingAllocation: "cycle",
+    manualDivisionCharge: 1,
+    cycleFillRate: 2,
+    bypassedCheckpoints: ["damage-arrest"],
+    survivalCapacity: 2,
+    regions: [
+      {
+        id: "r",
+        capacity: 3,
+        viability: 1,
+        phenotype: "migratory",
+        vesselLinkIds: ["vessel"],
+        routeIds: ["route"],
+        senescenceEventId: "sen",
+      },
+    ],
+    telomereReserveByRegion: {
+      r: 2,
+    },
+    telomeraseCharges: 1,
+    reserveFloor: 1,
+    vesselMaintenanceAtp: 1,
+    committedCellCommitments: {
+      route: 2,
+    },
+    routeRiskById: {
+      route: 1,
+    },
+    seededSites: ["r"],
+    atpBudget: {
+      vessel: 1,
+    },
+    atpSinks: ["vessel"],
+    immuneVisibilityByRegion: {
+      r: 1,
+    },
+    concealmentTokens: 1,
+    maskedRegions: ["r"],
+    inflammationEpisodes: [
+      {
+        id: "episode",
+        regionId: "r",
+        deadlineMs: 6,
+      },
+    ],
+    regionalInflammation: {
+      r: 1,
+    },
+    routeDiscoveryProgress: 1,
+    mutationOffers: [
+      {
+        id: "mutation-offer",
+        poolId: "pool",
+        mutationIds: ["mutation"],
+        sourceSeed: 1,
+        sourceSequence: 1,
+      },
+    ],
+    chosenMutations: ["chosen"],
+    mutationLiabilities: ["liability"],
+    genomeBurden: 1,
+    phenotypeCooldowns: {
+      r: 7,
+    },
+    regionalModifiers: {
+      r: 1,
+    },
+    programs: {
+      allowedByHallmark: {
+        proliferative_signaling: ["cycle"],
+      },
+      selectedByHallmark: {
+        proliferative_signaling: "cycle",
+      },
+      eligibleHallmarks: ["proliferative_signaling"],
+      cooldownDeadlineMs: 8,
+    },
+    microbiome: {
+      poolId: "micro-pool",
+      offerIds: ["microbe-c"],
+      seed: 1,
+      sequence: 2,
+      rotationCounter: 3,
+      rotationDeadlineMs: 9,
+      pendingCompatibility: "compatible",
+      selectedNiches: ["microbe-a", "microbe-b"],
+      compatibilitySnapshot: ["microbe-a", "microbe-b"],
+    },
+    senescentRegions: ["r"],
+    secretoryEffects: {
+      r: 1,
+    },
+    clearanceQueue: ["sen"],
+    pendingDamageEvents: [
+      {
+        id: "damage",
+        regionId: "r",
+        outcome: "repairable",
+      },
+    ],
+    pendingTransitEvents: [
+      {
+        id: "transit",
+        routeId: "route",
+        outcome: "arrived",
+      },
+    ],
+    deterministicSeed: 2,
+    eventSequence: 3,
+    prestigeAvailability: [
+      {
+        id: "L1",
+        status: "earned",
+      },
+    ],
+    totalOfflineMs: 4,
+    numberFormat: "full",
+    endingReached: true,
+  },
+};
+
 function baseState() {
-  const result = parseSave(readFileSync(fixtureUrl, "utf8"));
+  const result = parseSave(JSON.stringify(structuredClone(POPULATED_V2_RECORD)));
   assert.equal(result.status, "loaded");
   return result.state;
 }
@@ -121,7 +285,7 @@ function microbiomeState() {
   };
 }
 
-function m11MutationState() {
+function extendedHallmarkMutationState() {
   const state = baseState();
   const { lastStageTransition: _previousTransition, ...withoutPreviousTransition } = state;
   const currentStage = stageId("angiogenic_primary");
@@ -213,7 +377,7 @@ test("stage events reject skipped, backward, duplicate, terminal, mismatched, an
   });
 });
 
-test("every M4 event has payload-sensitive valid behavior and an atomic invalid counterpart", () => {
+test("every game event has payload-sensitive valid behavior and an atomic invalid counterpart", () => {
   valid(baseState(), { type: "click-divide", atMs: 10 }, (after, before) => {
     assert.equal(after.manualDivisionCharge, before.manualDivisionCharge + 1);
   });
@@ -234,7 +398,7 @@ test("every M4 event has payload-sensitive valid behavior and an atomic invalid 
     },
   );
 
-  // M10 freezes each core-six acquisition at its catalog-owned first level.
+  // core-six freezes each core-six acquisition at its catalog-owned first level.
   invalid(baseState(), {
     type: "purchase-hallmark",
     hallmarkId: hallmarkId("proliferative_signaling"),
@@ -266,7 +430,7 @@ test("every M4 event has payload-sensitive valid behavior and an atomic invalid 
     atMs: 10,
   });
 
-  // M13 owns reset rewards; M4's documented behavior is the atomic unavailable rejection.
+  // Prestige rewards own their economic effects; unavailable resets reject atomically.
   invalid(baseState(), { type: "perform-prestige-reset", atMs: 10 });
 
   valid(
@@ -320,7 +484,7 @@ test("every M4 event has payload-sensitive valid behavior and an atomic invalid 
   });
   invalid(baseState(), { type: "set-number-format", numberFormat: "bad", atMs: 10 });
 
-  // M10 routes core actions through catalog-gated handlers; base M4 state is intentionally locked.
+  // Core-six routes core actions through catalog-gated handlers; the base state is intentionally locked.
   invalid(baseState(), {
     type: "set-vessel-link",
     regionId: regionId("r"),
@@ -381,22 +545,26 @@ test("every M4 event has payload-sensitive valid behavior and an atomic invalid 
   invalid(baseState(), { type: "set-atp-budget", sink: "__proto__", amount: 9, atMs: 2 });
 
   valid(
-    m11MutationState(),
+    extendedHallmarkMutationState(),
     {
       type: "select-mutation",
-      offerId: m11MutationState().mutationOffers[0].id,
-      mutationId: m11MutationState().mutationOffers[0].cards[0].id,
+      offerId: extendedHallmarkMutationState().mutationOffers[0].id,
+      mutationId: extendedHallmarkMutationState().mutationOffers[0].cards[0].id,
       atMs: 10,
     },
     (after) => {
       assert.equal(after.mutationOffers.length, 0);
-      assert.ok(after.chosenMutations.includes(m11MutationState().mutationOffers[0].cards[0].id));
+      assert.ok(
+        after.chosenMutations.includes(
+          extendedHallmarkMutationState().mutationOffers[0].cards[0].id,
+        ),
+      );
     },
   );
-  invalid(m11MutationState(), {
+  invalid(extendedHallmarkMutationState(), {
     type: "select-mutation",
     offerId: offerId("missing"),
-    mutationId: m11MutationState().mutationOffers[0].cards[0].id,
+    mutationId: extendedHallmarkMutationState().mutationOffers[0].cards[0].id,
     atMs: 10,
   });
 

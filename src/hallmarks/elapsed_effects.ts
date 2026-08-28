@@ -1,7 +1,7 @@
 import { compare, fromSafeInteger, subtract } from "../bignum/bignum.js";
 import { coreSixHallmarkDefinition } from "./core_six_catalog.js";
 import type { GameState, RegionState } from "../types/state.js";
-import { atpBudgetForSink } from "./m11_economy.js";
+import { atpBudgetForSink } from "./atp_allocation.js";
 
 export const ELAPSED_HALLMARK_BOUNDARY_MS = 1_000;
 const PERFUSION_OXYGEN_LOSS_PER_LINK = 2;
@@ -55,7 +55,7 @@ export function manualDivisionAllowed(state: GameState): boolean {
   return !replicativeCapacityExhausted(state);
 }
 
-/** Avoids changing legacy arithmetic when no elapsed M10 state can change at a boundary. */
+/** Avoids changing legacy arithmetic when no elapsed core-six state can change at a boundary. */
 export function hasElapsedHallmarkEffect(state: GameState): boolean {
   const changingReserve =
     owns(state, "replicative_immortality") &&
@@ -77,7 +77,7 @@ function consumeReplicativeReserve(state: GameState): GameState {
 
 /**
  * A manual division consumes the currently viable regional reserve allocation.
- * The reducer owns the cell grant and event sequence; this projection owns only M10 state.
+ * The reducer owns the cell grant and event sequence; this projection owns only core-six state.
  */
 export function projectManualDivisionHallmarkEffects(state: GameState): GameState {
   if (!manualDivisionAllowed(state)) throw new Error("Replicative capacity is exhausted.");
@@ -122,7 +122,7 @@ function debitPerfusionMaintenance(state: GameState): GameState {
   if (!natural(state.vesselMaintenanceAtp) || state.vesselMaintenanceAtp !== linked.length) {
     throw new Error("Perfusion maintenance state is invalid.");
   }
-  // ASVS 2.2.3/2.3.3: a declared M11 reservation must cover every active physical link.
+  // ASVS 2.2.3/2.3.3: a declared extended-hallmark reservation must cover every active physical link.
   if (
     state.atpSinks.includes("vessel-maintenance") &&
     atpBudgetForSink(state, "vessel-maintenance") < linked.length * 25
@@ -155,7 +155,7 @@ export function elapsedHallmarkBoundaryCrossings(state: GameState, elapsedMs: nu
 }
 
 /**
- * Projects elapsed durable M10 mechanics without recording an event or advancing clocks.
+ * Projects elapsed durable core-six mechanics without recording an event or advancing clocks.
  * Repeated one-boundary application makes chunked and unchunked elapsed calls equivalent.
  */
 export function projectElapsedHallmarkEffects(state: GameState, elapsedMs: number): GameState {

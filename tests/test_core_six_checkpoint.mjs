@@ -26,7 +26,7 @@ function apply(state, checkpoint) {
   });
 }
 
-test("M10 checkpoint routing applies one distinct named pressure tradeoff for every route", () => {
+test("core-six checkpoint routing applies one distinct named pressure tradeoff for every route", () => {
   const expected = [
     ["contact-inhibition", "contactPressure", 1],
     ["nutrient-arrest", "nutrientPressure", 2],
@@ -49,7 +49,7 @@ test("M10 checkpoint routing applies one distinct named pressure tradeoff for ev
   }
 });
 
-test("M10 checkpoint routing rejects locked, unowned, repeat, occupied, and hostile commands atomically", () => {
+test("core-six checkpoint routing rejects locked, unowned, repeat, occupied, and hostile commands atomically", () => {
   const cases = [
     [
       "locked stage",
@@ -79,7 +79,7 @@ test("M10 checkpoint routing rejects locked, unowned, repeat, occupied, and host
   }
 });
 
-test("M10 checkpoint routing changes the ordered next decision from named pressures", () => {
+test("core-six checkpoint routing changes the ordered next decision from named pressures", () => {
   const baseline = ownedMicrocolonyState();
   assert.deepEqual(checkpointRoutingDecisionOrder(baseline), [
     "contact-inhibition",

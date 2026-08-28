@@ -8,17 +8,18 @@ single nucleus. It is a stylized scientific game illustration, not generic "more
 photorealistic pathology, a patient image, or a diagnostic slide. Each visible feature must convey
 morphology, stage, hallmark state, environmental interaction, depth, or a deliberate transition.
 
-M18 mounts one meaningful inline SVG in the future colony panel. Its stable contract is:
+The colony panel mounts one meaningful inline SVG inside one native colony control. Its stable
+contract is:
 
-| Property         | Requirement                                                                                           |
-| ---------------- | ----------------------------------------------------------------------------------------------------- |
-| Source of truth  | Pure typed scene data plus inline Solid SVG; no bitmap or copied asset directory                      |
-| View and scaling | `viewBox="0 0 1000 700"`, `preserveAspectRatio="xMidYMid meet"`, responsive width and auto height     |
-| Target sizes     | 320 x 224 at a 360 px viewport, 560 x 392 desktop panel, 1000 x 700 evidence render                   |
-| Backgrounds      | Current clinical-dark `#071418` delivery canvas and neutral light inspection canvas                   |
-| Reading order    | stage silhouette -> region and depth -> focal morphology -> optional caption                          |
-| Embed semantics  | one `role="img"` SVG with unique title and description IDs; internal drawing groups are `aria-hidden` |
-| Caption          | short stage-aware non-diagnostic explanation adjacent to or in the image description                  |
+| Property         | Requirement                                                                                              |
+| ---------------- | -------------------------------------------------------------------------------------------------------- |
+| Source of truth  | Pure typed scene data plus inline Solid SVG; no bitmap or copied asset directory                         |
+| View and scaling | `viewBox="0 0 1000 700"`, `preserveAspectRatio="xMidYMid meet"`, responsive width and auto height        |
+| Target sizes     | 320 x 224 at a 360 px viewport, 560 x 392 desktop panel, 1000 x 700 evidence render                      |
+| Backgrounds      | Current clinical-dark `#071418` delivery canvas and neutral light inspection canvas                      |
+| Reading order    | stage silhouette -> region and depth -> focal morphology -> optional caption                             |
+| Embed semantics  | one native `button` named `Divide cell`; its SVG is visual content and internal groups are `aria-hidden` |
+| Caption          | short visible stage-aware non-diagnostic explanation described by the native control                     |
 
 ## Art principles survey
 
@@ -57,6 +58,36 @@ restrained value falloff so a crowded field never becomes hundreds of equally lo
 may rely solely on cell-internal detail; the M17 suppressed-detail contact sheet is the decisive
 test.
 
+## Living tumor world
+
+The board combines the incremental-clicker grammar with a living cancer-system visualization. The
+colony is the direct action at left; the central progression field is the evolving tumor world,
+not empty decoration; the store stays a compact decision surface at right. As durable state
+changes, cells form colonies and tumors, acquire perfusion, show hallmark consequences, develop
+hypoxia, necrosis, and invasion, and later establish additional sites. The image remains a
+scientific abstraction: it shows state consequences rather than simulating clinical outcomes.
+
+At the 1280 x 800 (16:10) primary viewport, the first view presents the large colony action with
+authoritative count/rate, active stage and hallmark progression, producer-store quantity controls,
+and save/status together. Wider boards scale this composition; compact layouts retain its order by
+stacking colony action, progression world, then store. The 1280 x 800 capture is a representative
+task walkthrough, not a load-time or frame-time threshold.
+
+Every visual consequence traces through a named biological and geometric owner:
+
+| Consequence                                                                                      | Durable source and owner                                                                                                              | Rendering owner                                          |
+| ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| Cell family, nuclei, mitosis, and hallmark-visible traits                                        | `MorphologyParams` and contributor provenance in `src/svg/morphology.ts`                                                              | `src/svg/cell.tsx`                                       |
+| Colony/tumor silhouette, density, hypoxia, necrosis, invasive fronts, and later-site composition | readonly layout data and `layoutOrigin` provenance in `src/svg/colony_layout.ts`                                                      | `src/svg/colony.tsx`                                     |
+| Perfusion, vessel, and route motifs                                                              | `perfusion_layout.ts`, `route_commitment.ts`, and `elapsed_effects.ts` contribute typed state through an explicit layout contribution | `src/svg/colony.tsx` after its data contract is accepted |
+| Local control feedback, focus, and reduced-motion presentation                                   | `ColonyPanel` local UI state                                                                                                          | `src/render/colony_panel.tsx` and `src/style.css`        |
+
+Animation supplements durable state. A pulse, growth response, or route emphasis gives immediate
+feedback after the already-authoritative count/rate and status change. Reduced motion preserves a
+static state cue with the same biological reading. Future angiogenesis, vessel, and route layers
+extend the named data and rendering owners above; CSS only presents accepted semantic classes and
+does not invent biological state.
+
 ## Palette and non-color grammar
 
 The existing clinical-dark shell supplies a teal/mint/gold UI language. The colony remains a
@@ -80,20 +111,29 @@ or an available player action.
 
 ## SVG structure and editing policy
 
-The SVG is code-native and editable. M18 must use semantic group names, readable geometry, stable
-IDs, and a single owner for reusable treatments.
+The SVG is code-native and editable. The colony panel owns one native `button type="button"` named
+`Divide cell`; it contains the SVG, carries the single keyboard focus target, and describes itself
+with the visible instruction and stage-aware caption. The SVG remains visual content under that
+control. It uses semantic group names, readable geometry, stable IDs, and a single owner for
+reusable treatments.
 
 ```text
-<svg class="colony-figure" role="img" aria-labelledby="colony-title colony-desc"
-     viewBox="0 0 1000 700" preserveAspectRatio="xMidYMid meet">
-  <title id="colony-title">[stage] colony morphology</title>
-  <desc id="colony-desc">[non-diagnostic stage summary]</desc>
-  <defs>shared gradients, patterns, masks, and bounded filters</defs>
-  <g class="colony-figure__backdrop" />
-  <g class="colony-figure__regions" aria-hidden="true" />
-  <g class="colony-figure__cells" aria-hidden="true" />
-  <g class="colony-figure__foreground" aria-hidden="true" />
-</svg>
+<section class="colony-panel">
+  <p class="colony-panel__count-rate">[authoritative count and rate]</p>
+  <button type="button" class="colony-panel__action"
+          aria-describedby="colony-instruction colony-caption">
+    <svg class="colony-figure" aria-hidden="true"
+         viewBox="0 0 1000 700" preserveAspectRatio="xMidYMid meet">
+      <defs>shared gradients, patterns, masks, and bounded filters</defs>
+      <g class="colony-figure__backdrop" />
+      <g class="colony-figure__regions" />
+      <g class="colony-figure__cells" />
+      <g class="colony-figure__foreground" />
+    </svg>
+  </button>
+  <p id="colony-instruction">Click a visible cell to divide. Enter or Space also divides.</p>
+  <p id="colony-caption">[non-diagnostic stage summary]</p>
+</section>
 ```
 
 - Prefix fragment IDs with `ccng-`. Add a deterministic scene suffix only when uniqueness is
@@ -103,10 +143,19 @@ IDs, and a single owner for reusable treatments.
   maps an existing layout to cells. `colony_layout.ts` emits data and no SVG.
 - Prefer `circle`, `ellipse`, `line`, `polygon`, and grouped transforms where they express intent.
   Use paths for membrane and nuclear contours. Do not emit opaque path soup or bake text into paths.
-- Use CSS classes for repeated treatment. Share gradients and masks. Stable `data-*` keys are test
-  hooks, never visual labels or game state authority.
-- Live text stays live. The colony itself has no clickable SVG regions in M18. Future interaction
-  uses an HTML control or a fully named, focusable keyboard-equivalent control.
+- Use CSS classes for repeated treatment. Share gradients and masks. Stable `data-*` keys are local
+  UI hooks, never visual labels or game-state authority.
+- `cell.tsx` marks each visible cell group with a local `data-cell-key` and `data-colony-cell`.
+  `colony.tsx` delegates pointer and touch activation from that visible geometry to the one typed
+  colony action. The button accepts virtual keyboard or assistive-technology activation while the
+  delegated pointer path owns pointer/touch activation, so either user action calls the intent
+  once. Cell keys do not enter events, saves, reducers, or `GameState`.
+- Count/rate, a restrained immediate local response, visible focus, the instruction, save failure,
+  reduced-motion behavior, and the stage caption complete the control's feedback contract. The
+  count/rate and status are authoritative; reduced motion retains a static response.
+- The dense cell field uses actual cell geometry for pointer and touch activation. The one colony
+  button supplies the reachable keyboard and compact-width target without inventing overlapping
+  per-cell focus targets.
 
 ## Performance and motion policy
 

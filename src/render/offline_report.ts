@@ -4,7 +4,7 @@ import type { OfflineReplayReport } from "../state/offline.js";
 
 export type OfflineReportDocument = Pick<Document, "createElement">;
 
-/** M5's inert report fragment; M7 owns connection to a live Solid interface. */
+/** M5's inert report fragment; gameplay lifecycle owns connection to a live Solid interface. */
 export function renderOfflineReport(
   report: OfflineReplayReport,
   document: OfflineReportDocument,

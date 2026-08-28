@@ -1,9 +1,9 @@
 import { eventId, offerId, regionId, routeId, stageId, mutationId } from "../../brands.js";
 import {
-  findM11MutationCard,
-  M11_MUTATION_OFFER_CARD_COUNT,
-  M11_MUTATION_POOL_ID,
-} from "../../hallmarks/m11_catalog.js";
+  findMutationDraftCard,
+  MUTATION_DRAFT_OFFER_CARD_COUNT,
+  MUTATION_DRAFT_POOL_ID,
+} from "../../hallmarks/extended_hallmark_catalog.js";
 import type { SaveNotice } from "../../types/save.js";
 import type { GameState } from "../../types/state.js";
 import { isImmediateStageTransition, isStageId } from "../catalog.js";
@@ -76,7 +76,7 @@ export function parseOffers(value: unknown): GameState["mutationOffers"] | undef
         "threshold",
       ]) ||
       !identifier(item.id) ||
-      item.poolId !== M11_MUTATION_POOL_ID ||
+      item.poolId !== MUTATION_DRAFT_POOL_ID ||
       !natural(item.sourceSeed) ||
       !natural(item.sourceSequence) ||
       !identifier(item.sourceStage) ||
@@ -86,19 +86,19 @@ export function parseOffers(value: unknown): GameState["mutationOffers"] | undef
     )
       return undefined;
     const cardsValue = array(item.cards);
-    if (!cardsValue || cardsValue.length !== M11_MUTATION_OFFER_CARD_COUNT) return undefined;
+    if (!cardsValue || cardsValue.length !== MUTATION_DRAFT_OFFER_CARD_COUNT) return undefined;
     const cards = cardsValue.map(parseMutationCard);
     const [first, second, third] = cards;
     if (
       !first ||
       !second ||
       !third ||
-      new Set(cards.map((card) => card?.id)).size !== M11_MUTATION_OFFER_CARD_COUNT
+      new Set(cards.map((card) => card?.id)).size !== MUTATION_DRAFT_OFFER_CARD_COUNT
     )
       return undefined;
     result.push({
       id: offerId(item.id),
-      poolId: M11_MUTATION_POOL_ID,
+      poolId: MUTATION_DRAFT_POOL_ID,
       cards: [first, second, third],
       sourceSeed: item.sourceSeed,
       sourceSequence: item.sourceSequence,
@@ -109,7 +109,7 @@ export function parseOffers(value: unknown): GameState["mutationOffers"] | undef
   return unique(result.map((item) => item.id)) ? result : undefined;
 }
 
-function parseMutationCard(value: unknown): ReturnType<typeof findM11MutationCard> | undefined {
+function parseMutationCard(value: unknown): ReturnType<typeof findMutationDraftCard> | undefined {
   if (
     !exact(value, ["id", "displayName", "benefit", "liability", "genomeBurden", "effects"]) ||
     !identifier(value.id) ||
@@ -131,7 +131,7 @@ function parseMutationCard(value: unknown): ReturnType<typeof findM11MutationCar
     !identifier(value.liability.effect)
   )
     return undefined;
-  const expected = findM11MutationCard(mutationId(value.id));
+  const expected = findMutationDraftCard(mutationId(value.id));
   if (
     expected === undefined ||
     expected.displayName !== value.displayName ||

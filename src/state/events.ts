@@ -16,10 +16,10 @@ import { findCoreSixHallmark, hasReachedCoreSixUnlock } from "../hallmarks/core_
 import { applyCoreSixOperation } from "../hallmarks/core_six_dispatch.js";
 import {
   findAtpSink,
-  findM11Hallmark,
-  hasReachedM11Unlock,
+  findExtendedHallmark,
+  hasReachedExtendedHallmarkUnlock,
   MAX_TOTAL_ATP_BUDGET,
-} from "../hallmarks/m11_catalog.js";
+} from "../hallmarks/extended_hallmark_catalog.js";
 import { applyMetabolicConversion } from "../hallmarks/handlers/metabolism.js";
 import { applyImmuneVisibility } from "../hallmarks/handlers/immune_visibility.js";
 import { applyInflammation } from "../hallmarks/handlers/inflammation.js";
@@ -28,7 +28,7 @@ import {
   projectElapsedHallmarkDurableEffects,
   projectManualDivisionHallmarkEffects,
 } from "../hallmarks/elapsed_effects.js";
-import { projectM11DurableTickEffects } from "../hallmarks/m11_tick_effects.js";
+import { projectExtendedHallmarkDurableTickEffects } from "../hallmarks/extended_hallmark_tick.js";
 import { removeRegionProjection } from "./region_projection.js";
 
 function natural(value: unknown): value is number {
@@ -213,17 +213,17 @@ function applyCoreSixEvent(state: GameState, event: GameEvent): GameState | unde
   return projection;
 }
 
-/** Applies a trusted M11 projection without assigning a sequence number. */
-function applyM11Event(state: GameState, event: GameEvent): GameState | undefined {
-  const isM11Event =
+/** Applies a trusted extended-hallmark projection without assigning a sequence number. */
+function applyExtendedHallmarkEvent(state: GameState, event: GameEvent): GameState | undefined {
+  const isExtendedHallmarkEvent =
     event.type === "convert-substrate" ||
     event.type === "set-region-mask" ||
     event.type === "activate-inflammation" ||
     event.type === "select-mutation";
-  if (!isM11Event) return undefined;
+  if (!isExtendedHallmarkEvent) return undefined;
   // ASVS 2.3.1, 2.3.3, and 16.5.3: stale operations fail before any projection is built.
   if (!natural(state.activeTimeMs) || event.atMs !== state.activeTimeMs) {
-    throw new Error("M11 operation is stale.");
+    throw new Error("extended-hallmark operation is stale.");
   }
   let projection: GameState;
   switch (event.type) {
@@ -281,7 +281,7 @@ function applyM11Event(state: GameState, event: GameEvent): GameState | undefine
       return undefined;
   }
   if (projection.eventSequence !== state.eventSequence) {
-    throw new Error("M11 handlers must not advance the event sequence.");
+    throw new Error("extended-hallmark handlers must not advance the event sequence.");
   }
   return projection;
 }
@@ -290,8 +290,8 @@ function applyM11Event(state: GameState, event: GameEvent): GameState | undefine
 export function reduceGameEvent(state: GameState, event: GameEvent): GameState {
   const coreSixProjection = applyCoreSixEvent(state, event);
   if (coreSixProjection !== undefined) return next(state, coreSixProjection);
-  const m11Projection = applyM11Event(state, event);
-  if (m11Projection !== undefined) return next(state, m11Projection);
+  const extendedHallmarkProjection = applyExtendedHallmarkEvent(state, event);
+  if (extendedHallmarkProjection !== undefined) return next(state, extendedHallmarkProjection);
   switch (event.type) {
     case "click-divide": {
       const projection = projectManualDivisionHallmarkEffects(state);
@@ -326,13 +326,13 @@ export function reduceGameEvent(state: GameState, event: GameEvent): GameState {
           throw new Error("Core-six hallmark is already owned.");
         }
       }
-      const m11Definition = findM11Hallmark(id);
-      if (m11Definition !== undefined) {
-        if (!hasReachedM11Unlock(state.currentStage, m11Definition.key)) {
-          throw new Error("M11 hallmark is locked.");
+      const extendedHallmarkDefinition = findExtendedHallmark(id);
+      if (extendedHallmarkDefinition !== undefined) {
+        if (!hasReachedExtendedHallmarkUnlock(state.currentStage, extendedHallmarkDefinition.key)) {
+          throw new Error("extended-hallmark hallmark is locked.");
         }
-        if (hallmark.level >= m11Definition.purchase.maximumLevel) {
-          throw new Error("M11 hallmark is already owned.");
+        if (hallmark.level >= extendedHallmarkDefinition.purchase.maximumLevel) {
+          throw new Error("extended-hallmark hallmark is already owned.");
         }
       }
       return next(state, {
@@ -380,9 +380,17 @@ export function reduceGameEvent(state: GameState, event: GameEvent): GameState {
       // The economy adapter already debits tracked ATP at each boundary. Replay only structural
       // reserve/link outcomes from the original balance, then retain the authoritative snapshot.
       const elapsedDurable = projectElapsedHallmarkDurableEffects(state, event.elapsedMs);
-      // ASVS 2.3.3: reconstruct M11 from the original state, never from an adapter snapshot.
-      const m11Durable = projectM11DurableTickEffects(state, event.elapsedMs);
-      const accrued = { ...state, ...elapsedDurable, ...m11Durable, ...resourceSnapshot };
+      // ASVS 2.3.3: reconstruct extended-hallmark from the original state, never from an adapter snapshot.
+      const extendedHallmarkDurable = projectExtendedHallmarkDurableTickEffects(
+        state,
+        event.elapsedMs,
+      );
+      const accrued = {
+        ...state,
+        ...elapsedDurable,
+        ...extendedHallmarkDurable,
+        ...resourceSnapshot,
+      };
       return next(state, {
         ...accrued,
         pendingProgression: [...state.pendingProgression, ...additions],
@@ -413,7 +421,7 @@ export function reduceGameEvent(state: GameState, event: GameEvent): GameState {
     case "set-region-mask":
     case "activate-inflammation":
     case "select-mutation":
-      throw new Error("M11 event dispatch failed.");
+      throw new Error("extended-hallmark event dispatch failed.");
     case "switch-phenotype": {
       const target = region(state, event.regionId);
       const deadline = event.cooldownDeadlineMs;

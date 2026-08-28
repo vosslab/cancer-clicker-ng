@@ -1,5 +1,5 @@
 import type { BigNum } from "./bignum.js";
-import type { M11MutationOffer } from "../hallmarks/m11_types.js";
+import type { MutationDraftOffer } from "../hallmarks/extended_hallmark_types.js";
 import type {
   EventId,
   HallmarkId,
@@ -78,10 +78,10 @@ export type GameState = Readonly<{
   stageStartedAtMs: number;
   /** Monotonic simulation time; never derived from a wall-clock save sample. */
   activeTimeMs: number;
-  /** Identity-only eligibility observations awaiting an explicit M9/M13 action. */
+  /** Identity-only eligibility observations awaiting an explicit stage progression/M13 action. */
   pendingProgression: readonly PendingProgression[];
   stageProgress: number;
-  /** Saved per-stage gate progress; M9 owns semantic gate evaluation. */
+  /** Saved per-stage gate progress; stage progression owns semantic gate evaluation. */
   stageGateProgress: Readonly<Record<string, number>>;
   lastStageTransition?: Readonly<{ from: StageId; to: StageId; atMs: number }>;
   oxygenPressure: number;
@@ -111,8 +111,8 @@ export type GameState = Readonly<{
   inflammationEpisodes: readonly InflammationEpisode[];
   regionalInflammation: Readonly<Record<string, number>>;
   routeDiscoveryProgress: number;
-  /** M11 persists at most one closed, deterministic three-card offer snapshot. */
-  mutationOffers: readonly M11MutationOffer[];
+  /** extended-hallmark persists at most one closed, deterministic three-card offer snapshot. */
+  mutationOffers: readonly MutationDraftOffer[];
   chosenMutations: readonly MutationId[];
   mutationLiabilities: readonly MutationId[];
   genomeBurden: number;

@@ -100,7 +100,7 @@ function assertPurchaseOrderChanged(beforeScores, afterScores, label) {
   return { beforeOrder, afterOrder };
 }
 
-test("M9 stage definitions exactly cover the canonical ladder with distinct operational modes", () => {
+test("stage progression stage definitions exactly cover the canonical ladder with distinct operational modes", () => {
   const definitions = stageDefinitionsInOrder();
   assert.deepEqual(
     definitions.map((definition) => definition.id),

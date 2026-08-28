@@ -1,19 +1,19 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { stageId } from "../src/brands.ts";
 import { STAGE_IDS } from "../src/state/catalog.ts";
-import { createColonyLayout } from "../src/svg/colony_layout.ts";
-import { resolve_stage_morphology } from "../src/svg/morphology.ts";
+import { createInitialGameState } from "../src/state/game_state.ts";
 import {
   createCellRenderModel,
   createColonySceneRequest,
   sceneSvgId,
 } from "../src/svg/render_types.ts";
+import { createGameColonyScene } from "../src/svg/colony_visual_state.ts";
 
-function fixture(stageId, seed = 17, detail = "representative") {
-  const morphology = resolve_stage_morphology(seed, stageId);
-  const layout = createColonyLayout({ stageId, sceneSeed: seed, morphology, detail });
-  return Object.freeze({ layout, morphology, stageId, sceneSeed: seed, detail });
+function fixture(stage) {
+  const game = { ...createInitialGameState(), currentStage: stageId(stage), deterministicSeed: 17 };
+  return createGameColonyScene(game);
 }
 
 test("the render contract accepts every frozen M16/M17 stage fixture without changing either source", () => {
@@ -58,6 +58,7 @@ test("the render contract rejects mismatched, unsafe, forged, accessor, prototyp
   Object.defineProperties(accessor, {
     layout: { enumerable: true, get: () => source.layout },
     morphology: { enumerable: true, value: source.morphology },
+    visual: { enumerable: true, value: source.visual },
     stageId: { enumerable: true, value: source.stageId },
     sceneSeed: { enumerable: true, value: source.sceneSeed },
     detail: { enumerable: true, value: source.detail },

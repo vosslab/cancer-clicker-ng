@@ -1,8 +1,15 @@
-import { m11HallmarkDefinition, hasReachedM11Unlock } from "../m11_catalog.js";
-import { MAX_ACTIVE_INFLAMMATION_EPISODES } from "../m11_timeline.js";
-import type { M11Handler, M11HandlerResult, SetRegionMaskOperation } from "../m11_types.js";
+import {
+  extendedHallmarkDefinition,
+  hasReachedExtendedHallmarkUnlock,
+} from "../extended_hallmark_catalog.js";
+import { MAX_ACTIVE_INFLAMMATION_EPISODES } from "../inflammation_timeline.js";
+import type {
+  ExtendedHallmarkHandler,
+  ExtendedHallmarkHandlerResult,
+  SetRegionMaskOperation,
+} from "../extended_hallmark_types.js";
 import type { GameState, RegionState } from "../../types/state.js";
-import { m11MaskTokenCost } from "../m11_authoritative_effects.js";
+import { extendedHallmarkMaskTokenCost } from "../extended_hallmark_effects.js";
 
 export const MAX_CONCEALMENT_TOKENS = 12;
 export const CONCEALMENT_TOKEN_COST = 1;
@@ -12,11 +19,11 @@ function natural(value: unknown): value is number {
 }
 
 function requireOwnedAndUnlocked(state: GameState): void {
-  const definition = m11HallmarkDefinition("immune_destruction_avoidance");
+  const definition = extendedHallmarkDefinition("immune_destruction_avoidance");
   const owned = state.hallmarkLevels.some(
     (level) => level.id === definition.id && natural(level.level) && level.level >= 1,
   );
-  if (!owned || !hasReachedM11Unlock(state.currentStage, definition.key)) {
+  if (!owned || !hasReachedExtendedHallmarkUnlock(state.currentStage, definition.key)) {
     throw new Error("Immune visibility management is locked.");
   }
 }
@@ -72,7 +79,7 @@ function noActiveEpisode(state: GameState, region: RegionState): void {
 
 function applyMask(state: GameState, region: RegionState): GameState {
   if (state.maskedRegions.includes(region.id)) throw new Error("Region is already concealed.");
-  const cost = m11MaskTokenCost(state);
+  const cost = extendedHallmarkMaskTokenCost(state);
   if (state.concealmentTokens < cost) {
     throw new Error("Concealment tokens are insufficient.");
   }
@@ -87,7 +94,7 @@ function applyMask(state: GameState, region: RegionState): GameState {
 
 function applyUnmask(state: GameState, region: RegionState): GameState {
   if (!state.maskedRegions.includes(region.id)) throw new Error("Region is already visible.");
-  const cost = m11MaskTokenCost(state);
+  const cost = extendedHallmarkMaskTokenCost(state);
   if (state.concealmentTokens > MAX_CONCEALMENT_TOKENS - cost) {
     throw new Error("Concealment refund would overflow.");
   }
@@ -104,7 +111,7 @@ function applyUnmask(state: GameState, region: RegionState): GameState {
 /** Applies a token-conserving, one-region visibility choice without sequencing an event. */
 export function applyImmuneVisibility(
   context: Readonly<{ state: GameState; operation: SetRegionMaskOperation; appliedAtMs: number }>,
-): M11HandlerResult {
+): ExtendedHallmarkHandlerResult {
   const { state, operation, appliedAtMs } = context;
   if (
     operation.type !== "set-region-mask" ||
@@ -118,11 +125,11 @@ export function applyImmuneVisibility(
   noActiveEpisode(state, region);
   const next = operation.masked ? applyMask(state, region) : applyUnmask(state, region);
   if (next.eventSequence !== state.eventSequence)
-    throw new Error("M11 handlers cannot sequence events.");
+    throw new Error("extended-hallmark handlers cannot sequence events.");
   return next;
 }
 
-export const IMMUNE_VISIBILITY_HANDLER: M11Handler<SetRegionMaskOperation> = {
+export const IMMUNE_VISIBILITY_HANDLER: ExtendedHallmarkHandler<SetRegionMaskOperation> = {
   hallmark: "immune_destruction_avoidance",
   apply: applyImmuneVisibility,
 };

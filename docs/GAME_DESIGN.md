@@ -45,8 +45,8 @@ unchanged. M6 live ticks advance `activeTimeMs` and evaluate deadlines in that s
 ### Progression-schema migration
 
 The envelope remains `version: 2`, but M6 defines `CURRENT_PROGRESSION_VERSION = 4` as the
-only writer target. This deliberately does **not** redefine the already-accepted V2/p2 fixture:
-that fixture predates the two M5 durable fields, while V2/p3 predates M6's complete producer
+only writer target. This deliberately does **not** redefine the already-accepted V2/p2 record:
+that record predates the two M5 durable fields, while V2/p3 predates M6's complete producer
 catalog. The parser accepts p1 through p4. It first validates the exact allowlisted legacy
 envelope and structural core, then migrates p1/p2/p3 to p4 before strict current `STATE_KEYS`
 parsing. P1/p2 add exactly `activeTimeMs: stageStartedAtMs` and `pendingProgression: []`; p3
@@ -159,7 +159,7 @@ replace, the runtime projection boundary below.
 
 Immediately after the complete `GameState` declaration, `src/types/state.ts` defines the entire
 M5 resource surface with this compile-shaped contract. The tuple is deliberately finite and its
-current order is `cells`, `substrate`, then `atp`; replay, reports, and test fixtures iterate this
+current order is `cells`, `substrate`, then `atp`; replay, reports, and test-local records iterate this
 single canonical list.
 
 ```ts
@@ -266,7 +266,7 @@ visible no-longer-available outcome when appropriate. M5 never dispatches `advan
 `perform-prestige-reset`.
 
 M5 schema ownership is explicit: amend `src/types/state.ts`, `src/state/game_state.ts`, and
-`src/state/save_load.ts`, including strict parsing and serialization, V2 fixtures, and migration
+`src/state/save_load.ts`, including strict parsing and serialization, V2 inline records, and migration
 tests. The exact M5 implementation files are `src/state/offline.ts`,
 `src/render/offline_report.ts`, and `tests/test_offline_equivalence.mjs`. M9 and M13 own later
 consumption/removal and revalidation after explicit player actions.
@@ -400,27 +400,23 @@ M7 connects accepted/rejected results to real accessible UI and persistence.
 
 ### Verification contract
 
-`tests/test_offline_equivalence.mjs` is the M5 numerical and boundary oracle. It uses the exact
-resource tuple and checks every member. The comparison is total for every
-`TRACKED_RESOURCE_KEYS` member: if either expected or actual is zero, it requires exact canonical
-equality, so an exactly-one-zero pair fails. Otherwise it uses BigNum operations only:
-
-```ts
-abs(actual - expected) <= max(abs(actual), abs(expected)) * 0.02;
-```
-
-Runs using the same partition algorithm require exact canonical equality for every tuple resource.
-No tolerance predicate calls `toNumber`.
+`tests/test_offline_equivalence.mjs` is the offline numerical and boundary oracle. It compares
+equal scheduled boundaries through normalized durable projections, event outcomes, and pending
+progression order. Exact model segments therefore remain exact without coupling the test to object
+identity or serializer key order. A macro-step model that intentionally changes a display value
+uses a documented display-level error envelope calibrated against a fine-step reference; the
+calibration report names the corpus, macro-step policy, and observed envelope. No universal
+percentage is a permanent contract, and no comparison converts `BigNum` to `number`.
 
 | Evidence            | Required proof                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Clock helper        | `deriveOfflineElapsed` rejects invalid samples, returns visible zero skew, and never calls the adapter for either.                                                                                                                                                                                                                                                                                                                        |
 | Count and remainder | `61_000` ms is one 60-second and one 1-second step; cap plus one step makes exactly 10,080 calls, one or no positive remainder call, and never a millisecond loop.                                                                                                                                                                                                                                                                        |
-| Partitions          | Compare one N-hour replay with fixed short live partitions, irregular positive live partitions with the same sum, and the 61-second direct reference for every tuple resource. A threshold/remainder fixture covers both zero-to-nonzero and nonzero-to-zero mismatch directions, proving an exactly-one-zero resource cannot be omitted.                                                                                                 |
-| Nonlinear fixture   | A deterministic fixture has a producer baseline, selected-mutation or hallmark multiplier, and threshold/step effect. Changing the effect changes a tracked resource; live and offline agree for both cases; `rate * elapsed` diverges enough to fail the oracle.                                                                                                                                                                         |
+| Partitions          | Compare one N-hour replay with fixed short live partitions, irregular positive live partitions with the same sum, and the 61-second direct reference for each durable resource/progression relation. Inline records cover both zero-to-nonzero and nonzero-to-zero directions.                                                                                                                                                            |
+| Nonlinear model     | A deterministic local builder provides a producer baseline, selected-mutation or hallmark multiplier, and threshold/step effect. Exact scheduled boundaries agree; a declared display approximation is calibrated against a fine-step reference at the change boundary.                                                                                                                                                                   |
 | Queue               | Repeated two identities plus a later identity prove stage-then-prestige, first-seen ordering, kind-plus-ID deduplication, persisted save/parse/reload survival, and no stage/prestige reducer event. Old queue timestamps must be safe and `<= activeTimeMs`; newly recorded additions must equal it.                                                                                                                                     |
 | Freeze              | A fixture proves all deadline, cooldown, rotation, and `activeTimeMs` fields are bit-identical while a resource changes.                                                                                                                                                                                                                                                                                                                  |
-| Migration           | Existing p2, p1, p3, and V1 saves each migrate once to canonical p4; p4 then round-trips exactly. Future progression versions, malformed legacy structural cores, unsafe active time, malformed queues, and noncanonical p4 producer arrays reject.                                                                                                                                                                                       |
+| Migration           | Existing p2, p1, p3, and V1 inline records each migrate once to canonical p4; p4 then round-trips to an equivalent normalized durable state. Future progression versions, malformed legacy structural cores, unsafe active time, malformed queues, and noncanonical p4 producer arrays reject.                                                                                                                                            |
 | Projection boundary | A malicious or errant tick cannot modify a non-resource field by type or result shape. The named runtime projector rejects hostile extra-key, accessor-backed, and missing-key snapshots before any overlay or recorder call, then rebuilds a fresh tuple-indexed snapshot. Exact own-key stage/prestige observation records are parsed, then only controller-stamped durable additions and that complete snapshot reach the final event. |
 | Event payload       | Exact payload keys, canonical snapshot BigNums, every tuple key once, current `atMs`, known IDs, safe old-queue timestamps, equal new-observation timestamps, no duplicate additions, and no already-queued identity are accepted only when valid; every hostile variant rejects before mutation.                                                                                                                                         |
 | Atomic failure      | An adapter that succeeds then throws, returns hostile extra-key/accessor/missing-key snapshots, the exact signed delta-overflow fixture, and a throwing final recorder each return the original state and queue with no partial report, gains, or accounting event.                                                                                                                                                                       |

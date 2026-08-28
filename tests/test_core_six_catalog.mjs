@@ -31,7 +31,7 @@ const EXPECTED = [
   ["invasion_metastasis", "route-commitment", "apply-route-commitment", "commit-route"],
 ];
 
-test("M10 core-six catalog exactly covers six identities with distinct mechanic-handler operations", () => {
+test("core-six core-six catalog exactly covers six identities with distinct mechanic-handler operations", () => {
   assert.deepEqual(
     CORE_SIX_HALLMARK_KEYS,
     EXPECTED.map(([key]) => key),
@@ -62,7 +62,7 @@ test("M10 core-six catalog exactly covers six identities with distinct mechanic-
   assertCoreSixCatalog();
 });
 
-test("M10 core-six stage capabilities gate the declared unlock without local stage literals", () => {
+test("core-six core-six stage capabilities gate the declared unlock without local stage literals", () => {
   for (const definition of CORE_SIX_HALLMARK_CATALOG) {
     const stage = stageDefinition(definition.unlock.stageId);
     assert.equal(stage.operationalChange.actionId, definition.unlock.capability, definition.key);
@@ -81,7 +81,7 @@ test("M10 core-six stage capabilities gate the declared unlock without local sta
   assert.equal(findCoreSixHallmark(hallmarkId("metabolic_deregulation")), undefined);
 });
 
-test("M10 core-six catalog rejects missing, duplicate, unknown, and mismatched rows", () => {
+test("core-six core-six catalog rejects missing, duplicate, unknown, and mismatched rows", () => {
   const definitions = structuredClone(CORE_SIX_HALLMARK_CATALOG);
   assert.throws(() => assertCoreSixCatalog(definitions.slice(1)), /exactly six/);
   const duplicate = structuredClone(definitions);

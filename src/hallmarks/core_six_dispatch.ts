@@ -194,7 +194,7 @@ function applyRegisteredHandler(
 }
 
 /**
- * Applies one trusted parsed M10 operation through its catalog-authorized handler.
+ * Applies one trusted parsed core-six operation through its catalog-authorized handler.
  * Event parsing, recording, and eventSequence advancement remain outside this module.
  */
 export function applyCoreSixOperation(

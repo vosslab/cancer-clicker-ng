@@ -1,18 +1,22 @@
 import { offerId } from "../brands.js";
 import { compare, fromSafeInteger } from "../bignum/bignum.js";
 import {
-  M11_MUTATION_CARD_CATALOG,
-  M11_MUTATION_OFFER_CARD_COUNT,
-  M11_MUTATION_OFFER_THRESHOLDS,
-  M11_MUTATION_POOL_ID,
-  findM11MutationCard,
-  hasReachedM11Unlock,
-  m11HallmarkDefinition,
-} from "./m11_catalog.js";
-import { atpBudgetForSink } from "./m11_economy.js";
+  MUTATION_DRAFT_CARD_CATALOG,
+  MUTATION_DRAFT_OFFER_CARD_COUNT,
+  MUTATION_DRAFT_OFFER_THRESHOLDS,
+  MUTATION_DRAFT_POOL_ID,
+  findMutationDraftCard,
+  hasReachedExtendedHallmarkUnlock,
+  extendedHallmarkDefinition,
+} from "./extended_hallmark_catalog.js";
+import { atpBudgetForSink } from "./atp_allocation.js";
 import type { MutationId, OfferId, StageId } from "../types/ids.js";
 import type { GameState } from "../types/state.js";
-import type { M11MutationOffer, MutationCard, MutationOfferThreshold } from "./m11_types.js";
+import type {
+  MutationDraftOffer,
+  MutationCard,
+  MutationOfferThreshold,
+} from "./extended_hallmark_types.js";
 
 const GENOME_INSTABILITY_KEY = "genome_instability_mutation";
 const MUTATION_OFFER_VERSION = "mutation-offer-v1";
@@ -46,7 +50,7 @@ function isUint32(value: number): boolean {
 }
 
 function isOwned(state: GameState): boolean {
-  const definition = m11HallmarkDefinition(GENOME_INSTABILITY_KEY);
+  const definition = extendedHallmarkDefinition(GENOME_INSTABILITY_KEY);
   return state.hallmarkLevels.some(
     (level) =>
       level.id === definition.id &&
@@ -76,7 +80,7 @@ function sourceFor(state: GameState): MutationOfferSource | undefined {
 }
 
 function thresholdForBurden(burden: number): MutationOfferThreshold | undefined {
-  return M11_MUTATION_OFFER_THRESHOLDS.find((threshold) => threshold.burden === burden + 1);
+  return MUTATION_DRAFT_OFFER_THRESHOLDS.find((threshold) => threshold.burden === burden + 1);
 }
 
 /**
@@ -109,8 +113,8 @@ function compareCardPriority(
   left: MutationCard,
   right: MutationCard,
 ): number {
-  const leftIndex = M11_MUTATION_CARD_CATALOG.findIndex((card) => card.id === left.id);
-  const rightIndex = M11_MUTATION_CARD_CATALOG.findIndex((card) => card.id === right.id);
+  const leftIndex = MUTATION_DRAFT_CARD_CATALOG.findIndex((card) => card.id === left.id);
+  const rightIndex = MUTATION_DRAFT_CARD_CATALOG.findIndex((card) => card.id === right.id);
   if (leftIndex < 0 || rightIndex < 0) throw new Error("Mutation offer card is outside the pool.");
   const priorityDifference = sourceHash(source, leftIndex) - sourceHash(source, rightIndex);
   if (priorityDifference !== 0) return priorityDifference;
@@ -120,9 +124,9 @@ function compareCardPriority(
 function orderedCards(
   source: MutationOfferSource,
 ): readonly [MutationCard, MutationCard, MutationCard] {
-  const cards = [...M11_MUTATION_CARD_CATALOG];
+  const cards = [...MUTATION_DRAFT_CARD_CATALOG];
   cards.sort((left, right) => compareCardPriority(source, left, right));
-  const selected = cards.slice(0, M11_MUTATION_OFFER_CARD_COUNT);
+  const selected = cards.slice(0, MUTATION_DRAFT_OFFER_CARD_COUNT);
   const first = selected[0];
   const second = selected[1];
   const third = selected[2];
@@ -145,7 +149,7 @@ export function mutationOfferId(source: MutationOfferSource): OfferId {
 
 export function mutationDraftEligibility(state: GameState): MutationDraftEligibility {
   if (!isOwned(state)) return { eligible: false, reason: "not-owned" };
-  if (!hasReachedM11Unlock(state.currentStage, GENOME_INSTABILITY_KEY)) {
+  if (!hasReachedExtendedHallmarkUnlock(state.currentStage, GENOME_INSTABILITY_KEY)) {
     return { eligible: false, reason: "not-unlocked" };
   }
   if (state.mutationOffers.length > 0) return { eligible: false, reason: "outstanding-offer" };
@@ -158,20 +162,20 @@ export function mutationDraftEligibility(state: GameState): MutationDraftEligibi
 }
 
 /** Generates the one saved offer snapshot for an already-approved state source. */
-export function createMutationOffer(source: MutationOfferSource): M11MutationOffer {
+export function createMutationOffer(source: MutationOfferSource): MutationDraftOffer {
   if (!isUint32(source.deterministicSeed) || !isSafeNatural(source.eventSequence)) {
     throw new Error("Mutation offer source provenance is invalid.");
   }
   if (!isSafeNatural(source.genomeBurden))
     throw new Error("Mutation offer genome burden is invalid.");
-  if (!hasReachedM11Unlock(source.currentStage, GENOME_INSTABILITY_KEY)) {
+  if (!hasReachedExtendedHallmarkUnlock(source.currentStage, GENOME_INSTABILITY_KEY)) {
     throw new Error("Mutation offer source stage is not eligible.");
   }
   const threshold = thresholdForBurden(source.genomeBurden);
   if (!threshold) throw new Error("Mutation offer threshold is unavailable.");
-  const offer: M11MutationOffer = {
+  const offer: MutationDraftOffer = {
     id: mutationOfferId(source),
-    poolId: M11_MUTATION_POOL_ID,
+    poolId: MUTATION_DRAFT_POOL_ID,
     cards: orderedCards(source),
     sourceSeed: source.deterministicSeed,
     sourceSequence: source.eventSequence,
@@ -181,8 +185,8 @@ export function createMutationOffer(source: MutationOfferSource): M11MutationOff
   return offer;
 }
 
-export function assertM11GeneratedMutationOffer(
-  offer: M11MutationOffer,
+export function assertGeneratedMutationDraftOffer(
+  offer: MutationDraftOffer,
   source: MutationOfferSource,
 ): void {
   const expected = createMutationOffer(source);
@@ -195,13 +199,13 @@ export function assertM11GeneratedMutationOffer(
     offer.threshold !== expected.threshold
   )
     throw new Error("Mutation offer provenance does not match its deterministic source.");
-  for (let index = 0; index < M11_MUTATION_OFFER_CARD_COUNT; index += 1) {
+  for (let index = 0; index < MUTATION_DRAFT_OFFER_CARD_COUNT; index += 1) {
     const actual = offer.cards[index];
     const expectedCard = expected.cards[index];
     if (!actual || !expectedCard || actual.id !== expectedCard.id) {
       throw new Error("Mutation offer cards are not in canonical deterministic order.");
     }
-    const catalogCard = findM11MutationCard(actual.id);
+    const catalogCard = findMutationDraftCard(actual.id);
     if (!catalogCard || JSON.stringify(actual) !== JSON.stringify(catalogCard)) {
       throw new Error("Mutation offer card snapshot differs from the closed catalog.");
     }
@@ -216,6 +220,6 @@ export function projectPendingMutationOffer(state: GameState): GameState {
   return { ...state, mutationOffers: [offer] };
 }
 
-export function mutationOfferContains(offer: M11MutationOffer, mutation: MutationId): boolean {
+export function mutationOfferContains(offer: MutationDraftOffer, mutation: MutationId): boolean {
   return offer.cards.some((card) => card.id === mutation);
 }

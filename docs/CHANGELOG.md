@@ -115,6 +115,40 @@
 
 ### Decisions and Failures
 
+- Reclassified game-plan verification into permanent regression, one-time calibration, and design
+  review. Normalized durable-state replay, boundary-aware offline semantics, geometry safety,
+  accessible built-output behavior, and direct decision witnesses remain durable contracts; art,
+  balance, profile, and corpus measurements now record dated evidence instead of arbitrary byte,
+  pixel, count, rank, or timing gates.
+- Settled durable domain naming: implementation milestone labels remain in plans, changelog
+  history, and dated reports, while `src/`, `tests/`, and `tools/` paths name enduring behavior.
+  Pre-production migrations now use inline records or local legal-state builders unless a fixture
+  represents a published compatibility artifact.
+- Extended the 1280 x 800 living-tumor board contract with Cookie Clicker-style always-discoverable
+  stats and upgrade surface: visible count/rate, first-view producer store and quantity controls,
+  per-row owned/cost/affordability/contribution, richer hover/focus statistics, and biological
+  unlock explanations for future content.
+- Approved M12's p5 late-hallmark architecture before implementation: one closed
+  `GameState.lateHallmarks` aggregate replaces provisional maps and the region senescence backlink;
+  four exact events, a saved three-composition microbiome offer with its own ID, single-writer
+  reducer/deadline/tick/offline ownership, and a p4-to-p5 scaffold-data drop establish the durable
+  contract. The L3 activation adapter preserves prestige ownership, while frozen living-tumor
+  provenance and grounded permanent-versus-calibration evidence preserve the 1280 x 800 board
+  contract.
+
+- Approved the pre-production colony-action amendment before source changes: one native colony
+  control named Divide cell receives visible-cell pointer/touch delegation and one keyboard focus
+  path through the existing controller. The 1280 x 800 (16:10) first view joins colony/count/rate, the living
+  tumor progression world, producer quantity controls, and save/status. Biological morphology and
+  layout provenance own future vessel/route and tumor-world visuals; animation supplements durable
+  state. Production-dist behavior proof is permanent, while contact sheets and visual walkthroughs
+  remain one-time acceptance evidence without pixel, byte, or timing thresholds.
+- Replaced M11's synthetic all-four purchase-ranking exit with direct authoritative hallmark
+  outcomes: conversion moves substrate into ATP without creating cells, masking stays regional,
+  inflammation changes and then restores a real outcome, and saved mutation selection applies a
+  named effect or rejects atomically. Multi-card/rank searches and broad balance experiments are
+  one-time acceptance evidence. The test-residency cleanup retires
+  `tests/test_m11_all_four_decisions.mjs` after semantic re-acceptance.
 - Announced M11's frozen-contract amendment after M10 acceptance: exactly three new event
   discriminants (`convert-substrate`, `set-region-mask`, and `activate-inflammation`) name their
   parser, reducer/sequence, save/load, controller, SolidJS, production-browser, test, and M20

@@ -16,7 +16,7 @@ export function feasibleStageActions(state: GameState): readonly string[] {
   return actions;
 }
 
-/** M9's current nonvisual effect: every stage changes real production and one quoted producer cost. */
+/** stage progression's current nonvisual effect: every stage changes real production and one quoted producer cost. */
 export function stageEconomyModifier(
   state: GameState,
   producerId: ProducerId,

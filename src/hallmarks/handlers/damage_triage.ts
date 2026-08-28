@@ -93,7 +93,7 @@ function preserveEventSequence(state: GameState, next: GameState): GameState {
 }
 
 /**
- * Creates the M10 damage-triage handler around the reducer's one destructive
+ * Creates the core-six damage-triage handler around the reducer's one destructive
  * region-removal seam. The returned state deliberately retains eventSequence;
  * the event funnel records the command after this atomic projection succeeds.
  */

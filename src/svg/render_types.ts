@@ -1,10 +1,12 @@
 /**
- * Data-only boundary between accepted M16/M17 scene data and the M18 SVG
+ * Data-only boundary between accepted M16/M17 scene data and the colony renderer SVG
  * components. Rendering may project this immutable description, but never
  * changes the accepted colony layout or resolves another morphology.
  */
 import { isStageId } from "../state/catalog.js";
 import type { StageId } from "../types/ids.js";
+import { assertColonyVisualState } from "./colony_visual_state.js";
+import type { ColonyVisualState } from "./colony_visual_state.js";
 import type { CellSlot, ColonyLayout, DepthStratum } from "./colony_layout.js";
 import type { MitosisMotif, MitosisPlacement, MorphologyResolution } from "./morphology.js";
 
@@ -13,6 +15,8 @@ export type ColonySceneDetail = "representative" | "inspection";
 export type ColonySceneRequest = Readonly<{
   layout: ColonyLayout;
   morphology: MorphologyResolution;
+  /** Frozen semantic data projected by SVG layers without rereading GameState. */
+  visual: ColonyVisualState;
   stageId: StageId;
   sceneSeed: number;
   detail: ColonySceneDetail;
@@ -61,7 +65,7 @@ const LAYOUT_KEYS = [
   "metrics",
 ] as const;
 const MORPHOLOGY_KEYS = ["params", "provenance", "traits", "seed"] as const;
-const REQUEST_KEYS = ["layout", "morphology", "stageId", "sceneSeed", "detail"] as const;
+const REQUEST_KEYS = ["layout", "morphology", "visual", "stageId", "sceneSeed", "detail"] as const;
 const CELL_PATH_KEYS = ["slotKey", "membranePath", "nucleusPath", "mitosis"] as const;
 const MITOSIS_KEYS = ["motif", "placement"] as const;
 const SLOT_KEYS = [
@@ -198,7 +202,7 @@ function expectedSceneKey(stageId: StageId, sceneSeed: number, detail: ColonySce
   return `layout-v1:${stageId}:${sceneSeed}:${detail}`;
 }
 
-/** Validates and reconstructs the narrow immutable M18 scene boundary. */
+/** Validates and reconstructs the narrow immutable colony renderer scene boundary. */
 export function createColonySceneRequest(value: unknown): ColonySceneRequest {
   if (!hasExactDataKeys(value, REQUEST_KEYS))
     throw new Error("Scene request must be a frozen plain record.");
@@ -207,6 +211,7 @@ export function createColonySceneRequest(value: unknown): ColonySceneRequest {
   const detail = requireDetail(value.detail);
   const layout = requireLayout(value.layout);
   const morphology = requireMorphology(value.morphology);
+  assertColonyVisualState(value.visual, layout);
   if (
     layout.stageId !== stageId ||
     morphology.seed !== sceneSeed ||
@@ -221,7 +226,7 @@ export function createColonySceneRequest(value: unknown): ColonySceneRequest {
       );
     }
   }
-  return Object.freeze({ layout, morphology, stageId, sceneSeed, detail });
+  return Object.freeze({ layout, morphology, visual: value.visual, stageId, sceneSeed, detail });
 }
 
 function requireMitosis(value: unknown): MitosisRenderModel | undefined {

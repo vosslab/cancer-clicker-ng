@@ -1,29 +1,15 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { stageId } from "../src/brands.ts";
 import { STAGE_IDS } from "../src/state/catalog.ts";
-import { createColonyLayout } from "../src/svg/colony_layout.ts";
-import { resolve_stage_morphology } from "../src/svg/morphology.ts";
-import { createColonySceneRequest } from "../src/svg/render_types.ts";
+import { createInitialGameState } from "../src/state/game_state.ts";
 import { describeColonyScene } from "../src/svg/describe.ts";
+import { createGameColonyScene } from "../src/svg/colony_visual_state.ts";
 
-function fixture(stageId, seed = 17) {
-  const morphology = resolve_stage_morphology(seed, stageId);
-  const layout = createColonyLayout({
-    stageId,
-    sceneSeed: seed,
-    morphology,
-    detail: "representative",
-  });
-  return createColonySceneRequest(
-    Object.freeze({
-      layout,
-      morphology,
-      stageId,
-      sceneSeed: seed,
-      detail: "representative",
-    }),
-  );
+function fixture(stage) {
+  const game = { ...createInitialGameState(), currentStage: stageId(stage), deterministicSeed: 17 };
+  return createGameColonyScene(game);
 }
 
 const BANNED_LANGUAGE =

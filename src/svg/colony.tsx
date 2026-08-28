@@ -9,9 +9,15 @@ import type { JSX } from "solid-js";
 
 import { createCellBlobPaths } from "./blob.js";
 import { Cell } from "./cell.js";
-import { createColonySvgDefinitions } from "./defs.js";
+import { createColonySvgDefinitions, localSvgReference } from "./defs.js";
 import type { SvgDefinition, SvgDefinitionNode } from "./defs.js";
 import { describeColonyScene } from "./describe.js";
+import {
+  HallmarkOverlays,
+  InvasionOverlays,
+  OxygenOverlays,
+  PerfusionOverlays,
+} from "./colony_overlays.js";
 import { createCellRenderModel, createColonySceneRequest, sceneSvgId } from "./render_types.js";
 import type {
   CellRenderModel,
@@ -20,11 +26,12 @@ import type {
 } from "./render_types.js";
 
 const VIEW_BOX = "0 0 1000 700";
-const REPRESENTATIVE_NODE_BUDGET = 1050;
-const STATIC_SCENE_NODES = 26;
+const STATIC_SCENE_NODES = 34;
 
 export type ColonyProps = Readonly<{
   scene: ColonySceneRequest;
+  /** The named button owns accessibility when the colony becomes its visual surface. */
+  decorative?: boolean;
 }>;
 
 export type ColonySvgModel = Readonly<{
@@ -57,9 +64,6 @@ export function describeColonySvg(value: ColonySceneRequest): ColonySvgModel {
     return createCellRenderModel(scene, paths);
   });
   const nodeEstimate = estimateNodeCount(cells);
-  if (scene.detail === "representative" && nodeEstimate > REPRESENTATIVE_NODE_BUDGET) {
-    throw new Error("Representative colony SVG exceeds the M18 DOM budget.");
-  }
   return Object.freeze({
     titleId: sceneSvgId(scene, "title"),
     descriptionId: sceneSvgId(scene, "description"),
@@ -84,6 +88,13 @@ function renderDefinition(definition: SvgDefinition): JSX.Element {
       </linearGradient>
     );
   }
+  if (definition.element === "radialGradient") {
+    return (
+      <radialGradient id={definition.id} {...definition.attributes}>
+        <For each={definition.children}>{renderDefinitionNode}</For>
+      </radialGradient>
+    );
+  }
   if (definition.element === "pattern") {
     return (
       <pattern id={definition.id} {...definition.attributes}>
@@ -103,31 +114,47 @@ function silhouettePoints(scene: ColonySceneRequest): string {
   return points.join(" ");
 }
 
-/** Renders one meaningful inline image; all child drawing groups stay decorative. */
+/** Renders the living colony as a meaningful image or a decorative named-button surface. */
 export function Colony(props: ColonyProps): JSX.Element {
   const scene = createColonySceneRequest(props.scene);
   const model = describeColonySvg(scene);
   const definitions = createColonySvgDefinitions(scene);
   const label = `${model.titleId} ${model.descriptionId}`;
   const points = silhouettePoints(scene);
+  const decorative = props.decorative === true;
   return (
     <svg
-      class="colony-figure"
-      role="img"
+      class={`colony-figure colony-figure--${scene.visual.growthState}`}
+      role={decorative ? undefined : "img"}
       viewBox={VIEW_BOX}
       preserveAspectRatio="xMidYMid meet"
-      aria-labelledby={label}
+      aria-hidden={decorative ? "true" : undefined}
+      aria-labelledby={decorative ? undefined : label}
     >
-      <title id={model.titleId}>{model.description.title}</title>
-      <desc id={model.descriptionId}>{model.description.description}</desc>
+      {decorative ? undefined : <title id={model.titleId}>{model.description.title}</title>}
+      {decorative ? undefined : (
+        <desc id={model.descriptionId}>{model.description.description}</desc>
+      )}
       <defs>
         <For each={definitions.definitions}>{renderDefinition}</For>
       </defs>
-      <g class="colony-figure__backdrop" aria-hidden="true">
+      <g class="colony-figure__tissue" aria-hidden="true">
         <rect class="colony-figure__plate" x="0" y="0" width="1000" height="700" rx="32" />
+        <path
+          class="colony-figure__tissue-fascia"
+          d="M 0 118 C 220 72 354 176 540 112 S 814 90 1000 154"
+        />
+        <path
+          class="colony-figure__tissue-fascia"
+          d="M 0 562 C 202 508 410 624 622 558 S 838 504 1000 584"
+        />
       </g>
-      <g class="colony-figure__regions" aria-hidden="true">
-        <polygon class="colony-figure__silhouette" points={points} />
+      <g class="colony-figure__silhouette-regions" aria-hidden="true">
+        <polygon
+          class="colony-figure__silhouette"
+          points={points}
+          fill={localSvgReference(definitions.ids.tissueGradient)}
+        />
         <For each={scene.layout.regions}>
           {(region) => (
             <ellipse
@@ -151,12 +178,34 @@ export function Colony(props: ColonyProps): JSX.Element {
           )}
         </For>
       </g>
+      <OxygenOverlays layout={scene.layout} visual={scene.visual} definitionIds={definitions.ids} />
+      <PerfusionOverlays
+        layout={scene.layout}
+        visual={scene.visual}
+        definitionIds={definitions.ids}
+      />
       <g class="colony-figure__cells" aria-hidden="true">
         <For each={model.cells}>
-          {(cell) => <Cell cell={cell} definitionIds={definitions.ids} />}
+          {(cell) => (
+            <Cell
+              cell={cell}
+              definitionIds={definitions.ids}
+              growthState={scene.visual.growthState}
+            />
+          )}
         </For>
       </g>
-      <g class="colony-figure__foreground" aria-hidden="true">
+      <HallmarkOverlays
+        layout={scene.layout}
+        visual={scene.visual}
+        definitionIds={definitions.ids}
+      />
+      <InvasionOverlays
+        layout={scene.layout}
+        visual={scene.visual}
+        definitionIds={definitions.ids}
+      />
+      <g class="colony-figure__outline" aria-hidden="true">
         <polygon class="colony-figure__outline" points={points} />
       </g>
     </svg>

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { bigNum, eventId, hallmarkId, regionId } from "../src/brands.ts";
 import { projectElapsedHallmarkDurableEffects } from "../src/hallmarks/elapsed_effects.ts";
-import { projectM11DurableTickEffects } from "../src/hallmarks/m11_tick_effects.ts";
+import { projectExtendedHallmarkDurableTickEffects } from "../src/hallmarks/extended_hallmark_tick.ts";
 import { createInitialGameState } from "../src/state/game_state.ts";
 import { deriveOfflineElapsed, replayOffline } from "../src/state/offline.ts";
 
@@ -117,7 +117,7 @@ test("two-step hostile durable projections cannot alter offline relations or rea
   }));
 });
 
-test("hostile M11 durable projections reject atomically before offline accounting", () => {
+test("hostile extended-hallmark durable projections reject atomically before offline accounting", () => {
   const hostile = [
     (projection) => ({ ...projection, unexpected: true }),
     (projection) => {
@@ -154,7 +154,9 @@ test("hostile M11 durable projections reject atomically before offline accountin
         resourceSnapshot: resourceSnapshot(working),
         stageEligibility: [],
         prestigeEligibility: [],
-        m11Projection: buildProjection(projectM11DurableTickEffects(working, duration)),
+        extendedHallmarkProjection: buildProjection(
+          projectExtendedHallmarkDurableTickEffects(working, duration),
+        ),
       }),
       () => {
         recorderCalls += 1;

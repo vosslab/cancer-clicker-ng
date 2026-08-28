@@ -1,120 +1,50 @@
 /**
- * Read-only M18 presentation boundary for the current representative colony.
- *
- * The panel derives its stable scene identity from the controller's current
- * stage. It never writes game state, records events, or asks the SVG layer to
- * make a second layout decision.
+ * The colony is the single direct division control. It projects the accepted
+ * living-tumor scene and delegates pointer intent only from rendered cells;
+ * keyboard activation stays on this one native button.
  */
 import { ErrorBoundary, Show, createMemo } from "solid-js";
 import type { JSX } from "solid-js";
 
-import { stageDefinition } from "../stages/catalog.js";
+import { formatBigNum } from "../bignum/format.js";
+import { cellProductionRate } from "../economy/production.js";
 import type { GameState } from "../types/state.js";
 import { Colony } from "../svg/colony.js";
-import { createColonyLayout } from "../svg/colony_layout.js";
+import { createGameColonyScene } from "../svg/colony_visual_state.js";
 import { describeColonyScene } from "../svg/describe.js";
-import { resolve_stage_morphology } from "../svg/morphology.js";
-import type { StageVisualId } from "../svg/morphology.js";
-import { hash_seed } from "../svg/noise.js";
-import { createColonySceneRequest } from "../svg/render_types.js";
 import type { ColonySceneRequest } from "../svg/render_types.js";
-
-const REPRESENTATIVE_DETAIL = "representative" as const;
-const PANEL_SEED_NAMESPACE = "ccng-panel-scene-v1";
+import { NumberDisplay } from "./number_display.js";
 
 type ColonyPanelProps = Readonly<{
   game: GameState;
+  disabled?: boolean;
+  onDivide: () => void;
 }>;
 
 type ReadyPanelScene = Readonly<{
   kind: "ready";
   scene: ColonySceneRequest;
-  stageTitle: string;
   caption: string;
 }>;
 
-type UnavailablePanelScene = Readonly<{
-  kind: "unavailable";
-}>;
-
+type UnavailablePanelScene = Readonly<{ kind: "unavailable" }>;
 type ColonyPanelScene = ReadyPanelScene | UnavailablePanelScene;
 
-/** Stable per-stage identity keeps a replayed representative specimen recognizable. */
-export function representativeSceneSeed(stageId: GameState["currentStage"]): number {
-  const seed = hash_seed([PANEL_SEED_NAMESPACE, stageId]);
-  return seed;
+/** Creates the one immutable game-derived scene consumed by both panel and SVG layers. */
+export function createRepresentativeColonyScene(game: GameState): ColonySceneRequest {
+  return createGameColonyScene(game);
 }
 
-/** Narrows the state boundary to the closed M16 stage-fixture vocabulary. */
-function morphologyStageId(stageId: GameState["currentStage"]): StageVisualId {
-  switch (stageId) {
-    case "transformed_cell":
-      return "transformed_cell";
-    case "microcolony":
-      return "microcolony";
-    case "avascular_lesion":
-      return "avascular_lesion";
-    case "hypoxic_lesion":
-      return "hypoxic_lesion";
-    case "angiogenic_primary":
-      return "angiogenic_primary";
-    case "invasive_carcinoma":
-      return "invasive_carcinoma";
-    case "intravasation":
-      return "intravasation";
-    case "micrometastatic_seeding":
-      return "micrometastatic_seeding";
-    case "metastatic_burden":
-      return "metastatic_burden";
-    case "host_collapse":
-      return "host_collapse";
-    case "immortalized_culture":
-      return "immortalized_culture";
-    case "global_lab_contamination":
-      return "global_lab_contamination";
-  }
-  throw new Error("Current stage has no M16 morphology fixture.");
-}
-
-/** Constructs one frozen M16/M17/M18 representative scene without altering game state. */
-export function createRepresentativeColonyScene(
-  stageId: GameState["currentStage"],
-): ColonySceneRequest {
-  const sceneSeed = representativeSceneSeed(stageId);
-  const morphology = resolve_stage_morphology(sceneSeed, morphologyStageId(stageId));
-  const layout = createColonyLayout({
-    stageId,
-    sceneSeed,
-    morphology,
-    detail: REPRESENTATIVE_DETAIL,
-  });
-  const scene = createColonySceneRequest(
-    Object.freeze({
-      layout,
-      morphology,
-      stageId,
-      sceneSeed,
-      detail: REPRESENTATIVE_DETAIL,
-    }),
-  );
-  return scene;
-}
-
-function derivePanelScene(stageId: GameState["currentStage"]): ColonyPanelScene {
+function derivePanelScene(game: GameState): ColonyPanelScene {
   try {
-    const scene = createRepresentativeColonyScene(stageId);
-    const description = describeColonyScene(scene);
-    const stageTitle = stageDefinition(stageId).title;
-    const ready: ReadyPanelScene = {
+    const scene = createRepresentativeColonyScene(game);
+    return {
       kind: "ready",
       scene,
-      stageTitle,
-      caption: description.caption,
+      caption: describeColonyScene(scene).caption,
     };
-    return ready;
   } catch {
-    const unavailable: UnavailablePanelScene = { kind: "unavailable" };
-    return unavailable;
+    return { kind: "unavailable" };
   }
 }
 
@@ -126,29 +56,75 @@ function unavailablePanelState(): JSX.Element {
   );
 }
 
-/** Shows one noninteractive SVG specimen beside its brief, stage-aware game caption. */
+function targetIsVisibleColonyCell(target: EventTarget | null): boolean {
+  return target instanceof Element && target.closest("[data-colony-cell]") !== null;
+}
+
+/** Shows the visual cell field as one accessible action without per-cell tab stops. */
 export function ColonyPanel(props: ColonyPanelProps): JSX.Element {
-  const panelScene = createMemo(() => derivePanelScene(props.game.currentStage));
+  const panelScene = createMemo(() => derivePanelScene(props.game));
   const readyScene = createMemo(() => {
     const result = panelScene();
     return result.kind === "ready" ? result : undefined;
   });
+  const productionRate = createMemo(() => cellProductionRate(props.game));
+
+  function divideFromColony(event: MouseEvent): void {
+    // Keyboard and assistive activation has detail 0. Pointer/touch intent must
+    // originate from a rendered cell rather than the surrounding plate.
+    if (event.detail === 0 || targetIsVisibleColonyCell(event.target)) props.onDivide();
+  }
+
   return (
-    <section class="panel colony-panel" aria-labelledby="colony-panel-title">
+    <section
+      class="panel colony-panel"
+      data-growth-state={readyScene()?.scene.visual.growthState ?? "quiet"}
+      aria-labelledby="colony-panel-title"
+    >
       <div class="colony-panel__heading">
-        <p class="eyebrow">Current specimen</p>
-        <h2 id="colony-panel-title">Colony morphology</h2>
+        <div>
+          <p class="eyebrow">Primary culture</p>
+          <h2 id="colony-panel-title">Your colony</h2>
+        </div>
+        <p class="colony-panel__growth-state">
+          {readyScene()?.scene.visual.growthState ?? "quiet"} growth state
+        </p>
+      </div>
+      <div class="colony-panel__count-rate">
+        <NumberDisplay
+          class="cell-count"
+          value={props.game.cells}
+          format={props.game.numberFormat}
+          label="Cell count"
+        />
+        <output class="colony-panel__rate" aria-label="Cell production rate">
+          {formatBigNum(productionRate(), props.game.numberFormat, 2)} cells/s
+        </output>
       </div>
       <Show when={readyScene()} fallback={unavailablePanelState()}>
         {(ready) => (
-          <figure class="colony-panel__figure" aria-labelledby="colony-panel-title">
-            <ErrorBoundary fallback={unavailablePanelState()}>
-              <Colony scene={ready().scene} />
-            </ErrorBoundary>
-            <figcaption>
-              <strong>{ready().stageTitle}:</strong> {ready().caption} Stylized game abstraction.
-            </figcaption>
-          </figure>
+          <>
+            <button
+              id="divide-button"
+              class="colony-panel__action"
+              data-colony-action="divide"
+              type="button"
+              disabled={props.disabled}
+              aria-label="Divide cell"
+              aria-describedby="colony-instruction colony-caption"
+              onClick={divideFromColony}
+            >
+              <ErrorBoundary fallback={unavailablePanelState()}>
+                <Colony scene={ready().scene} decorative />
+              </ErrorBoundary>
+            </button>
+            <p id="colony-instruction" class="colony-panel__instruction">
+              Click a visible cell to divide. Enter or Space also divides.
+            </p>
+            <p id="colony-caption" class="colony-panel__caption">
+              {ready().caption} Stylized game abstraction.
+            </p>
+          </>
         )}
       </Show>
     </section>

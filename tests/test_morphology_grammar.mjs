@@ -451,7 +451,9 @@ test("stage grammar table exactly matches all executable fixture declarations", 
       );
       fingerprints.add(fingerprint);
     } else {
-      assert.ok(document.includes("deferred to M17/M18") || document.includes("regional/event"));
+      assert.ok(
+        document.includes("deferred to M17/colony renderer") || document.includes("regional/event"),
+      );
     }
   }
   for (const rowId of MORPHOLOGY_REFERENCE_ROW_IDS) {

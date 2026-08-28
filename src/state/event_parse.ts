@@ -16,8 +16,8 @@ import type { PurchaseQuantity } from "../economy/costs.js";
 import type { PendingProgression, TrackedResourceSnapshot } from "../types/state.js";
 import { MAX_PENDING_PROGRESSION, TRACKED_RESOURCE_KEYS } from "../types/state.js";
 import { isPrestigeId, isStageId } from "./catalog.js";
-import { parsePositiveCanonicalBigNumDto } from "../hallmarks/m11_types.js";
-import { ATP_SINK_CATALOG } from "../hallmarks/m11_catalog.js";
+import { parsePositiveCanonicalBigNumDto } from "../hallmarks/extended_hallmark_types.js";
+import { ATP_SINK_CATALOG } from "../hallmarks/extended_hallmark_catalog.js";
 
 const RESERVED = new Set(["__proto__", "prototype", "constructor"]);
 const CHECKPOINTS = new Set(["contact-inhibition", "nutrient-arrest", "damage-arrest"]);

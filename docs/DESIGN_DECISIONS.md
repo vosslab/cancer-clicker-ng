@@ -47,6 +47,36 @@ contract for M7 and later UI.
 
 **Owner.** `docs/SOLID_MODEL.md`
 
+### Colony is the division control
+
+**Decision.** Cancer Clicker NG uses one native colony button as the primary `Divide cell` control.
+Visible cell geometry delegates pointer and touch activation to the same typed intent; Enter and
+Space activate it through the one keyboard focus target. The normal board is a responsive 1280 x
+800 (16:10) landscape composition with colony action, living tumor/progression world, and store
+in that order.
+
+**Why.** Division is the game's frequent direct action, so the living colony should communicate
+and receive that action. One native control supplies truthful keyboard, touch, focus, disabled,
+and assistive-technology behavior without making a dense specimen field into hundreds of focus
+targets. The Cookie Clicker reference contributes the large-object, center-progression,
+right-store spatial grammar while the clinical scientific SVG retains Cancer Clicker NG's identity.
+
+**Consequence.** `App` passes only the existing `onDivide` intent and disabled/recovery state to
+`ColonyPanel`; the controller remains the event, persistence, and reconciliation owner. The panel
+groups authoritative count/rate, instruction, immediate restrained feedback, save state,
+reduced-motion feedback, and stage caption with the action. Its first 1280 x 800 view also exposes
+active stage/hallmark progression, producer quantity controls, and save/status without discovery
+scrolling. The right rail exposes each producer's owned count, next cost, affordability, and
+production contribution; hover/focus reveals richer derived statistics. Locked future content
+states its biological unlock condition and becomes actionable when its real requirements are met.
+`colony.tsx` and `cell.tsx` retain local UI cell keys only. Morphology and layout
+provenance own the biological state shown by the living tumor world; animation supplements that
+state and CSS presents it. Production-dist Playwright protects the player interaction; screenshot
+matrices and heuristic/contact evidence remain one-time acceptance artifacts rather than pixel-,
+byte-, or arbitrary-timing regressions.
+
+**Owner.** [SOLID_MODEL.md](SOLID_MODEL.md) and [ART_DIRECTION.md](ART_DIRECTION.md)
+
 ### Versioned local persistence boundary
 
 **Decision.** Persist anonymous game progress only through the versioned, bounded,
@@ -94,16 +124,17 @@ automation decision, and L4 continues supplying decisions after authored nodes a
 **Consequence.** `LineageLedger` stores reset-surviving identity and one-time claims; saved,
 deterministic draft and frontier derivation own visible choice identity; `NetworkState` owns L4
 tiers, pressure, graph, mandates, and campaigns. M14/M15 extend closed `GameEvent` and save
-contracts now; M20 owns only `ReplayLog` transport, recording lifecycle, and byte-identical replay
-proof. M21 falsifies universal strategies rather than accepting cosmetic layer variation.
+contracts now; M20 owns `ReplayLog` transport, recording lifecycle, and normalized durable-state
+replay proof. M21 reviews decision witnesses and tuning observations rather than accepting cosmetic
+layer variation.
 
 **Owner.** [PRESTIGE_DESIGN.md](PRESTIGE_DESIGN.md)
 
 ### Stages and morphology are data contracts
 
 **Decision.** M9 stages transition only through semantic gates and explicit adjacent events, and
-their real producer-specific rate and quote relations must cause a bounded observed purchase-order
-shift. M16 resolves immutable morphology from declared, row-ID-provenanced contributions and
+their real producer-specific rate and quote relations must create a documented decision witness.
+M16 resolves immutable morphology from declared, row-ID-provenanced contributions and
 durable seed identity; it does not render, place, or infer biology from ambient state.
 
 **Why.** A stage label or preference field without a measured decision consequence is a reskin.
@@ -119,7 +150,7 @@ The M7 landmark selector is test-only maintenance and does not create product be
 
 ### Core hallmark event activation
 
-**Decision.** M10 activates `HallmarkEffect` through one closed `spend-telomerase` event before
+**Decision.** M10 activates `HallmarkEffect` by registering the `spend-telomerase` event before
 any core-hallmark source changes, with atomic parser-to-storage behavior and named downstream
 replay ownership.
 
@@ -152,6 +183,58 @@ queue, storage, and recovery protection exactly.
 
 **Owner.** [contract_freeze.md](active_plans/reports/contract_freeze.md)
 
+### Authoritative hallmark outcomes define acceptance
+
+**Decision.** The durable acceptance contract for the four 2011 hallmark operations is their
+player-observable authoritative result: metabolism moves substrate into ATP without creating
+cells; masking changes only the selected region's visibility contribution to the authoritative
+weighted global producer quote; inflammation changes a real route, tick, or gate result until its
+deadline; and a valid saved mutation selection changes its named effect while invalid selection is
+atomic.
+
+**Why.** These outcomes follow the real event, save, economy, tick, and gate boundaries that the
+player uses. A synthetic purchase ranking can turn internal coefficients and a particular card
+distribution into test-owned behavior, which would make routine balance work fragile without
+describing the game contract. Direct outcomes apply **Fix the design, not the symptom** and
+**Design for adaptability** from `docs/REPO_STYLE.md`.
+
+**Consequence.** Permanent domain tests retain direct conversion, local-region, expiry, and
+atomic-selection properties. Bounded multi-card/rank searches and broad balance experiments
+remain one-time acceptance evidence in maintainer reports or tools, where they can guide tuning
+without freezing arbitrary result order. Durable test paths name hallmark behavior rather than the
+implementation milestone that introduced it.
+
+**Owner.** `src/hallmarks/hallmark_effects.ts`, `src/economy/atp_allocation.ts`, and
+`src/state/events.ts`
+
+### Closed late-hallmark aggregate
+
+**Decision.** M12 replaces provisional late-hallmark maps and the region senescence backlink with
+one required `GameState.lateHallmarks` aggregate. It owns typed plasticity, epigenetic,
+microbiome, and senescence records; `RegionState.phenotype` remains canonical local state. The
+closed event inventory is `assign-region-phenotype`, `reconfigure-hallmark-program`,
+`install-microbiome-composition`, and `resolve-senescence-decision`. A microbiome offer owns one
+saved three-composition choice with a distinct `MicrobiomeOfferId`, all displayed niche/community
+effects, compatibility result, provenance, and expiry.
+
+**Why.** The provisional generic maps split one biological domain across parser branches and a
+region backlink. A closed aggregate gives each durable relation one owner, preserves a visible
+microbiome tradeoff across reload/replay, and gives the living-tumor adapter authoritative biology
+without inventing measurements.
+
+**Consequence.** Reducer dispatch advances sequence once after accepted handling. Catalog/state
+handlers own their named mutation or deadline; a single elapsed projection owns microbiome offer
+rotation for both live and offline simulation. p4 migrates forward to an empty p5 aggregate and
+drops scaffold data, with no current-state compatibility field. M12 reads prestige activation
+through one adapter; M15 replaces only that adapter implementation with its L3 ledger authority.
+The frozen visual projection maps phenotype variance, chromatin program, microbiome surface, and
+retained senescence to named provenance rows. Durable tests cover operation relations, atomicity,
+saved offers, normalized live/offline equivalence, migration, and frozen provenance; tuning,
+fuzzing, contact sheets, and 1280 x 800 inspection remain dated evidence.
+
+**Owner.** `src/hallmarks/late_hallmark_types.ts`, `src/hallmarks/late_hallmark_tick.ts`, and
+`docs/active_plans/implementation_plan.md`
+
 ### Offline durable projection boundary
 
 **Decision.** Economy adapters expose M10 elapsed effects only as an exact four-field durable
@@ -171,6 +254,42 @@ New elapsed effects extend the named projection and its exact structural and two
 oracles together.
 
 **Owner.** `src/economy/tick.ts` and `src/state/offline.ts`
+
+### Reality-grounded evidence classes
+
+**Decision.** Permanent regression tests protect stable semantic contracts, mathematical
+invariants, safety boundaries, and shipped user-visible behavior. Calibration tools record
+representative art, balance, and performance measurements as dated evidence. Design reviews trace
+biology and progression claims to their behavior and decision witnesses.
+
+**Why.** A durable test must survive refactoring and ordinary tuning. Visual detail, bot rank,
+serializer key order, and machine timing are useful measurements but make fragile public contracts
+when asserted as universal constants.
+
+**Consequence.** Replay compares normalized durable state, event outcomes, and visible progression
+unless canonical JSON is an explicit public wire contract. Offline replay compares equal scheduled
+boundaries exactly and documents any calibrated display approximation. Geometry and browser tests
+retain containment, clearance, accessibility, fit, and reduced-motion behavior, while corpus
+measurements remain dated reports. `tools/balance_sim.mjs` and visual tools publish their corpus,
+environment, observations, and reproduce command for design review.
+
+**Owner.** [implementation_plan.md](active_plans/implementation_plan.md)
+
+### Durable domain naming
+
+**Decision.** Repository paths under `src/`, `tests/`, and `tools/` name their enduring behavior
+or responsibility. Milestone labels remain in plans, changelog entries, and dated implementation
+evidence. A public schema version or scientific year remains when it communicates domain meaning.
+
+**Why.** A durable path should teach a future maintainer what the module provides, independent of
+the implementation schedule.
+
+**Consequence.** Migration work classifies every milestone-looking identifier as history, public
+compatibility, scientific nomenclature, or temporary leakage. It renames leakage to behavior
+terms, updates imports, and favors inline setup or one shared legal-state builder over test-only
+fixture files.
+
+**Owner.** [REPO_STYLE.md](REPO_STYLE.md) and [implementation_plan.md](active_plans/implementation_plan.md)
 
 ## Dependencies
 

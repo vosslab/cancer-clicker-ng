@@ -5,7 +5,6 @@ import { createInitialGameState } from "../state/game_state.js";
 import { loadFromStorage } from "../state/save_load.js";
 import type { StorageLike } from "../state/save_load.js";
 import type { GameState, RuntimeState } from "../types/state.js";
-import { NumberDisplay } from "./number_display.js";
 import { ProducersPanel } from "./producers_panel.js";
 import { HallmarkTree } from "./hallmark_tree.js";
 import { ColonyPanel } from "./colony_panel.js";
@@ -109,7 +108,6 @@ export function App(props: AppProps): JSX.Element {
   const [showLifecycleProbe, setShowLifecycleProbe] = createSignal(true);
   const [cleanupCount, setCleanupCount] = createSignal(0);
   const [debugOutcome, setDebugOutcome] = createSignal("No debug event run.");
-  const cellsText = createMemo(() => controller.game.cells);
   const saveStatus = createMemo(() =>
     controller.saveError() ? "Unsaved changes" : "Progress saved locally",
   );
@@ -238,53 +236,32 @@ export function App(props: AppProps): JSX.Element {
           </button>
         </div>
       </header>
-      <section class="hero-grid" aria-labelledby="division-title">
-        <div class="division-panel panel">
-          <p class="eyebrow">Primary culture</p>
-          <h2 id="division-title">Your colony</h2>
-          <NumberDisplay
-            class="cell-count"
-            value={cellsText()}
-            format={controller.game.numberFormat}
-            label="Cell count"
-          />
-          <p class="division-copy">
-            The first cell wants a second. The second begins a staffing plan.
-          </p>
-          <button
-            id="divide-button"
-            class="divide-button"
-            type="button"
+      <section class="game-board" aria-label="Tumor growth board">
+        <ColonyPanel
+          game={controller.game}
+          disabled={controller.recoveryBlocked()}
+          onDivide={divide}
+        />
+        <section class="progression-rail" aria-label="Tumor progression">
+          <StagePanel
+            game={controller.game}
             disabled={controller.recoveryBlocked()}
-            onClick={divide}
-          >
-            Divide cell
-          </button>
-          <p id="game-status" class="sr-status" aria-live="polite">
-            {controller.saveError() ?? "Ready to divide."}
-          </p>
-        </div>
-        <aside class="biology-note" aria-label="Mechanics note">
-          <p class="eyebrow">Why it matters</p>
-          <p>
-            Growth is not a meter. It is a collection of molecular permissions, bought one at a
-            time.
-          </p>
+            onAdvance={advanceStage}
+          />
+          <HallmarkTree game={controller.game} controller={controller} />
+        </section>
+        <aside class="store-rail" aria-label="Division apparatus store">
+          <ProducersPanel
+            game={controller.game}
+            onPurchase={handlePurchase}
+            reverse={showReversedProducers()}
+            disabled={controller.recoveryBlocked()}
+          />
         </aside>
       </section>
-      <StagePanel
-        game={controller.game}
-        disabled={controller.recoveryBlocked()}
-        onAdvance={advanceStage}
-      />
-      <ColonyPanel game={controller.game} />
-      <HallmarkTree game={controller.game} controller={controller} />
-      <ProducersPanel
-        game={controller.game}
-        onPurchase={handlePurchase}
-        reverse={showReversedProducers()}
-        disabled={controller.recoveryBlocked()}
-      />
+      <p id="game-status" class="sr-status" aria-live="polite">
+        {controller.saveError() ?? "Ready to divide."}
+      </p>
       <Show when={visibleOfflineReport()}>
         {(report) => (
           <section class="panel offline-panel" aria-labelledby="offline-title">

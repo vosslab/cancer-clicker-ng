@@ -9,10 +9,12 @@ import type { JSX } from "solid-js";
 import { localSvgReference } from "./defs.js";
 import type { ColonySvgDefinitionIds } from "./defs.js";
 import type { CellRenderModel, MitosisRenderModel } from "./render_types.js";
+import type { ColonyVisualState } from "./colony_visual_state.js";
 
 export type CellProps = Readonly<{
   cell: CellRenderModel;
   definitionIds: ColonySvgDefinitionIds;
+  growthState: ColonyVisualState["growthState"];
 }>;
 
 export type CellSvgPath = Readonly<{
@@ -47,9 +49,9 @@ function mitosisPath(mitosis: MitosisRenderModel): string {
   return "M -6 -3 L 6 3 M -6 3 L 6 -3 M 0 -5 V 5";
 }
 
-function groupClass(cell: CellRenderModel): string {
+function groupClass(cell: CellRenderModel, growthState: ColonyVisualState["growthState"]): string {
   const mitosisClass = cell.mitosis === undefined ? "" : " colony-cell--mitotic";
-  return `colony-cell colony-cell--depth-${cell.depth} colony-cell--region-${cell.regionKey}${mitosisClass}`;
+  return `colony-cell colony-cell--depth-${cell.depth} colony-cell--region-${cell.regionKey} colony-cell--${growthState}${mitosisClass}`;
 }
 
 /**
@@ -78,7 +80,7 @@ export function describeCellSvg(props: CellProps): CellSvgStructure {
           transform: mitosisTransform(props.cell.mitosis),
         });
   return Object.freeze({
-    className: groupClass(props.cell),
+    className: groupClass(props.cell, props.growthState),
     transform: props.cell.transform,
     membrane,
     nucleus,
@@ -90,7 +92,11 @@ export function describeCellSvg(props: CellProps): CellSvgStructure {
 export function Cell(props: CellProps): JSX.Element {
   const structure = describeCellSvg(props);
   return (
-    <g class={structure.className} transform={structure.transform}>
+    <g
+      class={structure.className}
+      data-colony-cell={props.cell.key}
+      transform={structure.transform}
+    >
       <path
         class={structure.membrane.className}
         d={structure.membrane.d}

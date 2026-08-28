@@ -2,7 +2,7 @@ import type { EventId, HallmarkId, RegionId, RouteId, StageId } from "../types/i
 import type { CheckpointId, GameState, SignalingAllocation, TriageAction } from "../types/state.js";
 import type { StageActionId } from "../stages/stage_types.js";
 
-/** The six 2000 branches are a closed M10 subset of the canonical 14-branch registry. */
+/** The six 2000 branches are a closed core-six subset of the canonical 14-branch registry. */
 export type CoreSixHallmarkKey =
   | "proliferative_signaling"
   | "growth_suppressor_evasion"

@@ -4,7 +4,7 @@ import { createInitialGameState } from "../src/state/game_state.js";
 import type { LoadResult } from "../src/state/save_load.js";
 import type { SaveNotice } from "../src/types/save.js";
 import type { HallmarkEffect } from "../src/types/effects.js";
-import type { M11Operation } from "../src/hallmarks/m11_types.js";
+import type { ExtendedHallmarkOperation } from "../src/hallmarks/extended_hallmark_types.js";
 import type {
   AdvanceStageEvent,
   ApplyOfflineAccrualEvent,
@@ -46,7 +46,7 @@ export function colonyLayoutPhaseForgeryProof(): void {
   allocateCellSlots(RAW_CLUSTER_PLAN, COLONY_PROBE_REQUEST);
 }
 
-/** Compile-only M18 boundary proof; deliberately never invoked at runtime. */
+/** Compile-only colony renderer boundary proof; deliberately never invoked at runtime. */
 export function colonyRenderContractForgeryProof(): void {
   const scene = createColonySceneRequest(
     Object.freeze({
@@ -100,12 +100,12 @@ const _INVALID_SAVE_NOTICE_CONTRACT_PROBE = {
 void _INVALID_SAVE_NOTICE_CONTRACT_PROBE;
 
 // @ts-expect-error A conversion command cannot be routed through the immune branch.
-const _INVALID_M11_OPERATION: M11Operation = {
+const _INVALID_EXTENDED_HALLMARK_OPERATION: ExtendedHallmarkOperation = {
   type: "convert-substrate",
   hallmark: "immune_destruction_avoidance",
   amount: { mantissa: 2, exponent: 3 },
 };
-void _INVALID_M11_OPERATION;
+void _INVALID_EXTENDED_HALLMARK_OPERATION;
 
 export const LOAD_RESULT_CONTRACT_PROBE = {
   status: "loaded",

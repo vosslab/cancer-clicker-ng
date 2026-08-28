@@ -11,7 +11,10 @@ import type { CurrentSaveFileV2, SaveNotice, SerializedGameState } from "../type
 import type { GameState } from "../types/state.js";
 import { isHallmarkId, isPrestigeId, isStageId } from "./catalog.js";
 import { createInitialGameState } from "./game_state.js";
-import { assertM11SaveInvariants, hasM11RecoveryNotice } from "./m11_save_invariants.js";
+import {
+  assertExtendedHallmarkSaveInvariants,
+  hasExtendedHallmarkRecoveryNotice,
+} from "./extended_hallmark_save_invariants.js";
 import {
   parseDamage,
   parseEpisodes,
@@ -655,9 +658,9 @@ function parseState(source: Record<string, unknown>, notices: SaveNotice[]): Gam
     !state.clearanceQueue.every((id) => senescenceIds.includes(id))
   )
     return undefined;
-  if (notices.some((notice) => hasM11RecoveryNotice(notice.field))) return undefined;
+  if (notices.some((notice) => hasExtendedHallmarkRecoveryNotice(notice.field))) return undefined;
   try {
-    assertM11SaveInvariants(state);
+    assertExtendedHallmarkSaveInvariants(state);
   } catch {
     return undefined;
   }
@@ -680,8 +683,8 @@ function migrateLegacyState(
     if (Object.prototype.hasOwnProperty.call(source, key)) migrated[key] = source[key];
   }
   migrated.producerLevels = producerLevels;
-  // M11 closes formerly provisional ATP/visibility/mutation placeholders. Historical p1-p3
-  // saves cannot contain an M11 offer snapshot, so migrate them to the one canonical empty state.
+  // extended-hallmark closes formerly provisional ATP/visibility/mutation placeholders. Historical p1-p3
+  // saves cannot contain an extended-hallmark offer snapshot, so migrate them to the one canonical empty state.
   const initial = createInitialGameState();
   migrated.atpBudget = initial.atpBudget;
   migrated.atpSinks = initial.atpSinks;

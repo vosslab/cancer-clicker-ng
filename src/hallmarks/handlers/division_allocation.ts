@@ -110,7 +110,7 @@ export function applyDivisionAllocation(
   return nextState;
 }
 
-/** M10's closed core-six handler value for sustaining proliferative signaling. */
+/** core-six's closed core-six handler value for sustaining proliferative signaling. */
 export const divisionAllocationHandler: CoreSixHandler<SetSignalingAllocationOperation> = {
   hallmark: "proliferative_signaling",
   apply: applyDivisionAllocation,

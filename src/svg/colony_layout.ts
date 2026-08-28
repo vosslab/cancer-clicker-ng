@@ -1,7 +1,7 @@
 /**
  * Deterministic, drawing-free macro composition for colony illustrations.
  * Coordinates use the M16 plate frame: x 0..1000, y 0..700.  This module owns
- * the closed-boundary containment and collision policy used before M18 renders.
+ * the closed-boundary containment and collision policy used before colony renderer renders.
  */
 import { STAGE_IDS } from "../state/catalog.js";
 import type { StageId } from "../types/ids.js";
@@ -11,6 +11,12 @@ import { hash_seed, mulberry32 } from "./noise.js";
 
 export const PLATE_WIDTH = 1000;
 export const PLATE_HEIGHT = 700;
+/**
+ * Keeps the closed specimen contour legible at the compact consumer size.
+ * The 24-unit viewBox inset renders as roughly eight CSS pixels in the
+ * 360px panel, leaving room for the non-scaling outer stroke.
+ */
+export const PLATE_SILHOUETTE_MARGIN = 24;
 export const MAX_CANDIDATES_PER_SLOT = 24;
 export const REPRESENTATIVE_SLOT_CAP = 180;
 export const INSPECTION_SLOT_CAP = 240;
@@ -347,6 +353,27 @@ function isSimple(vertices: readonly Point[]): boolean {
   return true;
 }
 
+/**
+ * Preserves a generated contour's proportions while fitting it to the bounded
+ * M16 plate.  Multi-island stages share one environmental outline, so their
+ * broadest lobe sets the scale for the complete silhouette rather than letting
+ * individual vertices clip at an SVG edge.
+ */
+function silhouettePlateScale(centre: Point, vertices: readonly Point[]): number {
+  let scale = 1;
+  for (const vertex of vertices) {
+    const dx = vertex.x - centre.x;
+    const dy = vertex.y - centre.y;
+    if (dx > EPSILON)
+      scale = Math.min(scale, (PLATE_WIDTH - PLATE_SILHOUETTE_MARGIN - centre.x) / dx);
+    if (dx < -EPSILON) scale = Math.min(scale, (centre.x - PLATE_SILHOUETTE_MARGIN) / -dx);
+    if (dy > EPSILON)
+      scale = Math.min(scale, (PLATE_HEIGHT - PLATE_SILHOUETTE_MARGIN - centre.y) / dy);
+    if (dy < -EPSILON) scale = Math.min(scale, (centre.y - PLATE_SILHOUETTE_MARGIN) / -dy);
+  }
+  return Math.max(0, Math.min(1, scale));
+}
+
 export function buildSilhouette(request: ColonyLayoutRequest): ColonySilhouette {
   const name = validateRequest(request);
   const signature = STAGE_LAYOUT_SIGNATURES[name];
@@ -374,12 +401,19 @@ export function buildSilhouette(request: ColonyLayoutRequest): ColonySilhouette 
       point(centre.x + Math.cos(angle) * radius, centre.y + Math.sin(angle) * radius * 0.82),
     );
   }
-  if (!isSimple(vertices))
+  const scale = silhouettePlateScale(centre, vertices);
+  const fittedVertices =
+    scale === 1
+      ? vertices
+      : vertices.map((vertex) =>
+          point(centre.x + (vertex.x - centre.x) * scale, centre.y + (vertex.y - centre.y) * scale),
+        );
+  if (!isSimple(fittedVertices))
     throw new Error("Deterministic silhouette violated simple-polygon invariant.");
   return freeze({
     stageId: request.stageId,
     centre,
-    vertices: freeze(vertices),
+    vertices: freeze(fittedVertices),
     baseRadius,
     [silhouettePhase]: true,
   });
@@ -738,7 +772,7 @@ export function createColonyLayout(request: ColonyLayoutRequest): ColonyLayout {
   );
 }
 
-/** Geometry-only M18 handoff: deliberately omits stage, seeds, traits, and cell internals. */
+/** Geometry-only colony renderer handoff: deliberately omits stage, seeds, traits, and cell internals. */
 export function suppressedDetailGeometry(layout: ColonyLayout): readonly number[] {
   return freeze([
     ...layout.silhouette.vertices.flatMap((vertex) => [

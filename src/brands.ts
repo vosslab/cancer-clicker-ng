@@ -2,6 +2,11 @@ import type { BigNum } from "./types/bignum.js";
 import type {
   EventId,
   HallmarkId,
+  LateProgramOptionId,
+  MicrobiomeCommunityId,
+  MicrobiomeCompositionId,
+  MicrobiomeNicheId,
+  MicrobiomeOfferId,
   MicrobiomePoolId,
   MutationId,
   OfferId,
@@ -57,6 +62,21 @@ export function programOptionId(value: string): ProgramOptionId {
 }
 export function microbiomePoolId(value: string): MicrobiomePoolId {
   return requireIdentifier(value, "MicrobiomePoolId") as MicrobiomePoolId;
+}
+export function lateProgramOptionId(value: string): LateProgramOptionId {
+  return requireIdentifier(value, "LateProgramOptionId") as LateProgramOptionId;
+}
+export function microbiomeCommunityId(value: string): MicrobiomeCommunityId {
+  return requireIdentifier(value, "MicrobiomeCommunityId") as MicrobiomeCommunityId;
+}
+export function microbiomeCompositionId(value: string): MicrobiomeCompositionId {
+  return requireIdentifier(value, "MicrobiomeCompositionId") as MicrobiomeCompositionId;
+}
+export function microbiomeNicheId(value: string): MicrobiomeNicheId {
+  return requireIdentifier(value, "MicrobiomeNicheId") as MicrobiomeNicheId;
+}
+export function microbiomeOfferId(value: string): MicrobiomeOfferId {
+  return requireIdentifier(value, "MicrobiomeOfferId") as MicrobiomeOfferId;
 }
 
 export function bigNum(mantissa: number, exponent: number): BigNum {

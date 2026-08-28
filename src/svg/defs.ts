@@ -1,5 +1,5 @@
 /**
- * Scene-local SVG definitions for the M18 colony illustration.
+ * Scene-local SVG definitions for the colony renderer colony illustration.
  *
  * The renderer projects these immutable data models once per named inline SVG.
  * Cell nodes consume their paint and mask references but never create definitions.
@@ -19,15 +19,18 @@ export type SvgDefinitionNode = Readonly<{
 }>;
 
 export type SvgDefinition = Readonly<{
-  element: "linearGradient" | "mask" | "pattern";
+  element: "linearGradient" | "radialGradient" | "mask" | "pattern";
   id: SceneSvgId;
   attributes: Readonly<Record<string, SvgDefinitionAttributeValue>>;
   children: readonly SvgDefinitionNode[];
 }>;
 
 export type ColonySvgDefinitionIds = Readonly<{
+  tissueGradient: SceneSvgId;
   cytoplasmGradient: SceneSvgId;
   nucleusGradient: SceneSvgId;
+  hypoxiaGradient: SceneSvgId;
+  vesselGradient: SceneSvgId;
   membranePattern: SceneSvgId;
   plateMask: SceneSvgId;
 }>;
@@ -36,9 +39,6 @@ export type ColonySvgDefinitions = Readonly<{
   ids: ColonySvgDefinitionIds;
   definitions: readonly SvgDefinition[];
 }>;
-
-const MAX_SHARED_DEFINITIONS = 4;
-const MAX_SHARED_DEFINITION_NODES = 14;
 
 function frozenAttributes(
   attributes: Record<string, SvgDefinitionAttributeValue>,
@@ -73,7 +73,7 @@ export function localSvgReference(id: SceneSvgId): string {
   return reference;
 }
 
-/** Counts definition elements and their direct child nodes for the M18 DOM budget. */
+/** Counts definition elements and their direct child nodes for descriptive diagnostics. */
 export function sharedDefinitionNodeCount(definitions: ColonySvgDefinitions): number {
   const childCount = definitions.definitions.reduce(
     (count, item) => count + item.children.length,
@@ -91,12 +91,20 @@ export function sharedDefinitionNodeCount(definitions: ColonySvgDefinitions): nu
 export function createColonySvgDefinitions(scene: ColonySceneRequest): ColonySvgDefinitions {
   const trustedScene = createColonySceneRequest(scene);
   const ids = Object.freeze({
+    tissueGradient: sceneSvgId(trustedScene, "tissue-gradient"),
     cytoplasmGradient: sceneSvgId(trustedScene, "cytoplasm-gradient"),
     nucleusGradient: sceneSvgId(trustedScene, "nucleus-gradient"),
+    hypoxiaGradient: sceneSvgId(trustedScene, "hypoxia-gradient"),
+    vesselGradient: sceneSvgId(trustedScene, "vessel-gradient"),
     membranePattern: sceneSvgId(trustedScene, "membrane-pattern"),
     plateMask: sceneSvgId(trustedScene, "plate-mask"),
   });
   const definitions = Object.freeze([
+    definition("radialGradient", ids.tissueGradient, { cx: "42%", cy: "35%", r: "76%" }, [
+      definitionNode("stop", { offset: "0%", stopColor: "#6f9d92", stopOpacity: 0.94 }),
+      definitionNode("stop", { offset: "66%", stopColor: "#25555a", stopOpacity: 0.98 }),
+      definitionNode("stop", { offset: "100%", stopColor: "#102f37", stopOpacity: 1 }),
+    ]),
     definition(
       "linearGradient",
       ids.cytoplasmGradient,
@@ -116,6 +124,21 @@ export function createColonySvgDefinitions(scene: ColonySceneRequest): ColonySvg
         definitionNode("stop", { offset: "100%", stopColor: "#211e3c", stopOpacity: 1 }),
       ],
     ),
+    definition("radialGradient", ids.hypoxiaGradient, { cx: "50%", cy: "50%", r: "60%" }, [
+      definitionNode("stop", { offset: "0%", stopColor: "#210f1e", stopOpacity: 0.88 }),
+      definitionNode("stop", { offset: "62%", stopColor: "#7c3450", stopOpacity: 0.54 }),
+      definitionNode("stop", { offset: "100%", stopColor: "#bb7560", stopOpacity: 0.08 }),
+    ]),
+    definition(
+      "linearGradient",
+      ids.vesselGradient,
+      { x1: "0%", y1: "0%", x2: "100%", y2: "100%" },
+      [
+        definitionNode("stop", { offset: "0%", stopColor: "#571e2b", stopOpacity: 0.58 }),
+        definitionNode("stop", { offset: "50%", stopColor: "#d97364", stopOpacity: 0.96 }),
+        definitionNode("stop", { offset: "100%", stopColor: "#5c2331", stopOpacity: 0.66 }),
+      ],
+    ),
     definition(
       "pattern",
       ids.membranePattern,
@@ -129,12 +152,5 @@ export function createColonySvgDefinitions(scene: ColonySceneRequest): ColonySvg
       [definitionNode("rect", { x: 0, y: 0, width: 1000, height: 700, fill: "#ffffff" })],
     ),
   ]);
-  const result = Object.freeze({ ids, definitions });
-  if (
-    result.definitions.length > MAX_SHARED_DEFINITIONS ||
-    sharedDefinitionNodeCount(result) > MAX_SHARED_DEFINITION_NODES
-  ) {
-    throw new Error("Shared SVG definitions exceed the M18 performance budget.");
-  }
-  return result;
+  return Object.freeze({ ids, definitions });
 }

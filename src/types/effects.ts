@@ -2,7 +2,7 @@ import type { HallmarkId } from "./ids.js";
 import type { GameState } from "./state.js";
 import type { CoreSixOperation } from "../hallmarks/core_six_types.js";
 
-/** M10 activation: trusted parsed operation plus readonly state enters one pure hallmark handler. */
+/** core-six activation: trusted parsed operation plus readonly state enters one pure hallmark handler. */
 export type HallmarkEffectContext<Operation extends CoreSixOperation = CoreSixOperation> =
   Readonly<{
     state: GameState;

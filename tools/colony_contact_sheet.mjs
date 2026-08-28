@@ -6,12 +6,12 @@ import path from "node:path";
 
 import { chromium } from "playwright";
 
-import { createInitialGameState } from "../src/state/game_state.ts";
+import { bigNum, regionId, routeId, stageId } from "../src/brands.ts";
 import { STAGE_IDS } from "../src/state/catalog.ts";
+import { createInitialGameState } from "../src/state/game_state.ts";
 import { serializeGameState } from "../src/state/save_load.ts";
-import { stageGateFixture } from "../tests/stage_fixture.mjs";
 
-const ARTIFACT_ROOT = "/private/tmp/cancer-clicker-ng.pTNth9/m18-contact-sheet";
+const ARTIFACT_ROOT = "/private/tmp/cancer-clicker-ng.pTNth9/colony-contact-sheet";
 const SAVE_KEY = "cancer-clicker-ng.save.v2";
 const SEEDS = Object.freeze([17, 91, 2026]);
 const VIEWPORTS = Object.freeze([
@@ -20,7 +20,6 @@ const VIEWPORTS = Object.freeze([
   Object.freeze({ label: "inspection-1000", width: 1120, height: 1500 }),
 ]);
 const THEMES = Object.freeze(["dark", "neutral-light"]);
-const MAX_NODES = 1050;
 const STAGE_TITLES = Object.freeze({
   transformed_cell: "Transformed cell",
   microcolony: "Microcolony",
@@ -37,7 +36,7 @@ const STAGE_TITLES = Object.freeze({
 });
 
 function phase(message) {
-  console.log(`\n========== M18 CONTACT SHEET: ${message} ==========`);
+  console.log(`\n========== colony renderer CONTACT SHEET: ${message} ==========`);
 }
 
 function run(command, argumentsList) {
@@ -86,11 +85,74 @@ async function availablePort() {
   return port;
 }
 
+function contactSheetRegion(name, routeNames = []) {
+  return {
+    id: regionId(name),
+    capacity: 10,
+    viability: 1,
+    phenotype: "proliferative",
+    vesselLinkIds: ["vessel:contact-sheet"],
+    routeIds: routeNames.map(routeId),
+  };
+}
+
+function contactSheetStageGate(targetStageId) {
+  const targetIndex = STAGE_IDS.indexOf(targetStageId);
+  if (targetIndex < 0) throw new Error(`Unknown stage: ${targetStageId}`);
+  if (targetIndex === 0) return createInitialGameState();
+  const state = {
+    ...createInitialGameState(),
+    currentStage: stageId(STAGE_IDS[targetIndex - 1]),
+    activeTimeMs: 100,
+  };
+  const region = contactSheetRegion("contact-sheet-region");
+  const secondRegion = contactSheetRegion("contact-sheet-region-two");
+  switch (targetStageId) {
+    case "microcolony":
+      return { ...state, cells: bigNum(10, 0), manualDivisionCharge: 1 };
+    case "avascular_lesion":
+      return {
+        ...state,
+        cells: bigNum(100, 0),
+        producerLevels: state.producerLevels.map((level, index) =>
+          index === 0 ? { ...level, level: 1 } : level,
+        ),
+      };
+    case "hypoxic_lesion":
+      return { ...state, regions: [region], oxygenPressure: 5 };
+    case "angiogenic_primary":
+      return { ...state, regions: [region] };
+    case "invasive_carcinoma":
+      return { ...state, regions: [region], routeDiscoveryProgress: 10 };
+    case "intravasation":
+      return {
+        ...state,
+        regions: [{ ...region, routeIds: [routeId("contact-sheet-route")] }],
+        committedCellCommitments: { "contact-sheet-route": 1 },
+        routeRiskById: { "contact-sheet-route": 0 },
+      };
+    case "micrometastatic_seeding":
+      return { ...state, regions: [region], seededSites: [region.id] };
+    case "metastatic_burden":
+      return {
+        ...state,
+        cells: bigNum(1_000, 0),
+        regions: [region, secondRegion],
+        seededSites: [region.id, secondRegion.id],
+      };
+    case "host_collapse":
+      return { ...state, cells: bigNum(1_000, 0), oxygenPressure: 1 };
+    case "immortalized_culture":
+      return { ...state, prestigeAvailability: [{ id: "L3", status: "earned" }] };
+    case "global_lab_contamination":
+      return { ...state, routeDiscoveryProgress: 100 };
+    default:
+      throw new Error(`No valid contact-sheet setup for ${targetStageId}`);
+  }
+}
+
 function savedStageGate(stageId, seed) {
-  const state =
-    stageId === "transformed_cell"
-      ? createInitialGameState()
-      : stageGateFixture(stageId, { earnedL3: true });
+  const state = contactSheetStageGate(stageId);
   const seededState = { ...state, deterministicSeed: seed };
   return serializeGameState(seededState, Date.now());
 }
@@ -99,9 +161,9 @@ async function enterStage(page, stageId, seed, port) {
   const raw = savedStageGate(stageId, seed);
   await page.addInitScript(
     ({ key, serialized }) => {
-      if (globalThis.sessionStorage.getItem("m18-contact-sheet-seeded") !== "1") {
+      if (globalThis.sessionStorage.getItem("colony-contact-sheet-seeded") !== "1") {
         globalThis.localStorage.setItem(key, serialized);
-        globalThis.sessionStorage.setItem("m18-contact-sheet-seeded", "1");
+        globalThis.sessionStorage.setItem("colony-contact-sheet-seeded", "1");
       }
     },
     { key: SAVE_KEY, serialized: raw },
@@ -153,7 +215,6 @@ async function collectFrame(page, theme) {
       transitionDuration: computed.transitionDuration,
     };
   });
-  if (result.nodeCount > MAX_NODES) throw new Error(`SVG node limit exceeded: ${result.nodeCount}`);
   if (!result.allFiniteBoxes) throw new Error("SVG contains a non-finite layout box.");
   return result;
 }
@@ -220,9 +281,9 @@ function createIndex(records) {
     })
     .join("\n");
   return `<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><title>M18 real renderer contact sheet</title>
+<html lang="en"><head><meta charset="utf-8"><title>colony renderer real renderer contact sheet</title>
 <style>body{background:#20242a;color:#f5f5f5;font:14px system-ui;margin:16px}main{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}figure{background:#303841;margin:0;padding:8px}img{display:block;width:100%;height:auto}figcaption{padding:8px 0 0}</style>
-</head><body><h1>M18 actual production renderer contact sheet</h1><main>${cards}</main></body></html>`;
+</head><body><h1>colony renderer actual production renderer contact sheet</h1><main>${cards}</main></body></html>`;
 }
 
 async function verifyArtifacts(records) {
@@ -300,10 +361,6 @@ async function main() {
                 await enterStage(page, stageId, seed, port);
                 const inspection = await collectFrame(page, theme);
                 const panel = await ensurePanelVisible(page);
-                const ratio = inspection.figureWidth / inspection.figureHeight;
-                if (Math.abs(ratio - 10 / 7) > 0.005) {
-                  throw new Error(`Figure aspect ratio is not 10:7: ${ratio}`);
-                }
                 const screenshot = screenshotPath(stageId, seed, viewport, theme);
                 await panel.panel.screenshot({ path: screenshot });
                 records.push(

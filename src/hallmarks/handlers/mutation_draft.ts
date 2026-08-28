@@ -1,13 +1,20 @@
 import { hallmarkId } from "../../brands.js";
 import { compare, fromSafeInteger, subtract } from "../../bignum/bignum.js";
 import {
-  assertM11GeneratedMutationOffer,
+  assertGeneratedMutationDraftOffer,
   mutationOfferContains,
   type MutationOfferSource,
 } from "../mutation_offer_generator.js";
-import { hasReachedM11Unlock, m11HallmarkDefinition } from "../m11_catalog.js";
-import { atpBudgetForSink } from "../m11_economy.js";
-import type { M11Handler, M11HandlerResult, SelectMutationOperation } from "../m11_types.js";
+import {
+  hasReachedExtendedHallmarkUnlock,
+  extendedHallmarkDefinition,
+} from "../extended_hallmark_catalog.js";
+import { atpBudgetForSink } from "../atp_allocation.js";
+import type {
+  ExtendedHallmarkHandler,
+  ExtendedHallmarkHandlerResult,
+  SelectMutationOperation,
+} from "../extended_hallmark_types.js";
 import type { GameState } from "../../types/state.js";
 
 const GENOME_INSTABILITY_KEY = "genome_instability_mutation";
@@ -17,7 +24,7 @@ function isSafeNatural(value: number): boolean {
 }
 
 function isOwned(state: GameState): boolean {
-  const definition = m11HallmarkDefinition(GENOME_INSTABILITY_KEY);
+  const definition = extendedHallmarkDefinition(GENOME_INSTABILITY_KEY);
   return state.hallmarkLevels.some(
     (level) =>
       level.id === definition.id &&
@@ -51,13 +58,16 @@ function assertSelection(state: GameState, operation: SelectMutationOperation): 
   if (operation.type !== "select-mutation" || operation.hallmark !== GENOME_INSTABILITY_KEY) {
     throw new Error("Mutation selection operation is not owned by genome instability.");
   }
-  if (!isOwned(state) || !hasReachedM11Unlock(state.currentStage, GENOME_INSTABILITY_KEY)) {
+  if (
+    !isOwned(state) ||
+    !hasReachedExtendedHallmarkUnlock(state.currentStage, GENOME_INSTABILITY_KEY)
+  ) {
     throw new Error("Genome instability is not owned or unlocked.");
   }
   if (state.mutationOffers.length !== 1) throw new Error("Mutation selection requires one offer.");
   const offer = state.mutationOffers[0];
   if (!offer) throw new Error("Mutation selection requires one offer.");
-  assertM11GeneratedMutationOffer(offer, offerSource(state, offer));
+  assertGeneratedMutationDraftOffer(offer, offerSource(state, offer));
   if (!mutationOfferContains(offer, operation.mutationId)) {
     throw new Error("Mutation selection is not in the saved offer.");
   }
@@ -96,11 +106,11 @@ export function applyMutationSelection(
     operation: SelectMutationOperation;
     appliedAtMs: number;
   }>,
-): M11HandlerResult<GameState> {
+): ExtendedHallmarkHandlerResult<GameState> {
   const { operation, state } = context;
   assertSelection(state, operation);
   const genomeBurden = nextBurden(state, operation);
-  const nextState: M11HandlerResult<GameState> = {
+  const nextState: ExtendedHallmarkHandlerResult<GameState> = {
     ...state,
     mutationOffers: [],
     chosenMutations: [...state.chosenMutations, operation.mutationId],
@@ -111,7 +121,7 @@ export function applyMutationSelection(
   return nextState;
 }
 
-export const MUTATION_DRAFT_HANDLER: M11Handler<SelectMutationOperation> = {
+export const MUTATION_DRAFT_HANDLER: ExtendedHallmarkHandler<SelectMutationOperation> = {
   hallmark: GENOME_INSTABILITY_KEY,
   apply: applyMutationSelection,
 };

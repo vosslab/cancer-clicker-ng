@@ -108,7 +108,7 @@ function assertAtomicRejection(state, operation, appliedAtMs, pattern) {
   assert.deepEqual(state, before);
 }
 
-test("M10 dispatch registry has one coherent catalog-backed handler for every core-six row", () => {
+test("core-six dispatch registry has one coherent catalog-backed handler for every core-six row", () => {
   assert.deepEqual(
     CORE_SIX_HANDLER_REGISTRY.map((entry) => [
       entry.hallmark,
@@ -127,7 +127,7 @@ test("M10 dispatch registry has one coherent catalog-backed handler for every co
   assertCoreSixHandlerRegistry();
 });
 
-test("M10 dispatcher routes all six catalog operations through distinct pure handlers", () => {
+test("core-six dispatcher routes all six catalog operations through distinct pure handlers", () => {
   const cases = [
     [
       stateForDivision(),
@@ -204,7 +204,7 @@ test("M10 dispatcher routes all six catalog operations through distinct pure han
   }
 });
 
-test("M10 dispatcher rejects mismatched, forged, wrong-handler, and locked commands atomically", () => {
+test("core-six dispatcher rejects mismatched, forged, wrong-handler, and locked commands atomically", () => {
   assertAtomicRejection(
     stateForDivision(),
     { type: "set-signaling-allocation", hallmark: "angiogenesis", allocation: "cycle" },

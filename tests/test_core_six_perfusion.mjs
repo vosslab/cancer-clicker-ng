@@ -51,7 +51,7 @@ function apply(state, linked, appliedAtMs = state.activeTimeMs, targetRegionId =
   });
 }
 
-test("M10 angiogenesis links one viable region with bounded capacity, oxygen relief, and upkeep", () => {
+test("core-six angiogenesis links one viable region with bounded capacity, oxygen relief, and upkeep", () => {
   const before = perfusionState();
   const after = apply(before, true);
   const region = after.regions[0];
@@ -67,7 +67,7 @@ test("M10 angiogenesis links one viable region with bounded capacity, oxygen rel
   assert.deepEqual(before.regions[0]?.vesselLinkIds, []);
 });
 
-test("M10 angiogenesis unlink reverses only the local perfusion tradeoff", () => {
+test("core-six angiogenesis unlink reverses only the local perfusion tradeoff", () => {
   const linked = apply(perfusionState(), true);
   const after = apply(linked, false);
   const region = after.regions[0];
@@ -79,7 +79,7 @@ test("M10 angiogenesis unlink reverses only the local perfusion tradeoff", () =>
   assert.equal(after.eventSequence, linked.eventSequence);
 });
 
-test("M10 angiogenesis applies a real multi-region active-link cap and frees it on unlink", () => {
+test("core-six angiogenesis applies a real multi-region active-link cap and frees it on unlink", () => {
   const regions = Array.from({ length: MAX_ACTIVE_VESSEL_LINKS + 1 }, (_, index) => ({
     ...perfusionState().regions[0],
     id: regionId(`rim-${index}`),
@@ -103,7 +103,7 @@ test("M10 angiogenesis applies a real multi-region active-link cap and frees it 
   assert.equal(countActiveVesselLinks(relinked), MAX_ACTIVE_VESSEL_LINKS);
 });
 
-test("M10 angiogenesis rejects absent ownership, early stage, unknown region, and stale operations atomically", () => {
+test("core-six angiogenesis rejects absent ownership, early stage, unknown region, and stale operations atomically", () => {
   const missingOwnership = perfusionState({ hallmarkLevels: [] });
   const earlyStage = perfusionState({ currentStage: stageId("avascular_lesion") });
   const unknown = { ...operation(true), regionId: regionId("missing") };
@@ -120,7 +120,7 @@ test("M10 angiogenesis rejects absent ownership, early stage, unknown region, an
   }
 });
 
-test("M10 angiogenesis rejects duplicate, over-capacity, unavailable unlink, and invalid maintenance atomically", () => {
+test("core-six angiogenesis rejects duplicate, over-capacity, unavailable unlink, and invalid maintenance atomically", () => {
   const linked = apply(perfusionState(), true);
   const capacityFull = perfusionState({
     regions: [{ ...perfusionState().regions[0], capacity: MAX_PERFUSED_REGION_CAPACITY }],
@@ -142,7 +142,7 @@ test("M10 angiogenesis rejects duplicate, over-capacity, unavailable unlink, and
   }
 });
 
-test("M10 angiogenesis rejects corrupted links, inconsistent upkeep, and nonfinite counters atomically", () => {
+test("core-six angiogenesis rejects corrupted links, inconsistent upkeep, and nonfinite counters atomically", () => {
   const corruptedLink = perfusionState({
     regions: [{ ...perfusionState().regions[0], vesselLinkIds: [eventId("vessel:other")] }],
   });

@@ -40,7 +40,7 @@ main.tsx
   App (controller boundary and mounted shell)
     GameShell
       StatusBar / NumberDisplay
-      DivisionPanel
+      ColonyPanel (count/rate, native colony action, instruction, stage caption)
       ProducersPanel -> ProducerRow (For by ProducerId)
       OfflineReport (Show)
       SaveNotice (For by stable notice identity)
@@ -54,6 +54,37 @@ actions. It may
 pass typed intent callbacks such as `onDivide` or `onBuyProducer`, but it never passes
 `setGame`. Components only express player intent; they cannot bypass validation, persistence,
 or replay recording. Later surfaces extend this tree rather than establish their own stores.
+
+### Colony action seam
+
+`App` passes `ColonyPanel` the read-only `GameState`, the existing typed `onDivide` callback, and
+the current disabled/recovery state. `ColonyPanel` owns local visual feedback only; it receives no
+store setter and does not construct an event, persist, or reconcile. Its one native colony button
+is the only keyboard focus target for division. Enter and Space call the existing `onDivide`
+intent once. Its virtual button activation and `colony.tsx`'s typed `onCellActivate` path have
+separate event-detail handling, so pointer/touch input delegates only when the target belongs to
+rendered visible cell geometry and every activation reaches the intent once. Both paths therefore
+arrive at the same `controller.divide()` contract, which remains the sole constructor of the
+durable `click-divide` event.
+
+The component groups authoritative count/rate, the large action object, a short instruction,
+save/recovery state, immediate restrained feedback, and the stage-aware scientific caption. A
+successful action may set a narrow local feedback signal; it never treats animation as the source
+of truth. Reduced-motion users receive the same static highlight and visible state result. The
+button stays readable while recovery blocks mutation, and the controller's existing unsaved status
+continues to state a failed persistence result honestly.
+
+The normal board is a 1280 x 800 (16:10) landscape composition: colony action at left, the living
+tumor/progression world in the middle, and store at right. Its first view includes the large
+colony, count/rate, active stage and hallmark progression, producer quantity controls, and
+save/status. The first-view right rail keeps every producer discoverable: each row shows owned
+count, next cost, affordability, and production contribution, with hover/focus revealing richer
+derived statistics. Locked future content remains visible with its biological unlock condition;
+the real game requirements determine when its action becomes available. At narrower widths it
+retains that order as colony action, progression, then a full-width store, and it stacks in the
+same order below the compact breakpoint. This is a responsive layout rule, not a second game mode.
+Animation may supplement a data-derived cancer state, while a reduced-motion static cue preserves
+the same state reading.
 
 ## Typed action and persistence seam
 
