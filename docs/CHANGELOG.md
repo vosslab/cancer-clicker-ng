@@ -2,6 +2,9 @@
 
 ### Additions and New Features
 
+- Refreshed `README.md` as the Cancer Clicker Next Gen landing page: an evidence-backed first
+  loop, current pre-production scope, the stage-to-colony proof story, verification commands, and
+  a dispatchable screenshot artifact give newcomers a clear route into the expanding game.
 - Added M11's closed TypeScript catalog foundation: four 2011 hallmark mechanics, validated
   canonical BigNum conversion DTOs, bounded ATP sinks, and deterministic three-card mutation
   snapshot contracts for the later parser, reducer, save, and UI owners.

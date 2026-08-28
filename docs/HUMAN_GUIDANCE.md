@@ -13,3 +13,6 @@ origin belongs there too. Rules: [REPO_STYLE.md](REPO_STYLE.md).
 ## Review expectations
 
 ## Working style
+
+- Cancer Clicker NG means Next Gen: make it the superified, exciting evolution of Cancer Clicker
+  while keeping current behavior claims evidence-backed and future ambition clearly labeled.

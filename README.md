@@ -1,39 +1,40 @@
 # Cancer Clicker NG
 
-An educational browser strategy game for learners who want to explore how one transformed cell grows, adapts, and faces resource tradeoffs through a science-informed incremental model.
+An educational browser strategy game that lets biology learners steer a transformed cell through growth, scarcity, and adaptation, turning cancer concepts into observable tradeoffs rather than a memorization exercise.
 
-## Grow under pressure
+## Next Gen, under pressure
 
-Cancer Clicker NG turns cancer-biology concepts into consequential systems rather than a
-memorization exercise. You will guide an optimizing transformed cell through resource pressure,
-growth, adaptation, and eventually a deliberately dark, science-informed escalation. It is not
-clinical advice and does not depict patients; the satire targets the cell's relentless
-optimization.
+NG means **Next Gen**: the energized, superified evolution of Cancer Clicker. Its signature
+promise is an incremental game where biology changes the choices rather than just decorating
+larger numbers. You guide one relentlessly optimizing transformed cell through resources, growth,
+adaptation, and a deliberately dark science-informed escalation.
 
-The signature promise is an endless incremental game where biology changes the choices, not just
-the labels on larger numbers. The completed foundations make that promise concrete:
+The game is for learners, educators, and curious builders who want to reason about systems rather
+than memorize a list of cancer-biology terms. It is a stylized game abstraction, not clinical
+advice and not a depiction of patients.
 
-- Eight data-defined producers support `1`, `10`, `100`, and maximum affordable purchases with
-  deterministic costs.
-- Custom BigNum arithmetic and Conway-Wechsler illion names keep enormous quantities readable.
-- A typed event funnel, strict V2/p4 local-save migration, and one bounded replay seam make
-  growth and return-from-away accounting inspectable.
-- A progression design maps 14 cancer-biology branches and 12 stages to future player decisions
-  instead of a memorization checklist.
-- A client-only SolidJS surface turns those framework-free systems into a saved, playable loop
-  without adding a server or account boundary.
+## What is playable now
 
-## Current proof
+Cancer Clicker NG is pre-production software under active construction. The current local build
+already offers a durable incremental loop and the visual foundation for the full arc:
 
-M1 through M7 are accepted. The first playable SolidJS slice now lets you divide a cell, buy
-producers, watch cells accumulate while the tab is open, reload preserved local progress, and see
-meaningful offline gains on return. It keeps the game local to the browser: no account, network,
-or clinical data is involved.
+- Divide a cell, buy from eight data-defined producers in `1`, `10`, `100`, or maximum-affordable
+  quantities, and watch production continue while the page is open.
+- Reload locally saved progress and receive an honest offline-progress report when elapsed time
+  produces a meaningful gain.
+- Move through an explicit 12-stage ladder, inspect a stage-aware colony morphology panel, and
+  follow the current specimen through one accessible inline SVG illustration.
+- Explore a hallmark tree whose current branches connect ATP, metabolism, immune visibility,
+  inflammation, and deterministic mutation choices to real game-state effects.
+- Read enormous values using custom BigNum arithmetic and Conway-Wechsler illion names.
 
-The accepted M7 evidence includes 75 Node/tsx tests and 6 production-dist Playwright tests. The
-browser suite proves keyboard play, purchase and idle behavior, reload, offline gains, recovery,
-focus identity, narrow layout, and zero browser diagnostics. There is no confirmed hosted
-deployment URL, and no checked-in screenshot asset yet.
+## See the Next Gen loop take shape
+
+The strongest current proof is the production-built local game itself. Its primary screen places
+the stage panel, `Colony morphology` figure, hallmark tree, producers, and save status in one
+keyboard-operable flow. The checked-in browser suite exercises that real built surface, including
+the four current M11 hallmark branches and the accessible colony renderer at narrow and desktop
+sizes.
 
 <!-- screenshots:begin (managed by screenshot-docs) -->
 <!-- screenshots:end -->
@@ -48,60 +49,71 @@ npm install
 npm run serve
 ```
 
-Open the printed URL. Select **Divide cell** to create cells, then spend cells on a producer in
-the **Division apparatus** panel. The producer raises ongoing cells per second; reload the page to
-confirm that progress is local and durable. After time away, the **Offline progress** panel shows
-the applied gain when it is meaningful. Controls remain keyboard-operable. Stop the foreground
-server with `Ctrl-C`.
+Open the printed local URL. Select **Divide cell**, then spend cells in **Division apparatus** on
+a producer. Its rate raises cells per second. Reload to confirm that progress persists locally;
+after time away, **Offline progress** reports an applied gain when relevant. The stage and colony
+panels make the expanding design visible from the first run. Stop the foreground server with
+`Ctrl-C`.
 
 Use `npm run build` to create `dist/` without starting a server.
 
-## Verify the foundation
+## Verify a fresh checkout
 
-The normal repository validation front door is not Vitest. Run the owned Node/tsx test and static
-gate:
+Run the repository's canonical static and Node/tsx gate:
 
 ```bash
 ./check_codebase.sh
 ```
 
-It type-checks source and test/tool surfaces, runs ESLint and Prettier checks, then runs
-`tests/test_*.mjs` with Node's test runner and the `tsx` loader. The accepted M7 run contains 75
-Node/tsx tests. This is not Vitest. Verify the production-built browser surface separately:
+It type-checks source and test/tool surfaces, runs ESLint and Prettier, then runs the Node tests
+under `tests/test_*.mjs` through the `tsx` loader. Exercise the production-built browser surface
+with:
 
 ```bash
 npm run test:playwright -- --build
 ```
 
-That command rebuilds `dist/` and runs the committed production Playwright suite.
+That command rebuilds `dist/` and runs the committed Playwright suite against the served result.
 
-## What comes next
+## Build toward the full game
 
-M8 is now hardening the game contracts. Later milestones add the 12-stage arc, 14 mechanically
-distinct hallmark branches, prestige systems, and editable SVG colony visuals. The active plan
-keeps those milestones explicit so the game's ambition stays testable as it grows.
+The active roadmap names the remaining work: the later hallmark branches, prestige systems,
+ending, replay, balance laboratory, and release evidence. Each future feature is intended to
+change a real player decision, preserve a clear ownership boundary, and earn observable evidence.
 
 ## Documentation
 
-- `docs/SOLID_MODEL.md` - the client-only SolidJS boundary, one-store model, and
-  production-browser proof contract. It is shown as an inline path while its shared-worktree
-  document remains untracked.
-- [docs/GAME_DESIGN.md](docs/GAME_DESIGN.md) - offline replay, clocks, and the shared economy
-  tick semantics.
-- [docs/STATE_PERSISTENCE.md](docs/STATE_PERSISTENCE.md) - local V2/p4 save ownership,
-  migration, recovery, and writer-reader closure.
-- [docs/BIGNUM_OPS.md](docs/BIGNUM_OPS.md) - the arithmetic, bulk-cost, and illion-display
-  contract.
+- [docs/SOLID_MODEL.md](docs/SOLID_MODEL.md) - the client-only SolidJS boundary and one-store UI
+  model.
+- [docs/GAME_DESIGN.md](docs/GAME_DESIGN.md) - clock, offline replay, and shared economy-tick
+  semantics.
+- [docs/STATE_PERSISTENCE.md](docs/STATE_PERSISTENCE.md) - local save ownership, migration,
+  recovery, and writer-reader closure.
 - [docs/PROGRESSION_DESIGN.md](docs/PROGRESSION_DESIGN.md) - the 14 branch decisions and
   12-stage gameplay arc.
+- [docs/MORPHOLOGY_REFERENCE.md](docs/MORPHOLOGY_REFERENCE.md) - provenance for the stylized
+  morphology grammar and its interpretation limits.
 - [docs/active_plans/implementation_plan.md](docs/active_plans/implementation_plan.md) - the
   canonical 22-milestone roadmap and acceptance criteria.
 - [docs/active_plans/active/cancer_clicker_build_plan.md](docs/active_plans/active/cancer_clicker_build_plan.md)
   - the live execution ledger and accepted evidence.
-- [docs/E2E_TESTS.md](docs/E2E_TESTS.md) and
-  [docs/PLAYWRIGHT_USAGE.md](docs/PLAYWRIGHT_USAGE.md) - the difference between fast Node checks
-  and production-shaped browser evidence.
+- [docs/PLAYWRIGHT_USAGE.md](docs/PLAYWRIGHT_USAGE.md) - production-browser validation and
+  screenshot workflow guidance.
+
+## Next proof artifact
+
+Outcome: show a newcomer the real Next Gen stage-to-colony transition before they run the game.
+
+- Owner: `screenshot-docs`
+- Target files: `README.md`, `docs/screenshots/cancer_clicker_ng_stage_colony.gif`
+- Evidence: the production `dist/` page and the committed M18 browser renderer test
+- Work: capture one readable transition from the opening transformed-cell specimen to a later
+  stage, including the stage label and colony caption.
+- Success criteria: the figure, stage change, and caption are legible at repository viewing size;
+  the artifact labels the image as a stylized game abstraction.
+- Verification: replay the short loop, inspect alt text and surrounding prose, then run the local
+  Markdown-link test.
 
 ## License
 
-Source code is available under the [LICENSE.MIT](LICENSE.MIT).
+Source code is available under the [MIT License](LICENSE.MIT).
