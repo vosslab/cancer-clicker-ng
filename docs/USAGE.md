@@ -16,17 +16,19 @@ Use `Ctrl-C` in the terminal to stop the foreground server.
 
 ## First successful loop
 
-1. Click a painted cancer cell in **Your colony** on the left rail. Keyboard users can focus the
-   colony action and press Enter or Space.
-2. Read the cell count and cells-per-second rate above the colony.
-3. Buy an affordable item in the always-present **Division apparatus** Store on the right rail.
-   The producer raises cells per second.
-4. Follow the center rail as growth opens stage and hallmark decisions. Each control explains its
-   available action, cost, and biological tradeoff.
+1. Click a rendered cancer cell in the tumor arena. Keyboard users can focus **Divide cell** and
+   press Enter or Space.
+2. Watch the local division pulse and read the cell count and cells-per-second rate in the shallow
+   scoreboard HUD.
+3. Buy an affordable illustrated machine in the always-present upgrade rack. Its row shows the
+   cost, owned level, and marginal production increase.
+4. Follow the evolution dock as growth opens stage and hallmark decisions. Six icon tabs expose
+   one decision family at a time; focusable tooltips and the optional specimen drawer explain the
+   biology and tradeoffs when requested.
 5. Reload the same local URL to continue from browser-local progress. Returning after time away
    can show an **Offline progress** report with the bounded applied gain.
 
-The cell field is the primary manual action: a click must land on a rendered cell, while the
+The tumor is the game board and the primary manual action: a click must land on a rendered cell, while the
 surrounding tissue and whitespace remain inert. The biological scene is a stylized game abstraction,
 not clinical advice or a depiction of patients.
 

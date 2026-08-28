@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
 
+// Selector contract: the direct divide action, visible cell targets, and saved cell count
+// (src/render/tumor_arena.tsx:133; src/render/colony_panel.tsx:74; src/state/save_load.ts:152).
 const SAVE_KEY = "cancer-clicker-ng.save.v2";
 
 function savedCellCount(raw) {
@@ -56,9 +58,15 @@ async function clickVisibleSvgPath(page, selector) {
     ({ x, y }) => document.elementFromPoint(x, y)?.closest("[data-colony-cell]") !== null,
     point,
   );
+  const colonyPoint = await page.locator("svg.colony-figure").evaluate((figure, screenPoint) => {
+    const matrix = figure.getScreenCTM();
+    if (matrix === null) throw new Error("Expected colony SVG transform.");
+    const mapped = new DOMPoint(screenPoint.x, screenPoint.y).matrixTransform(matrix.inverse());
+    return { x: mapped.x, y: mapped.y };
+  }, point);
   await page.mouse.move(point.x, point.y);
   await page.mouse.click(point.x, point.y);
-  return targetsCell;
+  return { point, colonyPoint, targetsCell };
 }
 
 test("the 1280 by 800 colony board keeps its primary clicker surfaces visible and actionable", async ({
@@ -70,8 +78,8 @@ test("the 1280 by 800 colony board keeps its primary clicker surfaces visible an
     await page.goto("/");
 
     await expect(page.getByRole("button", { name: "Divide cell" })).toBeVisible();
-    await expect(page.getByLabel("Cell count")).toBeVisible();
-    await expect(page.getByLabel("Cell production rate")).toBeVisible();
+    await expect(page.getByLabel("Cell count", { exact: true })).toBeVisible();
+    await expect(page.getByLabel("Cell production rate", { exact: true })).toBeVisible();
     await expect(page.locator('[aria-label="Tumor progression"]')).toBeVisible();
     await expect(page.locator('[aria-label="Division apparatus store"]')).toBeVisible();
     await expect(page.locator('[aria-label="Producer purchase quantity"]')).toBeVisible();
@@ -159,10 +167,10 @@ test("compact reduced-motion cell membranes and nuclei each divide once while ti
     expect(await page.evaluate(() => matchMedia("(prefers-reduced-motion: reduce)").matches)).toBe(
       true,
     );
-    expect(await clickVisibleSvgPath(page, ".colony-cell__membrane")).toBe(true);
+    expect((await clickVisibleSvgPath(page, ".colony-cell__membrane")).targetsCell).toBe(true);
     expect(await readSavedCellCount(page)).toBe(1);
 
-    expect(await clickVisibleSvgPath(page, ".colony-cell__nucleus")).toBe(true);
+    expect((await clickVisibleSvgPath(page, ".colony-cell__nucleus")).targetsCell).toBe(true);
     expect(await readSavedCellCount(page)).toBe(2);
 
     await whitespace.click({ position: { x: 8, y: 8 } });
@@ -192,10 +200,14 @@ test("recovery and failed persistence preserve the saved state and tell the play
     );
     await recoveryPage.goto("/");
     const recoveryAction = recoveryPage.getByRole("button", { name: "Divide cell" });
-    const recoveryCells = await recoveryPage.getByLabel("Cell count").textContent();
+    const recoveryCells = await recoveryPage
+      .getByLabel("Cell count", { exact: true })
+      .textContent();
     await expect(recoveryAction).toBeDisabled();
     await recoveryAction.click({ force: true });
-    await expect(recoveryPage.getByLabel("Cell count")).toHaveText(recoveryCells ?? "");
+    await expect(recoveryPage.getByLabel("Cell count", { exact: true })).toHaveText(
+      recoveryCells ?? "",
+    );
     expect(await recoveryPage.evaluate((key) => localStorage.getItem(key), SAVE_KEY)).toBe(
       "{unreadable-colony-save",
     );
@@ -213,13 +225,21 @@ test("recovery and failed persistence preserve the saved state and tell the play
     }, SAVE_KEY);
     await persistencePage.goto("/");
     const beforeRaw = await persistencePage.evaluate((key) => localStorage.getItem(key), SAVE_KEY);
+    const failedDivisionFeedback = persistencePage.locator(".tumor-feedback__division");
+    const failedRewardFeedback = persistencePage.locator(".tumor-arena .reward-feedback");
+    await expect(failedDivisionFeedback).toHaveCount(0);
+    await expect(failedRewardFeedback).toHaveAttribute("data-reward-sequence", "0");
     await persistencePage.evaluate(() => {
       globalThis.__rejectColonyPersistence = true;
     });
     await persistencePage.getByRole("button", { name: "Divide cell" }).press("Enter");
-    await expect(persistencePage.getByLabel("Cell count")).toHaveText(/0(?:\.0+)? cells/);
-    await expect(persistencePage.locator("#save-status")).toHaveText("Unsaved changes");
+    await expect(persistencePage.getByLabel("Cell count", { exact: true })).toHaveText(
+      /0(?:\.0+)? cells/,
+    );
+    await expect(persistencePage.locator("#save-status")).toContainText("Unsaved changes");
     await expect(persistencePage.locator("#game-status")).toContainText("Progress is not saved");
+    await expect(failedDivisionFeedback).toHaveCount(0);
+    await expect(failedRewardFeedback).toHaveAttribute("data-reward-sequence", "0");
     expect(await persistencePage.evaluate((key) => localStorage.getItem(key), SAVE_KEY)).toBe(
       beforeRaw,
     );
@@ -229,33 +249,38 @@ test("recovery and failed persistence preserve the saved state and tell the play
   }
 });
 
-test("reduced motion retains the colony action cue without running colony animation", async ({
-  browser,
+test("a successful direct-cell gesture exposes bounded arena feedback while tissue stays inert", async ({
+  page,
 }) => {
-  const context = await browser.newContext({
-    viewport: { width: 1280, height: 800 },
-    reducedMotion: "reduce",
+  await page.goto("/");
+  const action = page.getByRole("button", { name: "Divide cell" });
+  const tissue = action.locator(".colony-figure__plate");
+
+  await action.focus();
+  await expect(page.locator(".tumor-arena .help-tooltip-content")).toHaveText(
+    "Divide a visible cell",
+  );
+  const reward = page.locator(".tumor-arena .reward-feedback");
+  const beforeRewardSequence = await reward.getAttribute("data-reward-sequence");
+  const click = await clickVisibleSvgPath(page, ".colony-cell__membrane");
+  expect(click.targetsCell).toBe(true);
+  expect(await readSavedCellCount(page)).toBe(1);
+  const feedback = page.locator(".tumor-arena .tumor-feedback__division");
+  await expect(feedback).toHaveCount(1);
+  const feedbackPoint = await feedback.evaluate((node) => {
+    const transform = node.getAttribute("transform");
+    const match = transform?.match(/^translate\(([^ ]+) ([^)]+)\)$/);
+    if (match === null || match === undefined) throw new Error("Expected feedback translation.");
+    return { x: Number(match[1]), y: Number(match[2]) };
   });
-  try {
-    const page = await context.newPage();
-    await page.goto("/");
-    const action = page.getByRole("button", { name: "Divide cell" });
-    await expect(action).toBeVisible();
-    await expect(page.locator(".colony-panel__instruction")).toContainText("Click a visible cell");
-    await expect(action.locator("svg.colony-figure")).toBeVisible();
-    const motion = await action.evaluate((element) => ({
-      reduced: matchMedia("(prefers-reduced-motion: reduce)").matches,
-      animationNames: [element, ...element.querySelectorAll("*")].map(
-        (node) => getComputedStyle(node).animationName,
-      ),
-      activeAnimations: element.getAnimations({ subtree: true }).length,
-    }));
-    expect(motion.reduced).toBe(true);
-    expect(motion.animationNames).toEqual(
-      expect.not.arrayContaining([expect.not.stringMatching(/^none$/)]),
-    );
-    expect(motion.activeAnimations).toBe(0);
-  } finally {
-    await context.close();
-  }
+  // Map before activation: the authoritative count update can change the
+  // specimen's post-division layout, but feedback belongs at the accepted
+  // pre-division cell coordinate.
+  expect(feedbackPoint.x).toBeCloseTo(click.colonyPoint.x, 3);
+  expect(feedbackPoint.y).toBeCloseTo(click.colonyPoint.y, 3);
+  const acceptedRewardSequence = await reward.getAttribute("data-reward-sequence");
+  expect(acceptedRewardSequence).not.toBe(beforeRewardSequence);
+
+  await tissue.click({ position: { x: 8, y: 8 } });
+  await expect(reward).toHaveAttribute("data-reward-sequence", acceptedRewardSequence ?? "");
 });

@@ -9,15 +9,21 @@ import type { JSX } from "solid-js";
 
 import { createCellBlobPaths } from "./blob.js";
 import { Cell } from "./cell.js";
-import { createColonySvgDefinitions, localSvgReference } from "./defs.js";
-import type { SvgDefinition, SvgDefinitionNode } from "./defs.js";
-import { describeColonyScene } from "./describe.js";
-import { EndingOverlay } from "./ending_overlay.js";
 import {
+  createColonySvgDefinitions,
+  localSvgReference,
+  sharedDefinitionNodeCount,
+} from "./defs.js";
+import type { ColonySvgDefinitions, SvgDefinition, SvgDefinitionNode } from "./defs.js";
+import { describeColonyScene } from "./describe.js";
+import { EndingOverlay, endingOverlayNodeCount } from "./ending_overlay.js";
+import {
+  ActivityOverlays,
   HallmarkOverlays,
   InvasionOverlays,
   OxygenOverlays,
   PerfusionOverlays,
+  colonyOverlayNodeCount,
 } from "./colony_overlays.js";
 import { createCellRenderModel, createColonySceneRequest, sceneSvgId } from "./render_types.js";
 import type {
@@ -27,7 +33,6 @@ import type {
 } from "./render_types.js";
 
 const VIEW_BOX = "0 0 1000 700";
-const STATIC_SCENE_NODES = 34;
 
 export type ColonyProps = Readonly<{
   scene: ColonySceneRequest;
@@ -44,27 +49,51 @@ export type ColonySvgModel = Readonly<{
 }>;
 
 function countCellNodes(cell: CellRenderModel): number {
-  return cell.mitosis === undefined ? 3 : 4;
+  // Outer cell group, visual group, membrane, nucleus, and optional mitosis path.
+  return cell.mitosis === undefined ? 4 : 5;
 }
 
-function estimateNodeCount(cells: readonly CellRenderModel[]): number {
+function estimateNodeCount(
+  scene: ColonySceneRequest,
+  cells: readonly CellRenderModel[],
+  definitions: ColonySvgDefinitions,
+  decorative: boolean,
+): number {
   const cellNodes = cells.reduce((total, cell) => total + countCellNodes(cell), 0);
-  const estimate = STATIC_SCENE_NODES + cellNodes;
-  return estimate;
+  const accessibleDescription = decorative ? 0 : 2;
+  const tissue = 4;
+  const silhouette = 2 + scene.layout.regions.length + scene.layout.voids.length;
+  const outline = 2;
+  // The SVG and defs wrappers are rendered nodes too. Every variable portion
+  // delegates to the same bounded slot/overlay models that drive the view.
+  return (
+    1 +
+    accessibleDescription +
+    1 +
+    sharedDefinitionNodeCount(definitions) +
+    tissue +
+    endingOverlayNodeCount(scene) +
+    silhouette +
+    colonyOverlayNodeCount(scene.layout, scene.visual) +
+    1 +
+    cellNodes +
+    outline
+  );
 }
 
 /**
  * Produces ordered renderer data without adding, moving, or otherwise changing
  * accepted colony-layout slots. This pure model is also the structural-test seam.
  */
-export function describeColonySvg(value: ColonySceneRequest): ColonySvgModel {
+export function describeColonySvg(value: ColonySceneRequest, decorative = false): ColonySvgModel {
   const scene = createColonySceneRequest(value);
+  const definitions = createColonySvgDefinitions(scene);
   const description = describeColonyScene(scene);
   const cells = scene.layout.slots.map((slot) => {
     const paths = createCellBlobPaths(slot, scene.morphology);
     return createCellRenderModel(scene, paths);
   });
-  const nodeEstimate = estimateNodeCount(cells);
+  const nodeEstimate = estimateNodeCount(scene, cells, definitions, decorative);
   return Object.freeze({
     titleId: sceneSvgId(scene, "title"),
     descriptionId: sceneSvgId(scene, "description"),
@@ -118,14 +147,16 @@ function silhouettePoints(scene: ColonySceneRequest): string {
 /** Renders the living colony as a meaningful image or a decorative named-button surface. */
 export function Colony(props: ColonyProps): JSX.Element {
   const scene = createMemo(() => createColonySceneRequest(props.scene));
-  const model = createMemo(() => describeColonySvg(scene()));
   const definitions = createMemo(() => createColonySvgDefinitions(scene()));
+  const decorative = props.decorative === true;
+  const model = createMemo(() => describeColonySvg(scene(), decorative));
   const label = createMemo(() => `${model().titleId} ${model().descriptionId}`);
   const points = createMemo(() => silhouettePoints(scene()));
-  const decorative = props.decorative === true;
   return (
     <svg
-      class={`colony-figure colony-figure--${scene().visual.growthState}`}
+      class={`colony-figure colony-figure--${scene().visual.growthState} colony-figure--stage-${scene().stageId}`}
+      data-stage={scene().stageId}
+      data-burden-tier={scene().layout.burdenTier}
       role={decorative ? undefined : "img"}
       viewBox={VIEW_BOX}
       preserveAspectRatio="xMidYMid meet"
@@ -180,6 +211,11 @@ export function Colony(props: ColonyProps): JSX.Element {
           )}
         </For>
       </g>
+      <ActivityOverlays
+        layout={scene().layout}
+        visual={scene().visual}
+        definitionIds={definitions().ids}
+      />
       <OxygenOverlays
         layout={scene().layout}
         visual={scene().visual}

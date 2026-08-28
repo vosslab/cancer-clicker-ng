@@ -13,6 +13,7 @@ function fixture(stageId, seed = 17) {
     sceneSeed: seed,
     morphology,
     detail: "representative",
+    burdenTier: "dense",
   });
   const slot = layout.slots[0];
   assert.ok(slot, `${stageId} has an accepted colony-layout slot`);

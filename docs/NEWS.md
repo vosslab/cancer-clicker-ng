@@ -15,5 +15,6 @@
 
 ### Upgrade notes
 
-- Existing p7 saves load into the current p8 model with an unreached scale-report state. The game
-  preserves valid current-state evidence and does not infer a previously completed report.
+- This pre-production release adopts one exact format-2, state-schema-8 save contract. Other shapes
+  enter the protected recovery flow, keeping the current game model explicit and free of invented
+  historical state.

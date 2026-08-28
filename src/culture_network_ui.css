@@ -1,0 +1,276 @@
+/* Compact visual boards for L3 culture and L4 contamination. */
+.culture-network-panel {
+  --board-accent: #77f1c3;
+  --board-accent-soft: rgb(119 241 195 / 23%);
+  display: grid;
+  gap: 0.55rem;
+  padding: 0.65rem;
+  border-color: rgb(111 241 195 / 55%);
+  background:
+    radial-gradient(circle at 12% 0%, rgb(77 212 161 / 22%), transparent 31%),
+    linear-gradient(145deg, #123a32, #071e1c 76%);
+}
+.network-panel {
+  --board-accent: #82d4ff;
+  --board-accent-soft: rgb(130 212 255 / 23%);
+  border-color: rgb(130 212 255 / 57%);
+  background:
+    radial-gradient(circle at 87% 0%, rgb(73 155 234 / 27%), transparent 33%),
+    linear-gradient(145deg, #12334a, #071923 76%);
+}
+.culture-network-board {
+  display: grid;
+  gap: 0.55rem;
+  min-inline-size: 0;
+  padding: 0.55rem;
+  border: 1px solid color-mix(in srgb, var(--board-accent) 38%, transparent);
+  border-radius: 0.85rem;
+  background: rgb(2 13 17 / 33%);
+}
+.culture-network-board__topline,
+.culture-network-board__status,
+.culture-network-compact-list,
+.culture-network-map {
+  display: flex;
+  gap: 0.42rem;
+  align-items: center;
+  min-inline-size: 0;
+}
+.culture-network-board__topline {
+  justify-content: space-between;
+}
+.culture-network-board__topline h2 {
+  font-size: 1.05rem;
+}
+.culture-network-board__topline p,
+.culture-network-board__status,
+.culture-network-compact-list,
+.culture-network-map__label {
+  margin: 0;
+  color: #dcfff5;
+  font-size: 0.74rem;
+  font-weight: 750;
+  letter-spacing: 0.035em;
+}
+.culture-network-board__status {
+  justify-content: space-between;
+  padding: 0.38rem 0.48rem;
+  border-radius: 0.56rem;
+  background: var(--board-accent-soft);
+  font-variant-numeric: tabular-nums;
+}
+.culture-network-board__status:focus-visible {
+  outline: 2px solid #fff0a7;
+  outline-offset: 2px;
+}
+.culture-network-action-status {
+  margin: 0;
+  padding: 0.4rem 0.48rem;
+  border-inline-start: 3px solid var(--board-accent);
+  border-radius: 0.38rem;
+  color: #e7fff6;
+  background: var(--board-accent-soft);
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1.3;
+}
+.culture-network-action-status[data-tone="failure"] {
+  border-inline-start-color: #ffbf83;
+  color: #fff0dc;
+  background: rgb(145 68 37 / 28%);
+}
+.help-tooltip {
+  display: block;
+}
+.culture-network-prop {
+  flex: 0 0 auto;
+  width: 2.65rem;
+  height: 2.65rem;
+  overflow: visible;
+  stroke: currentcolor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.2;
+}
+.culture-network-prop__body {
+  fill: rgb(7 20 29 / 74%);
+}
+.culture-network-prop__body circle,
+.culture-network-prop__body ellipse {
+  fill: rgb(89 241 190 / 20%);
+}
+.culture-network-prop__shadow {
+  fill: rgb(0 0 0 / 38%);
+  stroke: none;
+}
+.culture-network-prop__state {
+  color: #fff0a7;
+  fill: #fff0a7;
+}
+.culture-network-prop--locked {
+  color: #899a9f;
+  filter: saturate(0.35);
+}
+.culture-network-prop--ready {
+  color: #92ffd2;
+  filter: drop-shadow(0 0 0.28rem rgb(87 255 194 / 45%));
+}
+.culture-network-prop--active {
+  color: #ffce75;
+  filter: drop-shadow(0 0 0.3rem rgb(255 183 84 / 46%));
+}
+.culture-network-prop--selected {
+  color: #e8fffc;
+  filter: drop-shadow(0 0 0.3rem rgb(175 255 245 / 54%));
+}
+.network-panel .culture-network-prop__body circle,
+.network-panel .culture-network-prop__body ellipse {
+  fill: rgb(129 211 255 / 20%);
+}
+.culture-network-action-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 7rem), 1fr));
+  gap: 0.42rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.culture-network-action {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.35rem;
+  align-items: center;
+  width: 100%;
+  min-height: 3.35rem;
+  padding: 0.32rem 0.42rem;
+  border: 1px solid color-mix(in srgb, var(--board-accent) 45%, transparent);
+  border-radius: 0.7rem;
+  color: #eaffff;
+  text-align: start;
+  background: linear-gradient(145deg, var(--board-accent-soft), rgb(4 14 21 / 58%));
+  box-shadow: none;
+}
+.culture-network-action:hover:not(:disabled) {
+  border-color: var(--board-accent);
+  background: var(--board-accent-soft);
+}
+.culture-network-action:focus-visible {
+  outline: 3px solid #fff0a7;
+  outline-offset: 2px;
+}
+.culture-network-action:disabled {
+  opacity: 0.52;
+}
+.culture-network-action__copy {
+  display: grid;
+  gap: 0.08rem;
+  min-inline-size: 0;
+}
+.culture-network-action__name {
+  overflow: hidden;
+  font-size: 0.77rem;
+  font-weight: 900;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.culture-network-action__count {
+  color: #c5eee2;
+  font-size: 0.67rem;
+  font-variant-numeric: tabular-nums;
+}
+.culture-network-map {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.35rem;
+  padding: 0.35rem;
+  border-radius: 0.68rem;
+  background: linear-gradient(145deg, rgb(70 177 242 / 14%), rgb(2 12 20 / 52%));
+}
+.culture-network-map::before {
+  position: absolute;
+  inset: 48% 9% auto;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--board-accent), transparent);
+  content: "";
+  opacity: 0.58;
+  pointer-events: none;
+}
+.culture-network-map > li {
+  z-index: 1;
+  min-inline-size: 0;
+  list-style: none;
+}
+.culture-network-map .culture-network-action {
+  grid-template-columns: auto minmax(0, 1fr);
+  min-height: 3rem;
+}
+.culture-network-compact-list {
+  flex-wrap: wrap;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.culture-network-compact-list > li {
+  position: relative;
+  z-index: 1;
+  min-inline-size: 0;
+}
+.culture-network-compact-list > li > .help-tooltip {
+  display: block;
+  position: relative;
+  z-index: 1;
+}
+.culture-network-compact-list .culture-network-action {
+  position: relative;
+  z-index: 1;
+  pointer-events: auto;
+  min-height: 2.9rem;
+}
+.culture-network-board details {
+  border-top: 1px solid color-mix(in srgb, var(--board-accent) 26%, transparent);
+  color: #c8ddd9;
+  font-size: 0.73rem;
+  line-height: 1.36;
+}
+.culture-network-board summary {
+  min-height: 2.75rem;
+  padding: 0.58rem 0.2rem;
+  color: #ddfff8;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+.culture-network-board details p {
+  margin: 0 0 0.5rem;
+}
+.culture-network-board details ul {
+  display: grid;
+  gap: 0.3rem;
+  margin: 0 0 0.5rem;
+  padding: 0;
+  list-style: none;
+}
+.culture-network-dialog__actions {
+  display: flex;
+  justify-content: end;
+  gap: 0.45rem;
+}
+.culture-network-dialog__actions button {
+  min-block-size: 2.75rem;
+}
+.culture-network-dialog__actions .culture-network-prop {
+  width: 1.5rem;
+  height: 1.5rem;
+  vertical-align: middle;
+}
+@media (max-width: 48rem) {
+  .culture-network-action-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .culture-network-prop {
+    filter: none;
+  }
+}

@@ -99,6 +99,108 @@ function systemicInvasiveFront(layout: ColonyLayout): string {
   return `M ${edge.x} ${edge.y} C ${edge.x + 26} ${edge.y - 18}, ${endX - 26} ${endY + 16}, ${endX} ${endY}`;
 }
 
+/**
+ * Counts presentation nodes from the same frozen state predicates that drive
+ * the overlay components. This keeps renderer diagnostics honest without
+ * introducing a frame-time budget as a gameplay invariant.
+ */
+export function colonyOverlayNodeCount(layout: ColonyLayout, visual: ColonyVisualState): number {
+  const hypoxic = overlaysFor(layout, visual, "hypoxic");
+  const necrotic = overlaysFor(layout, visual, "necrotic");
+  const perfused = overlaysFor(layout, visual, "perfused");
+  const masked = overlaysFor(layout, visual, "masked");
+  const inflamed = overlaysFor(layout, visual, "inflamed");
+  const phenotypeVariance = effectRegions(layout, visual, "phenotype-variance");
+  const senescent = overlaysFor(layout, visual, "senescent");
+  const routes = routeOverlays(layout, visual);
+  const seeds = seededOverlays(layout, visual);
+  const systemicFront = visual.invasion.routeCommitted && routes.length === 0;
+
+  const activity =
+    2 +
+    (visual.growthState === "quiet" ? 0 : 1) +
+    (hasEffect(visual, "viability-preservation") ? 1 : 0) +
+    (hasEffect(visual, "replicative-reserve") ? 1 : 0) +
+    (hasEffect(visual, "mutation-heterogeneity") ? 4 : 0);
+  const oxygen = 1 + hypoxic.length * 3 + necrotic.length * 5;
+  const perfusion = 1 + perfused.length * 6;
+  const hallmarks =
+    2 +
+    masked.length +
+    inflamed.length +
+    (hasEffect(visual, "metabolic-state") ? 1 : 0) +
+    (hasEffect(visual, "checkpoint-disorganization") ? 1 : 0) +
+    phenotypeVariance.length * 3 +
+    (hasEffect(visual, "chromatin-program") ? 4 : 0) +
+    (hasEffect(visual, "microbiome-surface") ? 5 : 0) +
+    senescent.length * 3;
+  const invasion = 1 + routes.length * 2 + (systemicFront ? 4 : 0) + seeds.length;
+  return activity + oxygen + perfusion + hallmarks + invasion;
+}
+
+/**
+ * Projects whole-field activity from the frozen scene semantic ledger. These
+ * are presentation cues only: their dimensions come from accepted layout
+ * geometry and they never interpret mutable game state in the SVG layer.
+ */
+export function ActivityOverlays(props: OverlayProps): JSX.Element {
+  const { centre, baseRadius } = props.layout.silhouette;
+  const cycling = props.visual.growthState !== "quiet";
+  const energized = props.visual.growthState === "energized";
+  const hasRepair = hasEffect(props.visual, "viability-preservation");
+  const hasMutation = hasEffect(props.visual, "mutation-heterogeneity");
+  const hasReserve = hasEffect(props.visual, "replicative-reserve");
+  const outerRx = Math.min(458, baseRadius * 1.2 + 44);
+  const outerRy = Math.min(306, baseRadius * 0.88 + 34);
+  return (
+    <g
+      class="colony-figure__activity"
+      data-growth-state={props.visual.growthState}
+      data-stage={props.layout.stageId}
+      aria-hidden="true"
+      pointer-events="none"
+    >
+      <ellipse
+        class="colony-figure__activity-aura"
+        cx={centre.x}
+        cy={centre.y}
+        rx={outerRx}
+        ry={outerRy}
+      />
+      {cycling ? (
+        <ellipse
+          class={`colony-figure__cycle-wave${energized ? " colony-figure__cycle-wave--energized" : ""}`}
+          cx={centre.x}
+          cy={centre.y}
+          rx={Math.max(36, baseRadius * 0.72)}
+          ry={Math.max(26, baseRadius * 0.53)}
+        />
+      ) : undefined}
+      {hasRepair ? (
+        <path
+          class="colony-figure__repair-arc"
+          d={`M ${centre.x - outerRx * 0.7} ${centre.y + outerRy * 0.48} A ${outerRx * 0.82} ${outerRy * 0.86} 0 0 1 ${centre.x + outerRx * 0.78} ${centre.y + outerRy * 0.26}`}
+          fill="none"
+        />
+      ) : undefined}
+      {hasReserve ? (
+        <path
+          class="colony-figure__reserve-arc"
+          d={`M ${centre.x - outerRx * 0.5} ${centre.y - outerRy * 0.68} Q ${centre.x} ${centre.y - outerRy * 1.08} ${centre.x + outerRx * 0.5} ${centre.y - outerRy * 0.68}`}
+          fill="none"
+        />
+      ) : undefined}
+      {hasMutation ? (
+        <g class="colony-figure__mutation-shards" data-effect="mutation-heterogeneity">
+          <path d={`M ${centre.x - 26} ${centre.y - outerRy - 18} l 11 -18 l 10 18 z`} />
+          <path d={`M ${centre.x + outerRx + 13} ${centre.y - 10} l 17 11 l -17 10 z`} />
+          <path d={`M ${centre.x - outerRx - 13} ${centre.y + 14} l -17 -11 l 17 -10 z`} />
+        </g>
+      ) : undefined}
+    </g>
+  );
+}
+
 /** Renders condition-backed oxygen and necrosis interiors under individual cells. */
 export function OxygenOverlays(props: OverlayProps): JSX.Element {
   const hypoxic = overlaysFor(props.layout, props.visual, "hypoxic");
@@ -107,28 +209,56 @@ export function OxygenOverlays(props: OverlayProps): JSX.Element {
     <g class="colony-figure__hypoxia-necrosis" aria-hidden="true" pointer-events="none">
       <For each={hypoxic}>
         {(overlay) => (
-          <ellipse
-            class="colony-figure__hypoxic-core"
-            data-region={overlay.sourceRegionId}
-            cx={overlay.region.centre.x}
-            cy={overlay.region.centre.y}
-            rx={overlay.region.rx * 0.72}
-            ry={overlay.region.ry * 0.72}
-            fill={localSvgReference(props.definitionIds.hypoxiaGradient)}
-          />
+          <g class="colony-figure__hypoxic-region" data-region={overlay.sourceRegionId}>
+            <ellipse
+              class="colony-figure__hypoxic-core"
+              cx={overlay.region.centre.x}
+              cy={overlay.region.centre.y}
+              rx={overlay.region.rx * 0.72}
+              ry={overlay.region.ry * 0.72}
+              fill={localSvgReference(props.definitionIds.hypoxiaGradient)}
+            />
+            <path
+              class="colony-figure__hypoxic-contour"
+              d={`M ${overlay.region.centre.x - overlay.region.rx * 0.5} ${overlay.region.centre.y} q ${overlay.region.rx * 0.24} ${-overlay.region.ry * 0.26} ${overlay.region.rx * 0.48} 0 t ${overlay.region.rx * 0.48} 0`}
+              fill="none"
+            />
+          </g>
         )}
       </For>
       <For each={necrotic}>
-        {(overlay) => (
-          <ellipse
-            class="colony-figure__necrotic-core"
-            data-region={overlay.sourceRegionId}
-            cx={overlay.region.centre.x}
-            cy={overlay.region.centre.y}
-            rx={overlay.region.rx * 0.58}
-            ry={overlay.region.ry * 0.58}
-          />
-        )}
+        {(overlay) => {
+          const { centre, rx, ry } = overlay.region;
+          return (
+            <g class="colony-figure__necrotic-region" data-region={overlay.sourceRegionId}>
+              <ellipse
+                class="colony-figure__necrotic-core"
+                cx={centre.x}
+                cy={centre.y}
+                rx={rx * 0.58}
+                ry={ry * 0.58}
+              />
+              <circle
+                class="colony-figure__necrotic-debris"
+                cx={centre.x - rx * 0.21}
+                cy={centre.y + ry * 0.1}
+                r="4"
+              />
+              <circle
+                class="colony-figure__necrotic-debris"
+                cx={centre.x + rx * 0.16}
+                cy={centre.y - ry * 0.18}
+                r="3"
+              />
+              <circle
+                class="colony-figure__necrotic-debris"
+                cx={centre.x + rx * 0.3}
+                cy={centre.y + ry * 0.22}
+                r="2.5"
+              />
+            </g>
+          );
+        }}
       </For>
     </g>
   );
@@ -157,6 +287,23 @@ export function PerfusionOverlays(props: OverlayProps): JSX.Element {
                 class="colony-figure__vessel-branch"
                 d={`M ${endX} ${endY} L ${overlay.region.centre.x + overlay.region.rx * 0.38} ${overlay.region.centre.y - overlay.region.ry * 0.26}`}
                 fill="none"
+              />
+              <path
+                class="colony-figure__vessel-branch"
+                d={`M ${endX} ${endY} L ${overlay.region.centre.x + overlay.region.rx * 0.18} ${overlay.region.centre.y + overlay.region.ry * 0.42}`}
+                fill="none"
+              />
+              <circle
+                class="colony-figure__vessel-terminal"
+                cx={overlay.region.centre.x + overlay.region.rx * 0.38}
+                cy={overlay.region.centre.y - overlay.region.ry * 0.26}
+                r="4"
+              />
+              <circle
+                class="colony-figure__vessel-terminal"
+                cx={overlay.region.centre.x + overlay.region.rx * 0.18}
+                cy={overlay.region.centre.y + overlay.region.ry * 0.42}
+                r="3"
               />
             </g>
           );
@@ -306,12 +453,20 @@ export function InvasionOverlays(props: OverlayProps): JSX.Element {
         }}
       </For>
       {needsSystemicFront ? (
-        <path
-          class="colony-figure__invasive-front colony-figure__invasive-front--systemic"
-          data-scope="systemic"
-          d={systemicInvasiveFront(props.layout)}
-          fill="none"
-        />
+        <g data-scope="systemic">
+          <path
+            class="colony-figure__invasive-front colony-figure__invasive-front--systemic"
+            d={systemicInvasiveFront(props.layout)}
+            fill="none"
+          />
+          <circle class="colony-figure__detached-cell" cx="948" cy="286" r="8" />
+          <circle
+            class="colony-figure__detached-cell colony-figure__detached-cell--small"
+            cx="916"
+            cy="314"
+            r="4.5"
+          />
+        </g>
       ) : undefined}
       <For each={seeds}>
         {(overlay) => {

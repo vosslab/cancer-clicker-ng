@@ -1,20 +1,32 @@
-import { Show, createMemo, createSignal, onCleanup, onMount } from "solid-js";
+import { For, Show, createSignal, onCleanup, onMount } from "solid-js";
 import type { JSX } from "solid-js";
+import { formatBigNum, formatQuantity } from "../bignum/format.js";
+import { GAME_COPY } from "../content/game_copy.js";
+import { cellProductionRate } from "../economy/production.js";
+import { stageDefinition } from "../stages/catalog.js";
 import { browserStorage } from "../state/save_storage.js";
 import { createInitialGameState } from "../state/game_state.js";
 import { loadFromStorage } from "../state/save_load.js";
 import type { StorageLike } from "../state/save_load.js";
 import type { GameState, RuntimeState } from "../types/state.js";
 import { ProducersPanel } from "./producers_panel.js";
-import { HallmarkTree } from "./hallmark_tree.js";
 import { ColonyPanel } from "./colony_panel.js";
-import { StagePanel } from "./stage_panel.js";
 import { TransitPanel } from "./transit_panel.js";
 import { PrestigePanel } from "./prestige_panel.js";
 import { CulturePanel } from "./culture_panel.js";
 import { NetworkPanel } from "./network_panel.js";
 import { EndingView } from "./ending_view.js";
 import { GameShell } from "./shell.js";
+import { EvolutionDock } from "./evolution_dock.js";
+import { GameBoard } from "./game_board.js";
+import { GameHud } from "./game_hud.js";
+import { GameRewardDock } from "./game_reward_dock.js";
+import { EVOLUTION_TABS, createGameUiState } from "./game_ui_state.js";
+import type { EvolutionTab } from "./game_ui_state.js";
+import { InspectorDrawer } from "./inspector_drawer.js";
+import { HelpTooltip } from "./action_tooltip.js";
+import { ActionIcon } from "./action_icon.js";
+import type { SvgIconName } from "../svg/icons.js";
 import { createGameController, persistWithStorage } from "./game_controller.js";
 import type {
   ActiveClock,
@@ -42,6 +54,17 @@ type LoadedGame = Readonly<{
   savedAtMs?: number;
   recoveryReason?: RecoveryBlockReason;
 }>;
+
+type EvolutionTabVisual = Readonly<{ label: string; icon: SvgIconName }>;
+
+const EVOLUTION_TAB_VISUALS: Readonly<Record<EvolutionTab, EvolutionTabVisual>> = {
+  stage: { label: "Stage", icon: "stage_advance" },
+  hallmarks: { label: "Hallmarks", icon: "proliferative_signaling" },
+  routes: { label: "Routes", icon: "transit" },
+  prestige: { label: "Resets", icon: "lineage_reset" },
+  culture: { label: "Culture", icon: "culture" },
+  network: { label: "Network", icon: "network_node" },
+};
 
 function loadGame(storage: StorageLike | undefined): LoadedGame {
   if (!storage) return { game: createInitialGameState(), recoveryReason: "storage-read-failed" };
@@ -116,9 +139,7 @@ export function App(props: AppProps): JSX.Element {
   const [endingFocusSourceEventSequence, setEndingFocusSourceEventSequence] = createSignal<
     number | undefined
   >(undefined);
-  const saveStatus = createMemo(() =>
-    controller.saveError() ? "Unsaved changes" : "Progress saved locally",
-  );
+  const gameUi = createGameUiState();
   let runtime: RuntimeState = {
     game: controller.game,
     lastTickAtMs: activeClock.now(),
@@ -127,8 +148,12 @@ export function App(props: AppProps): JSX.Element {
   };
   let timer: ReturnType<typeof setInterval> | undefined;
 
-  function divide(): void {
-    controller.divide();
+  /** The arena receives this acknowledgement only after the controller persists the event. */
+  function divide(): boolean {
+    const result = controller.divide();
+    if (!result.ok) return false;
+    gameUi.pushTransientFeedback({ message: "+1 cell", tone: "success" });
+    return true;
   }
 
   function replaceUnreadableSave(): void {
@@ -153,7 +178,34 @@ export function App(props: AppProps): JSX.Element {
   }
 
   function advanceStage(): void {
-    controller.advanceStage();
+    const result = controller.advanceStage();
+    if (result.ok) gameUi.pushTransientFeedback({ message: "Stage advanced", tone: "success" });
+  }
+
+  function openSpecimenInspector(invoker: HTMLElement): void {
+    const stage = stageDefinition(controller.game.currentStage);
+    const cells = formatQuantity(
+      controller.game.cells,
+      controller.game.numberFormat,
+      2,
+      "cell",
+      "cells",
+    );
+    const rate = formatBigNum(cellProductionRate(controller.game), controller.game.numberFormat, 2);
+    gameUi.openInspector(
+      {
+        id: `specimen:${stage.id}`,
+        kind: GAME_COPY.mastheadEyebrow,
+        title: stage.title,
+        summary: `${GAME_COPY.mastheadSubtitle} ${stage.gameplayIdentity}`,
+        details: [
+          { label: "Cells", value: cells },
+          { label: "Production", value: `${rate} cells/s` },
+          { label: "Pressure", value: stage.pressure },
+        ],
+      },
+      invoker,
+    );
   }
 
   function reachSoftEnding(): ReturnType<typeof controller.reachSoftEnding> {
@@ -225,6 +277,31 @@ export function App(props: AppProps): JSX.Element {
     }
   }
 
+  function evolutionSurface(): JSX.Element {
+    const activeTab = gameUi.activeEvolutionTab();
+    switch (activeTab) {
+      case "stage":
+      case "hallmarks":
+        return (
+          <EvolutionDock
+            game={controller.game}
+            controller={controller}
+            disabled={controller.recoveryBlocked()}
+            onAdvance={advanceStage}
+            activeView={activeTab}
+          />
+        );
+      case "routes":
+        return <TransitPanel game={controller.game} controller={controller} />;
+      case "prestige":
+        return <PrestigePanel game={controller.game} controller={controller} />;
+      case "culture":
+        return <CulturePanel game={controller.game} controller={controller} />;
+      case "network":
+        return <NetworkPanel game={controller.game} controller={controller} />;
+    }
+  }
+
   onMount(() => {
     timer = setInterval(advance, 1000);
     if (props.debug) window.addEventListener("keydown", handleDebugKeydown);
@@ -236,51 +313,48 @@ export function App(props: AppProps): JSX.Element {
 
   return (
     <GameShell>
-      <header class="masthead">
-        <p class="eyebrow">Clinical growth simulation</p>
-        <h1 id="game-title">Cancer Clicker NG</h1>
-        <p class="subtitle">One transformed cell. No exit interview.</p>
-        <div class="status-strip">
-          <p id="save-status" classList={{ "is-unsaved": Boolean(controller.saveError()) }}>
-            {saveStatus()}
-          </p>
-          <button
-            id="format-button"
-            class="text-button"
-            type="button"
-            disabled={controller.recoveryBlocked()}
-            onClick={() => controller.toggleNumberFormat()}
-          >
-            Use {controller.game.numberFormat === "short" ? "full" : "short"} names
-          </button>
-        </div>
-      </header>
-      <EndingView
+      <GameHud
         game={controller.game}
         disabled={controller.recoveryBlocked()}
-        acceptedSourceEventSequence={endingFocusSourceEventSequence()}
-        onAcceptedFocusHandled={() => setEndingFocusSourceEventSequence(undefined)}
-        onReach={reachSoftEnding}
+        saveError={controller.saveError()}
+        onToggleNumberFormat={() => controller.toggleNumberFormat()}
+        onOpenInspector={openSpecimenInspector}
       />
-      <section class="game-board" aria-label="Tumor growth board">
-        <ColonyPanel
-          game={controller.game}
-          disabled={controller.recoveryBlocked()}
-          onDivide={divide}
-        />
-        <section class="progression-rail" aria-label="Tumor progression">
-          <StagePanel
+      <GameBoard
+        arena={
+          <ColonyPanel
             game={controller.game}
             disabled={controller.recoveryBlocked()}
-            onAdvance={advanceStage}
+            onDivide={divide}
           />
-          <TransitPanel game={controller.game} controller={controller} />
-          <HallmarkTree game={controller.game} controller={controller} />
-          <PrestigePanel game={controller.game} controller={controller} />
-          <CulturePanel game={controller.game} controller={controller} />
-          <NetworkPanel game={controller.game} controller={controller} />
-        </section>
-        <aside class="store-rail" aria-label="Division apparatus store">
+        }
+        tabs={
+          <nav class="evolution-tabs" aria-label="Evolution systems">
+            <For each={EVOLUTION_TABS}>
+              {(tab) => {
+                const visual = EVOLUTION_TAB_VISUALS[tab];
+                return (
+                  <HelpTooltip tooltip={visual.label} placement="below">
+                    {(tooltipBindings) => (
+                      <button
+                        {...tooltipBindings}
+                        class="evolution-tabs__button"
+                        type="button"
+                        aria-label={`${visual.label} evolution system`}
+                        aria-pressed={gameUi.activeEvolutionTab() === tab}
+                        onClick={() => gameUi.setActiveEvolutionTab(tab)}
+                      >
+                        <ActionIcon name={visual.icon} />
+                      </button>
+                    )}
+                  </HelpTooltip>
+                );
+              }}
+            </For>
+          </nav>
+        }
+        evolution={evolutionSurface()}
+        rack={
           <ProducersPanel
             game={controller.game}
             onPurchase={handlePurchase}
@@ -288,8 +362,21 @@ export function App(props: AppProps): JSX.Element {
             reverse={showReversedProducers()}
             disabled={controller.recoveryBlocked()}
           />
-        </aside>
-      </section>
+        }
+        rewards={
+          <>
+            <GameRewardDock ui={gameUi} />
+            <EndingView
+              game={controller.game}
+              disabled={controller.recoveryBlocked()}
+              acceptedSourceEventSequence={endingFocusSourceEventSequence()}
+              onAcceptedFocusHandled={() => setEndingFocusSourceEventSequence(undefined)}
+              onReach={reachSoftEnding}
+            />
+          </>
+        }
+        inspector={<InspectorDrawer ui={gameUi} />}
+      />
       <p id="game-status" class="sr-status" aria-live="polite">
         {controller.saveError() ?? "Ready to divide."}
       </p>

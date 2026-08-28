@@ -2,106 +2,66 @@
 
 ## Player loop
 
-Cancer Clicker NG is an incremental cancer-biology game. The player directly activates visible
-cancer-cell geometry to divide cells, then spends earned resources on producers, hallmarks, stage
-progression, and the L1-L4 prestige systems. The 1280 x 800 board keeps the colony action at left,
-the living tumor and progression world in the middle, and the always-upgradable Store at right.
+Cancer Clicker NG is a fictional incremental cancer-biology game built around a living tumor game
+board. Click a visible cancer cell to divide, use earned cells to buy illustrated molecular
+machines, choose one active evolution family, and revisit new decisions as the colony progresses.
+The initial 1280 x 800 board keeps the tumor, progression, and upgrade rack visible together, so
+the main loop never collapses into a single generic button.
 
-The game makes biological state legible: growing colonies form tumors, acquire blood supply, show
-hallmark-linked morphology, and eventually disseminate through a saved network. The interface keeps
-future content visible with its biological unlock condition and lets player choices remain meaningful
-after every new layer opens.
+The board depicts state consequences: a colony becomes denser, establishes perfusion, expresses
+hallmark-linked morphology, develops hypoxia or necrosis, invades, and later forms a saved network.
+These are stylized systems-level game cues. They do not represent a patient, treatment advice,
+diagnosis, prognosis, outbreak, or clinical simulation.
 
-## Chicago scale culmination
+## Board grammar
 
-The optional Chicago-scale presentation becomes available at `global_lab_contamination` after one
-completed dissemination tier and `2.5e25` cells. Its catalog model declares `5.0e10 m3` of
-high-rise volume at `2.0e-15 m3` per cell. This is a transparent scale model, not a measurement
-claim about every building.
+| Surface                   | Decision promise                                                                                                                 |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| Shallow scoreboard HUD    | Always shows cell count, cells/s, stage, save condition, number format, and an optional specimen route.                          |
+| Living tumor arena        | A pointer action must land on visible cell geometry; Enter and Space activate the same `Divide cell` control.                    |
+| Evolution dock            | Shows six compact icon tabs while one family is active, keeping upgrades legible rather than stacking every system at once.      |
+| Illustrated upgrade rack  | Keeps buy quantity, machine art, owned level, next cost, marginal benefit, and biological details continuously available.        |
+| Tooltip and drawer routes | Explain unfamiliar icons, biological tradeoffs, and specimen facts when requested without turning the first board into a manual. |
 
-Opening the presentation is an explicit durable event. It records evidence, restores after reload,
-and places `EndingView` above the live board. Cells, producer economics, offline accrual, direct
-cell action, and network decisions continue unchanged. Before it opens, the board identifies the
-remaining stage, dissemination, or modeled-cell-scale condition. Reduced-motion players receive the
-same readable completed state without requiring an animation.
+The icon is a family cue, not the only instruction. Decorative SVG marks sit beside text labels;
+icon-first utility controls retain explicit accessible names and tooltips. High-consequence choices
+keep their words visible.
 
-## Offline replay
+## Progression and continued play
 
-### Player promise
+Stages and hallmarks create new constraints and tradeoffs rather than replacing the base loop.
+The L1-L4 reset systems, culture, and dissemination network add durable choices while producers
+and direct division continue to matter. [PRESTIGE_DESIGN.md](PRESTIGE_DESIGN.md) owns the detailed
+reset and network contract; [PROGRESSION_DESIGN.md](PROGRESSION_DESIGN.md) owns the hallmark
+branches and gates.
 
-On return, the game reports what the colony earned while away, whether the grant was capped, and
-which progression decisions await an explicit player action. It never spends resources, chooses an
-upgrade, advances a stage, or performs prestige on the player's behalf.
+The optional Chicago-scale report is earned only at `global_lab_contamination` after the required
+dissemination evidence and modeled `2.5e25` cell scale. Its high-rise-volume comparison is a
+transparent fictional scale analogy, not a claim about buildings or biology. Opening it records a
+durable event, and it remains revisitable after reload. Reaching it never stops direct division,
+producer economics, offline gain, culture, or network decisions.
 
-### Bounded economy
+## Return from absence
 
-`src/state/offline.ts` owns absence orchestration and `src/economy/tick.ts` owns the shared live
-and offline economy formula. Offline work uses 60,000 ms macro-steps, one positive remainder when
-needed, and a seven-day maximum applied duration. It is not a `rate * elapsed` shortcut and never
-iterates per millisecond.
+On return, the game reports bounded earned production and any safety notice. It does not spend
+cells, choose an upgrade, advance a stage, or perform a reset for the player. `src/state/offline.ts`
+orchestrates absence while `src/economy/tick.ts` supplies the same formula used during live play.
+The maximum applied absence is seven days, evaluated in 60,000 ms macro-steps with at most one
+positive remainder.
 
-| Constant            | Value            | Rule                                      |
-| ------------------- | ---------------- | ----------------------------------------- |
-| `OFFLINE_STEP_MS`   | `60_000` ms      | One minute per full macro-step.           |
-| `MAX_OFFLINE_MS`    | `604_800_000` ms | Seven-day maximum economic absence grant. |
-| `MAX_OFFLINE_STEPS` | `10_080`         | Exact maximum full-step count.            |
+The current save contract is `version: 2` and `stateSchemaVersion: 8`.
+[STATE_PERSISTENCE.md](STATE_PERSISTENCE.md) owns strict parsing, protected unreadable bytes, and
+the explicit fresh-replacement route. Semantic replay compares normalized durable state and visible
+progression, not serialized-byte identity.
 
-The controller validates these safe integral relations. It makes one call per full step, at most one
-positive remainder call, and no calls for zero applied duration. A request above the cap runs the
-bounded maximum and reports the cap visibly.
+## Evidence and calibration
 
-### Two clocks
+`./check_codebase.sh` is the aggregate TypeScript gate. Production browser tests establish
+interaction and accessibility behavior; rendered screenshots establish visual hierarchy at the
+board target and narrow responsive width. Those rendered checks are qualitative acceptance evidence,
+not pixel-equivalence or arbitrary machine-timing gates.
 
-The save envelope's `savedAtMs` is an injected wall-clock sample used only to measure absence. The
-persisted `GameState.activeTimeMs` is the safe, nonnegative simulation clock for event timestamps,
-stage transitions, cooldowns, and deadlines. Offline economics changes resources and eligibility
-observations without advancing simulation time. Live ticking advances simulation time and evaluates
-ordinary deadlines.
-
-`deriveOfflineElapsed()` accepts safe wall-clock samples, returns a visible zero-duration
-clock-skew result for future samples, and rejects invalid samples before adapter work. The
-controller resaves valid completed handling with the sampled wall-clock value and preserves the
-prior save for invalid clock input.
-
-### Progression persistence
-
-Gameplay writes the one current save envelope: `version: 2` and `stateSchemaVersion: 8`.
-[STATE_PERSISTENCE.md](STATE_PERSISTENCE.md) owns strict parsing, protected rejected storage, and
-the explicit fresh-replacement flow.
-
-Current writer revalidation gives a zero-notice reload and stable canonical serialization. This is
-a persistence invariant, not a requirement that offline or development replay match serialized
-bytes.
-
-### Progression queue
-
-The economy observes only identity-level stage and prestige eligibility. The state owner stamps
-accepted observations at the current simulation time and appends them to the ordered durable queue.
-The queue never performs stage or prestige actions automatically. Stage and prestige modules
-revalidate an entry when the player acts and can show that it is no longer available.
-
-## Verification ownership
-
-| Evidence           | Owner and semantic result                                                                                                                       |
-| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| Offline behavior   | Domain-named Node/tsx tests cover clock inputs, bounded steps, partitions, queues, projection boundaries, atomic failures, and BigNum extremes. |
-| Persistence        | `src/state/save_load.ts` and its tests cover strict current-schema rejection and writer revalidation.                                           |
-| Development replay | `src/state/replay.ts` compares normalized durable state and visible progression; it is distinct from offline economy replay.                    |
-| Browser behavior   | Production-dist Playwright covers actual controls, storage lifecycle, accessibility, reduced motion, and responsive layout.                     |
-
-`./check_codebase.sh` is the canonical aggregate TypeScript gate. A production build, browser
-capture, and visual inspection are one-time acceptance evidence when a UI change needs rendered
-review. Calibration reports may measure approximation behavior and policy tradeoffs, but they do
-not introduce a fixed percentage, rank, pixel, byte, or machine-timing gate.
-
-## Durable ownership
-
-- `src/economy/tick.ts` owns the shared economy formula.
-- `src/state/offline.ts` owns bounded absence orchestration and return reporting data.
-- `src/state/save_load.ts` owns the current save lifecycle and exact parser/writer boundary.
-- `src/state/events.ts` owns accepted durable mutations.
-- `src/render/game_controller.ts` owns storage-aware player intents and visible return handling.
-- Stage and prestige modules own explicit progression action and revalidation.
-
-Dated implementation history belongs in [CHANGELOG.md](CHANGELOG.md). Active follow-on work belongs
-in `docs/active_plans/`.
+The deterministic balance laboratory is a development instrument. It compares visible-state-only
+policies and records traces, witnesses, completions, stalls, and outliers for a human tuning
+decision. [BALANCE.md](BALANCE.md), when present, owns the accepted calibration conclusion;
+generated reports remain one-time output rather than a player-facing score.

@@ -7,7 +7,7 @@ import { isStageId } from "../state/catalog.js";
 import type { StageId } from "../types/ids.js";
 import { assertColonyVisualState } from "./colony_visual_state.js";
 import type { ColonyVisualState } from "./colony_visual_state.js";
-import type { CellSlot, ColonyLayout, DepthStratum } from "./colony_layout.js";
+import type { CellSlot, ColonyBurdenTier, ColonyLayout, DepthStratum } from "./colony_layout.js";
 import type { MitosisMotif, MitosisPlacement, MorphologyResolution } from "./morphology.js";
 
 export type ColonySceneDetail = "representative" | "inspection";
@@ -56,6 +56,7 @@ export type CellRenderPathInput = Readonly<{
 const UINT32_MAX = 0xffffffff;
 const LAYOUT_KEYS = [
   "stageId",
+  "burdenTier",
   "sceneKey",
   "silhouette",
   "regions",
@@ -139,6 +140,10 @@ function requireLayout(value: unknown): ColonyLayout {
     throw new Error("Scene layout must be a frozen accepted colony layout.");
   if (
     typeof value.stageId !== "string" ||
+    (value.burdenTier !== "sparse" &&
+      value.burdenTier !== "established" &&
+      value.burdenTier !== "dense" &&
+      value.burdenTier !== "overgrown") ||
     typeof value.sceneKey !== "string" ||
     !Array.isArray(value.slots) ||
     !Object.isFrozen(value.slots)
@@ -198,8 +203,13 @@ function validFiniteSlot(value: unknown, sceneSeed: number): value is CellSlot {
   );
 }
 
-function expectedSceneKey(stageId: StageId, sceneSeed: number, detail: ColonySceneDetail): string {
-  return `layout-v1:${stageId}:${sceneSeed}:${detail}`;
+function expectedSceneKey(
+  stageId: StageId,
+  sceneSeed: number,
+  detail: ColonySceneDetail,
+  burdenTier: ColonyBurdenTier,
+): string {
+  return `layout-v2:${stageId}:${sceneSeed}:${detail}:${burdenTier}`;
 }
 
 /** Validates and reconstructs the narrow immutable colony renderer scene boundary. */
@@ -215,7 +225,7 @@ export function createColonySceneRequest(value: unknown): ColonySceneRequest {
   if (
     layout.stageId !== stageId ||
     morphology.seed !== sceneSeed ||
-    layout.sceneKey !== expectedSceneKey(stageId, sceneSeed, detail)
+    layout.sceneKey !== expectedSceneKey(stageId, sceneSeed, detail, layout.burdenTier)
   ) {
     throw new Error("Scene stage, seed, detail, layout, and morphology must share one identity.");
   }

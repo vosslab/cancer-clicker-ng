@@ -9,7 +9,15 @@ import { fileURLToPath } from "node:url";
 
 import { chromium } from "playwright";
 
-import { bigNum, eventId, regionId, stageId } from "../src/brands.ts";
+import {
+  bigNum,
+  cryobankProgramId,
+  eventId,
+  passageUpgradeId,
+  regionId,
+  routeId,
+  stageId,
+} from "../src/brands.ts";
 import { CHICAGO_SKYSCRAPER_CELL_EQUIVALENT } from "../src/ending/trigger.ts";
 import {
   AUTHORED_NETWORK_NODE_CATALOG,
@@ -30,10 +38,19 @@ const README_BLOCK = Object.freeze({
   begin: "<!-- screenshots:begin (managed by screenshot-docs) -->",
   end: "<!-- screenshots:end -->",
   lines: Object.freeze([
-    "![Cancer Clicker NG board with a direct cancer-cell action, live cell count and production rate, tumor progression, and the Division apparatus store](docs/screenshots/cancer_clicker_ng_board.png)",
-    "![Cancer Clicker NG angiogenic primary with a perfused multicellular tumor, visible blood-supply branches, meaningful growth, and producer upgrades](docs/screenshots/cancer_clicker_ng_perfused_tumor.png)",
-    "![Cancer Clicker NG advanced systems view with icon-led culture choices, a renewable dissemination network frontier, and the persistent living tumor board](docs/screenshots/cancer_clicker_ng_culture_network.png)",
-    "![Cancer Clicker NG earned Chicago scale report over the living colony, retaining the direct cell action and continued-play context](docs/screenshots/cancer_clicker_ng_chicago_scale.png)",
+    "![Cancer Clicker NG game board after a visible tumor-cell click, with the living tumor, compact scoreboard, icon tabs, and upgrade rack](docs/screenshots/cancer_clicker_ng_board.png)",
+    "",
+    "<details>",
+    "<summary>Central tumor progression: hypoxic core, perfusion, and invasive route</summary>",
+    "",
+    "![Cancer Clicker NG dense hypoxic lesion with an oxygen-starved rim and necrotic core](docs/screenshots/cancer_clicker_ng_hypoxic_necrotic.png)",
+    "![Cancer Clicker NG perfused angiogenic tumor, with visible vessel branches and the Stage evolution tab](docs/screenshots/cancer_clicker_ng_perfused_tumor.png)",
+    "![Cancer Clicker NG invasive route state with a seeded site and visible invasive front](docs/screenshots/cancer_clicker_ng_invasive_route.png)",
+    "</details>",
+    "",
+    "![Cancer Clicker NG Culture tab, showing the illustrated dish, cryobank program, and compact laboratory controls](docs/screenshots/cancer_clicker_ng_culture_lab.png)",
+    "![Cancer Clicker NG Network tab, showing the illustrated two-by-two site map and renewable campaign frontier](docs/screenshots/cancer_clicker_ng_network_map.png)",
+    "![Cancer Clicker NG earned Chicago scale report over the continuing living tumor board](docs/screenshots/cancer_clicker_ng_chicago_scale.png)",
   ]),
 });
 
@@ -97,6 +114,60 @@ function legalPerfusedTumorState() {
   };
 }
 
+function captureRegion(id, changes = {}) {
+  return {
+    id: regionId(id),
+    capacity: 16,
+    viability: 1,
+    phenotype: "proliferative",
+    vesselLinkIds: [],
+    routeIds: [],
+    ...changes,
+  };
+}
+
+/** A dense, parser-validated lesion that makes both oxygen and necrosis overlays visible. */
+function hypoxicNecroticState() {
+  const initial = createInitialGameState();
+  const hypoxic = captureRegion("readme-hypoxic-rim", {
+    viability: 0.42,
+    phenotype: "stress-tolerant",
+  });
+  const necrotic = captureRegion("readme-necrotic-core", { viability: 0 });
+  return {
+    ...initial,
+    activeTimeMs: 100,
+    cells: bigNum(8, 7),
+    currentStage: stageId("hypoxic_lesion"),
+    regions: [hypoxic, necrotic],
+    telomereReserveByRegion: { [hypoxic.id]: 6, [necrotic.id]: 0 },
+    oxygenPressure: 8,
+    damagePressure: 3,
+  };
+}
+
+/** A dense route-and-seed snapshot; the route commitment drives the invasive visual contract. */
+function invasiveRouteState() {
+  const initial = createInitialGameState();
+  const route = routeId("readme-invasive-route");
+  const seeded = captureRegion("readme-seeded-site", {
+    phenotype: "migratory",
+    routeIds: [route],
+  });
+  return {
+    ...initial,
+    activeTimeMs: 100,
+    cells: bigNum(5, 7),
+    currentStage: stageId("invasive_carcinoma"),
+    regions: [seeded],
+    seededSites: [seeded.id],
+    telomereReserveByRegion: { [seeded.id]: 8 },
+    committedCellCommitments: { [route]: 24 },
+    routeRiskById: { [route]: 0.18 },
+    routeDiscoveryProgress: 6,
+  };
+}
+
 async function seedLegalPerfusedTumorState(page) {
   const serialized = serializeGameState(legalPerfusedTumorState(), FIXED_CAPTURE_CLOCK_MS);
   const parsed = parseSave(serialized);
@@ -144,6 +215,24 @@ function advancedSystemsState() {
         frontierSequence: 0,
         sourceEventSequence: 1,
       }),
+    },
+  };
+}
+
+/** A parser-validated L3 snapshot with a visible selected cryobank program. */
+function cultureLabState() {
+  const state = advancedSystemsState();
+  return {
+    ...state,
+    culture: {
+      passages: 5,
+      purchasedPassageUpgrades: [
+        { upgradeId: passageUpgradeId("cryobank"), rank: 1 },
+        { upgradeId: passageUpgradeId("assay_discipline"), rank: 1 },
+        { upgradeId: passageUpgradeId("high_throughput"), rank: 1 },
+      ],
+      cryobankProgram: cryobankProgramId("cryobank_occult"),
+      queuedProducerAction: null,
     },
   };
 }
@@ -211,7 +300,8 @@ async function assertBoard(page) {
     page.getByRole("button", { name: "Divide cell" }),
     page.getByLabel("Cell count"),
     page.getByLabel("Cell production rate"),
-    page.getByRole("region", { name: "Tumor progression" }),
+    page.getByRole("region", { name: "Living tumor arena" }),
+    page.getByRole("navigation", { name: "Evolution systems" }),
     page.getByRole("complementary", { name: "Division apparatus store" }),
   ];
   for (const locator of required) await locator.waitFor({ state: "visible" });
@@ -227,6 +317,106 @@ async function assertBoard(page) {
   if (measurements.reducedMotion !== true)
     throw new Error("The documentation browser did not honor reduced-motion mode.");
   return measurements;
+}
+
+/** Confirms every captured burden and biological overlay came from the saved game state. */
+async function assertSceneEvidence(page, expected) {
+  const evidence = await page.locator("body").evaluate((body, wanted) => {
+    const view = body.ownerDocument.defaultView;
+    if (view === null) throw new Error("The capture document has no window.");
+    const figure = body.querySelector(".colony-figure");
+    if (!(figure instanceof view.SVGSVGElement)) throw new Error("The living tumor SVG is absent.");
+    const selectorCounts = Object.fromEntries(
+      wanted.overlaySelectors.map((selector) => [selector, body.querySelectorAll(selector).length]),
+    );
+    return {
+      stage: figure.dataset.stage,
+      burdenTier: figure.dataset.burdenTier,
+      selectorCounts,
+      transitionCount: body.querySelectorAll(`[data-stage-transition="${wanted.stageId}"]`).length,
+    };
+  }, expected);
+  if (evidence.stage !== expected.stageId)
+    throw new Error(`Expected stage ${expected.stageId}, received ${evidence.stage ?? "none"}.`);
+  if (evidence.burdenTier !== expected.burdenTier)
+    throw new Error(
+      `Expected burden ${expected.burdenTier}, received ${evidence.burdenTier ?? "none"}.`,
+    );
+  if (evidence.transitionCount === 0)
+    throw new Error(`Missing stage-arrival emphasis for ${expected.stageId}.`);
+  for (const [selector, count] of Object.entries(evidence.selectorCounts)) {
+    if (count === 0) throw new Error(`Missing required visual overlay: ${selector}.`);
+  }
+  return evidence;
+}
+
+/** One-time capture evidence that the persistent targeting reticle is on a visible cell. */
+async function assertReticleIntersectsVisibleCell(page) {
+  const intersections = await page.locator("body").evaluate((body) => {
+    const view = body.ownerDocument.defaultView;
+    if (view === null) throw new Error("The capture document has no window.");
+    const reticle = body.querySelector(".tumor-feedback__reticle");
+    if (!(reticle instanceof view.SVGGElement)) throw new Error("The tumor reticle is absent.");
+    const reticleMatrix = reticle.getScreenCTM();
+    if (reticleMatrix === null) throw new Error("The tumor reticle has no screen transform.");
+    const point = new view.DOMPoint(0, 0).matrixTransform(reticleMatrix);
+    return [...body.querySelectorAll("[data-colony-cell]")].filter((cell) =>
+      [...cell.querySelectorAll(".colony-cell__membrane, .colony-cell__nucleus")].some(
+        (candidate) => {
+          if (!(candidate instanceof view.SVGGeometryElement)) return false;
+          const matrix = candidate.getScreenCTM();
+          if (matrix === null) return false;
+          const localPoint = point.matrixTransform(matrix.inverse());
+          return candidate.isPointInFill(localPoint) || candidate.isPointInStroke(localPoint);
+        },
+      ),
+    ).length;
+  });
+  if (intersections === 0) throw new Error("The tumor reticle does not intersect a visible cell.");
+  return { reticleCellIntersections: intersections };
+}
+
+/** Keeps the narrow Evolution advance action inside the goal card that owns it. */
+async function assertEvolutionAdvanceInsideGoal(page) {
+  const geometry = await page.locator("body").evaluate((body) => {
+    const view = body.ownerDocument.defaultView;
+    if (view === null) throw new Error("The capture document has no window.");
+    const action = body.querySelector(".evolution-stage__advance");
+    const goal = action?.closest(".evolution-stage__goal");
+    if (!(action instanceof view.HTMLElement) || !(goal instanceof view.HTMLElement))
+      throw new Error("The Evolution advance action or its goal card is absent.");
+    const actionRect = action.getBoundingClientRect();
+    const goalRect = goal.getBoundingClientRect();
+    const contained =
+      actionRect.left >= goalRect.left &&
+      actionRect.right <= goalRect.right &&
+      actionRect.top >= goalRect.top &&
+      actionRect.bottom <= goalRect.bottom;
+    return {
+      contained,
+      action: {
+        width: actionRect.width,
+        height: actionRect.height,
+      },
+      goal: {
+        width: goalRect.width,
+        height: goalRect.height,
+      },
+    };
+  });
+  if (!geometry.contained) throw new Error("The Evolution advance action escapes its goal card.");
+  return geometry;
+}
+
+async function selectEvolutionTab(page, label) {
+  const tab = page.getByRole("button", { name: `${label} evolution system` });
+  await tab.click();
+  await tab.evaluate((button) => {
+    if (button.getAttribute("aria-pressed") !== "true")
+      throw new Error(
+        `The ${button.getAttribute("aria-label") ?? "requested"} tab did not activate.`,
+      );
+  });
 }
 
 async function resetPageScroll(page) {
@@ -252,38 +442,80 @@ async function screenshotBoard(page, url, outputPath) {
     if (cell.ownerDocument.querySelector('[aria-label="Cell count"]')?.textContent === previous)
       throw new Error("The direct cancer-cell click did not update the visible cell count.");
   }, before);
+  const scene = await assertSceneEvidence(page, {
+    stageId: "transformed_cell",
+    burdenTier: "sparse",
+    overlaySelectors: [".tumor-feedback__division"],
+  });
+  const reticle = await assertReticleIntersectsVisibleCell(page);
   await page.screenshot({ path: outputPath });
-  return { ...measurements, directCellClick: true };
+  return { ...measurements, directCellClick: true, reticle, scene };
 }
 
-async function scrollRailToPanel(page, selector) {
-  await resetPageScroll(page);
-  await page.locator(".progression-rail").evaluate((rail, panelSelector) => {
-    const panel = rail.querySelector(panelSelector);
-    const top =
-      panel === null
-        ? 0
-        : Math.max(
-            0,
-            panel.getBoundingClientRect().top -
-              rail.getBoundingClientRect().top +
-              rail.scrollTop -
-              12,
-          );
-    rail.scrollTo({ top });
-  }, selector);
-}
-
-async function screenshotCultureNetwork(page, url, outputPath) {
+async function screenshotHypoxicNecrotic(page, url, outputPath) {
   await installFixedCaptureClock(page);
-  await seedState(page, advancedSystemsState(), "readme-culture-network-fixture-seeded");
+  await seedState(page, hypoxicNecroticState(), "readme-hypoxic-necrotic-fixture-seeded");
   await page.goto(url, { waitUntil: "networkidle" });
-  const network = page.getByRole("region", { name: "Contamination network", exact: true });
-  await network.getByText("Renewable campaign frontier").waitFor({ state: "visible" });
-  await scrollRailToPanel(page, ".network-panel");
+  await page.getByRole("heading", { name: "Hypoxic lesion" }).waitFor({ state: "visible" });
   const measurements = await assertBoard(page);
+  const scene = await assertSceneEvidence(page, {
+    stageId: "hypoxic_lesion",
+    burdenTier: "dense",
+    overlaySelectors: [".colony-figure__hypoxic-region", ".colony-figure__necrotic-region"],
+  });
   await page.screenshot({ path: outputPath });
-  return measurements;
+  return { ...measurements, scene };
+}
+
+async function screenshotInvasiveRoute(page, url, outputPath) {
+  await installFixedCaptureClock(page);
+  await seedState(page, invasiveRouteState(), "readme-invasive-route-fixture-seeded");
+  await page.goto(url, { waitUntil: "networkidle" });
+  await page.getByRole("heading", { name: "Invasive carcinoma" }).waitFor({ state: "visible" });
+  const measurements = await assertBoard(page);
+  const scene = await assertSceneEvidence(page, {
+    stageId: "invasive_carcinoma",
+    burdenTier: "dense",
+    overlaySelectors: [".colony-figure__invasive-front", ".colony-figure__seed-anchor"],
+  });
+  const reticle = await assertReticleIntersectsVisibleCell(page);
+  await page.screenshot({ path: outputPath });
+  return { ...measurements, reticle, scene };
+}
+
+async function screenshotCultureLab(page, url, outputPath) {
+  await installFixedCaptureClock(page);
+  await seedState(page, cultureLabState(), "readme-culture-lab-fixture-seeded");
+  await page.goto(url, { waitUntil: "networkidle" });
+  await selectEvolutionTab(page, "Culture");
+  await page.getByRole("heading", { name: "Culture" }).waitFor({ state: "visible" });
+  await page.getByLabel("Cryobank program selection").waitFor({ state: "visible" });
+  const measurements = await assertBoard(page);
+  const scene = await assertSceneEvidence(page, {
+    stageId: "global_lab_contamination",
+    burdenTier: "established",
+    overlaySelectors: [".colony-figure__activity"],
+  });
+  await page.screenshot({ path: outputPath });
+  return { ...measurements, scene };
+}
+
+async function screenshotNetworkMap(page, url, outputPath) {
+  await installFixedCaptureClock(page);
+  await seedState(page, advancedSystemsState(), "readme-network-map-fixture-seeded");
+  await page.goto(url, { waitUntil: "networkidle" });
+  await selectEvolutionTab(page, "Network");
+  await page.getByRole("heading", { name: "Network" }).waitFor({ state: "visible" });
+  await page.getByLabel("Contamination node map").waitFor({ state: "visible" });
+  await page.getByLabel("Renewable campaign frontier").waitFor({ state: "visible" });
+  const measurements = await assertBoard(page);
+  const scene = await assertSceneEvidence(page, {
+    stageId: "global_lab_contamination",
+    burdenTier: "established",
+    overlaySelectors: [".colony-figure__activity"],
+  });
+  await page.screenshot({ path: outputPath });
+  return { ...measurements, scene };
 }
 
 async function screenshotPerfusedTumor(page, url, outputPath) {
@@ -292,10 +524,16 @@ async function screenshotPerfusedTumor(page, url, outputPath) {
   await page.goto(url, { waitUntil: "networkidle" });
   await page.getByRole("heading", { name: "Angiogenic primary" }).waitFor({ state: "visible" });
   await page.locator(".colony-figure__vessel").waitFor({ state: "visible" });
+  await selectEvolutionTab(page, "Stage");
   await resetPageScroll(page);
   const measurements = await assertBoard(page);
+  const scene = await assertSceneEvidence(page, {
+    stageId: "angiogenic_primary",
+    burdenTier: "established",
+    overlaySelectors: [".colony-figure__vessel"],
+  });
   await page.screenshot({ path: outputPath });
-  return measurements;
+  return { ...measurements, scene };
 }
 
 async function screenshotChicagoScale(page, url, outputPath) {
@@ -308,8 +546,49 @@ async function screenshotChicagoScale(page, url, outputPath) {
     .waitFor({ state: "visible" });
   await page.locator(".colony-ending-overlay").waitFor({ state: "visible" });
   const measurements = await assertBoard(page);
+  const scene = await assertSceneEvidence(page, {
+    stageId: "global_lab_contamination",
+    burdenTier: "overgrown",
+    overlaySelectors: [".colony-ending-overlay"],
+  });
   await page.screenshot({ path: outputPath });
-  return measurements;
+  return { ...measurements, scene };
+}
+
+/** One-time normal-motion evidence; no artifact or permanent timing test is retained. */
+async function verifyNormalMotion(browser, url) {
+  const context = await browser.newContext({ viewport: VIEWPORT, reducedMotion: "no-preference" });
+  const page = await context.newPage();
+  const diagnostics = collectDiagnostics(page);
+  try {
+    await installFixedCaptureClock(page);
+    await seedState(page, legalPerfusedTumorState(), "readme-normal-motion-fixture-seeded");
+    await page.goto(url, { waitUntil: "networkidle" });
+    const visibleCell = page.locator("[data-colony-cell]").first();
+    await visibleCell.click();
+    await page.locator(".tumor-feedback__division").waitFor({ state: "visible" });
+    const evidence = await page.locator("body").evaluate((body) => ({
+      reducedMotion: body.ownerDocument.defaultView?.matchMedia("(prefers-reduced-motion: reduce)")
+        .matches,
+      divisionAnimation: body.ownerDocument.defaultView?.getComputedStyle(
+        body.querySelector(".tumor-feedback__ripple"),
+      ).animationName,
+      stageArrivalAnimation: body.ownerDocument.defaultView?.getComputedStyle(
+        body.querySelector(".stage-transition-emphasis__arrival"),
+      ).animationName,
+    }));
+    if (evidence.reducedMotion !== false)
+      throw new Error("The normal-motion walkthrough unexpectedly enabled reduced motion.");
+    if (evidence.divisionAnimation === "none" || evidence.stageArrivalAnimation === "none")
+      throw new Error(
+        "The normal-motion walkthrough did not expose division and stage-arrival motion.",
+      );
+    if (diagnostics.length > 0)
+      throw new Error(`Normal-motion browser diagnostics:\n${diagnostics.join("\n")}`);
+    return evidence;
+  } finally {
+    await context.close();
+  }
 }
 
 async function verifyNarrowChicago(browser, url) {
@@ -321,24 +600,32 @@ async function verifyNarrowChicago(browser, url) {
   const diagnostics = collectDiagnostics(page);
   try {
     await installFixedCaptureClock(page);
+    await page.goto(url, { waitUntil: "networkidle" });
+    const evolutionAction = await assertEvolutionAdvanceInsideGoal(page);
     await seedState(page, chicagoScaleState(), "readme-narrow-chicago-fixture-seeded");
     await page.goto(url, { waitUntil: "networkidle" });
     await page.getByRole("button", { name: "Open the Chicago scale report" }).click();
-    await page.getByRole("heading", { name: "Chicago scale report open" }).waitFor({ state: "visible" });
+    await page
+      .getByRole("heading", { name: "Chicago scale report open" })
+      .waitFor({ state: "visible" });
     const evidence = await page.locator(".ending-view").evaluate((report) => ({
       animationName: report.ownerDocument.defaultView?.getComputedStyle(report).animationName,
       horizontalOverflow:
-        report.ownerDocument.documentElement.scrollWidth > report.ownerDocument.documentElement.clientWidth,
-      reducedMotion: report.ownerDocument.defaultView?.matchMedia("(prefers-reduced-motion: reduce)")
-        .matches,
+        report.ownerDocument.documentElement.scrollWidth >
+        report.ownerDocument.documentElement.clientWidth,
+      reducedMotion: report.ownerDocument.defaultView?.matchMedia(
+        "(prefers-reduced-motion: reduce)",
+      ).matches,
     }));
-    if (evidence.horizontalOverflow) throw new Error("The narrow scale report has horizontal overflow.");
+    if (evidence.horizontalOverflow)
+      throw new Error("The narrow scale report has horizontal overflow.");
     if (evidence.reducedMotion !== true)
       throw new Error("The narrow scale report did not honor reduced-motion mode.");
     if (evidence.animationName !== "none")
       throw new Error("The narrow scale report retains animation in reduced-motion mode.");
-    if (diagnostics.length > 0) throw new Error(`Narrow browser diagnostics:\n${diagnostics.join("\n")}`);
-    return { viewport: { width: 360, height: 800 }, ...evidence };
+    if (diagnostics.length > 0)
+      throw new Error(`Narrow browser diagnostics:\n${diagnostics.join("\n")}`);
+    return { viewport: { width: 360, height: 800 }, evolutionAction, ...evidence };
   } finally {
     await narrowContext.close();
   }
@@ -394,38 +681,63 @@ async function main() {
       SCREENSHOT_DIRECTORY,
       "cancer_clicker_ng_perfused_tumor.png",
     );
-    const cultureNetworkPath = path.join(
+    const hypoxicNecroticPath = path.join(
       SCREENSHOT_DIRECTORY,
-      "cancer_clicker_ng_culture_network.png",
+      "cancer_clicker_ng_hypoxic_necrotic.png",
     );
+    const invasiveRoutePath = path.join(
+      SCREENSHOT_DIRECTORY,
+      "cancer_clicker_ng_invasive_route.png",
+    );
+    const cultureLabPath = path.join(SCREENSHOT_DIRECTORY, "cancer_clicker_ng_culture_lab.png");
+    const networkMapPath = path.join(SCREENSHOT_DIRECTORY, "cancer_clicker_ng_network_map.png");
     const chicagoScalePath = path.join(SCREENSHOT_DIRECTORY, "cancer_clicker_ng_chicago_scale.png");
     const board = await screenshotBoard(page, url, boardPath);
     await page.close();
+    const hypoxicNecroticPage = await browserContext.newPage();
+    const hypoxicNecroticDiagnostics = collectDiagnostics(hypoxicNecroticPage);
+    const hypoxicNecrotic = await screenshotHypoxicNecrotic(
+      hypoxicNecroticPage,
+      url,
+      hypoxicNecroticPath,
+    );
+    diagnostics.push(...hypoxicNecroticDiagnostics);
+    await hypoxicNecroticPage.close();
     const perfusedTumorPage = await browserContext.newPage();
     const perfusedTumorDiagnostics = collectDiagnostics(perfusedTumorPage);
     const perfusedTumor = await screenshotPerfusedTumor(perfusedTumorPage, url, perfusedTumorPath);
     diagnostics.push(...perfusedTumorDiagnostics);
     await perfusedTumorPage.close();
-    const cultureNetworkPage = await browserContext.newPage();
-    const cultureNetworkDiagnostics = collectDiagnostics(cultureNetworkPage);
-    const cultureNetwork = await screenshotCultureNetwork(
-      cultureNetworkPage,
-      url,
-      cultureNetworkPath,
-    );
-    diagnostics.push(...cultureNetworkDiagnostics);
-    await cultureNetworkPage.close();
+    const invasiveRoutePage = await browserContext.newPage();
+    const invasiveRouteDiagnostics = collectDiagnostics(invasiveRoutePage);
+    const invasiveRoute = await screenshotInvasiveRoute(invasiveRoutePage, url, invasiveRoutePath);
+    diagnostics.push(...invasiveRouteDiagnostics);
+    await invasiveRoutePage.close();
+    const cultureLabPage = await browserContext.newPage();
+    const cultureLabDiagnostics = collectDiagnostics(cultureLabPage);
+    const cultureLab = await screenshotCultureLab(cultureLabPage, url, cultureLabPath);
+    diagnostics.push(...cultureLabDiagnostics);
+    await cultureLabPage.close();
+    const networkMapPage = await browserContext.newPage();
+    const networkMapDiagnostics = collectDiagnostics(networkMapPage);
+    const networkMap = await screenshotNetworkMap(networkMapPage, url, networkMapPath);
+    diagnostics.push(...networkMapDiagnostics);
+    await networkMapPage.close();
     const chicagoScalePage = await browserContext.newPage();
     const chicagoScaleDiagnostics = collectDiagnostics(chicagoScalePage);
     const chicagoScale = await screenshotChicagoScale(chicagoScalePage, url, chicagoScalePath);
     diagnostics.push(...chicagoScaleDiagnostics);
     await chicagoScalePage.close();
     const narrowChicago = await verifyNarrowChicago(context, url);
+    const normalMotion = await verifyNormalMotion(context, url);
     await rewriteReadmeBlock();
     const files = await Promise.all([
       screenshotInfo(boardPath),
+      screenshotInfo(hypoxicNecroticPath),
       screenshotInfo(perfusedTumorPath),
-      screenshotInfo(cultureNetworkPath),
+      screenshotInfo(invasiveRoutePath),
+      screenshotInfo(cultureLabPath),
+      screenshotInfo(networkMapPath),
       screenshotInfo(chicagoScalePath),
     ]);
     if (diagnostics.length > 0) throw new Error(`Browser diagnostics:\n${diagnostics.join("\n")}`);
@@ -434,10 +746,14 @@ async function main() {
         {
           viewport: VIEWPORT,
           board,
+          hypoxicNecrotic,
           perfusedTumor,
-          cultureNetwork,
+          invasiveRoute,
+          cultureLab,
+          networkMap,
           chicagoScale,
           narrowChicago,
+          normalMotion,
           files,
           diagnostics,
         },

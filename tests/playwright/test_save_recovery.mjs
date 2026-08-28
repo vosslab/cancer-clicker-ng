@@ -35,7 +35,7 @@ test("save recovery protects rejected raw storage until an accessible explicit r
   await expect(replace).toBeVisible();
   await expect(divide).toBeDisabled();
   await expect(page.locator("#format-button")).toBeDisabled();
-  await expect(page.locator(".purchase-controls button").first()).toBeDisabled();
+  await expect(page.getByRole("button", { name: /^Buy 1 Cyclin D machine/ })).toBeDisabled();
 
   await divide.click({ force: true });
   await expect(cells).toHaveText(initialCells ?? "");

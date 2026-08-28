@@ -1,109 +1,32 @@
-# Cookbook
+# Player and developer cookbook
 
-This cookbook gives contributors repeatable local workflows for Cancer Clicker NG. Run commands
-from the repository root. The first group is permanent quality evidence; the remaining recipes
-produce bounded development or visual-review evidence for a specific change.
+## Inspect a first board
 
-## Start a local board
+1. Run `npm run serve` from the repository root and open the printed URL.
+2. Click a visible cell and confirm the arena count changes.
+3. Choose a buy quantity in the upgrade rack and purchase an affordable illustrated machine.
+4. Open an evolution tab, focus a compact icon to read its tooltip, and open specimen details from
+   the HUD or an available detail control.
 
-Install dependencies once, then build and serve the same static artifact that GitHub Pages uses:
+This walkthrough checks the intended board sequence: direct tumor action, growth feedback, upgrade
+choice, then biological explanation. It uses fictional game state rather than clinical
+interpretation.
 
-```bash
-npm install
-npm run serve
-```
+## Review keyboard parity
 
-- Open the loopback URL printed by the server.
-- Click a visible cancer cell, then buy an affordable producer in the Store.
-- Reload that same URL to inspect browser-local persistence.
-- Use `?debug=1` on a local URL for the development-only inspection panel.
+1. Tab to the `Divide cell` control and press Enter or Space.
+2. Tab through the evolution tabs and upgrade controls; read each visible focus treatment and
+   tooltip.
+3. Open the specimen drawer, press Escape, and verify focus returns to the invoking control.
+4. Repeat at a 360px viewport, where the board stacks tumor, evolution, upgrade rack, and rewards.
 
-See [USAGE.md](USAGE.md) for the player loop and local-progress behavior.
+## Capture a visual change
 
-## Build the Pages artifact
+1. Build the production artifact with `./build_github_pages.sh`.
+2. Capture the current board at 1280 x 800 and the narrow board at 360px.
+3. Repeat with reduced motion enabled.
+4. Review that cell geometry, not whitespace, is the primary pointer target; that labels and small
+   icons remain legible; and that no clipping hides the action or upgrade rack.
 
-Create a fresh static deployment artifact:
-
-```bash
-./build_github_pages.sh
-```
-
-The build writes `dist/`, including `index.html`, `main.js`, owned stylesheets, and `.nojekyll`.
-Use `npm run build` when the npm front door is more convenient. See [INSTALL.md](INSTALL.md) for
-the local prerequisites.
-
-## Run permanent checks
-
-Run the canonical offline TypeScript and Node behavior gate before handing off a code change:
-
-```bash
-./check_codebase.sh
-```
-
-Run the production-browser suite when the change affects the rendered game, interaction, storage,
-or responsive behavior:
-
-```bash
-./run_playwright_tests.sh --build
-```
-
-- `check_codebase.sh` covers type checking, ESLint, formatting, and deterministic Node/tsx tests.
-- The Playwright lane builds and exercises the served `dist/` artifact.
-- These gates establish repeatable regression evidence. A focused test belongs in the permanent
-  suite when it protects stable behavior; scenario capture and calibration remain separate proof.
-
-See [PLAYWRIGHT_USAGE.md](PLAYWRIGHT_USAGE.md) for browser-runner details and
-[TYPESCRIPT_STYLE.md](TYPESCRIPT_STYLE.md) for the canonical TypeScript gate.
-
-## Capture documentation screenshots
-
-Capture the named 1280 x 800 documentation board states after a visual change:
-
-```bash
-./build_github_pages.sh
-node --import tsx tools/capture_readme_screenshots.mjs
-```
-
-The capture tool serves `dist/` on loopback, writes PNG files under `docs/screenshots/`, and
-updates the managed screenshot block in `README.md`. Inspect the resulting images at their target
-size; automated capture confirms a reproducible artifact, while visual review confirms biological
-readability, hierarchy, and direct-cell affordance.
-
-## Inspect saves and semantic replay
-
-Use a browser's developer tools while the local game is open to inspect the browser-local key
-`cancer-clicker-ng.save.v2`. Treat its JSON as untrusted diagnostic input: normal play, parsing,
-and replacement all go through the game's persistence boundary.
-
-Run the focused replay behavior test while changing event, save, or replay code:
-
-```bash
-node --import tsx --test tests/test_replay.mjs
-```
-
-The development replay record is not a player save or public transport format. It replays accepted
-events through the normal parser and reducer, comparing normalized durable state and visible
-progression. [STATE_PERSISTENCE.md](STATE_PERSISTENCE.md) defines the save and replay contract.
-
-## Run the balance suite
-
-Run all tracked scenarios with the headless visible-state-only comparison. The aggregate report
-uses the five canonical policy IDs `greedy-payback`, `naive-cheapest`, `hallmark-first`,
-`prestige-rush`, and `check-in-idle`:
-
-```bash
-node --import tsx tools/balance_sim.mjs --suite \
-  --output output_balance/balance_report.json
-```
-
-- Keep scenario inputs in `tools/balance_scenarios/`.
-- Read the generated JSON from `output_balance/`; it is intentionally ignored output.
-- Compare policy behavior, declared decision witnesses, traces, completions, and outliers before
-  changing tuning.
-
-Use `--scenario tools/balance_scenarios/<file>.json` when one decision witness needs a focused
-report. The one-scenario command retains the same format-2 report shape.
-
-The simulator is a one-time calibration tool, not a fixed performance or ranking gate. See
-[PRESTIGE_DESIGN.md](PRESTIGE_DESIGN.md) for its design boundary and
-[FILE_STRUCTURE.md](FILE_STRUCTURE.md) for source and output ownership.
+These captures are one-time visual evidence. Keep permanent tests focused on deterministic,
+behavioral contracts.

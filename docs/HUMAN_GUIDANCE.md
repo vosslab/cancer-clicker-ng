@@ -21,17 +21,25 @@ origin belongs there too. Rules: [REPO_STYLE.md](REPO_STYLE.md).
 - I expect the rendered cancer cells and colony to be the primary click action. Keep the clinical
   scientific SVG identity while using Cookie Clicker's large-object, center-progression,
   right-store spatial grammar as the interaction reference.
-- Combine the incremental-clicker interface grammar with a living cancer-system visualization:
-  cells form tumors, gain blood supply, pulse and grow, express hallmarks, develop hypoxia,
-  necrosis, and invasion, then seed later sites. The center/progression field is the evolving
-  tumor world, and every visual consequence traces through biological provenance.
-- I like Cookie Clicker's always-available stats and upgrade surface. Keep count and production
-  rate visible, retain producer store and quantity controls in the first-view right rail, and show
-  each producer's owned count, next cost, affordability, and production contribution. Hover or
-  focus can reveal richer stats; locked future content stays discoverable with its biological
-  unlock condition, while purchases become actionable when their real requirements are met.
+- I want cancer cells forming tumors, gaining blood supply, pulsing, growing, and expressing the
+  hallmarks of cancer.
+- Show hypoxia, necrosis, invasion, and later-site seeding; every visual change should have
+  biological provenance.
+- I love Cookie Clicker's stats and always upgradability. Keep count, production rate, producer
+  levels, costs, and quantity controls visible.
+- Keep future upgrades discoverable; use hover or focus for richer stats and unlock biology.
+- I want the local Cookie Clicker source reviewed for lessons in source layout, increment systems,
+  and visual layout that Cancer Clicker NG can use.
+- I would like the living clicker in the middle of the desktop board, with the other major columns
+  on its left and right.
 - I want fewer plain buttons and more small icons. Use a coherent biological icon language to make
   important action families easier to recognize while keeping each control's text label clear.
+- I want the central panel to be much more dynamic than Cookie Clicker's cookie, and the original
+  implementation plan's visual progression is the contract.
+- The visuals should be top priority and draw players in first. Text should be very, very minimal
+  and limited to tooltips.
+- Make it fun for high-school and college students; let the living tumor, illustrated machines,
+  and small icons carry the experience.
 
 ## Review expectations
 

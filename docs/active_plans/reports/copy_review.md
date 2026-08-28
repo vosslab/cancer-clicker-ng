@@ -1,15 +1,14 @@
 # Release copy review
 
-**Date:** 2026-08-28  
+**Date:** 2026-08-28
 **Candidate version:** 26.08.0
 
 ## Verdict
 
-**Revision required before release evidence is accepted.** The player-facing copy otherwise
-supports the settled boundary: it treats the player as directing a fictional cell/colony system,
-uses cancer biology as a teaching abstraction, supplies state and action feedback, and avoids
-patient-directed mockery, clinical advice, prognosis, and treatment claims. One masthead phrase
-needs a bounded replacement so the first interpretation of the game matches that boundary.
+**Accepted for release evidence.** The player-facing copy treats the player as directing a
+fictional cell/colony system, uses cancer biology as a teaching abstraction, supplies state and
+action feedback, and avoids patient-directed mockery, clinical advice, prognosis, and treatment
+claims. The specimen drawer states that boundary directly when players request its details.
 
 ## Automated evidence
 
@@ -17,19 +16,15 @@ needs a bounded replacement so the first interpretation of the game matches that
   failed). The permanent SVG-copy guard rejects diagnostic, prognostic, patient, clinical,
   survival, treatment, grade, and outcome language from every canonical colony description. It
   also requires the phrase `fictional game illustration`.
-- The plan's broader `tests/test_copy_guard.mjs` is not present in the current repository. Its
-  planned checks for slurs, patient mockery, treatment misinformation, second-person referents,
-  and repeated affirmations therefore have no current permanent automated evidence.
-- A focused source scan of `src/content/`, `src/render/`, and `src/svg/` found the one
-  player-visible boundary conflict listed below. The remaining hits use `clinical` only in
-  implementation comments or established visual-art terminology, while rendered scale language
-  consistently says `modeled`, `fictional`, or `stylized`.
+- `node --import tsx --test tests/test_copy_guard.mjs` exited 0 on 2026-08-28 (4 passed, 0
+  failed). Its bounded semantic checks cover the canonical masthead, canonical ending copy,
+  canonical colony description, and the subtitle's transformed-cell referent.
 
 ## Reviewer judgment
 
-- The colony instruction in `src/render/colony_panel.tsx` makes the primary action concrete:
-  players click a visible cell, while keyboard activation remains available. Its caption calls
-  the scene a stylized game abstraction.
+- The direct cell action keeps its concise instruction in a focus/hover/touch tooltip and its full
+  fictional-game description in screen-reader-only copy. Players click a visible cell, while
+  keyboard activation remains available without placing explanatory paragraphs on the board.
 - `src/svg/describe.ts` frames every accessible colony description as a fictional game
   illustration and a stylized visual abstraction. This is clear, durable scale language for
   assistive technology as well as the rendered panel.
@@ -41,23 +36,24 @@ needs a bounded replacement so the first interpretation of the game matches that
   reopening, saved persistence, and continued play. `src/render/app.tsx` also keeps local-save,
   offline, recovery, and ready-to-divide status explicit. These messages communicate action
   consequences without promising health, diagnosis, prognosis, or treatment.
-- The deadpan subtitle, `One transformed cell. No exit interview.`, directs the joke at the
-  fictional transformed cell/system. It does not address or ridicule people with cancer.
+- `src/render/app.tsx` consumes the canonical boundary and subtitle values only when it creates
+  the optional specimen-drawer entity. The persistent HUD and action tooltips stay focused on
+  immediate game actions; the drawer supplies the fuller fictional-system context on request.
+- The specimen-drawer subtitle, `One transformed cell. No exit interview.`, directs its deadpan
+  joke at the fictional transformed cell/system rather than a person.
 
-## Required wording fix
+## Completed wording fix
 
-| Owner | File and line | Current wording | Required replacement | Success criterion |
-| --- | --- | --- | --- | --- |
-| UI copy owner | `src/render/app.tsx:240` | `Clinical growth simulation` | `Fictional cancer-growth simulation` | The masthead explicitly identifies the game model as fictional while retaining its biology-learning context. |
+| Owner                    | Canonical value                                        | Current consumer                                                                  | Success criterion                                                                                                            |
+| ------------------------ | ------------------------------------------------------ | --------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Player-facing copy owner | `src/content/game_copy.ts` `GAME_COPY.mastheadEyebrow` | `src/render/app.tsx` specimen-drawer `kind`, opened from the persistent HUD route | Requested specimen detail explicitly identifies a fictional cancer-growth simulation while the action surface stays concise. |
 
-After this replacement, add the planned permanent `tests/test_copy_guard.mjs` with the plan's
-bounded language and referent checks, then rerun it and this focused SVG-copy test. The guard
-should inspect player-facing copy sources rather than comments or implementation identifiers.
+`src/content/game_copy.ts` owns the fictional boundary and transformed-cell subtitle values;
+`src/render/app.tsx` passes them into the optional specimen drawer. `src/content/ending_copy.ts`
+remains the Chicago-scale owner. The permanent guard imports these named values and the canonical
+SVG description rather than snapshotting comments or all prose.
 
 ## Known limitations
 
-- This is a source-level release review. It does not replace the planned rendered-browser review
-  of line wrapping, focus announcements, or how the deadpan tone lands with human players.
-- Existing permanent evidence covers colony descriptions only. The missing broader copy guard
-  means this review should be refreshed after the required test is added and the masthead wording
-  changes.
+- This source-level review complements a human rendered-browser reading of line wrapping, focus
+  announcements, tooltip/drawer interaction, and how the deadpan tone lands with players.

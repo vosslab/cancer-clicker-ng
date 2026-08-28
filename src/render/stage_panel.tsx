@@ -2,13 +2,13 @@ import { For, Show } from "solid-js";
 import type { JSX } from "solid-js";
 
 import { formatBigNum } from "../bignum/format.js";
-import { producerDefinition } from "../economy/producers.js";
 import { stageDefinitionsInOrder } from "../stages/catalog.js";
-import { stageOperationalChange } from "../stages/effects.js";
 import { stageGateResult } from "../stages/gates.js";
-import type { GameState } from "../types/state.js";
 import type { StageDefinition, StageGateResult, StageUiMode } from "../stages/stage_types.js";
+import type { GameState } from "../types/state.js";
+import { StageSigil } from "../svg/evolution_sigils.js";
 import { ActionIcon } from "./action_icon.js";
+import { HelpTooltip } from "./action_tooltip.js";
 
 type StagePanelProps = Readonly<{
   game: GameState;
@@ -16,27 +16,33 @@ type StagePanelProps = Readonly<{
   onAdvance: () => void;
 }>;
 
-function successorFor(
-  game: GameState,
-): ReturnType<typeof stageDefinitionsInOrder>[number] | undefined {
+type ModeReadout = Readonly<{ heading: string; metrics: readonly string[] }>;
+
+function successorFor(game: GameState): StageDefinition | undefined {
   const definitions = stageDefinitionsInOrder();
   const index = definitions.findIndex((definition) => definition.id === game.currentStage);
   if (index < 0) throw new Error("Current stage is absent from the stage catalog.");
   return definitions[index + 1];
 }
 
+function currentStage(game: GameState): StageDefinition {
+  const definition = stageDefinitionsInOrder().find(
+    (candidate) => candidate.id === game.currentStage,
+  );
+  if (!definition) throw new Error("Current stage is absent from the stage catalog.");
+  return definition;
+}
+
+function stagePosition(game: GameState): number {
+  const position = stageDefinitionsInOrder().findIndex((stage) => stage.id === game.currentStage);
+  if (position < 0) throw new Error("Current stage is absent from the stage catalog.");
+  return position + 1;
+}
+
 function readableMode(mode: string): string {
   const words = mode.replace(/-/g, " ");
   return `${words.charAt(0).toUpperCase()}${words.slice(1)}`;
 }
-
-function economyEvidence(game: GameState): string {
-  const economy = stageOperationalChange(game).economy;
-  const producer = producerDefinition(economy.favoredProducerId);
-  return `Production runs at ${economy.productionMultiplier}x. ${producer.displayName} costs ${economy.favoredProducerCostMultiplier}x.`;
-}
-
-type ModeReadout = Readonly<{ heading: string; metrics: readonly string[] }>;
 
 function totalCommittedCells(game: GameState): number {
   return Object.values(game.committedCellCommitments).reduce((total, cells) => total + cells, 0);
@@ -55,104 +61,85 @@ function modeReadout(game: GameState, mode: StageUiMode): ModeReadout {
   switch (mode) {
     case "cell-focus":
       return {
-        heading: "Cell focus metrics",
-        metrics: [`Cells: ${cellCount}`, `Manual charge: ${game.manualDivisionCharge}`],
+        heading: "Cell focus",
+        metrics: [`Cells ${cellCount}`, `Charge ${game.manualDivisionCharge}`],
       };
     case "colony-grid":
       return {
-        heading: "Colony grid metrics",
-        metrics: [
-          `Producer levels: ${producerLevels}`,
-          `Contact pressure: ${game.contactPressure}`,
-        ],
+        heading: "Colony",
+        metrics: [`Producers ${producerLevels}`, `Contact ${game.contactPressure}`],
       };
     case "resource-budget":
-      return {
-        heading: "Resource budget metrics",
-        metrics: [`Substrate: ${substrate}`, `ATP: ${atp}`],
-      };
+      return { heading: "Budget", metrics: [`Substrate ${substrate}`, `ATP ${atp}`] };
     case "region-map":
       return {
-        heading: "Region map metrics",
-        metrics: [`Regions: ${game.regions.length}`, `Oxygen pressure: ${game.oxygenPressure}`],
+        heading: "Regions",
+        metrics: [`Regions ${game.regions.length}`, `Oxygen ${game.oxygenPressure}`],
       };
     case "vascular-overlay":
       return {
-        heading: "Vascular overlay metrics",
-        metrics: [
-          `Vessel links: ${vesselLinkCount(game)}`,
-          `Upkeep ATP: ${game.vesselMaintenanceAtp}`,
-        ],
+        heading: "Vessels",
+        metrics: [`Links ${vesselLinkCount(game)}`, `Upkeep ${game.vesselMaintenanceAtp}`],
       };
     case "route-board":
       return {
-        heading: "Route board metrics",
+        heading: "Routes",
         metrics: [
-          `Route discovery: ${game.routeDiscoveryProgress}`,
-          `Committed cells: ${totalCommittedCells(game)}`,
+          `Discovery ${game.routeDiscoveryProgress}`,
+          `Committed ${totalCommittedCells(game)}`,
         ],
       };
     case "transit-panel":
       return {
-        heading: "Transit panel metrics",
+        heading: "Transit",
         metrics: [
-          `Transit events: ${game.pendingTransitEvents.length}`,
-          `Committed cells: ${totalCommittedCells(game)}`,
+          `Events ${game.pendingTransitEvents.length}`,
+          `Committed ${totalCommittedCells(game)}`,
         ],
       };
     case "site-switcher":
       return {
-        heading: "Site switcher metrics",
-        metrics: [`Seeded sites: ${game.seededSites.length}`, `Regions: ${game.regions.length}`],
+        heading: "Sites",
+        metrics: [`Seeded ${game.seededSites.length}`, `Regions ${game.regions.length}`],
       };
     case "burden-dashboard":
       return {
-        heading: "Burden dashboard metrics",
-        metrics: [`Seeded sites: ${game.seededSites.length}`, `Coupled pressure: ${pressures}`],
+        heading: "Burden",
+        metrics: [`Seeded ${game.seededSites.length}`, `Pressure ${pressures}`],
       };
     case "collapse-summary":
-      return {
-        heading: "Collapse summary metrics",
-        metrics: [`Cells: ${cellCount}`, `Host pressure: ${pressures}`],
-      };
+      return { heading: "Collapse", metrics: [`Cells ${cellCount}`, `Pressure ${pressures}`] };
     case "culture-bench": {
       const l3 = game.prestigeAvailability.some(
         (entry) => entry.id === "L3" && entry.status === "earned",
       );
       return {
-        heading: "Culture bench metrics",
+        heading: "Culture",
         metrics: [
-          `L3 availability: ${l3 ? "earned" : "unavailable"}`,
-          `Senescent regions: ${game.lateHallmarks.senescence.retainedRegions.length}`,
+          `L3 ${l3 ? "earned" : "locked"}`,
+          `Senescent ${game.lateHallmarks.senescence.retainedRegions.length}`,
         ],
       };
     }
     case "contamination-network":
       return {
-        heading: "Contamination network metrics",
-        metrics: [
-          `Dissemination progress: ${game.routeDiscoveryProgress}`,
-          `Network regions: ${game.regions.length}`,
-        ],
+        heading: "Network",
+        metrics: [`Spread ${game.routeDiscoveryProgress}`, `Regions ${game.regions.length}`],
       };
   }
 }
 
-/** Shows the currently active play contract and the next semantic gate without owning stage truth. */
+/** Compact progress HUD: stage truth remains catalog and gate owned. */
 export function StagePanel(props: StagePanelProps): JSX.Element {
   function current(): StageDefinition {
-    const definition = stageDefinitionsInOrder().find(
-      (candidate) => candidate.id === props.game.currentStage,
-    );
-    if (!definition) throw new Error("Current stage is absent from the stage catalog.");
-    return definition;
+    return currentStage(props.game);
   }
   function next(): StageDefinition | undefined {
     return successorFor(props.game);
   }
   function gate(): StageGateResult | undefined {
-    const nextStage = next();
-    return nextStage ? stageGateResult(props.game, nextStage.id) : undefined;
+    const successor = next();
+    return successor ? stageGateResult(props.game, successor.id) : undefined;
   }
   function advanceDisabled(): boolean {
     const nextGate = gate();
@@ -163,84 +150,92 @@ export function StagePanel(props: StagePanelProps): JSX.Element {
   }
 
   return (
-    <section class="panel stage-panel" aria-labelledby="stage-title">
-      <div class="section-heading">
+    <section class="stage-panel evolution-stage" aria-labelledby="stage-title">
+      <header class="evolution-stage__current">
+        <StageSigil index={stagePosition(props.game)} terminal={next() === undefined} />
         <div>
-          <p class="eyebrow">Disease progression</p>
+          <p class="evolution-stage__kicker">
+            Stage {stagePosition(props.game)} / {stageDefinitionsInOrder().length}
+          </p>
           <h2 id="stage-title">{current().title}</h2>
+          <p class="evolution-stage__mode">{readableMode(current().uiMode)}</p>
         </div>
-        <p class="stage-mode">{readableMode(current().uiMode)}</p>
+      </header>
+      <div class="evolution-stage__numbers" aria-label={readout().heading}>
+        <For each={readout().metrics}>{(metric) => <output>{metric}</output>}</For>
       </div>
-      <div class="stage-contract-grid">
-        <section aria-labelledby="stage-pressure-title">
-          <h3 id="stage-pressure-title">Current pressure</h3>
-          <p>{current().pressure}</p>
-        </section>
-        <section aria-labelledby="stage-opportunity-title">
-          <h3 id="stage-opportunity-title">New opportunity</h3>
-          <p>{current().opportunity}</p>
-        </section>
-        <section aria-labelledby="stage-identity-title">
-          <h3 id="stage-identity-title">How play changes</h3>
-          <p>{current().gameplayIdentity}</p>
-        </section>
-        <section aria-labelledby="stage-retired-title">
-          <h3 id="stage-retired-title">Retired assumption</h3>
-          <p>{current().retires}</p>
-        </section>
-      </div>
-      <section
-        class="stage-mode-readout"
-        data-stage-mode={current().uiMode}
-        aria-labelledby="stage-readout-title"
-      >
-        <h3 id="stage-readout-title">{readout().heading}</h3>
-        <ul>
-          <For each={readout().metrics}>{(metric) => <li>{metric}</li>}</For>
-        </ul>
-      </section>
-      <p class="stage-operation">
-        <span>
-          {stageOperationalChange(props.game).availability === "available"
-            ? "Active operational shift:"
-            : "Deferred operational shift:"}
-        </span>{" "}
-        {stageOperationalChange(props.game).summary}
-      </p>
-      <p class="stage-economy" role="status">
-        <span>Current economy effect:</span> {economyEvidence(props.game)}
-      </p>
-      <Show when={stageOperationalChange(props.game).availability === "deferred"}>
-        <p class="stage-deferred">
-          The associated action is intentionally deferred:{" "}
-          {stageOperationalChange(props.game).feasibilityRule}
-        </p>
-      </Show>
       <Show
         when={next()}
-        fallback={<p class="stage-terminal">This is the current terminal stage of the ladder.</p>}
+        fallback={<p class="evolution-stage__terminal">Terminal stage reached</p>}
       >
         {(nextStage) => (
-          <div class="stage-advance" aria-labelledby="stage-gate-title">
-            <div>
-              <p class="eyebrow">Next stage</p>
-              <h3 id="stage-gate-title">{nextStage().title}</h3>
-              <p>
-                {gate()?.label}: {gate()?.current} / {gate()?.required}
-              </p>
+          <div class="evolution-stage__goal">
+            <div class="evolution-stage__goal-copy">
+              <p>Next: {nextStage().title}</p>
+              <span id="stage-gate-label">{gate()?.label}</span>
+              <output>
+                {gate()?.current} / {gate()?.required}
+              </output>
+              <span
+                class="evolution-stage__gate-state"
+                data-state={gate()?.eligible ? "ready" : "locked"}
+              >
+                {gate()?.eligible ? "Ready" : "Locked"}
+              </span>
             </div>
-            <button
-              class="stage-advance-button"
-              type="button"
+            <progress
+              id="stage-gate-progress"
+              max={gate()?.required ?? 1}
+              value={Math.min(gate()?.required ?? 1, Math.max(0, gate()?.current ?? 0))}
+              aria-labelledby="stage-gate-label"
+            />
+            <HelpTooltip
+              tooltip={
+                gate()?.eligible
+                  ? "Advance to the next stage"
+                  : (gate()?.label ?? "Advance unavailable")
+              }
               disabled={advanceDisabled()}
-              aria-describedby="stage-gate-title"
-              onClick={props.onAdvance}
+              disabledLabel={`Advance unavailable. ${gate()?.label ?? "Meet the stage prerequisite first."}`}
             >
-              <ActionIcon name="stage_advance" /> Advance to {nextStage().title}
-            </button>
+              {(tooltipBindings) => (
+                <button
+                  {...tooltipBindings}
+                  class="stage-advance-button evolution-stage__advance"
+                  type="button"
+                  disabled={advanceDisabled()}
+                  aria-describedby={`${tooltipBindings["aria-describedby"]} stage-gate-label`}
+                  onClick={props.onAdvance}
+                >
+                  <ActionIcon name="stage_advance" />
+                  <span>Advance</span>
+                </button>
+              )}
+            </HelpTooltip>
           </div>
         )}
       </Show>
+      <details class="evolution-stage__specimen">
+        <summary>Specimen notes</summary>
+        <dl>
+          <div>
+            <dt>Pressure</dt>
+            <dd>{current().pressure}</dd>
+          </div>
+          <div>
+            <dt>Opportunity</dt>
+            <dd>{current().opportunity}</dd>
+          </div>
+          <div>
+            <dt>Play shift</dt>
+            <dd>{current().gameplayIdentity}</dd>
+          </div>
+          <div>
+            <dt>Retired</dt>
+            <dd>{current().retires}</dd>
+          </div>
+        </dl>
+      </details>
     </section>
   );
 }

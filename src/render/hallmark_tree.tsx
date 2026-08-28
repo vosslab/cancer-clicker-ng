@@ -28,7 +28,6 @@ import {
   extendedHallmarkRouteDiscoveryGainPerSecond,
 } from "../hallmarks/extended_hallmark_effects.js";
 import { compare, fromSafeInteger } from "../bignum/bignum.js";
-import { stageDefinition } from "../stages/catalog.js";
 import { formatQuantity } from "../bignum/format.js";
 import type { CoreSixHallmarkDefinition } from "../hallmarks/core_six_types.js";
 import type {
@@ -43,8 +42,8 @@ import { LateProgramPanel } from "./late_program_panel.js";
 import { LateSenescencePanel } from "./late_senescence_panel.js";
 import type { CheckpointId, GameState, InflammationEpisode, TriageAction } from "../types/state.js";
 import type { HallmarkId, MutationId, OfferId, RouteId } from "../types/ids.js";
-import { ActionIcon } from "./action_icon.js";
-import type { SvgIconName } from "../svg/icons.js";
+import { HallmarkSigil } from "../svg/evolution_sigils.js";
+import { HelpTooltip } from "./action_tooltip.js";
 
 type HallmarkTreeProps = Readonly<{
   game: GameState;
@@ -53,25 +52,28 @@ type HallmarkTreeProps = Readonly<{
 
 type BranchStatus = "locked" | "available" | "acquired";
 
-function hallmarkIcon(id: string): SvgIconName {
-  const icons: Readonly<Record<string, SvgIconName>> = {
-    proliferative_signaling: "proliferative_signaling",
-    growth_suppressor_evasion: "growth_suppressor_evasion",
-    cell_death_resistance: "cell_death_resistance",
-    replicative_immortality: "replicative_immortality",
-    angiogenesis: "angiogenesis",
-    invasion_metastasis: "invasion_metastasis",
-    metabolic_deregulation: "metabolic_deregulation",
-    immune_destruction_avoidance: "immune_destruction_avoidance",
-    tumor_promoting_inflammation: "tumor_promoting_inflammation",
-    genome_instability_mutation: "genome_instability_mutation",
-    phenotypic_plasticity: "culture",
-    epigenetic_reprogramming: "culture",
-    polymorphic_microbiomes: "network_node",
-    senescent_cells: "replicative_immortality",
-  };
-  return icons[id] ?? "acquire";
-}
+type HallmarkBranch =
+  | Readonly<{
+      family: "core";
+      number: number;
+      definition: CoreSixHallmarkDefinition;
+      status: BranchStatus;
+      unlock: string;
+    }>
+  | Readonly<{
+      family: "extended";
+      number: number;
+      definition: ExtendedHallmarkDefinition;
+      status: BranchStatus;
+      unlock: string;
+    }>
+  | Readonly<{
+      family: "late";
+      number: number;
+      definition: LateHallmarkDefinition;
+      status: BranchStatus;
+      unlock: string;
+    }>;
 
 const CHECKPOINTS = [
   "contact-inhibition",
@@ -133,22 +135,6 @@ function lateHallmarkBranchStatus(
   return hasReachedLateHallmarkActivation(game.currentStage, definition.key)
     ? "available"
     : "locked";
-}
-
-function unlockExplanation(definition: CoreSixHallmarkDefinition): string {
-  const stage = stageDefinition(definition.unlock.stageId);
-  const capability = readableIdentifier(definition.unlock.capability);
-  return `Unlocks at ${stage.title}: ${capability}.`;
-}
-
-function extendedHallmarkUnlockExplanation(definition: ExtendedHallmarkDefinition): string {
-  const stage = stageDefinition(definition.unlock.stageId);
-  const capability = readableIdentifier(definition.unlock.capability);
-  return `Unlocks at ${stage.title}: ${capability}.`;
-}
-
-function lateHallmarkUnlockExplanation(definition: LateHallmarkDefinition): string {
-  return `Unlocks at ${stageDefinition(definition.activation.stageId).title}: ${readableIdentifier(definition.activation.capability)}.`;
 }
 
 function lateMechanicSummary(definition: LateHallmarkDefinition): string {
@@ -825,152 +811,149 @@ function ExtendedHallmarkAcquiredControls(
   }
 }
 
-/** Catalog-driven core-six controls: rendering observes durable state; the controller owns all mutation. */
+function branchCatalog(game: GameState): readonly HallmarkBranch[] {
+  const core = CORE_SIX_HALLMARK_CATALOG.map((definition, index) => ({
+    family: "core" as const,
+    number: index + 1,
+    definition,
+    status: branchStatus(game, definition),
+    unlock: `Unlocks at ${readableIdentifier(definition.unlock.stageId)}.`,
+  }));
+  const extended = EXTENDED_HALLMARK_CATALOG.map((definition, index) => ({
+    family: "extended" as const,
+    number: index + 7,
+    definition,
+    status: extendedHallmarkBranchStatus(game, definition),
+    unlock: `Unlocks at ${readableIdentifier(definition.unlock.stageId)}.`,
+  }));
+  const late = LATE_HALLMARK_CATALOG.map((definition, index) => ({
+    family: "late" as const,
+    number: index + 11,
+    definition,
+    status: lateHallmarkBranchStatus(game, definition),
+    unlock: `Unlocks at ${readableIdentifier(definition.activation.stageId)}.`,
+  }));
+  return [...core, ...extended, ...late];
+}
+
+function branchSummary(branch: HallmarkBranch): string {
+  switch (branch.family) {
+    case "core":
+      return mechanicSummary(branch.definition);
+    case "extended":
+      return `${readableIdentifier(branch.definition.mechanicClass)} creates a durable tradeoff.`;
+    case "late":
+      return lateMechanicSummary(branch.definition);
+  }
+}
+
+function BranchControls(props: HallmarkTreeProps, branch: HallmarkBranch): JSX.Element {
+  switch (branch.family) {
+    case "core":
+      return AcquiredControls(props, branch.definition);
+    case "extended":
+      return ExtendedHallmarkAcquiredControls(props, branch.definition);
+    case "late":
+      return LateHallmarkAcquiredControls(props, branch.definition);
+  }
+}
+
+/** Catalog-driven mutation tray: only the player-selected active branch opens a decision panel. */
 export function HallmarkTree(props: HallmarkTreeProps): JSX.Element {
+  const [selectedId, setSelectedId] = createSignal<HallmarkId | undefined>(undefined);
+  const branches = createMemo(() => branchCatalog(props.game));
+  const activeBranch = createMemo(() => {
+    const selected = selectedId();
+    const selectedBranch = branches().find((branch) => branch.definition.id === selected);
+    if (selectedBranch) return selectedBranch;
+    return (
+      branches().find((branch) => branch.status === "available") ??
+      branches().find((branch) => branch.status === "acquired") ??
+      branches()[0]
+    );
+  });
+
   return (
-    <section class="panel hallmark-tree" aria-labelledby="hallmark-tree-title">
-      <div class="section-heading">
+    <section class="hallmark-tree evolution-hallmarks" aria-labelledby="hallmark-tree-title">
+      <header class="evolution-hallmarks__heading">
         <div>
-          <p class="eyebrow">Hallmark programs</p>
-          <h2 id="hallmark-tree-title">The core six capabilities</h2>
+          <p class="evolution-hallmarks__kicker">Mutation deck</p>
+          <h2 id="hallmark-tree-title">Hallmark programs</h2>
         </div>
-        <p class="section-note">
-          Acquire a branch at its stage gate, then make its durable decision.
-        </p>
-      </div>
-      <ol class="hallmark-list">
-        <For each={CORE_SIX_HALLMARK_CATALOG}>
-          {(definition, index) => {
-            const status = (): BranchStatus => branchStatus(props.game, definition);
-            const explanation = (): string | undefined => controlExplanation(props, status());
+      </header>
+      <ol class="evolution-hallmarks__constellation" aria-label="Hallmark mutation programs">
+        <For each={branches()}>
+          {(branch) => {
+            const isActive = (): boolean => activeBranch()?.definition.id === branch.definition.id;
+            const tooltip = (): string =>
+              `${branch.definition.displayName}. ${branch.status}. ${branch.unlock}`;
             return (
-              <li class="hallmark-row">
-                <div class="hallmark-copy">
-                  <p class="hallmark-index">Branch {index() + 1}</p>
-                  <h3>
-                    <ActionIcon name={hallmarkIcon(definition.id)} /> {definition.displayName}
-                  </h3>
-                  <p>{mechanicSummary(definition)}</p>
-                  <p class="hallmark-unlock">{unlockExplanation(definition)}</p>
-                </div>
-                <div class="hallmark-action">
-                  <p class={`hallmark-status is-${status()}`}>{readableIdentifier(status())}</p>
-                  <Show when={status() === "available"}>
+              <li data-state={branch.status}>
+                <HelpTooltip tooltip={tooltip()}>
+                  {(bindings) => (
                     <button
+                      {...bindings}
+                      class="evolution-hallmarks__sigil-button"
+                      classList={{ "is-active": isActive() }}
                       type="button"
-                      disabled={interactionDisabled(props)}
-                      onClick={() => props.controller.purchaseHallmark(definition.id)}
+                      aria-pressed={isActive()}
+                      aria-label={`${branch.definition.displayName}, ${branch.status}`}
+                      onClick={() => setSelectedId(branch.definition.id)}
                     >
-                      <ActionIcon name="acquire" /> Acquire capability
+                      <HallmarkSigil name={branch.definition.id} state={branch.status} />
+                      <span class="evolution-hallmarks__name">{branch.definition.displayName}</span>
+                      <span class="evolution-hallmarks__state">
+                        {readableIdentifier(branch.status)}
+                      </span>
                     </button>
-                  </Show>
-                  <Show when={status() === "acquired"}>{AcquiredControls(props, definition)}</Show>
-                  <Show when={explanation()}>
-                    {(message) => <p class="hallmark-disabled-note">{message()}</p>}
-                  </Show>
-                </div>
+                  )}
+                </HelpTooltip>
               </li>
             );
           }}
         </For>
       </ol>
-      <div class="section-heading extended-hallmarks-heading">
-        <div>
-          <p class="eyebrow">2011 expansion</p>
-          <h2>Metabolism, immunity, inflammation, and mutation</h2>
-        </div>
-        <p class="section-note">
-          These branches create durable tradeoffs rather than passive bonuses.
-        </p>
-      </div>
-      <ol class="hallmark-list" start="7">
-        <For each={EXTENDED_HALLMARK_CATALOG}>
-          {(definition, index) => {
-            const status = (): BranchStatus => extendedHallmarkBranchStatus(props.game, definition);
-            const explanation = (): string | undefined => controlExplanation(props, status());
-            return (
-              <li class="hallmark-row extended-hallmark-row">
-                <div class="hallmark-copy">
-                  <p class="hallmark-index">Branch {index() + 7}</p>
-                  <h3>
-                    <ActionIcon name={hallmarkIcon(definition.id)} /> {definition.displayName}
-                  </h3>
+      <Show when={activeBranch()}>
+        {(branch) => {
+          return (
+            <section
+              class="evolution-hallmarks__active"
+              data-state={branch().status}
+              aria-live="polite"
+            >
+              <div class="evolution-hallmarks__active-heading">
+                <HallmarkSigil name={branch().definition.id} state={branch().status} />
+                <div>
                   <p>
-                    {readableIdentifier(definition.mechanicClass)} with explicit costs and
-                    consequences.
+                    Branch {branch().number} · {readableIdentifier(branch().status)}
                   </p>
-                  <p class="hallmark-unlock">{extendedHallmarkUnlockExplanation(definition)}</p>
+                  <h3>{branch().definition.displayName}</h3>
                 </div>
-                <div class="hallmark-action">
-                  <p class={`hallmark-status is-${status()}`}>{readableIdentifier(status())}</p>
-                  <Show when={status() === "available"}>
-                    <button
-                      type="button"
-                      disabled={interactionDisabled(props)}
-                      onClick={() => props.controller.purchaseHallmark(definition.id)}
-                    >
-                      <ActionIcon name="acquire" /> Acquire capability
-                    </button>
-                  </Show>
-                  <Show when={status() === "acquired"}>
-                    {ExtendedHallmarkAcquiredControls(props, definition)}
-                  </Show>
-                  <Show when={explanation()}>
-                    {(message) => <p class="hallmark-disabled-note">{message()}</p>}
-                  </Show>
-                </div>
-              </li>
-            );
-          }}
-        </For>
-      </ol>
-      <div class="section-heading extended-hallmarks-heading late-hallmarks-heading">
-        <div>
-          <p class="eyebrow">2022 expansion</p>
-          <h2>Plasticity, programs, microbiomes, and senescence</h2>
-        </div>
-        <p class="section-note">
-          Late decisions persist as regional choices, saved offers, and explicit consequences.
-        </p>
-      </div>
-      <ol class="hallmark-list" start="11">
-        <For each={LATE_HALLMARK_CATALOG}>
-          {(definition, index) => {
-            const status = (): BranchStatus => lateHallmarkBranchStatus(props.game, definition);
-            const explanation = (): string | undefined => controlExplanation(props, status());
-            return (
-              <li class="hallmark-row late-hallmark-row">
-                <div class="hallmark-copy">
-                  <p class="hallmark-index">Branch {index() + 11}</p>
-                  <h3>
-                    <ActionIcon name={hallmarkIcon(definition.id)} /> {definition.displayName}
-                  </h3>
-                  <p>{lateMechanicSummary(definition)}</p>
-                  <p class="hallmark-unlock">{lateHallmarkUnlockExplanation(definition)}</p>
-                </div>
-                <div class="hallmark-action">
-                  <p class={`hallmark-status is-${status()}`}>{readableIdentifier(status())}</p>
-                  <Show when={status() === "available"}>
-                    <button
-                      type="button"
-                      disabled={interactionDisabled(props)}
-                      onClick={() => props.controller.purchaseHallmark(definition.id)}
-                    >
-                      <ActionIcon name="acquire" /> Acquire capability
-                    </button>
-                  </Show>
-                  <Show when={status() === "acquired"}>
-                    {LateHallmarkAcquiredControls(props, definition)}
-                  </Show>
-                  <Show when={explanation()}>
-                    {(message) => <p class="hallmark-disabled-note">{message()}</p>}
-                  </Show>
-                </div>
-              </li>
-            );
-          }}
-        </For>
-      </ol>
+              </div>
+              <Show when={branch().status === "available"}>
+                <button
+                  class="evolution-hallmarks__acquire"
+                  type="button"
+                  disabled={interactionDisabled(props)}
+                  onClick={() => props.controller.purchaseHallmark(branch().definition.id)}
+                >
+                  <HallmarkSigil name={branch().definition.id} state="available" />
+                  <span>Acquire</span>
+                </button>
+              </Show>
+              <Show when={branch().status === "acquired"}>{BranchControls(props, branch())}</Show>
+              <details class="evolution-hallmarks__specimen">
+                <summary>Specimen note</summary>
+                <p>{branchSummary(branch())}</p>
+                <p>{branch().unlock}</p>
+                <Show when={controlExplanation(props, branch().status)}>
+                  {(message) => <p>{message()}</p>}
+                </Show>
+              </details>
+            </section>
+          );
+        }}
+      </Show>
     </section>
   );
 }

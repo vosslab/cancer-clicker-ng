@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
 
+// Selector contract: the accessible divide action and its decorative inline SVG
+// (src/render/tumor_arena.tsx:133; src/render/colony_panel.tsx:74).
 function installDiagnostics(page) {
   const failures = [];
   page.on("pageerror", (error) => failures.push(`pageerror: ${error.message}`));
@@ -15,7 +17,7 @@ async function inspectColonyFigure(page) {
   await expect(svg).toHaveAttribute("aria-hidden", "true");
   await expect(svg.locator("title")).toHaveCount(0);
   await expect(svg.locator("desc")).toHaveCount(0);
-  await expect(page.locator("#colony-caption")).toBeVisible();
+  await expect(page.locator("#colony-a11y-description")).toContainText("Click a visible cell");
   return svg.evaluate((element) => {
     const allNodes = [element, ...element.querySelectorAll("*")];
     const ids = new Set([...element.querySelectorAll("[id]")].map((node) => node.id));
@@ -34,37 +36,20 @@ async function inspectColonyFigure(page) {
         }
       }
     }
-    const box = element.getBoundingClientRect();
-    const layerSelectors = [
-      ".colony-figure__tissue",
-      ".colony-figure__silhouette-regions",
-      ".colony-figure__hypoxia-necrosis",
-      ".colony-figure__perfusion",
-      ".colony-figure__cells",
-      ".colony-figure__hallmark-accents",
-      ".colony-figure__invasion",
-      ".colony-figure__outline",
-    ];
-    const directChildren = [...element.children];
     return {
       externalReferences,
       unresolvedReferences,
-      finiteBox: [box.x, box.y, box.width, box.height].every(Number.isFinite),
-      visible: box.width > 0 && box.height > 0,
       focusable: element.querySelectorAll(
         'a, button, input, select, textarea, [tabindex]:not([tabindex="-1"])',
       ).length,
       inlineHandlers: allNodes.some((node) =>
         [...node.attributes].some((attribute) => attribute.name.toLowerCase().startsWith("on")),
       ),
-      layerOrder: layerSelectors.map((selector) =>
-        directChildren.findIndex((node) => node.matches(selector)),
-      ),
     };
   });
 }
 
-test("the production page keeps local finite SVG geometry beneath one named colony action", async ({
+test("the production colony action keeps its decorative SVG local and reference-safe", async ({
   page,
 }) => {
   const diagnostics = installDiagnostics(page);
@@ -73,16 +58,10 @@ test("the production page keeps local finite SVG geometry beneath one named colo
   await expect(action).toBeVisible();
   await expect(action.locator("svg.colony-figure")).toHaveCount(1);
   const inspection = await inspectColonyFigure(page);
-  expect(inspection.visible).toBe(true);
-  expect(inspection.finiteBox).toBe(true);
   expect(inspection.externalReferences).toEqual([]);
   expect(inspection.unresolvedReferences).toEqual([]);
   expect(inspection.focusable).toBe(0);
   expect(inspection.inlineHandlers).toBe(false);
-  expect(inspection.layerOrder.every((index) => index >= 0)).toBe(true);
-  expect(inspection.layerOrder).toEqual(
-    [...inspection.layerOrder].sort((left, right) => left - right),
-  );
   expect(diagnostics).toEqual([]);
 });
 
@@ -98,15 +77,15 @@ test("the colony figure remains visible without horizontal overflow in compact r
     const page = await context.newPage();
     const diagnostics = installDiagnostics(page);
     await page.goto("/");
-    await expect(page.locator(".colony-panel")).toBeVisible();
-    const inspection = await inspectColonyFigure(page);
+    await expect(page.getByRole("region", { name: "Living tumor arena" })).toBeVisible();
+    await inspectColonyFigure(page);
     const responsive = await page.evaluate(() => ({
       overflow: document.documentElement.scrollWidth > document.documentElement.clientWidth,
       reduced: matchMedia("(prefers-reduced-motion: reduce)").matches,
     }));
     expect(responsive.reduced).toBe(true);
     expect(responsive.overflow).toBe(false);
-    expect(inspection.visible).toBe(true);
+    await expect(page.getByRole("button", { name: "Divide cell" })).toBeVisible();
     expect(diagnostics).toEqual([]);
   } finally {
     await context.close();

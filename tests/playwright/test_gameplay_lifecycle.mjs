@@ -1,5 +1,8 @@
 import { expect, test } from "@playwright/test";
 
+// Selector contract: named game controls come from the render components; `data-save-state`
+// exposes the HUD's saved/unsaved state without coupling this journey to its visible glyph.
+
 const SAVE_KEY = "cancer-clicker-ng.save.v2";
 
 // This walkthrough shares the production persistence story; keep its browser actions serial.
@@ -52,7 +55,7 @@ async function clickVisibleCell(page) {
 async function earnAndBuyCyclin(page) {
   for (let count = 0; count < 10; count += 1) await clickVisibleCell(page);
   const cyclin = page.locator('[data-producer-id="producer"]');
-  const buyOne = cyclin.getByRole("button", { name: "Buy 1", exact: true });
+  const buyOne = cyclin.getByRole("button", { name: /^Buy 1 Cyclin D machine/ });
   await expect(buyOne).toBeEnabled();
   await cyclin.evaluate((element) => {
     globalThis.__gameplayCyclinRow = element;
@@ -107,10 +110,12 @@ test("gameplay lifecycle production dist is playable, persistent, accessible, an
   await page.goto("/");
 
   await expect(page.getByRole("main", { name: "Cancer Clicker NG" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Cancer Clicker NG" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Cancer Clicker NG" })).toHaveCount(1);
   await expect(page.getByRole("button", { name: "Divide cell" })).toBeVisible();
   await expect(page.locator("#debug-controls")).toHaveCount(0);
-  await expect(page.locator("#save-status")).toHaveText("Progress saved locally");
+  const saveStatus = page.locator("#save-status");
+  await expect(saveStatus).toHaveAttribute("data-save-state", "saved");
+  await expect(saveStatus).toHaveAttribute("title", "Progress saved locally");
 
   const initialCells = await page.getByLabel("Cell count").textContent();
   await page.getByRole("button", { name: "Divide cell" }).focus();
@@ -124,7 +129,11 @@ test("gameplay lifecycle production dist is playable, persistent, accessible, an
   await page.reload();
   await expect(page.getByRole("heading", { name: "Offline progress" })).toHaveCount(0);
   await expect(page.locator('[data-producer-id="producer"]')).toContainText("Owned level 1");
-  await expect(page.getByRole("button", { name: "Buy 1", exact: true }).first()).toBeEnabled();
+  await expect(
+    page
+      .locator('[data-producer-id="producer"]')
+      .getByRole("button", { name: /^Buy 1 Cyclin D machine/ }),
+  ).toBeEnabled();
 
   const storage = await page.evaluate(
     (key) => ({
@@ -165,7 +174,9 @@ test("gameplay lifecycle production dist exposes debug mutation controls only on
   await expect(
     page.getByRole("status").filter({ hasText: "Hostile event rejected" }),
   ).toBeVisible();
-  await expect(page.locator("#save-status")).toHaveText("Progress saved locally");
+  const saveStatus = page.locator("#save-status");
+  await expect(saveStatus).toHaveAttribute("data-save-state", "saved");
+  await expect(saveStatus).toHaveAttribute("title", "Progress saved locally");
   await expect
     .poll(() => page.evaluate((key) => window.localStorage.getItem(key), SAVE_KEY))
     .toEqual(beforeHostile);
@@ -179,7 +190,7 @@ test("gameplay lifecycle production dist exposes debug mutation controls only on
   await earnAndBuyCyclin(page);
   const cyclinBuy = page
     .locator('[data-producer-id="producer"]')
-    .getByRole("button", { name: "Buy 1", exact: true });
+    .getByRole("button", { name: /^Buy 1 Cyclin D machine/ });
   await cyclinBuy.focus();
   await page.keyboard.press("Alt+R");
   await expect(cyclinBuy).toBeFocused();

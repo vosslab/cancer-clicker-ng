@@ -1,0 +1,547 @@
+/* The prestige board is a game board: art, routes, counters, then optional written detail. */
+.prestige-route-board,
+.transit-route-board {
+  gap: 0.65rem;
+  overflow: visible;
+  border-color: rgb(255 205 106 / 75%);
+  background:
+    radial-gradient(circle at 16% 12%, rgb(245 112 107 / 17%), transparent 23rem),
+    linear-gradient(145deg, rgb(61 38 35 / 94%), rgb(9 28 26 / 98%) 64%);
+}
+
+.prestige-route-header,
+.transit-route-header {
+  display: flex;
+  gap: 0.55rem;
+  align-items: center;
+  min-inline-size: 0;
+}
+
+.prestige-route-board > .section-heading {
+  display: flex;
+  gap: 0.55rem;
+  align-items: center;
+  min-inline-size: 0;
+}
+
+.prestige-route-board > .section-heading > div {
+  min-inline-size: 0;
+}
+
+.prestige-route-board > .section-heading .section-note {
+  margin-inline-start: auto;
+}
+
+.prestige-route-header .section-heading,
+.transit-route-header .section-heading {
+  display: contents;
+}
+
+.prestige-route-header .section-heading > div,
+.transit-route-header > div {
+  min-inline-size: 0;
+}
+
+.prestige-route-header .section-heading .eyebrow,
+.transit-route-header .eyebrow {
+  margin: 0;
+}
+
+.prestige-route-header .section-heading h2,
+.transit-route-header h2 {
+  margin: 0;
+  font-size: clamp(1rem, 1.6vw, 1.3rem);
+}
+
+.prestige-route-title-art,
+.transit-route-header > .prestige-route-prop {
+  inline-size: 3.1rem;
+  block-size: 3.1rem;
+  flex: 0 0 auto;
+}
+
+.prestige-route-header .section-note {
+  margin-inline-start: auto;
+  border-color: rgb(255 215 125 / 65%);
+  color: #fff3cc;
+  background: rgb(74 46 20 / 75%);
+  font-variant-numeric: tabular-nums;
+}
+
+.prestige-route-board .hallmark-fieldset {
+  position: relative;
+  grid-template-columns: 4.2rem minmax(0, 1fr) auto;
+  gap: 0.5rem 0.75rem;
+  align-items: center;
+  min-block-size: 6.5rem;
+  padding: 0.6rem 0.7rem;
+  overflow: visible;
+  border: 1px solid rgb(255 207 121 / 46%);
+  border-radius: 0.8rem;
+  background: linear-gradient(90deg, rgb(251 105 106 / 10%), transparent 50%), rgb(8 24 22 / 72%);
+}
+
+.prestige-route-board .hallmark-fieldset legend {
+  padding-inline: 0.35rem;
+  color: #ffe3a2;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.prestige-route-board .prestige-layer-prop {
+  grid-row: 1 / span 5;
+  inline-size: 4rem;
+  block-size: 4rem;
+}
+
+.prestige-route-board .hallmark-fieldset > p,
+.prestige-route-board .hallmark-fieldset > ul,
+.prestige-route-board .hallmark-fieldset > div,
+.prestige-route-board .hallmark-fieldset > .prestige-card-grid {
+  grid-column: 2;
+}
+
+.prestige-route-board .hallmark-fieldset > button {
+  grid-column: 3;
+  grid-row: 2 / span 3;
+  inline-size: auto;
+  min-inline-size: 5.8rem;
+  min-block-size: 2.75rem;
+  padding: 0.45rem 0.6rem;
+  border-color: #ffaf99;
+  color: #381515;
+  background: linear-gradient(145deg, #ffd3bd, #f36e76);
+  box-shadow: 0 0.35rem 0.85rem rgb(243 110 118 / 22%);
+}
+
+.prestige-route-board .prestige-summary > p:first-of-type {
+  color: #ffe5b2;
+  font-size: 1rem;
+}
+
+.prestige-route-board .prestige-summary ul,
+.prestige-route-board .prestige-tradeoff {
+  display: none;
+}
+
+.prestige-route-board .hallmark-disabled-note {
+  display: block;
+  padding: 0.3rem 0.45rem;
+  border-inline-start: 2px solid rgb(255 192 119 / 82%);
+  color: #ffe5c2;
+  font-size: 0.72rem;
+}
+
+.prestige-route-board .prestige-card-grid {
+  grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+}
+
+.prestige-route-board .prestige-card {
+  position: relative;
+  gap: 0.35rem;
+  min-block-size: 10.5rem;
+  padding: 0.55rem;
+  overflow: visible;
+  border-color: rgb(255 215 126 / 42%);
+  background:
+    radial-gradient(circle at 78% 18%, rgb(255 206 116 / 14%), transparent 6rem),
+    linear-gradient(145deg, rgb(66 48 37 / 84%), rgb(8 26 23 / 96%));
+}
+
+.prestige-route-board .prestige-card-prop {
+  position: absolute;
+  inset-block-start: 0.4rem;
+  inset-inline-end: 0.35rem;
+  inline-size: 2.55rem;
+  block-size: 2.55rem;
+  opacity: 0.92;
+  pointer-events: none;
+}
+
+.prestige-route-board .prestige-card h3,
+.prestige-route-board .prestige-card h4 {
+  max-inline-size: calc(100% - 2.6rem);
+  color: #fff0bd;
+}
+
+.prestige-route-board .prestige-card > p {
+  color: #ffe5b2;
+  font-variant-numeric: tabular-nums;
+}
+
+.prestige-route-board .prestige-card > .prestige-tradeoff {
+  display: none;
+}
+
+.prestige-route-board .prestige-card button {
+  min-block-size: 2.75rem;
+  padding: 0.4rem;
+  border-radius: 0.65rem;
+  font-size: 0.75rem;
+}
+
+.prestige-route-board .prestige-card > .prestige-card-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.prestige-route-board .prestige-card > .prestige-card-grid > p {
+  display: none;
+}
+
+.prestige-route-board .prestige-card > .prestige-card-grid button {
+  min-block-size: 2.75rem;
+  font-size: 0;
+}
+
+.prestige-route-board .prestige-card > .prestige-card-grid button .action-icon {
+  inline-size: 1.3rem;
+  block-size: 1.3rem;
+}
+
+.prestige-route-board .prestige-layer-l2 {
+  border-color: rgb(151 219 255 / 52%);
+  background: linear-gradient(90deg, rgb(82 154 213 / 13%), transparent 55%), rgb(8 24 27 / 78%);
+  isolation: isolate;
+}
+
+.prestige-route-board .prestige-layer-l2 > button {
+  position: relative;
+  z-index: 2;
+  border-color: #93d7ff;
+  color: #10222e;
+  background: linear-gradient(145deg, #d1f1ff, #75bde6);
+}
+
+.prestige-route-board .prestige-layer-l2 > .prestige-card-grid {
+  position: relative;
+  z-index: 1;
+}
+
+.prestige-route-board .prestige-draft {
+  position: relative;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  border-color: rgb(153 220 255 / 52%);
+  background: linear-gradient(145deg, rgb(31 71 88 / 82%), rgb(8 25 29 / 92%));
+}
+
+.prestige-route-board .prestige-draft > .prestige-layer-prop {
+  inline-size: 3.5rem;
+  block-size: 3.5rem;
+}
+
+.prestige-route-board .prestige-draft > h3,
+.prestige-route-board .prestige-draft > p,
+.prestige-route-board .prestige-draft > .prestige-card-grid {
+  grid-column: 2;
+}
+
+.prestige-route-board .prestige-draft > .prestige-card-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.prestige-route-board .prestige-host-card {
+  min-block-size: 8rem;
+  padding: 0.5rem;
+}
+
+.prestige-route-board .prestige-host-card ul {
+  display: none;
+}
+
+.transit-route-board {
+  border-color: rgb(123 210 246 / 72%);
+  background:
+    radial-gradient(circle at 75% 15%, rgb(99 207 242 / 16%), transparent 20rem),
+    linear-gradient(145deg, rgb(16 58 72 / 96%), rgb(7 23 28 / 99%));
+}
+
+.transit-route-header {
+  min-block-size: 3.5rem;
+}
+
+.transit-route-count {
+  display: grid;
+  min-inline-size: 2.1rem;
+  min-block-size: 2.1rem;
+  place-items: center;
+  margin-inline-start: auto;
+  border: 2px solid #b8edff;
+  border-radius: 999px;
+  color: #e4f8ff;
+  background: rgb(29 120 151 / 58%);
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+
+.transit-route-list {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.transit-route-event {
+  display: grid;
+  grid-template-columns: 3.3rem auto minmax(0, 1fr);
+  gap: 0.55rem;
+  align-items: center;
+  padding: 0.45rem 0.55rem;
+  border: 1px solid rgb(141 218 248 / 48%);
+  border-radius: 0.8rem;
+  background: linear-gradient(90deg, rgb(85 182 223 / 15%), rgb(6 28 35 / 62%));
+}
+
+.transit-route-event > .prestige-route-prop {
+  inline-size: 3rem;
+  block-size: 3rem;
+}
+
+.transit-route-status {
+  color: #d4f5ff;
+  font-size: 0.75rem;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.transit-route-event.is-lost {
+  border-style: dashed;
+  filter: saturate(0.55);
+}
+
+.transit-destination-rack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  justify-content: end;
+}
+
+.transit-destination .action-tooltip-trigger {
+  display: inline-flex;
+  gap: 0.25rem;
+  align-items: center;
+  min-block-size: 2.75rem;
+  padding: 0.25rem 0.4rem;
+  border-color: rgb(137 222 253 / 65%);
+  color: #def8ff;
+  background: rgb(24 95 121 / 70%);
+  font-size: 0.72rem;
+}
+
+.transit-destination .prestige-route-prop {
+  inline-size: 1.8rem;
+  block-size: 1.8rem;
+}
+
+.prestige-route-prop {
+  overflow: visible;
+}
+
+.route-prop-trail,
+.route-prop-trail-faint,
+.route-prop-vessel,
+.route-prop-vessel-inner,
+.route-prop-network-link,
+.route-prop-network-pulse,
+.route-prop-organ-vein,
+.route-prop-transfer-arrow,
+.route-prop-host-line,
+.route-prop-frost,
+.route-prop-snow {
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.route-prop-metastasis {
+  color: #ff9d91;
+}
+.route-prop-trail {
+  stroke-width: 5;
+  opacity: 0.7;
+}
+.route-prop-trail-faint {
+  stroke-width: 2.5;
+  opacity: 0.4;
+}
+.route-prop-core {
+  fill: #e96071;
+  stroke: #ffd1b5;
+  stroke-width: 3;
+}
+.route-prop-nucleus {
+  fill: #4a1835;
+}
+.route-prop-bud {
+  fill: #fa9f87;
+  stroke: #ffd9bf;
+  stroke-width: 2;
+}
+.route-prop-arrow {
+  fill: none;
+  stroke: #fff0d1;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.route-prop-host {
+  color: #a6e7ff;
+}
+.route-prop-host-shell {
+  fill: rgb(63 142 177 / 38%);
+  stroke: currentColor;
+  stroke-width: 3;
+}
+.route-prop-host-cell {
+  fill: #98d7ec;
+  stroke: #e4fbff;
+  stroke-width: 2;
+}
+.route-prop-transfer-arrow {
+  stroke: #ffd98d;
+  stroke-width: 4;
+}
+.route-prop-host-line {
+  stroke-width: 2;
+  opacity: 0.75;
+}
+.route-prop-cryobank {
+  color: #9eeaff;
+}
+.route-prop-vial-cap {
+  fill: #d5f9ff;
+  stroke: #6ad3f1;
+  stroke-width: 2;
+}
+.route-prop-vial {
+  fill: rgb(64 191 238 / 25%);
+  stroke: currentColor;
+  stroke-width: 3;
+}
+.route-prop-frost {
+  stroke: #d7fbff;
+  stroke-width: 2;
+}
+.route-prop-cryocell {
+  fill: #80d8f6;
+  stroke: #e3fcff;
+  stroke-width: 2;
+}
+.route-prop-snow {
+  stroke: #efffff;
+  stroke-width: 2;
+}
+.route-prop-network {
+  color: #e3b8ff;
+}
+.route-prop-network-link {
+  stroke: #b577e8;
+  stroke-width: 3;
+}
+.route-prop-network-node {
+  fill: #bc7cec;
+  stroke: #f1d7ff;
+  stroke-width: 2;
+}
+.route-prop-network-core {
+  fill: #e5b8ff;
+  stroke: #fff3ff;
+  stroke-width: 3;
+}
+.route-prop-network-pulse {
+  stroke: #f6dfff;
+  stroke-width: 2;
+}
+.route-prop-transit {
+  color: #89ddff;
+}
+.route-prop-vessel {
+  stroke: #cf5f71;
+  stroke-width: 13;
+}
+.route-prop-vessel-inner {
+  stroke: #7a263e;
+  stroke-width: 4;
+}
+.route-prop-circulating-cell {
+  fill: #f39a86;
+  stroke: #ffe3c8;
+  stroke-width: 2;
+}
+.route-prop-flow-arrow {
+  fill: #d7f8ff;
+  stroke: #d7f8ff;
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+.route-prop-organ {
+  color: #f0a774;
+}
+.route-prop-organ-body {
+  fill: rgb(213 111 89 / 48%);
+  stroke: currentColor;
+  stroke-width: 3;
+}
+.route-prop-organ-vein {
+  stroke: #ffd2a1;
+  stroke-width: 2.5;
+}
+.route-prop-organ-site {
+  fill: #fff1c9;
+  stroke: #ea7c6c;
+  stroke-width: 2;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .prestige-route-prop-transit .route-prop-circulating-cell {
+    animation: route-cell-drift 2.8s ease-in-out infinite alternate;
+  }
+  .prestige-route-prop-network .route-prop-network-core {
+    animation: route-network-pulse 1.8s ease-in-out infinite;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .prestige-route-prop *,
+  .transit-route-event,
+  .prestige-route-board .prestige-card {
+    animation: none !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@keyframes route-cell-drift {
+  to {
+    transform: translate(6px, 3px);
+  }
+}
+
+@keyframes route-network-pulse {
+  50% {
+    r: 17px;
+    opacity: 0.74;
+  }
+}
+
+@media (max-width: 48rem) {
+  .prestige-route-board .hallmark-fieldset {
+    grid-template-columns: 3.4rem minmax(0, 1fr);
+  }
+  .prestige-route-board .hallmark-fieldset > button {
+    grid-column: 2;
+    grid-row: auto;
+    inline-size: 100%;
+  }
+  .prestige-route-board .prestige-draft > .prestige-card-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .transit-route-event {
+    grid-template-columns: 3rem minmax(0, 1fr);
+  }
+  .transit-destination-rack {
+    grid-column: 1 / -1;
+    justify-content: start;
+  }
+}

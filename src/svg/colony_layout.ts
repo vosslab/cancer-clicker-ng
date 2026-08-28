@@ -29,6 +29,8 @@ const clusterPhase: unique symbol = Symbol("cluster phase");
 type StageName = (typeof STAGE_IDS)[number];
 export type Point = Readonly<{ x: number; y: number }>;
 export type DepthStratum = "surface" | "middle" | "deep";
+/** A bounded state-driven density family for the representative SVG board. */
+export type ColonyBurdenTier = "sparse" | "established" | "dense" | "overgrown";
 export type RegionKind =
   "core" | "rim" | "perfusion" | "front" | "departure" | "island" | "culture_well" | "network_node";
 export type VoidKind = "core_void" | "channel" | "cleft" | "moat" | "island_gap";
@@ -38,6 +40,7 @@ export type ColonyLayoutRequest = Readonly<{
   sceneSeed: number;
   morphology: MorphologyResolution;
   detail: "representative" | "inspection";
+  burdenTier: ColonyBurdenTier;
 }>;
 export type PublicSilhouette = Readonly<{
   centre: Point;
@@ -129,6 +132,7 @@ export type ColonyLayoutMetrics = Readonly<{
 }>;
 export type ColonyLayout = Readonly<{
   stageId: StageId;
+  burdenTier: ColonyBurdenTier;
   sceneKey: string;
   silhouette: PublicSilhouette;
   regions: readonly PublicRegion[];
@@ -147,6 +151,40 @@ type Signature = Readonly<{
   voidKinds: readonly VoidKind[];
   clearance: number;
 }>;
+
+type BurdenProfile = Readonly<{
+  targetMultiplier: number;
+  radiusMultiplier: number;
+  lobulationMultiplier: number;
+  voidMultiplier: number;
+}>;
+
+const BURDEN_PROFILES: Readonly<Record<ColonyBurdenTier, BurdenProfile>> = Object.freeze({
+  sparse: Object.freeze({
+    targetMultiplier: 0.48,
+    radiusMultiplier: 0.76,
+    lobulationMultiplier: 0.72,
+    voidMultiplier: 1.24,
+  }),
+  established: Object.freeze({
+    targetMultiplier: 0.76,
+    radiusMultiplier: 0.9,
+    lobulationMultiplier: 0.9,
+    voidMultiplier: 1.08,
+  }),
+  dense: Object.freeze({
+    targetMultiplier: 1,
+    radiusMultiplier: 1,
+    lobulationMultiplier: 1,
+    voidMultiplier: 0.92,
+  }),
+  overgrown: Object.freeze({
+    targetMultiplier: 1.15,
+    radiusMultiplier: 1.08,
+    lobulationMultiplier: 1.2,
+    voidMultiplier: 0.76,
+  }),
+});
 
 /** Exhaustive, data-only macro contracts.  Values are deliberately broad visual families. */
 export const STAGE_LAYOUT_SIGNATURES = {
@@ -275,6 +313,17 @@ function stageName(value: StageId): StageName {
     throw new Error("Unsupported colony-layout stage.");
   return value as StageName;
 }
+
+export function colonyBurdenTier(request: ColonyLayoutRequest): ColonyBurdenTier {
+  const tier = request.burdenTier;
+  if (!(tier in BURDEN_PROFILES)) throw new Error("Colony burden tier must be canonical.");
+  return tier;
+}
+
+function burdenProfile(request: ColonyLayoutRequest): BurdenProfile {
+  return BURDEN_PROFILES[colonyBurdenTier(request)];
+}
+
 function validateRequest(request: ColonyLayoutRequest): StageName {
   if (
     !request ||
@@ -287,6 +336,7 @@ function validateRequest(request: ColonyLayoutRequest): StageName {
     throw new Error("Unknown layout detail level.");
   if (!request.morphology || !Number.isSafeInteger(request.morphology.seed))
     throw new Error("A resolved morphology fixture is required.");
+  colonyBurdenTier(request);
   for (const value of Object.values(request.morphology.params))
     if (typeof value === "number" && !Number.isFinite(value))
       throw new Error("Morphology values must be finite.");
@@ -294,7 +344,13 @@ function validateRequest(request: ColonyLayoutRequest): StageName {
 }
 function seeded(request: ColonyLayoutRequest, ...parts: (string | number)[]): () => number {
   return mulberry32(
-    hash_seed(["ccng-layout-v1", request.sceneSeed, stageName(request.stageId), ...parts]),
+    hash_seed([
+      "ccng-layout-v2",
+      request.sceneSeed,
+      stageName(request.stageId),
+      colonyBurdenTier(request),
+      ...parts,
+    ]),
   );
 }
 function distance(a: Point, b: Point): number {
@@ -381,9 +437,20 @@ function silhouettePlateScale(centre: Point, vertices: readonly Point[]): number
 export function buildSilhouette(request: ColonyLayoutRequest): ColonySilhouette {
   const name = validateRequest(request);
   const signature = STAGE_LAYOUT_SIGNATURES[name];
+  const burden = burdenProfile(request);
   const random = seeded(request, "silhouette");
   const centre = point(500 + (random() - 0.5) * 18, 350 + (random() - 0.5) * 14);
-  const baseRadius = signature.components === 1 ? signature.radius : 430;
+  // The opening is a direct-manipulation lesson, not a miniaturized lesion:
+  // one coherent cell must dominate the board while the surrounding well stays
+  // quiet enough to make the first division feel consequential.
+  const baseRadius =
+    signature.components === 1
+      ? name === "transformed_cell"
+        ? 190
+        : name === "microcolony"
+          ? Math.max(220, signature.radius * burden.radiusMultiplier)
+          : signature.radius * burden.radiusMultiplier
+      : 430;
   const count = 32;
   const vertices: Point[] = [];
   for (let index = 0; index < count; index += 1) {
@@ -394,7 +461,7 @@ export function buildSilhouette(request: ColonyLayoutRequest): ColonySilhouette 
         : 0;
     const wave =
       Math.sin(angle * (name === "invasive_carcinoma" ? 3 : 2) + random() * 0.3) *
-        (signature.lobe + request.morphology.params.invasion * 0.12) +
+        (signature.lobe * burden.lobulationMultiplier + request.morphology.params.invasion * 0.12) +
       invasionBulge;
     const radius =
       baseRadius *
@@ -451,40 +518,60 @@ function voidFor(
   ordinal: number,
 ): VoidFeature {
   const signature = STAGE_LAYOUT_SIGNATURES[stageName(request.stageId)];
+  const burden = burdenProfile(request);
   const key = `layout-v1:${request.stageId}:${kind}:${ordinal}`;
   if (kind === "moat")
     return freeze({
       key,
       kind,
       centre: silhouette.centre,
-      rx: signature.radius * 0.24,
-      ry: signature.radius * 0.2,
+      rx: signature.radius * 0.24 * burden.voidMultiplier,
+      ry: signature.radius * 0.2 * burden.voidMultiplier,
       clearance: 14,
     });
   if (kind === "channel")
-    return freeze({ key, kind, centre: point(590, 350), rx: 150, ry: 22, clearance: 10 });
+    return freeze({
+      key,
+      kind,
+      centre: point(590, 350),
+      rx: 150 * burden.voidMultiplier,
+      ry: 22 * burden.voidMultiplier,
+      clearance: 10,
+    });
   if (kind === "cleft")
     return freeze({
       key,
       kind,
       centre: point(500, 350),
-      rx: stageName(request.stageId) === "avascular_lesion" ? 108 : 34,
-      ry: signature.radius * (stageName(request.stageId) === "avascular_lesion" ? 0.42 : 0.46),
+      rx: (stageName(request.stageId) === "avascular_lesion" ? 108 : 34) * burden.voidMultiplier,
+      ry:
+        signature.radius *
+        (stageName(request.stageId) === "avascular_lesion" ? 0.42 : 0.46) *
+        burden.voidMultiplier,
       clearance: 8,
     });
   if (kind === "island_gap")
-    return freeze({ key, kind, centre: silhouette.centre, rx: 105, ry: 72, clearance: 12 });
+    return freeze({
+      key,
+      kind,
+      centre: silhouette.centre,
+      rx: 105 * burden.voidMultiplier,
+      ry: 72 * burden.voidMultiplier,
+      clearance: 12,
+    });
   return freeze({
     key,
     kind,
     centre: silhouette.centre,
     rx:
       signature.radius *
+      burden.voidMultiplier *
       (stageName(request.stageId) === "hypoxic_lesion"
         ? 0.42 + request.morphology.params.necrosis * 0.18
         : 0.23 + request.morphology.params.necrosis * 0.14),
     ry:
       signature.radius *
+      burden.voidMultiplier *
       (stageName(request.stageId) === "hypoxic_lesion"
         ? 0.32 + request.morphology.params.necrosis * 0.12
         : 0.19),
@@ -499,6 +586,13 @@ export function planRegions(
   if (silhouette.stageId !== request.stageId || silhouette[silhouettePhase] !== true)
     throw new Error("Regions require a matching silhouette phase.");
   const signature = STAGE_LAYOUT_SIGNATURES[name];
+  const burden = burdenProfile(request);
+  const radiusMultiplier =
+    name === "transformed_cell"
+      ? 1.9
+      : name === "microcolony"
+        ? Math.max(1.32, burden.radiusMultiplier)
+        : burden.radiusMultiplier;
   const centres = radialCentres(signature, request, silhouette.centre);
   const regions: ColonyRegion[] = [];
   const regionCount = Math.max(centres.length, signature.regionKinds.length);
@@ -531,8 +625,8 @@ export function planRegions(
         key: `layout-v1:${request.stageId}:${kind}:${i}`,
         kind,
         centre: regionalCentre,
-        rx: signature.radius * factor,
-        ry: signature.radius * factor * 0.78,
+        rx: signature.radius * factor * radiusMultiplier,
+        ry: signature.radius * factor * 0.78 * radiusMultiplier,
         density: 1 - i * 0.05,
         depths: freeze(["deep", "middle", "surface"]),
         precedence: i,
@@ -552,10 +646,13 @@ export function populateClusters(plan: RegionalPlan, request: ColonyLayoutReques
   if (plan.silhouette.stageId !== request.stageId || plan[regionPhase] !== true)
     throw new Error("Clusters require a regional-plan phase.");
   const signature = STAGE_LAYOUT_SIGNATURES[name];
+  const burden = burdenProfile(request);
   const cap = request.detail === "representative" ? REPRESENTATIVE_SLOT_CAP : INSPECTION_SLOT_CAP;
   const target = Math.min(
     cap,
-    Math.round(signature.target * (request.detail === "inspection" ? 1.18 : 1)),
+    Math.round(
+      signature.target * burden.targetMultiplier * (request.detail === "inspection" ? 1.18 : 1),
+    ),
   );
   const clusters = plan.regions.map((region, index) => {
     const share =
@@ -653,6 +750,8 @@ function slotFor(
   depth: DepthStratum,
 ): CellSlot | undefined {
   const isOpeningCell = stageName(request.stageId) === "transformed_cell";
+  const isEarlyMicrocolony =
+    stageName(request.stageId) === "microcolony" && colonyBurdenTier(request) === "sparse";
   const random = seeded(request, "slot", cluster.key, index);
   const angle = random() * Math.PI * 2;
   const ring = Math.min(
@@ -673,11 +772,17 @@ function slotFor(
   // directly targetable while the allocator continues to enforce containment
   // and collision policy from the same authoritative dimensions.
   const rx = isOpeningCell
-    ? 48
-    : (8.25 + random() * 3.5) * scale * (1 + (random() - 0.5) * disorganization * 0.24);
+    ? 106
+    : (8.25 + random() * 3.5) *
+      scale *
+      (isEarlyMicrocolony ? 1.8 : 1) *
+      (1 + (random() - 0.5) * disorganization * 0.24);
   const ry = isOpeningCell
-    ? 40
-    : (7 + random() * 3) * scale * (1 + (random() - 0.5) * disorganization * 0.2);
+    ? 88
+    : (7 + random() * 3) *
+      scale *
+      (isEarlyMicrocolony ? 1.8 : 1) *
+      (1 + (random() - 0.5) * disorganization * 0.2);
   const clusterOrdinal = cluster.key.split(":")[cluster.key.split(":").length - 1]!;
   return freeze({
     key: `layout-v1:${request.stageId}:cell:${clusterOrdinal}:${index}`,
@@ -760,7 +865,8 @@ export function allocateCellSlots(plan: ClusterPlan, request: ColonyLayoutReques
   );
   const provisional = {
     stageId: request.stageId,
-    sceneKey: `layout-v1:${request.stageId}:${request.sceneSeed}:${request.detail}`,
+    burdenTier: colonyBurdenTier(request),
+    sceneKey: `layout-v2:${request.stageId}:${request.sceneSeed}:${request.detail}:${colonyBurdenTier(request)}`,
     silhouette: publicSilhouette,
     regions,
     voids: plan.regions.voids,

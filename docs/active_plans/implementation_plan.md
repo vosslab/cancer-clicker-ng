@@ -164,7 +164,7 @@ src/
     bignum.ts              BigNum shape and brand
     ids.ts                 branded ProducerId, HallmarkId, StageId, PrestigeId
     state.ts               GameState, RuntimeState
-    save.ts                SaveFileV1, version union, migration signature
+    save.ts                CurrentSaveFile exact envelope and recovery notice types
     events.ts              GameEvent discriminated union
     effects.ts             HallmarkEffect handler interface
     morphology.ts          MorphologyParams: the state -> art contract
@@ -177,7 +177,7 @@ src/
   state/
     game_state.ts          canonical state object and reducers
     events.ts              record_event dispatch funnel
-    save_load.ts           serialize, parse, validate, migrate
+    save_load.ts           serialize, strict current parse, validate, protected recovery
     offline.ts             bounded coarse-step offline simulation
     replay.ts              dev-only record and replay over the event funnel
   economy/
@@ -228,19 +228,19 @@ src/
 
 ### Mapping (milestones / workstreams -> components / patches)
 
-| Milestone / Workstream  | Component                                                             | Review boundary                                       |
-| ----------------------- | --------------------------------------------------------------------- | ----------------------------------------------------- |
-| A0 Contracts            | `src/types/*`                                                         | `typescript-engineer` designs; frozen at M8, not M1   |
-| A Numbers               | `src/bignum/*`                                                        | unit-tested in isolation; imports nothing from `src/` |
-| B State and persistence | `src/state/*`                                                         | sole owner of `localStorage`                          |
-| C Economy               | `src/economy/*`                                                       | pure functions over state; no DOM                     |
-| D Hallmarks and stages  | `src/hallmarks/*`, `src/stages/*`                                     | data plus handlers; no DOM                            |
-| E Prestige and ending   | `src/prestige/*`, `src/ending/*`                                      | only module allowed to wipe state                     |
-| F UI shell and render   | `src/main.tsx`, `src/render/*.tsx`, `src/index.html`, `src/style.css`, domain CSS | only DOM owner |
-| G Art                   | `src/svg/*`                                                           | pure producers; no state reads                        |
-| H Content and tone      | `src/content/*`                                                       | strings only; guarded by an automated lint            |
-| I Test and balance      | `tests/**`, `output_balance/`                                         | never edits `src/`                                    |
-| J Design artifacts      | `docs/*`                                                              | writes the four gating documents                      |
+| Milestone / Workstream  | Component                                                                         | Review boundary                                       |
+| ----------------------- | --------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| A0 Contracts            | `src/types/*`                                                                     | `typescript-engineer` designs; frozen at M8, not M1   |
+| A Numbers               | `src/bignum/*`                                                                    | unit-tested in isolation; imports nothing from `src/` |
+| B State and persistence | `src/state/*`                                                                     | sole owner of `localStorage`                          |
+| C Economy               | `src/economy/*`                                                                   | pure functions over state; no DOM                     |
+| D Hallmarks and stages  | `src/hallmarks/*`, `src/stages/*`                                                 | data plus handlers; no DOM                            |
+| E Prestige and ending   | `src/prestige/*`, `src/ending/*`                                                  | only module allowed to wipe state                     |
+| F UI shell and render   | `src/main.tsx`, `src/render/*.tsx`, `src/index.html`, `src/style.css`, domain CSS | only DOM owner                                        |
+| G Art                   | `src/svg/*`                                                                       | pure producers; no state reads                        |
+| H Content and tone      | `src/content/*`                                                                   | strings only; guarded by an automated lint            |
+| I Test and balance      | `tests/**`, `output_balance/`                                                     | never edits `src/`                                    |
+| J Design artifacts      | `docs/*`                                                                          | writes the four gating documents                      |
 
 Ownership rule on every dispatch: an agent edits only its own column. A cross-module type need
 pauses the agent, routes to `typescript-engineer`, and resumes after the stub lands.
@@ -316,7 +316,7 @@ Twenty-two milestones. Each reaches green independently. No milestone waits on a
     merged into its neighbor rather than shipped as a reskin. Recorded here because M9 implements
     stages and must not be dispatched against a visual-only specification.
 - Why this early: the save schema and the state shape depend on what fields hallmarks need.
-  Writing this after M4 would mean migrating a schema that was designed blind.
+  Writing this after M4 would mean revising a schema that was designed blind.
 - Parallel-plan ready: no.
 
 ### Milestone: M3 numbers
@@ -337,16 +337,16 @@ Twenty-two milestones. Each reaches green independently. No milestone waits on a
 ### Milestone: M4 state and persistence
 
 - Depends on: M2, M3.
-- Deliverables: `src/state/game_state.ts`, `events.ts`, `save_load.ts`, and
-  `tests/test_save_migration.mjs` using inline records and a test-local legal-state builder.
+- Deliverables: `src/state/game_state.ts`, `events.ts`, `save_load.ts`, and focused current-save
+  boundary tests using inline records and a test-local legal-state builder.
 - Workstreams: B.
 - Entry criteria: progression design written, so the schema knows what it must hold.
-- Exit criteria: save round-trips to an equivalent normalized durable state; a representative
-  prior-schema record migrates forward; an unresolvable field restores a safe default and logs
-  visibly rather than discarding the save; the event registry owns parse schema, reducer handler,
-  save rule, and replay applicability for every registered event and rejects unknown types. A
-  committed fixture is added only for a shipped compatibility artifact or approved shared
-  infrastructure.
+- Exit criteria: the current writer round-trips through the current parser to an equivalent
+  normalized durable state; format `2` / schema `8` is the only accepted shape; incompatible data
+  enters protected recovery without automatic overwrite; and the event registry owns parse schema,
+  reducer handler, save rule, and replay applicability for every registered event while rejecting
+  unknown types. A committed fixture is added only for a shipped compatibility artifact or approved
+  shared infrastructure.
 - Parallel-plan ready: no. One state owner.
 
 ### Milestone: M5 offline semantics
@@ -492,13 +492,13 @@ Twenty-two milestones. Each reaches green independently. No milestone waits on a
 ### Milestone: M12 hallmarks, 2022 four
 
 - Depends on: M11, M16.
-- Deliverables: the closed p5 late-hallmark state and save migration; unlocking phenotypic
+- Deliverables: the closed current late-hallmark state and strict current-save validation; unlocking phenotypic
   plasticity, nonmutational epigenetic reprogramming, polymorphic microbiomes, and senescent
   cells; typed catalog/effect/tick projections; four player intents; and biology-backed morphology
   contributions where a hallmark has a visible consequence.
 - Workstreams: D, G.
-- Entry criteria: M11 exit met, the morphology contract is in use, and the p5 schema migration
-  plus accepted late-hallmark catalog are written before event, UI, or SVG implementation.
+- Entry criteria: M11 exit met, the morphology contract is in use, and the current aggregate
+  contract plus accepted late-hallmark catalog are written before event, UI, or SVG implementation.
 - State contract: `GameState.lateHallmarks` is the one required aggregate for this domain. It owns
   plasticity switch cooldowns by region; epigenetic program assignments and cooldown; microbiome
   active composition, pending offer, rotation deadline, and rotation sequence; and senescence
@@ -537,11 +537,10 @@ Twenty-two milestones. Each reaches green independently. No milestone waits on a
   relations. M12 imports the L3 immortalization activation predicate through one small adapter;
   M15 replaces that adapter implementation with its ledger-owned activation while retaining the
   M12 state, event, save, and UI contract.
-- Save contract: advance `CURRENT_STATE_SCHEMA_VERSION` from p4 to p5. `parseLateHallmarks`
-  validates bounded/canonical/unique catalog relations, exact saved composition cards, timestamps,
-  region links, ownership, and offer deadlines. The p4-to-p5 migration constructs an empty
-  aggregate and drops provisional late-hallmark scaffold data. Earlier migrations then enter p5.
-  The current state has no reader-side compatibility field or shim for the retired scaffolding.
+- Historical implementation record: the late-hallmark aggregate replaced provisional scaffolding
+  during pre-production. The settled current parser validates bounded, canonical, and unique
+  catalog relations, exact saved composition cards, timestamps, region links, ownership, and offer
+  deadlines in the format-2/schema-8 state. It accepts no historical schema or compatibility shim.
 - Living-tumor contract: after the state model is accepted, the frozen visual adapter adds
   `phenotype-variance`, `chromatin-program`, `microbiome-surface`, and `senescent-region`, each
   with a named hallmark and morphology provenance row. It can overlay an existing stylized region;
@@ -549,7 +548,7 @@ Twenty-two milestones. Each reaches green independently. No milestone waits on a
   secretome concentration, or cell count. The renderer consumes frozen visual effects, never
   `GameState` or mechanics maps.
 - Dispatch order: D.6 closes types, brands, catalogs, activation adapter, and pure effects; D.7
-  adds events, parser, reducer, and senescence factory; B/C.6 add p5 parse/migration and the shared
+  adds events, parser, reducer, and senescence factory; B/C.6 added the current aggregate parser and the shared
   live/offline tick projection; C/D.8 connect named operation and gate effects; F.12 adds the four
   controller/UI intents and visible composition, compatibility, cooldown, and status; G.11 follows
   the catalog API with frozen provenance effects; I.11 adds durable event/save/offline/browser
@@ -558,7 +557,7 @@ Twenty-two milestones. Each reaches green independently. No milestone waits on a
   layers. Every event has an eligible operation relation and invalid, missing, stale, or expired
   input is atomic; a real phenotype/program changes its named behavior; a saved microbiome offer
   reloads with its three exact candidates and accepts only one; keep and clear have distinct real
-  senescence outcomes; p4 migration produces the canonical empty aggregate; and normalized
+  senescence outcomes; the current schema requires the canonical aggregate; and normalized
   live/offline durable state agrees across an offer rotation. A visible branch traces its
   biology-backed morphology contribution from catalog through frozen scene provenance, while a
   branch without a visible consequence records the rationale in the design document. Production
@@ -620,9 +619,9 @@ Twenty-two milestones. Each reaches green independently. No milestone waits on a
 ### Milestone: M14 prestige layers 1 and 2
 
 - Depends on: M11, M12 completion, M13.
-- Deliverables: exact-key p6 `LineageLedger`, separate authoritative `MetastasisState` and
+- Deliverables: exact-key current `LineageLedger`, separate authoritative `MetastasisState` and
   `HostTransferState`, organ/host/boon catalogs, deterministic random derivation, complete reset
-  projections, six prestige intents, selected-run prestige effects, strict save migration/parser
+  projections, six prestige intents, selected-run prestige effects, strict current-save parser
   support, and a confirmed Solid prestige surface. The implementation owns `src/prestige/layers.ts`,
   `reset.ts`, `seeding.ts`, `hosts.ts`, `effects.ts`, `src/state/deterministic_random.ts`,
   `src/state/save_parse/prestige.ts`, and
@@ -670,14 +669,11 @@ Twenty-two milestones. Each reaches green independently. No milestone waits on a
   current revision. The Solid surface displays derived quote/draft and requires an explicit
   confirmation that sends stable IDs plus revision only; persist-before-reconcile keeps failed-save
   state visibly unchanged.
-- Persistence contract: advance current progression from p5 to p6. Exact-key p6 parser/writer
-  covers ledger, L1, and L2 records and rejects unknown/missing keys, noncanonical/reordered lists,
-  unsafe counters/seeds, foreign IDs, malformed drafts, invalid BigNums, and inconsistent active
-  host/ledger run identity. The single p5-to-p6 projection adds empty M14 state, derives its
-  lineage seed once through `deriveSeedV1` from accepted p5 deterministic identity and event
-  sequence, emits documented `field-defaulted` notices, and invents no historic activity. Earlier
-  migrations first produce p5 through M12, then route through this p5-to-p6 projection; canonical
-  current p6 save round-trips with no notices.
+- Historical implementation record: prestige aggregates were introduced during pre-production.
+  The settled exact current parser/writer covers ledger, L1, and L2 records and rejects
+  unknown/missing keys, noncanonical/reordered lists, unsafe counters/seeds, foreign IDs, malformed
+  drafts, invalid BigNums, and inconsistent active host/ledger run identity. The format-2/schema-8
+  writer-reader closure round-trips with no notices; it does not accept earlier schema shapes.
 - Selected-run effects contract: `MetastasisState.activeNicheContext` is null before a selected L1
   run or an exact catalog-consistent `{ siteId, allocationRank, programId }` record. An accepted
   `perform-metastasis-reset` names `siteId`, validates a positive allocation and exactly one
@@ -697,19 +693,19 @@ Twenty-two milestones. Each reaches green independently. No milestone waits on a
   stable IDs and revision; they never choose a trait or derive an effect locally.
 - Dispatch order: E.1 settles brands, organ/route catalog, ledger writer, `resolve-transit`, L1/L2
   state, quotes, deterministic seed, and draft interfaces; E.2 adds reset/event projections after
-  that seam; B.7 adds p6 parser and migration; F.13 adds controller/panel confirmation after
+  that seam; B.7 adds current aggregate parsing; F.13 adds controller/panel confirmation after
   command signatures settle; I.12 adds domain behavior proof. Each projection and later L3/L4 reset
   lives in `reset.ts`, so later layers extend its complete-state contract rather than creating a
   second reset path.
 - Exit criteria: an M14 compatible transit records arrival tags and count while lost or invalid
-  transit is atomic; exact-key saved state
-  migrates and round-trips; each accepted L1/L2 cycle begins at `host_collapse`, uses a transient
+  transit is atomic; exact-key current saved state
+  round-trips; each accepted L1/L2 cycle begins at `host_collapse`, uses a transient
   current revision, applies its declared complete projection, and records through `recordEvent()`;
   an L2 draft remains identical across reload until selection; and the production build exposes
   deliberate keyboard-accessible confirmation with honest persistence failure behavior. Permanent
   tests prove representative reset preservation/clearance, formula and seed validity, one accepted
   sequence advance, stale/foreign/hidden/reused/invalid input atomicity, saved-draft/reload
-  semantics, strict migration, and browser confirmation/focus. Readable draft dumps, portfolio and
+  semantics, strict current parsing, and browser confirmation/focus. Readable draft dumps, portfolio and
   card-rank comparison, and balance tuning are one-time review evidence rather than brittle test
   fixtures, count locks, or timing limits.
 - Parallel-plan ready: yes, after the declared state/catalog seam.
@@ -795,14 +791,19 @@ Twenty-two milestones. Each reaches green independently. No milestone waits on a
   `colony.ts` to one typed action; the native colony button owns Enter/Space and the sole keyboard
   focus target. Both paths call the established controller divide intent once. Local cell keys
   never become event, save, reducer, or game-state data.
-- Board contract: target the 1280 x 800 (16:10) first view with colony action left, living
-  tumor/progression world middle, and store right. It exposes the large clickable colony with
-  count/rate, active stage/hallmark progression, producer quantity controls, and save/status
-  without scroll-to-discover. The right rail keeps producer rows discoverable with owned count,
-  next cost, affordability, and production contribution; hover/focus exposes richer derived
-  statistics. Locked future content states its biological unlock condition and becomes actionable
-  when its real requirements are met. Wider boards scale; compact widths retain colony action,
-  progression, then store.
+- Board contract: target one shared 1280 x 800 (16:10) first view whose visual hierarchy is a game
+  canvas rather than a set of explanatory panels. A shallow scoreboard HUD shows cells, cells per
+  second, stage, save state, and compact utilities. The living tumor is the largest visual and
+  interaction region; the center shows one active evolution family and next goal; the right rail is
+  an illustrated, always-available upgrade rack. A compact reward strip closes the loop below.
+  Players click rendered cells directly and receive immediate division feedback. Producer rows use
+  distinctive editable SVG machinery and retain owned count, next cost, affordability, and
+  production contribution. Hallmarks, stages, prestige systems, and utilities use a coherent
+  icon-first language. Persistent copy is limited to essential labels, numbers, states, and the
+  immediate goal; biological rationale, tradeoffs, exact prerequisites, and richer statistics live
+  in keyboard- and pointer-accessible tooltips or an optional specimen drawer. Wider boards scale;
+  compact widths retain arena, active evolution, then upgrade rack with no horizontal document
+  overflow.
 - Exit criteria: cells render as volumes (silhouette, irregular nucleus offset from center,
   cytoplasmic value variation, restrained cross-contour marks following the local membrane,
   overlap, directional light). Cells vary deterministically with a seed while retaining recognizable
@@ -818,8 +819,13 @@ Twenty-two milestones. Each reaches green independently. No milestone waits on a
   threshold is a release gate.
 - Dispatch order: F.10 defines the typed panel handoff and 16:10 shell; G.10 adds local visible-
   cell delegation and data-derived living-tumor layers; F.11 adds focus, feedback, and responsive
-  styling; I.10 adds the durable `tests/playwright/test_colony_interaction.mjs` player journey; the
-  image-evaluation lane records representative evidence after the built interaction is available.
+  styling; G.11 supplies the tumor focal-response SVG, producer-machine illustrations, stage
+  emblems, and hallmark sigils; F.12 composes the compact HUD, evolution dock, upgrade rack,
+  accessible tooltips, and specimen drawer; I.10 adds the durable
+  `tests/playwright/test_colony_interaction.mjs` player journey. The image-evaluation lane records
+  initial, perfused, late-game, and compact reduced-motion evidence after the production build is
+  available. Screenshot review judges focal hierarchy, game feel, and biological legibility rather
+  than pixel equivalence.
 - Parallel-plan ready: yes, after `colony.ts` lands.
 
 ### Milestone: M19 soft ending
@@ -876,13 +882,14 @@ Twenty-two milestones. Each reaches green independently. No milestone waits on a
 
 - Depends on: M21, and M18 for the art artifacts.
 - Deliverables: `docs/RELEASE_EVIDENCE.md`; `.github/workflows/deploy-pages.yml` installed;
-  captured artifacts; drafted changelog and commit message; staged working tree.
-- Workstreams: I assembles; the orchestrator stages.
+  captured artifacts; drafted changelog and commit message; human-ready worktree and file manifest.
+- Workstreams: I assembles the evidence package and exact handoff manifest; the human owner reviews
+  the candidate and owns index and commit actions.
 - Entry criteria: every prior milestone green.
 - Exit criteria: `docs/RELEASE_EVIDENCE.md` contains, in one place: every gate result with its
   command, exit status, relevant tool version, concise behavior summary, and artifact link;
   balance observations for all five bots; screenshots and the art
-  contact sheet; save-migration evidence; accessibility output (contrast measurements, reduced
+  contact sheet; current-save boundary evidence; accessibility output (contrast measurements, reduced
   motion, the colony's `<title>`/`<desc>` text); SVG node-count and framerate measurements; the
   copy-guard and copy-review verdicts; and a written known-limitations section.
   It also opens with a **progression narrative**, because this project is design-heavy and gate
@@ -901,8 +908,8 @@ host death -> immortalized culture -> global contamination -> Chicago ending -> 
 
 - Goal: cross-module shapes that survive real use.
 - Owner: one agent with `typescript-engineer`.
-- Work packages: WP-A0.1 branded ids and `BigNum` shape; WP-A0.2 `GameState`, `SaveFileV1`,
-  version union, migration signature; WP-A0.3 `GameEvent` union and `HallmarkEffect` interface;
+- Work packages: WP-A0.1 branded ids and `BigNum` shape; WP-A0.2 `GameState`, `CurrentSaveFile`,
+  exact envelope, and recovery notice types; WP-A0.3 `GameEvent` union and `HallmarkEffect` interface;
   WP-A0.4 `MorphologyParams`; WP-A0.5 `ReplayLog`; WP-A0.6 the five slice probes; WP-A0.7 the M8
   freeze audit.
 - Needs: nothing.
@@ -972,7 +979,10 @@ host death -> immortalized culture -> global contamination -> Chicago ending -> 
 - Work packages: WP-F.1 shell and `index.html`; WP-F.2 producers panel; WP-F.3 hallmark tree;
   WP-F.4 stage panel; WP-F.5 prestige panels and confirm modals; WP-F.6 offline report;
   WP-F.7 event log; WP-F.8 theme CSS and motion; WP-F.9 ending view; WP-F.10 colony action
-  handoff and 1280 x 800 board; WP-F.11 colony focus, feedback, and responsive fallbacks.
+  handoff and 1280 x 800 board; WP-F.11 colony focus, feedback, and responsive fallbacks;
+  WP-F.12 compact scoreboard HUD and game-canvas composition; WP-F.13 icon-led evolution dock and
+  illustrated upgrade rack; WP-F.14 focusable tooltips, specimen drawer, and transient reward
+  feedback.
 - Needs: all logic workstreams; G for art.
 - Provides: the playable surface.
 - Review boundary: only DOM owner, owner of `src/style.css`, and owner of explicitly linked,
@@ -1166,8 +1176,8 @@ refactor. Tests use inline inputs or a local builder; regular tests run offline.
   system carries a decision witness with reachable state, alternatives, observed tradeoff, and its
   design rationale. Provenance is required where biology creates a visible consequence; a declared
   absence has a rationale. Independent review traces the claim to the actual behavior.
-- **Repo hygiene** (`pytest tests/`): shipped Python checks keep ASCII, indentation, source-size,
-  Markdown-link, and vendored-header rules healthy.
+- **Repo hygiene** (`source source_me.sh && python3 -m pytest tests/`): shipped Python checks keep
+  ASCII, indentation, source-size, Markdown-link, and vendored-header rules healthy.
 
 ### Evidence task dispatch
 
@@ -1176,7 +1186,7 @@ refactor. Tests use inline inputs or a local builder; regular tests run offline.
 | Offline model calibration       | State owner with reviewer       | `docs/GAME_DESIGN.md` and dated offline report                                    | Exact segments preserve normalized durable outcomes; any display approximation has a named measured envelope                                     | `./check_codebase.sh` plus focused offline Node test and production-dist scenario                         |
 | Geometry and render calibration | SVG creator and image evaluator | `tools/colony_contact_sheet.mjs` and dated visual report                          | Contact sheet covers registered stages, representative seeds, supported sizes, themes, and reduced motion; review traces visible fit and biology | `./build_github_pages.sh`, `./run_playwright_tests.sh`, contact-sheet command                             |
 | Balance design review           | Balance owner with planner      | `tools/balance_sim.mjs`, `output_balance/balance_report.json`, `docs/BALANCE.md`  | Report links strategies to decision witnesses and identifies dead actions, dominance, gates, and L4 renewal                                      | `node tools/balance_sim.mjs`                                                                              |
-| Release evidence                | Integrator and docs owner       | `docs/RELEASE_EVIDENCE.md`                                                        | Each release claim has command, status, behavior summary, relevant version, and artifact link                                                    | `./check_codebase.sh`, `./build_github_pages.sh`, `./run_playwright_tests.sh`, `pytest tests/`            |
+| Release evidence                | Integrator and docs owner       | `docs/RELEASE_EVIDENCE.md`                                                        | Each release claim has command, status, behavior summary, relevant version, and artifact link                                                    | `./check_codebase.sh`, `./build_github_pages.sh`, `./run_playwright_tests.sh`, `source source_me.sh && python3 -m pytest tests/` |
 | Durable naming migration        | Maintainer with tester review   | domain-named `src/`, `tests/`, and `tools/` paths plus `docs/DESIGN_DECISIONS.md` | Implementation milestone labels leave durable paths; valid schema-version and scientific identifiers remain                                      | `./check_codebase.sh`, `./build_github_pages.sh`, applicable `./run_playwright_tests.sh`, `pytest tests/` |
 
 ### Simulator player-strategy model
@@ -1231,15 +1241,18 @@ with a documented tradeoff, including after the ending and through L4 renewal.
 
 ## Migration and compatibility policy
 
-- The save file carries `version` from the first commit that writes one. Loading is a discriminated
-  union over version plus a forward migration chain; the parser validates and migrates, never
-  trusts, and uses no unchecked `as` cast outside the guarded boundary.
-- Save shape may change freely before the first public deploy. After M22, every schema change ships
-  with its migration step and one minimal fixture per supported published schema version. Before
-  deploy, migration tests use inline records or a local builder so an internal snapshot never
-  blocks a stronger schema.
-- Losing progress is the one unrecoverable failure in an idle game. A migration that cannot resolve
-  a field restores a safe default and logs it visibly rather than discarding the save.
+### Settled pre-production cutover
+
+- The historical migration ladder was retired before public deployment. The only accepted and
+  written save is the exact `version: 2`, `stateSchemaVersion: 8` envelope.
+- `parseSave()` validates that current envelope and complete DTO without default injection or
+  partial repair. Every other shape enters protected recovery; rejected raw bytes remain available
+  until the player explicitly confirms a validated fresh replacement.
+- The writer re-enters the same strict parser before storage, establishing current writer-reader
+  closure. Development semantic replay is a diagnostic over schema-current snapshots and accepted
+  events, not save compatibility.
+- A future public compatibility policy requires a newly approved contract. This pre-production plan
+  carries no live promise to accept retired p5, p6, or p7 shapes.
 
 ## Risk register
 
@@ -1386,7 +1399,8 @@ None are execution-blocking. Each has an owner, an evidence rule, and a mileston
 ## Notes for the implementer
 
 - Read `docs/REPO_STYLE.md` and `docs/TYPESCRIPT_STYLE.md` before the first patch. Tabs, ASCII
-  only, files under 1000 lines, `git mv` for renames, agents never run `git commit`.
+  only, files under 1000 lines, `git mv` for renames, and human ownership of the Git index and
+  commits are the durable repository contract.
 - The first patch must include a stub `.ts` under `tools/` or `tests/`, or `check_codebase.sh`
   step 2 fails with TS18003 on an empty include list.
 - `src/index.html` must contain `<script type="module" src="main.js"></script>` exactly, or the

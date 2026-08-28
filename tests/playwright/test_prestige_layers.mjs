@@ -5,6 +5,8 @@ import { createInitialGameState } from "../../src/state/game_state.ts";
 import { serializeGameState } from "../../src/state/save_load.ts";
 import { generateNetworkFrontierV1 } from "../../src/prestige/network.ts";
 
+// Selector contract: prestige, network, and assay actions use accessible controls and saved state
+// (src/render/prestige_panel.tsx:1; src/render/network_panel.tsx:75; src/state/save_load.ts:152).
 const SAVE_KEY = "cancer-clicker-ng.save.v2";
 const FIXED_CLOCK_MS = 1_750_000_000_000;
 
@@ -164,6 +166,26 @@ function prestigePanel(page) {
   return page.getByRole("region", { name: "Prestige layers" });
 }
 
+async function openEvolutionSystem(page, name) {
+  await page.getByRole("button", { name: `${name} evolution system` }).click();
+}
+
+async function controlOwnsHitGrid(control) {
+  return control.evaluate((element) => {
+    const bounds = element.getBoundingClientRect();
+    if (bounds.width < 1 || bounds.height < 1) return false;
+    return [0.2, 0.5, 0.8].every((horizontal) =>
+      [0.25, 0.5, 0.75].every((vertical) => {
+        const hit = document.elementFromPoint(
+          bounds.left + bounds.width * horizontal,
+          bounds.top + bounds.height * vertical,
+        );
+        return hit === element || element.contains(hit);
+      }),
+    );
+  });
+}
+
 async function confirm(page, title) {
   const dialog = page.getByRole("dialog", { name: title });
   await expect(dialog).toBeVisible();
@@ -177,11 +199,11 @@ test("prestige metastasis confirmation cancels safely then persists one delibera
   const diagnostics = installDiagnostics(page);
   await seedFixture(page, { l1: true, preparedLung: true });
   await page.goto("/");
+  await openEvolutionSystem(page, "Resets");
 
   const panel = prestigePanel(page);
   const reset = panel.getByRole("button", { name: "Begin metastasis reset", exact: true });
-  await expect(panel).toContainText("Viable seeded sites: 1");
-  await expect(panel).toContainText("Reset clears:");
+  await expect(reset).toBeVisible();
   await panel.getByRole("radio", { name: /Lung: rank 1, Exploit Niche/ }).check();
   await expect(reset).toBeEnabled();
   const before = await savedEnvelope(page);
@@ -208,6 +230,7 @@ test("prestige metastasis confirmation cancels safely then persists one delibera
   });
   await expect(panel.locator("#metastasis-summary")).toBeFocused();
   await page.reload();
+  await openEvolutionSystem(page, "Resets");
   expect((await savedEnvelope(page)).envelope.state.metastasis.activeNicheContext).toEqual({
     siteId: "lung",
     allocationRank: 1,
@@ -216,7 +239,7 @@ test("prestige metastasis confirmation cancels safely then persists one delibera
   expect(diagnostics).toEqual([]);
 });
 
-test("prestige host transfer preserves a revealed deterministic draft through reload and keyboard choice", async ({
+test("prestige host transfer accepts a pointer click and preserves a revealed draft through reload", async ({
   page,
 }) => {
   await installFixedClock(page);
@@ -229,6 +252,7 @@ test("prestige host transfer preserves a revealed deterministic draft through re
     preparedLung: true,
   });
   await page.goto("/");
+  await openEvolutionSystem(page, "Resets");
 
   const panel = prestigePanel(page);
   const transfer = panel.getByRole("button", { name: "Perform host transfer", exact: true });
@@ -236,6 +260,8 @@ test("prestige host transfer preserves a revealed deterministic draft through re
   await expect(panel.getByRole("heading", { name: "Protected Route Affinity" })).toBeVisible();
   await expect(panel.getByRole("heading", { name: "Reduced Trait Liability" })).toHaveCount(0);
   await expect(transfer).toBeVisible();
+  await transfer.scrollIntoViewIfNeeded();
+  expect(await controlOwnsHitGrid(transfer)).toBe(true);
   await transfer.click();
   await confirm(page, "Perform host transfer");
   await expect(panel.getByRole("heading", { name: "Saved host draft" })).toBeVisible();
@@ -248,6 +274,7 @@ test("prestige host transfer preserves a revealed deterministic draft through re
   const revealedIds = [...firstDraft.revealedCardIds];
 
   await page.reload();
+  await openEvolutionSystem(page, "Resets");
   const reloaded = await savedEnvelope(page);
   const reloadedDraft = reloaded.envelope.state.hostTransfer.pendingDraft;
   expect(reloadedDraft.cards.map((card) => card.id)).toEqual(
@@ -281,7 +308,6 @@ test("prestige host transfer preserves a revealed deterministic draft through re
   await expect(
     activeHost.getByRole("heading", { name: "Target a host-trait liability" }),
   ).toBeVisible();
-  await expect(activeHost).toContainText("Active niche: Lung, rank 1, Exploit Niche.");
   const targetRow = activeHost.locator(`#active-host-trait-${targetTraitId}-status`).locator("..");
   await targetRow.getByRole("button", { name: "Reduce liability" }).focus();
   await page.keyboard.press("Enter");
@@ -299,15 +325,12 @@ test("prestige host transfer preserves a revealed deterministic draft through re
     targetTraitId,
   });
   await page.reload();
+  await openEvolutionSystem(page, "Resets");
   await expect(panel.locator("#active-host-summary")).toContainText(revealedIds[0]);
-  await expect(panel.locator("#active-host-summary")).toContainText(
-    "Active niche: Lung, rank 1, Exploit Niche.",
-  );
   await expect(panel.getByRole("button", { name: "Choose this host" })).toHaveCount(0);
-  const consumedDraft = panel.getByRole("status").filter({ hasText: "Consumed draft:" });
-  await expect(consumedDraft).toContainText(`Consumed draft: ${selectedCardTitle};`);
-  await expect(consumedDraft).toContainText(`reveal policy ${firstDraft.revealPolicy};`);
-  await expect(consumedDraft).toContainText(`saved revision ${firstDraft.sourceEventSequence}.`);
+  expect((await savedEnvelope(page)).envelope.state.hostTransfer.pendingDraft.consumedCardId).toBe(
+    revealedIds[0],
+  );
   expect(diagnostics).toEqual([]);
 });
 
@@ -327,6 +350,7 @@ test("prestige confirmation keeps on-screen and raw state retryable after a scop
   }, SAVE_KEY);
   await seedFixture(page, { l1: true, preparedLung: true });
   await page.goto("/");
+  await openEvolutionSystem(page, "Resets");
 
   const panel = prestigePanel(page);
   const reset = panel.getByRole("button", { name: "Begin metastasis reset", exact: true });
@@ -362,6 +386,7 @@ test("prestige terminal confirmation remains reachable at 360px with reduced mot
     const diagnostics = installDiagnostics(page);
     await seedFixture(page, { l1: true, preparedLung: true });
     await page.goto("/");
+    await openEvolutionSystem(page, "Resets");
     const reset = prestigePanel(page).getByRole("button", {
       name: "Begin metastasis reset",
       exact: true,
@@ -387,6 +412,35 @@ test("prestige terminal confirmation remains reachable at 360px with reduced mot
   }
 });
 
+test("prestige host transfer keeps its full pointer target at 360px", async ({ browser }) => {
+  const context = await browser.newContext({
+    viewport: { width: 360, height: 720 },
+    reducedMotion: "reduce",
+  });
+  try {
+    const page = await context.newPage();
+    await installFixedClock(page);
+    await seedFixture(page, {
+      l2: true,
+      completedL1ResetCount: 3,
+      tags: ["hepatic", "pulmonary"],
+      preparedLung: true,
+    });
+    await page.goto("/");
+    await openEvolutionSystem(page, "Resets");
+    const transfer = prestigePanel(page).getByRole("button", {
+      name: "Perform host transfer",
+      exact: true,
+    });
+    await transfer.scrollIntoViewIfNeeded();
+    expect(await controlOwnsHitGrid(transfer)).toBe(true);
+    await transfer.click();
+    await expect(page.getByRole("dialog", { name: "Perform host transfer" })).toBeVisible();
+  } finally {
+    await context.close();
+  }
+});
+
 test("network frontier confirms one saved campaign and retires its alternatives", async ({
   page,
 }) => {
@@ -394,12 +448,14 @@ test("network frontier confirms one saved campaign and retires its alternatives"
   const diagnostics = installDiagnostics(page);
   await seedNetworkFixture(page);
   await page.goto("/");
-  const panel = page.getByRole("region", { name: "Contamination network", exact: true });
-  await expect(panel).toContainText("Renewable campaign frontier");
-  const choice = panel.getByRole("button", { name: "Choose Deepen" });
-  await choice.click();
-  await confirm(page, "Choose dissemination mandate");
+  await openEvolutionSystem(page, "Network");
+  const panel = page.getByRole("region", { name: "Network", exact: true });
+  const choice = panel.getByRole("button", { name: "Deepen route" });
+  await choice.focus();
+  await page.keyboard.press("Enter");
   const confirmation = page.getByRole("dialog", { name: "Choose dissemination mandate" });
+  await expect(confirmation).toBeVisible();
+  await confirmation.getByRole("button", { name: "Confirm" }).click();
   await expect(confirmation).toBeHidden();
   const saved = await savedEnvelope(page);
   expect(saved.envelope.state.network.activeCampaign.mandate.category).toBe("deepen");
@@ -407,8 +463,6 @@ test("network frontier confirms one saved campaign and retires its alternatives"
   expect(saved.envelope.state.network.activeCampaign.sourceFrontier.id).toMatch(
     /^network-frontier-v1:/,
   );
-  await expect(panel).toContainText("Active Deepen campaign");
-  await expect(panel).toContainText("Retired alternatives: Widen, Reroute.");
   expect(diagnostics).toEqual([]);
 });
 

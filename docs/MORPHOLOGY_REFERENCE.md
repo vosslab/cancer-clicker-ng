@@ -39,10 +39,32 @@ values are stable grammar-test inputs; contributors cite them in fixture metadat
 | `morphology:necrotic_region`          | Necrosis                               | Central low-detail void, debris, or washed-out deep zone                        | Viability assay or pathology readout                                 | `necrosis`, `depthStratum`; layout and renderer                |
 | `morphology:metastatic_dissemination` | Metastatic dissemination               | Separated site or cluster compositions sharing lineage palette                  | Clinical metastatic prediction                                       | `dissemination`; colony layout and L4 panel                    |
 | `morphology:vascular_margin`          | Angiogenesis                           | Restrained vessel-like margin relationship, never blood-gore decoration         | Functional perfusion or patient vasculature                          | stage or hallmark tag; layout region and SVG motif             |
+| `morphology:biomass_tier`             | Bounded game biomass magnitude         | Occupied extent, density, lobulation, and negative-space response               | Exact lesion size, growth law, or a clinical measurement             | source-owned burden tier; colony visual state and layout       |
+| `morphology:stage_arrival`            | Newly accepted stage                   | Brief keyed arrival geometry around the established scene                       | A biological scanner, sustained ring, or durable state               | accepted stage ID; presentation-only SVG layer                 |
 | `morphology:phenotype_variance`       | Phenotypic plasticity                  | Neighboring cell-family variance within a regional role                         | A stable cell lineage or treatment response                          | `heterogeneity`, `polarity`; SVG cell family                   |
 | `morphology:chromatin_texture`        | Epigenetic reprogramming               | Bounded nucleus interior texture or contour change                              | Genomic sequence or epigenetic assay                                 | `nuclearEccentricity`, `membraneWaviness`; SVG nucleus         |
 | `morphology:surface_motif`            | Microbiome or ecological surface state | Sparse contextual surface motif at a region, not on every cell                  | Organism identification or infection diagnosis                       | regional contributor; SVG foreground                           |
 | `morphology:senescent_shape`          | Senescent-cell state                   | Enlarged flatter low-division cell family with persistent cohort                | Cell-age measurement or senescence assay                             | `elongation`, `mitoticState`, `heterogeneity`; SVG cell family |
+
+## Biomass composition and visual scale
+
+`colonyBurdenTierFor()` converts durable cell magnitude into four bounded composition tiers:
+`sparse` below `10^3`, `established` from `10^3` to below `10^6`, `dense` from `10^6` to below
+`10^9`, and `overgrown` at `10^9` or more. `src/svg/colony_layout.ts` translates those tiers into
+representative occupied extent, slot density, silhouette lobulation, and protected negative space.
+The first transformed cell remains large and targetable; the next tier creates a microcolony, and
+later tiers deepen the same scene without regressing it to a smaller opening state.
+
+These powers of ten provide a useful visual order only: small cluster near `10^3`, roughly
+millimeter-scale order near `10^6`, and roughly centimeter-scale order near `10^9`. They are a
+stylized game abstraction rather than a conversion from this game's cells to a lesion diameter,
+diagnosis, or biological measurement. The source-owned thresholds and bounded profiles remain
+adaptable when the layout, catalog, or player readability evidence changes.
+
+Biomass operates beside stage grammar. Hypoxic and necrotic stages can create a constrained deep
+void; vascular maturation can add a restrained margin network; and invasion can break a directional
+front or add separated satellites. The tier never invents those conditions by itself, and stage
+grammar never erases the durable magnitude response.
 
 ## Composition contract
 

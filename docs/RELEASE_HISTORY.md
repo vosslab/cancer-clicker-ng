@@ -26,10 +26,14 @@
 
 ### Compatibility notes
 
-- Current saves use the p8 schema. Earlier p7 saves migrate to an unreached ending state; migration
-  intentionally does not fabricate evidence that the soft ending was previously reached.
-- Legacy prestige and culture state is normalized through the current save boundary before gameplay
-  resumes.
+- **Pre-production schema cutover.** The release accepts and writes exactly `version: 2` with
+  `stateSchemaVersion: 8`. Incompatible or incomplete data enters protected recovery, retaining
+  rejected bytes until the player explicitly confirms a validated fresh replacement.
+- Semantic replay is a development diagnostic over schema-current snapshots and accepted events. It
+  verifies behavior through the current parser and reducer; it does not provide player-save
+  compatibility.
+- Earlier p5/p6/p7 migration work is historical implementation context, not a supported input
+  contract for this release.
 
 ### Validation
 

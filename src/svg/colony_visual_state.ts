@@ -20,7 +20,7 @@ import {
   type ColonyVisualEffectId,
 } from "./colony_visual_catalog.js";
 import { isRetainedSenescentRegion } from "../hallmarks/late_hallmark_effects.js";
-import type { ColonyLayout } from "./colony_layout.js";
+import type { ColonyBurdenTier, ColonyLayout } from "./colony_layout.js";
 import type { ColonySceneRequest } from "./render_types.js";
 import type {
   MorphologyContribution,
@@ -247,6 +247,19 @@ function currentGrowthState(game: GameState): ColonyVisualState["growthState"] {
   return "quiet";
 }
 
+/**
+ * Buckets only durable biomass magnitude. The tier is intentionally bounded so
+ * representative SVG composition remains readable and within its slot cap.
+ */
+export function colonyBurdenTierFor(game: GameState): ColonyBurdenTier {
+  if (game.cells.mantissa <= 0) return "sparse";
+  const logMagnitude = game.cells.exponent + Math.log10(game.cells.mantissa);
+  if (logMagnitude < 3) return "sparse";
+  if (logMagnitude < 6) return "established";
+  if (logMagnitude < 9) return "dense";
+  return "overgrown";
+}
+
 function routeCommitted(game: GameState, region: RegionState): boolean {
   const committed = region.routeIds.some(
     (routeId) => (game.committedCellCommitments[routeId] ?? 0) > 0,
@@ -439,6 +452,7 @@ export function createGameColonyScene(game: GameState): ColonySceneRequest {
     sceneSeed,
     morphology,
     detail: "representative",
+    burdenTier: colonyBurdenTierFor(game),
   });
   const visual = resolveColonyVisualState(game, layout);
   const request = freeze({

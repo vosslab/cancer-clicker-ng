@@ -40,6 +40,15 @@ function cityRouteTarget(index: number): Readonly<{ x: number; y: number }> {
   return { x: site.x + site.width / 2, y: site.y + site.height + 20 };
 }
 
+/** Counts the exact optional ending nodes emitted by EndingOverlay. */
+export function endingOverlayNodeCount(scene: ColonySceneRequest): number {
+  if (scene.visual.ending.mode !== "chicago-scale") return 0;
+  const markerCount = Math.min(CITY_SITES.length, scene.visual.ending.connectedSiteCount);
+  // Root, lake, grid, routes, and skyline groups plus their fixed children.
+  const fixedNodes = 52;
+  return fixedNodes + scene.visual.ending.routeAnchors.length + markerCount;
+}
+
 /**
  * Projects the reached-only ending semantics as a layered, static SVG group.
  * Existing colony cells and biological overlays render afterward and remain legible.

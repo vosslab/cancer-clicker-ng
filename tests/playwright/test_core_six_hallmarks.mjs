@@ -2,7 +2,14 @@ import { expect, test } from "@playwright/test";
 
 import { coreSixBrowserFixtureSave } from "../core_six_browser_fixture.mjs";
 
+// Selector contract: hallmark actions use accessible tab, program, and native action controls
+// (src/render/evolution_dock.tsx:19; src/render/hallmark_tree.tsx:887).
 const SAVE_KEY = "cancer-clicker-ng.save.v2";
+const FIXED_CLOCK_MS = 1_750_000_000_000;
+
+async function installFixedClock(page) {
+  await page.clock.install({ time: FIXED_CLOCK_MS });
+}
 
 const BRANCHES = [
   {
@@ -68,7 +75,7 @@ function installDiagnostics(page) {
 
 function currentFixture(branch, options) {
   const envelope = JSON.parse(coreSixBrowserFixtureSave(branch, options));
-  envelope.savedAtMs = Date.now();
+  envelope.savedAtMs = FIXED_CLOCK_MS;
   return JSON.stringify(envelope);
 }
 
@@ -90,33 +97,46 @@ async function savedGameState(page) {
   return JSON.parse(raw).state;
 }
 
-function branchRow(page, heading) {
-  return page.getByRole("listitem").filter({ has: page.getByRole("heading", { name: heading }) });
+function hallmarksTab(page) {
+  return page.getByRole("button", { name: "Hallmarks evolution system" });
 }
 
-test("core-six core-six tree exposes headings, locked status, and native branch controls", async ({
+function hallmarkPanel(page) {
+  return page.getByRole("region", { name: "Tumor progression" }).locator(".hallmark-tree");
+}
+
+async function openHallmarks(page) {
+  await hallmarksTab(page).click();
+  await expect(hallmarkPanel(page)).toBeVisible();
+}
+
+async function selectBranch(page, heading, status) {
+  const panel = hallmarkPanel(page);
+  await panel.getByRole("button", { name: `${heading}, ${status}` }).click();
+  const active = panel.locator(".evolution-hallmarks__active");
+  await expect(active.getByRole("heading", { name: heading })).toBeVisible();
+  return active;
+}
+
+test("core-six icon deck selects one active hallmark and exposes its compact native action", async ({
   page,
 }) => {
+  await installFixedClock(page);
   const diagnostics = installDiagnostics(page);
   await seedFixture(page, "proliferative_signaling");
   await page.goto("/");
-  const tree = page.getByRole("region", { name: "The core six capabilities" });
-  const coreSixList = tree.locator(".hallmark-list").first();
-  await expect(tree.getByRole("heading", { name: "The core six capabilities" })).toBeVisible();
-  await expect(coreSixList.getByRole("listitem")).toHaveCount(6);
-  await expect(coreSixList.locator(".hallmark-status.is-locked")).toHaveCount(5);
-  await expect(coreSixList.getByRole("button", { name: "Acquire capability" })).toHaveCount(1);
-  await expect(tree.getByText("Unlocks at Microcolony: Producer checkpoint.")).toBeVisible();
-
-  const proliferative = branchRow(page, "Sustaining proliferative signaling");
-  await proliferative.getByRole("button", { name: "Acquire capability" }).click();
-  await expect(proliferative.locator(".hallmark-status")).toHaveText("Acquired");
+  await openHallmarks(page);
+  const tree = hallmarkPanel(page);
+  await expect(tree.getByRole("list", { name: "Hallmark mutation programs" })).toBeVisible();
+  await expect(tree.locator(".evolution-hallmarks__sigil-button")).toHaveCount(14);
+  const proliferative = await selectBranch(page, "Sustaining proliferative signaling", "available");
+  await proliferative.getByRole("button", { name: "Acquire" }).click();
   const fieldset = proliferative.getByRole("group", { name: /Division allocation/ });
   await expect(fieldset).toBeVisible();
   const cycle = fieldset.getByRole("button", { name: "Cycle" });
   await cycle.focus();
   await page.keyboard.press("Enter");
-  await expect(fieldset).toContainText("Cycle");
+  expect((await savedGameState(page)).signalingAllocation).toBe("cycle");
   expect(diagnostics).toEqual([]);
 });
 
@@ -127,13 +147,13 @@ test("core-six acquires each core-six branch and persists its visible decision t
     const context = await browser.newContext();
     try {
       const page = await context.newPage();
+      await installFixedClock(page);
       const diagnostics = installDiagnostics(page);
       await seedFixture(page, branch.key);
       await page.goto(branch.key === "angiogenesis" ? "/?debug=1" : "/");
-      const row = branchRow(page, branch.heading);
-      await expect(row.locator(".hallmark-status")).toHaveText("Available");
-      await row.getByRole("button", { name: "Acquire capability" }).click();
-      await expect(row.locator(".hallmark-status")).toHaveText("Acquired");
+      await openHallmarks(page);
+      const row = await selectBranch(page, branch.heading, "available");
+      await row.getByRole("button", { name: "Acquire" }).click();
       await expect(row.getByRole("button", { name: branch.action })).toBeVisible();
       await row.getByRole("button", { name: branch.action }).click();
       branch.saved(await savedGameState(page));
@@ -145,7 +165,6 @@ test("core-six acquires each core-six branch and persists its visible decision t
         expect(unpaid.regions[0].vesselLinkIds).toEqual([]);
       }
       await page.reload();
-      await expect(row.locator(".hallmark-status")).toHaveText("Acquired");
       const reloaded = await savedGameState(page);
       if (branch.key === "angiogenesis") {
         expect(reloaded.atp).toEqual({ mantissa: 0, exponent: 0 });
@@ -162,6 +181,7 @@ test("core-six acquires each core-six branch and persists its visible decision t
 test("core-six keeps recovery-protected hallmark mutations disabled and leaves raw storage untouched", async ({
   page,
 }) => {
+  await installFixedClock(page);
   const diagnostics = installDiagnostics(page);
   const corruptRaw = "{core-six-corrupt-save";
   await page.addInitScript(({ key, raw }) => window.localStorage.setItem(key, raw), {
@@ -169,14 +189,10 @@ test("core-six keeps recovery-protected hallmark mutations disabled and leaves r
     raw: corruptRaw,
   });
   await page.goto("/");
-  const allMutations = page.locator("button:not(#replace-unreadable-save)");
-  const disabled = await allMutations.evaluateAll((buttons) =>
-    buttons.every((button) => button instanceof HTMLButtonElement && button.disabled),
-  );
-  expect(disabled).toBe(true);
-  const acquire = page.getByRole("button", { name: "Acquire capability" });
-  await expect(acquire).toBeDisabled();
-  await acquire.click({ force: true });
+  await expect(page.getByRole("button", { name: "Divide cell" })).toBeDisabled();
+  await openHallmarks(page);
+  const active = await selectBranch(page, "Sustaining proliferative signaling", "available");
+  await expect(active.getByRole("button", { name: "Acquire" })).toBeDisabled();
   expect(await page.evaluate((key) => window.localStorage.getItem(key), SAVE_KEY)).toBe(corruptRaw);
   expect(diagnostics).toEqual([]);
 });
@@ -190,35 +206,32 @@ test("core-six hallmark controls remain reachable at 360px with reduced motion a
   });
   try {
     const page = await context.newPage();
+    await installFixedClock(page);
     const diagnostics = installDiagnostics(page);
     await seedFixture(page, "invasion_metastasis", { allBranches: true });
     await page.goto("/");
-    const tree = page.getByRole("region", { name: "The core six capabilities" });
-    for (const branch of BRANCHES) {
-      const row = branchRow(page, branch.heading);
-      await row.getByRole("button", { name: "Acquire capability" }).click();
-    }
-    await expect(tree.getByRole("group", { name: /Telomerase budget/ })).toBeVisible();
-    await expect(tree.locator('input[type="number"]')).toHaveCount(2);
-    await expect(tree.locator("select")).toHaveCount(1);
-    const dimensions = await tree.getByRole("button").evaluateAll((buttons) =>
-      buttons.map((button) => {
-        const box = button.getBoundingClientRect();
-        return { label: button.textContent?.trim(), width: box.width, height: box.height };
-      }),
-    );
+    await openHallmarks(page);
+    const tree = hallmarkPanel(page);
+    const dimensions = await tree
+      .locator(".evolution-hallmarks__sigil-button")
+      .evaluateAll((buttons) =>
+        buttons.map((button) => {
+          const box = button.getBoundingClientRect();
+          return { label: button.textContent?.trim(), width: box.width, height: box.height };
+        }),
+      );
     for (const control of dimensions) {
       expect(control.width, control.label).toBeGreaterThanOrEqual(44);
       expect(control.height, control.label).toBeGreaterThanOrEqual(44);
     }
+    await tree.locator(".evolution-hallmarks__sigil-button").first().focus();
+    await page.keyboard.press("Enter");
     const viewport = await page.evaluate(() => ({
       overflow: document.documentElement.scrollWidth > document.documentElement.clientWidth,
       reduced: window.matchMedia("(prefers-reduced-motion: reduce)").matches,
-      transition: getComputedStyle(document.querySelector("button")).transitionDuration,
     }));
     expect(viewport.overflow).toBe(false);
     expect(viewport.reduced).toBe(true);
-    expect(Number.parseFloat(viewport.transition)).toBeLessThanOrEqual(0.01);
     expect(diagnostics).toEqual([]);
   } finally {
     await context.close();

@@ -21,6 +21,7 @@ import type {
   OrganSiteId,
 } from "../types/ids.js";
 import type { GameState } from "../types/state.js";
+import { PrestigeRouteProp } from "../svg/prestige_route_props.js";
 import type { ApplyResult, GameController } from "./game_controller.js";
 import { ActionIcon } from "./action_icon.js";
 
@@ -167,8 +168,9 @@ export function PrestigePanel(props: PrestigePanelProps): JSX.Element {
   }
 
   return (
-    <section class="panel prestige-panel" aria-labelledby="prestige-title">
+    <section class="panel prestige-panel prestige-route-board" aria-labelledby="prestige-title">
       <div class="section-heading">
+        <PrestigeRouteProp kind="metastasis" class="prestige-route-title-art" />
         <div>
           <p class="eyebrow">Lineage strategy</p>
           <h2 id="prestige-title">Prestige layers</h2>
@@ -177,8 +179,13 @@ export function PrestigePanel(props: PrestigePanelProps): JSX.Element {
           Potential {metastasis().potential}; Imprints {transfer().imprints}.
         </p>
       </div>
-      <fieldset id="metastasis-summary" class="hallmark-fieldset prestige-summary" tabindex="-1">
+      <fieldset
+        id="metastasis-summary"
+        class="hallmark-fieldset prestige-summary prestige-layer-l1"
+        tabindex="-1"
+      >
         <legend>Metastasis terminal</legend>
+        <PrestigeRouteProp kind="metastasis" class="prestige-layer-prop" />
         <p>
           Gain {metastasis().gainedPotential} Metastatic Potential from this trusted terminal
           snapshot.
@@ -248,7 +255,8 @@ export function PrestigePanel(props: PrestigePanelProps): JSX.Element {
               const allocation = createMemo(() => organAllocationPresentation(props.game, site.id));
               return (
                 <li>
-                  <article class="prestige-card">
+                  <article class="prestige-card prestige-site-card">
+                    <PrestigeRouteProp kind="organ" class="prestige-card-prop" />
                     <h3>
                       <ActionIcon name="organ_site" /> {allocation().title}
                     </h3>
@@ -331,8 +339,9 @@ export function PrestigePanel(props: PrestigePanelProps): JSX.Element {
           </For>
         </ul>
       </fieldset>
-      <fieldset class="hallmark-fieldset">
+      <fieldset class="hallmark-fieldset prestige-layer-l2">
         <legend>Host transfer</legend>
+        <PrestigeRouteProp kind="host-transfer" class="prestige-layer-prop" />
         <p>
           Host Imprints: {transfer().imprints}. A transfer gains {transfer().gainedImprints}{" "}
           Imprints and clears: {transfer().clearedFields.join("; ")}.
@@ -367,7 +376,8 @@ export function PrestigePanel(props: PrestigePanelProps): JSX.Element {
               );
               return (
                 <li>
-                  <article class="prestige-card">
+                  <article class="prestige-card prestige-boon-card">
+                    <PrestigeRouteProp kind="host-transfer" class="prestige-card-prop" />
                     <h3>
                       <ActionIcon name="boon" /> {quote().title}
                     </h3>
@@ -408,6 +418,7 @@ export function PrestigePanel(props: PrestigePanelProps): JSX.Element {
         </ul>
         <Show when={draft().draftId}>
           <section class="prestige-draft" aria-labelledby="host-draft-title">
+            <PrestigeRouteProp kind="host-transfer" class="prestige-layer-prop" />
             <h3 id="host-draft-title">Saved host draft</h3>
             <p id="host-draft-summary" tabindex="-1">
               Saved draft revision {draft().sourceEventSequence}; cards remain in their revealed
@@ -420,7 +431,8 @@ export function PrestigePanel(props: PrestigePanelProps): JSX.Element {
                   <For each={draft().cards}>
                     {(card) => (
                       <li>
-                        <article class="prestige-card">
+                        <article class="prestige-card prestige-host-card">
+                          <PrestigeRouteProp kind="host-transfer" class="prestige-card-prop" />
                           <h4>{card.title}</h4>
                           <Show
                             when={card.revealed}

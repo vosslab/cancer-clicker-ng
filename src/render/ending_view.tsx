@@ -73,7 +73,10 @@ export function EndingView(props: EndingViewProps): JSX.Element {
   }
 
   const reportVisible = createMemo(() => presentation().mode !== "reached" || !dismissed());
-  const reportRelevant = createMemo(() => softEndingEligibility(props.game).reason !== "stage");
+  const reportRelevant = createMemo(() => {
+    const eligibility = softEndingEligibility(props.game);
+    return eligibility.available || eligibility.reason !== "stage";
+  });
 
   return (
     <Show when={reportRelevant()} fallback={<></>}>

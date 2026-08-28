@@ -1,29 +1,19 @@
 ## 2026-08-28
 
-### Fixes and Maintenance
-
-- Refocused the saved Chicago scale report around its earned state: the early transformed-cell board
-  now begins directly with the colony and Store, the global-laboratory boundary exposes the compact
-  report action, and the reached report presents an editable, decorative lakefront skyline cue
-  beside its readable metrics.
-
-- Established the pre-production current-schema-only documentation contract: the browser accepts
-  and writes exactly `version: 2` / `stateSchemaVersion: 8`; strict parsing rejects incompatible
-  data, protects rejected bytes, and offers explicit validated fresh replacement. Replay and
-  balance references now name their current schema boundaries rather than a retired migration
-  ladder.
-
-- Renamed the culture and dissemination presentation seam and its CSS hooks with durable domain
-  vocabulary, and moved the editable Chicago colony-overlay rules into the ending stylesheet.
-  Base, prestige, and ending styles now each retain a focused ownership boundary below the source
-  file-size limit.
-
-- Kept the permanent Node suite organized by behavioral contracts: core-hallmark economy,
-  elapsed effects, catalog/funnel, metabolic conversion, immune inflammation, mutation drafting,
-  controller persistence, and decision outcomes now use durable domain filenames. Historical
-  milestone-style test-file references are removed from active documentation.
-
 ### Additions and New Features
+
+- Recorded owner guidance that the central panel should be more dynamic than Cookie Clicker's
+  cookie and that the original implementation plan's visual progression remains the contract.
+
+- Added `docs/RELEASE_EVIDENCE.md` as the human review surface for the visual-first candidate.
+  It documents the strict format-2/schema-8 boundary, separates permanent semantic tests from
+  one-time balance and visual review, records bounded focused evidence, and reserves final gates
+  plus GitHub Pages/Git acceptance for fresh human-owned handoff.
+
+- Added a three-part review of the local 2013 Cookie Clicker source covering its source ownership,
+  increment formulas and reinforcement loops, and dynamic three-column visual layout. The notes
+  preserve the owner preference for a center living clicker with progression and Store on its sides,
+  while keeping Cancer Clicker NG's typed, replayable, accessible, and responsive boundaries.
 
 - Installed the shipped GitHub Pages workflow at `.github/workflows/deploy-pages.yml` as an exact
   parity copy of the root template. The workflow builds `dist/`, uploads the Pages artifact, and
@@ -58,8 +48,9 @@
   non-color connected-site cues with concise accessible scene copy.
 
 - Added the replayable Chicago soft-ending domain: a catalog-owned 2.5e25-cell scale reference,
-  explicit reducer-recorded transition, strict p8 ending evidence, pure BigNum scale presentation,
-  and p7 migration to an unreached state without fabricating historical proof.
+  explicit reducer-recorded transition, strict current-schema ending evidence, and pure BigNum
+  scale presentation. Pre-production historical ending shapes now reject at the closed parser
+  boundary instead of fabricating evidence.
 
 - Added the Chicago scale-report interface: a keyboard-openable, persistence-first Solid leaf with
   explicit prerequisite progress, full/short scale vocabulary, saved reached revisit, locally
@@ -120,6 +111,63 @@
   application provenance; realistic permanent semantic tests; dated M21 balance evidence; and
   explicit base/domain stylesheet assets that the Pages build must preflight, copy, and prove in a
   browser.
+
+### Behavior or Interface Changes
+
+### Fixes and Maintenance
+
+- Moved the optional reached Chicago report into a compact right-rail drawer so its copy and scale
+  graphic remain available while the complete central tumor action surface stays clickable.
+
+- Reconciled the visual-first redesign brief with its delivered SVG ownership: the tumor-feedback,
+  producer-machine, evolution-sigil, culture-network, and prestige-route components now replace
+  forward-looking placeholder filenames, while implemented art packages remain explicitly pending
+  one-time rendered review.
+
+- Refreshed permanent player and UI guidance around the visual-first 1280 x 800 tumor board:
+  shallow HUD, direct rendered-cell action with keyboard parity, one active evolution family,
+  illustrated upgrade rack, editable icon language, focusable tooltips, optional specimen drawer,
+  narrow 360px composition, reduced motion, and fictional-scientific boundaries.
+
+- Made the masthead explicitly identify the game as a fictional cancer-growth simulation and
+  centralized its boundary copy with the transformed-cell subtitle. A small deterministic copy
+  guard now preserves fictional colony framing, modeled Chicago metaphor language, continued
+  play, and the subtitle's non-person referent.
+
+- Refocused the saved Chicago scale report around its earned state: the early transformed-cell board
+  now begins directly with the colony and Store, the global-laboratory boundary exposes the compact
+  report action, and the reached report presents an editable, decorative lakefront skyline cue
+  beside its readable metrics.
+
+- Established the pre-production current-schema-only documentation contract: the browser accepts
+  and writes exactly `version: 2` / `stateSchemaVersion: 8`; strict parsing rejects incompatible
+  data, protects rejected bytes, and offers explicit validated fresh replacement. Replay and
+  balance references now name their current schema boundaries rather than a retired migration
+  ladder.
+
+- Renamed the culture and dissemination presentation seam and its CSS hooks with durable domain
+  vocabulary, and moved the editable Chicago colony-overlay rules into the ending stylesheet.
+  Base, prestige, and ending styles now each retain a focused ownership boundary below the source
+  file-size limit.
+
+- Kept the permanent Node suite organized by behavioral contracts: core-hallmark economy,
+  elapsed effects, catalog/funnel, metabolic conversion, immune inflammation, mutation drafting,
+  controller persistence, and decision outcomes now use durable domain filenames. Historical
+  milestone-style test-file references are removed from active documentation.
+
+### Removals
+
+### Decisions and Failures
+
+### Developer Tests and Notes
+
+- Final local verification passed all five `./check_codebase.sh` lanes with 370 Node tests, the
+  GitHub Pages build, and 48 production-browser tests. A disposable full-candidate Git projection
+  passed all 1,484 Python tests while preserving the human-owned real index; the ordinary tracked
+  projection reported only the two intentionally untracked new screenshot links.
+- Recaptured all seven 1280 x 800 documentation frames with no browser diagnostics or horizontal
+  overflow. Independent original-resolution review accepted every frame, including the final
+  right-rail Chicago drawer with the central living tumor fully unobscured.
 
 ## 2026-08-27
 
@@ -184,6 +232,12 @@
   integrity, and state/event drift guards.
 
 ### Behavior or Interface Changes
+
+- Pivoted the planned visual hierarchy toward a visual-first game board: a fluorescent living-tumor
+  arena, illustrated upgrade machines, hallmark sigils, and tactile direct-cell feedback now lead
+  the first read at 1280 x 800. Persistent UI copy becomes compact and detail moves to native
+  tooltips; the implementation brief names reusable SVG owners, motion behavior, and independent
+  asset work packages.
 
 - Adopted one pre-production durable save contract: envelope version 2 and state schema 8. Current
   parsing now rejects older or incomplete payloads instead of synthesizing migration defaults, while

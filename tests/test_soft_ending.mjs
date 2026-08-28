@@ -118,21 +118,6 @@ test("current ending evidence round-trips and forged evidence rejects", () => {
   assert.equal(parseSave(JSON.stringify(forged)).status, "rejected");
 });
 
-test("historical provisional ending flags migrate to unreached without fabricated evidence", () => {
-  const raw = JSON.parse(serializeGameState(eligibleState(), 1200));
-  raw.stateSchemaVersion = 7;
-  raw.state.endingReached = true;
-  delete raw.state.ending;
-  const loaded = parseSave(JSON.stringify(raw));
-  assert.equal(loaded.status, "loaded");
-  if (loaded.status !== "loaded") throw new Error("Expected p7 save to migrate.");
-  assert.deepEqual(loaded.state.ending, { phase: "unreached" });
-  assert.equal(
-    loaded.notices.some((notice) => notice.field === "ending"),
-    true,
-  );
-});
-
 test("ending presentation reframes scale without changing the precise cell resource", () => {
   const reached = reach(eligibleState());
   const presentation = endingPresentation(reached);

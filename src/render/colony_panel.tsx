@@ -3,22 +3,22 @@
  * living-tumor scene and delegates pointer intent only from rendered cells;
  * keyboard activation stays on this one native button.
  */
-import { ErrorBoundary, Show, createMemo } from "solid-js";
+import { ErrorBoundary, Show, createMemo, createSignal } from "solid-js";
 import type { JSX } from "solid-js";
 
 import { formatBigNum } from "../bignum/format.js";
 import { cellProductionRate } from "../economy/production.js";
 import type { GameState } from "../types/state.js";
-import { Colony } from "../svg/colony.js";
 import { createGameColonyScene } from "../svg/colony_visual_state.js";
 import { describeColonyScene } from "../svg/describe.js";
 import type { ColonySceneRequest } from "../svg/render_types.js";
-import { NumberDisplay } from "./number_display.js";
+import { TumorArena } from "./tumor_arena.js";
 
 type ColonyPanelProps = Readonly<{
   game: GameState;
   disabled?: boolean;
-  onDivide: () => void;
+  /** True only after the canonical click event becomes durable player progress. */
+  onDivide: () => boolean;
 }>;
 
 type ReadyPanelScene = Readonly<{
@@ -56,49 +56,13 @@ function unavailablePanelState(): JSX.Element {
   );
 }
 
-function pathContainsPointer(path: SVGGeometryElement, event: MouseEvent): boolean {
-  const matrix = path.getScreenCTM();
-  if (matrix === null) return false;
-  const point = new DOMPoint(event.clientX, event.clientY).matrixTransform(matrix.inverse());
-  return path.isPointInFill(point) || path.isPointInStroke(point);
-}
-
-function pointerFallsOnVisibleColonyCell(event: MouseEvent): boolean {
-  const action =
-    event.currentTarget instanceof HTMLButtonElement
-      ? event.currentTarget
-      : event.target instanceof Element
-        ? event.target.closest("button[data-colony-action='divide']")
-        : null;
-  if (!(action instanceof HTMLButtonElement)) return false;
-  // Chromium can retarget a compact reduced-motion SVG click to its root even
-  // when a painted cell lies under the pointer. Recheck only cell membrane and
-  // nucleus geometry, so tissue, voids, and board whitespace stay inert.
-  return [...action.querySelectorAll("[data-colony-cell]")].some((cell) =>
-    [...cell.querySelectorAll(".colony-cell__membrane, .colony-cell__nucleus")].some(
-      (candidate) =>
-        candidate instanceof SVGGeometryElement && pathContainsPointer(candidate, event),
-    ),
-  );
-}
-
-function eventTargetsVisibleColonyCell(event: MouseEvent): boolean {
-  const directTarget = event.target;
-  if (directTarget instanceof Element && directTarget.closest("[data-colony-cell]") !== null) {
-    return true;
-  }
-  if (
-    event
-      .composedPath()
-      .some((candidate) => candidate instanceof Element && candidate.matches("[data-colony-cell]"))
-  ) {
-    return true;
-  }
-  return pointerFallsOnVisibleColonyCell(event);
-}
-
 /** Shows the visual cell field as one accessible action without per-cell tab stops. */
 export function ColonyPanel(props: ColonyPanelProps): JSX.Element {
+  const [feedbackTarget, setFeedbackTarget] = createSignal<Readonly<{ x: number; y: number }>>({
+    x: 500,
+    y: 350,
+  });
+  const [feedbackSequence, setFeedbackSequence] = createSignal(0);
   const panelScene = createMemo(() => {
     const currentStage = props.game.currentStage;
     const resolved = derivePanelScene(props.game);
@@ -113,62 +77,30 @@ export function ColonyPanel(props: ColonyPanelProps): JSX.Element {
   });
   const productionRate = createMemo(() => cellProductionRate(props.game));
 
-  function divideFromColony(event: MouseEvent): void {
-    // Keyboard and assistive activation has detail 0. Pointer/touch intent must
-    // originate from a rendered cell rather than the surrounding plate.
-    if (event.detail === 0 || eventTargetsVisibleColonyCell(event)) props.onDivide();
-  }
-
   return (
     <section
       class="panel colony-panel"
       data-growth-state={readyScene()?.scene.visual.growthState ?? "quiet"}
-      aria-labelledby="colony-panel-title"
+      aria-label="Living tumor arena"
     >
-      <div class="colony-panel__heading">
-        <div>
-          <p class="eyebrow">Primary culture</p>
-          <h2 id="colony-panel-title">Your colony</h2>
-        </div>
-        <p class="colony-panel__growth-state">
-          {readyScene()?.scene.visual.growthState ?? "quiet"} growth state
-        </p>
-      </div>
-      <div class="colony-panel__count-rate">
-        <NumberDisplay
-          class="cell-count"
-          value={props.game.cells}
-          format={props.game.numberFormat}
-          label="Cell count"
-        />
-        <output class="colony-panel__rate" aria-label="Cell production rate">
-          {formatBigNum(productionRate(), props.game.numberFormat, 2)} cells/s
-        </output>
-      </div>
       <Show when={readyScene()} fallback={unavailablePanelState()}>
         {(ready) => (
-          <>
-            <button
-              id="divide-button"
-              class="colony-panel__action"
-              data-colony-action="divide"
-              type="button"
-              disabled={props.disabled}
-              aria-label="Divide cell"
-              aria-describedby="colony-instruction colony-caption"
-              on:click={divideFromColony}
-            >
-              <ErrorBoundary fallback={unavailablePanelState()}>
-                <Colony scene={ready().scene} decorative />
-              </ErrorBoundary>
-            </button>
-            <p id="colony-instruction" class="colony-panel__instruction">
-              Click a visible cell to divide. Enter or Space also divides.
-            </p>
-            <p id="colony-caption" class="colony-panel__caption">
-              {ready().caption} Stylized game abstraction.
-            </p>
-          </>
+          <ErrorBoundary fallback={unavailablePanelState()}>
+            <TumorArena
+              disabled={props.disabled === true}
+              scene={ready().scene}
+              cellsLabel={formatBigNum(props.game.cells, props.game.numberFormat, 2)}
+              productionLabel={`${formatBigNum(productionRate(), props.game.numberFormat, 2)} cells/s`}
+              description={`${ready().caption} Stylized game abstraction.`}
+              feedbackTarget={feedbackTarget}
+              feedbackSequence={feedbackSequence}
+              onDivisionFeedback={(target) => {
+                setFeedbackTarget(target);
+                setFeedbackSequence((sequence) => sequence + 1);
+              }}
+              onDivide={props.onDivide}
+            />
+          </ErrorBoundary>
         )}
       </Show>
     </section>

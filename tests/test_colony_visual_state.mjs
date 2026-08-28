@@ -16,7 +16,7 @@ import {
 import { findMicrobiomeComposition } from "../src/hallmarks/microbiome_catalog.ts";
 import { createInitialGameState } from "../src/state/game_state.ts";
 import { createColonySceneRequest } from "../src/svg/render_types.ts";
-import { createGameColonyScene } from "../src/svg/colony_visual_state.ts";
+import { colonyBurdenTierFor, createGameColonyScene } from "../src/svg/colony_visual_state.ts";
 
 function region(name, viability = 1, phenotype = "migratory") {
   return {
@@ -133,6 +133,85 @@ test("game state produces one frozen finite renderer scene without mutation", ()
     scene.layout.slots.every((slot) => Number.isFinite(slot.centre.x)),
     true,
   );
+});
+
+test("biomass burden thresholds have one exact canonical visual tier", () => {
+  const initial = createInitialGameState();
+  const tierFor = (cells) => colonyBurdenTierFor({ ...initial, cells });
+
+  assert.deepEqual(
+    [
+      [bigNum(0, 0), "sparse"],
+      [bigNum(9.99, 2), "sparse"],
+      [bigNum(1, 3), "established"],
+      [bigNum(9.99999, 5), "established"],
+      [bigNum(1, 6), "dense"],
+      [bigNum(9.99999999, 8), "dense"],
+      [bigNum(1, 9), "overgrown"],
+    ].map(([cells, tier]) => [tierFor(cells), tier]),
+    [
+      ["sparse", "sparse"],
+      ["sparse", "sparse"],
+      ["established", "established"],
+      ["established", "established"],
+      ["dense", "dense"],
+      ["dense", "dense"],
+      ["overgrown", "overgrown"],
+    ],
+  );
+});
+
+test("durable biomass tiers deterministically change within-stage tumor burden", () => {
+  const game = activeLivingTumorState();
+  const scenes = [bigNum(1, 2), bigNum(1, 4), bigNum(1, 7), bigNum(1, 10)].map((cells) =>
+    createGameColonyScene({ ...game, cells }),
+  );
+
+  assert.deepEqual(
+    scenes.map((scene) => scene.layout.burdenTier),
+    ["sparse", "established", "dense", "overgrown"],
+  );
+  assert.deepEqual(
+    scenes.map((scene) => scene.layout.slots.length),
+    [...scenes.map((scene) => scene.layout.slots.length)].sort((left, right) => left - right),
+  );
+  assert.deepEqual(
+    scenes.map((scene) => scene.layout.silhouette.baseRadius),
+    [...scenes.map((scene) => scene.layout.silhouette.baseRadius)].sort(
+      (left, right) => left - right,
+    ),
+  );
+  assert.ok(scenes[0].layout.metrics.voidAreaFraction > scenes[3].layout.metrics.voidAreaFraction);
+  assert.deepEqual(
+    createGameColonyScene({ ...game, cells: bigNum(1, 7) }).layout,
+    scenes[2].layout,
+  );
+});
+
+test("the first microcolony expands the opening cell's occupied visual extent", () => {
+  const initial = createInitialGameState();
+  const opening = createGameColonyScene(initial);
+  const microcolony = createGameColonyScene({
+    ...initial,
+    currentStage: stageId("microcolony"),
+    cells: bigNum(10, 0),
+  });
+  const occupiedRadius = (scene) =>
+    Math.max(
+      ...scene.layout.slots.map(
+        (slot) =>
+          Math.hypot(
+            slot.centre.x - scene.layout.silhouette.centre.x,
+            slot.centre.y - scene.layout.silhouette.centre.y,
+          ) + Math.max(slot.rx, slot.ry),
+      ),
+    );
+
+  assert.equal(opening.layout.burdenTier, "sparse");
+  assert.equal(microcolony.layout.burdenTier, "sparse");
+  assert.ok(microcolony.layout.slots.length > opening.layout.slots.length);
+  assert.ok(occupiedRadius(microcolony) > occupiedRadius(opening));
+  assert.ok(microcolony.layout.silhouette.baseRadius > opening.layout.silhouette.baseRadius);
 });
 
 test("authoritative regional state creates named visual evidence and keeps its relation across unrelated state", () => {

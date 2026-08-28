@@ -2,10 +2,11 @@ import { For, Show, createEffect, createMemo, createSignal, onCleanup } from "so
 import type { JSX } from "solid-js";
 
 import { culturePresentation } from "../prestige/culture_network_presentation.js";
+import { CultureNetworkProp } from "../svg/culture_network_props.js";
 import type { CryobankProgramId, PassageUpgradeId, ProducerId } from "../types/ids.js";
 import type { GameState } from "../types/state.js";
+import { HelpTooltip } from "./action_tooltip.js";
 import type { ApplyResult, GameController } from "./game_controller.js";
-import { ActionIcon } from "./action_icon.js";
 
 type CulturePanelProps = Readonly<{ game: GameState; controller: GameController }>;
 type Confirmation =
@@ -14,7 +15,7 @@ type Confirmation =
   | Readonly<{ kind: "program"; programId: CryobankProgramId; title: string; summary: string }>
   | Readonly<{ kind: "assay"; producerId: ProducerId; title: string; summary: string }>;
 
-/** Culture choices are all confirmed durable events; this component owns no passage arithmetic. */
+/** A small playable culture bench; accepted culture events remain controller-owned. */
 export function CulturePanel(props: CulturePanelProps): JSX.Element {
   const [pending, setPending] = createSignal<Confirmation>();
   const presentation = createMemo(() => culturePresentation(props.game));
@@ -26,9 +27,7 @@ export function CulturePanel(props: CulturePanelProps): JSX.Element {
     if (pending() && !dialog.open) dialog.showModal();
     if (!pending() && dialog.open) dialog.close();
   });
-  onCleanup(() => {
-    if (dialog?.open) dialog.close();
-  });
+  onCleanup(() => dialog?.open && dialog.close());
 
   function open(next: Confirmation, event: MouseEvent): void {
     if (props.controller.recoveryBlocked()) return;
@@ -62,147 +61,180 @@ export function CulturePanel(props: CulturePanelProps): JSX.Element {
 
   return (
     <section class="panel culture-network-panel culture-panel" aria-labelledby="culture-title">
-      <div class="section-heading">
-        <div>
-          <p class="eyebrow">Durable culture</p>
-          <h2 id="culture-title">Culture bench</h2>
+      <div class="culture-network-board">
+        <div class="culture-network-board__topline">
+          <h2 id="culture-title">Culture</h2>
+          <CultureNetworkProp kind="dish" state={presentation().l3Ready ? "ready" : "locked"} />
         </div>
-        <p id="culture-summary" class="section-note" tabindex="-1">
-          {presentation().passages} Passages
+        <p id="culture-summary" class="culture-network-board__status" tabindex="-1">
+          <span>{presentation().passages} passages</span>
+          <span>{presentation().activeProgramLabel ?? "niche needed"}</span>
         </p>
-      </div>
-      <fieldset class="hallmark-fieldset culture-network-fieldset">
-        <legend>Immortalization translation</legend>
-        <p class="culture-network-readout">Current culture state: Immortalized culture.</p>
-        <p>
-          An immortalization choice clears host-local history, converts the active niche into one
-          cryobank program, and debits that cryobank rank from the new award in the same accepted
-          event.
-        </p>
-        <Show
-          when={presentation().activeProgramLabel}
-          fallback={
-            <p class="hallmark-disabled-note">
-              An active niche program is required for immortalization.
-            </p>
-          }
-        >
-          {(active) => <p class="culture-network-readout">Active niche translation: {active()}.</p>}
-        </Show>
-        <ul class="culture-network-card-grid">
+        <ul class="culture-network-action-grid" aria-label="Immortalization programs">
           <For each={presentation().programs}>
             {(program) => (
               <li>
-                <article class="culture-network-card">
-                  <h3>
-                    <ActionIcon name="culture" /> {program.label}
-                  </h3>
-                  <p>{program.detail}</p>
-                  <button
-                    type="button"
-                    disabled={props.controller.recoveryBlocked() || !program.available}
-                    onClick={(event) =>
-                      open(
-                        {
-                          kind: "immortalize",
-                          programId: program.id,
-                          title: "Perform immortalization",
-                          summary: `Choose ${program.label}. The accepted L3 reset clears host-local state and records its atomic cryobank debit.`,
-                        },
-                        event,
-                      )
-                    }
-                  >
-                    <ActionIcon name="culture" /> Perform immortalization
-                  </button>
-                </article>
+                <HelpTooltip tooltip={program.detail}>
+                  {(tooltip) => (
+                    <button
+                      {...tooltip}
+                      class="culture-network-action"
+                      type="button"
+                      disabled={props.controller.recoveryBlocked() || !program.available}
+                      onClick={(event) =>
+                        open(
+                          {
+                            kind: "immortalize",
+                            programId: program.id,
+                            title: "Immortalize",
+                            summary: `Choose ${program.label}. The accepted L3 reset clears host-local state and records its atomic cryobank debit.`,
+                          },
+                          event,
+                        )
+                      }
+                    >
+                      <CultureNetworkProp
+                        kind="dish"
+                        state={program.available ? "ready" : "locked"}
+                      />
+                      <span class="culture-network-action__copy">
+                        <span class="culture-network-action__name">{program.label}</span>
+                        <span class="culture-network-action__count">
+                          {program.available ? "immortalize" : "locked"}
+                        </span>
+                      </span>
+                    </button>
+                  )}
+                </HelpTooltip>
               </li>
             )}
           </For>
         </ul>
-      </fieldset>
-      <fieldset class="hallmark-fieldset culture-network-fieldset">
-        <legend>Passage upgrades</legend>
-        <ul class="culture-network-card-grid">
+        <ul class="culture-network-compact-list" aria-label="Passage upgrades">
           <For each={presentation().upgrades}>
             {(upgrade) => (
               <li>
-                <article class="culture-network-card">
-                  <h3>
-                    <ActionIcon name="cryobank" /> {upgrade.label}
-                  </h3>
-                  <p>
-                    Rank {upgrade.rank}/{upgrade.maximumRank}; {upgrade.detail}.
-                  </p>
-                  <p>Next debit: {upgrade.cost ?? "complete"} Passages.</p>
-                  <button
-                    type="button"
-                    disabled={props.controller.recoveryBlocked() || !upgrade.available}
-                    onClick={(event) =>
-                      open(
-                        {
-                          kind: "upgrade",
-                          upgradeId: upgrade.id,
-                          title: "Purchase passage upgrade",
-                          summary: `Spend ${upgrade.cost ?? 0} Passages on ${upgrade.label}.`,
-                        },
-                        event,
-                      )
-                    }
-                  >
-                    <ActionIcon name="buy" /> Purchase passage upgrade
-                  </button>
-                </article>
+                <HelpTooltip
+                  tooltip={`Rank ${upgrade.rank}/${upgrade.maximumRank}. ${upgrade.detail}. Next debit: ${upgrade.cost ?? "complete"} Passages.`}
+                >
+                  {(tooltip) => (
+                    <button
+                      {...tooltip}
+                      class="culture-network-action"
+                      type="button"
+                      disabled={props.controller.recoveryBlocked() || !upgrade.available}
+                      onClick={(event) =>
+                        open(
+                          {
+                            kind: "upgrade",
+                            upgradeId: upgrade.id,
+                            title: "Acquire passage upgrade",
+                            summary: `Spend ${upgrade.cost ?? 0} Passages on ${upgrade.label}.`,
+                          },
+                          event,
+                        )
+                      }
+                    >
+                      <CultureNetworkProp
+                        kind="passage"
+                        state={upgrade.available ? "ready" : upgrade.rank > 0 ? "active" : "locked"}
+                      />
+                      <span class="culture-network-action__copy">
+                        <span class="culture-network-action__name">{upgrade.label}</span>
+                        <span class="culture-network-action__count">
+                          {upgrade.rank}/{upgrade.maximumRank} | {upgrade.cost ?? "done"}
+                        </span>
+                      </span>
+                    </button>
+                  )}
+                </HelpTooltip>
               </li>
             )}
           </For>
         </ul>
         <Show when={presentation().upgrades.some((entry) => entry.id === "cryobank")}>
-          <div class="culture-network-choices" aria-label="Cryobank program choices">
-            <p>Choose a purchased cryobank program for future culture translation.</p>
+          <ul class="culture-network-compact-list" aria-label="Cryobank program selection">
             <For each={presentation().programs}>
               {(program) => (
-                <button
-                  type="button"
-                  aria-pressed={program.selected}
-                  disabled={
-                    props.controller.recoveryBlocked() ||
-                    !program.selectionAvailable ||
-                    program.selected
-                  }
-                  onClick={(event) =>
-                    open(
-                      {
-                        kind: "program",
-                        programId: program.id,
-                        title: "Select cryobank program",
-                        summary: `Record ${program.label} as the current cryobank program.`,
-                      },
-                      event,
-                    )
-                  }
-                >
-                  <ActionIcon name="cryobank" />{" "}
-                  {program.selected ? `${program.label} selected` : `Select ${program.label}`}
-                </button>
+                <li>
+                  <HelpTooltip
+                    tooltip={`Record ${program.label} as the current cryobank program for future culture translation.`}
+                  >
+                    {(tooltip) => (
+                      <button
+                        {...tooltip}
+                        class="culture-network-action"
+                        type="button"
+                        aria-pressed={program.selected}
+                        disabled={
+                          props.controller.recoveryBlocked() ||
+                          !program.selectionAvailable ||
+                          program.selected
+                        }
+                        onClick={(event) =>
+                          open(
+                            {
+                              kind: "program",
+                              programId: program.id,
+                              title: "Select cryobank program",
+                              summary: `Record ${program.label} as the current cryobank program.`,
+                            },
+                            event,
+                          )
+                        }
+                      >
+                        <CultureNetworkProp
+                          kind="cryobank"
+                          state={
+                            program.selected
+                              ? "selected"
+                              : program.selectionAvailable
+                                ? "ready"
+                                : "locked"
+                          }
+                        />
+                        <span class="culture-network-action__copy">
+                          <span class="culture-network-action__name">{program.label}</span>
+                          <span class="culture-network-action__count">
+                            {program.selected ? "selected" : "select"}
+                          </span>
+                        </span>
+                      </button>
+                    )}
+                  </HelpTooltip>
+                </li>
               )}
             </For>
-          </div>
+          </ul>
         </Show>
-      </fieldset>
-      <Show when={presentation().queuedAction}>
-        {(queue) => (
-          <fieldset class="hallmark-fieldset culture-network-fieldset" aria-live="polite">
-            <legend>Assay discipline</legend>
-            <p>
-              Queued {queue().producerLabel}: next cost {queue().cost};{" "}
-              {queue().affordable
-                ? "its accepted assay event is reconciling."
-                : "waiting for an affordable balance."}
+        <Show when={presentation().queuedAction}>
+          {(queue) => (
+            <p class="culture-network-board__status" aria-live="polite">
+              <CultureNetworkProp kind="assay" state={queue().affordable ? "ready" : "locked"} />
+              <span>assay: {queue().producerLabel}</span>
+              <span>{queue().cost}</span>
             </p>
-          </fieldset>
-        )}
-      </Show>
+          )}
+        </Show>
+        <details>
+          <summary>Specimen notes</summary>
+          <p>
+            An immortalization choice clears host-local history, converts the active niche into one
+            cryobank program, and debits that cryobank rank from the new award in the same accepted
+            event.
+          </p>
+          <Show when={presentation().queuedAction}>
+            {(queue) => (
+              <p>
+                Queued {queue().producerLabel}: next cost {queue().cost};{" "}
+                {queue().affordable
+                  ? "its accepted assay event is reconciling."
+                  : "waiting for an affordable balance."}
+              </p>
+            )}
+          </Show>
+        </details>
+      </div>
       <dialog
         ref={(element) => {
           dialog = element;
@@ -222,12 +254,12 @@ export function CulturePanel(props: CulturePanelProps): JSX.Element {
               <Show when={props.controller.saveError()}>
                 <p role="alert">{props.controller.saveError()}</p>
               </Show>
-              <form method="dialog">
+              <form method="dialog" class="culture-network-dialog__actions">
                 <button type="button" onClick={cancel}>
                   Cancel
                 </button>
                 <button type="button" onClick={confirm}>
-                  <ActionIcon name="culture" /> Confirm {action().title}
+                  <CultureNetworkProp kind="dish" state="ready" /> Confirm
                 </button>
               </form>
             </>

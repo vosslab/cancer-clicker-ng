@@ -2,100 +2,75 @@
 
 ## Decision and boundary
 
-Cancer Clicker NG uses client-only SolidJS as its deliberate UI runtime. The static application
-ships a TypeScript/TSX bundle and has no server runtime. The game engine, BigNum arithmetic, save
-parsing, event reduction, replay, SVG factories, and prestige domains remain framework-free.
+Cancer Clicker NG is a client-only SolidJS game. Solid owns fine-grained rendering and brief,
+local presentation state; the framework-free TypeScript domain owns game state, BigNum arithmetic,
+save parsing, event reduction, replay, and SVG scene data. `src/render/game_controller.ts` is the
+single mutation boundary: a rendered control expresses intent, the controller records and persists
+the accepted event, then Solid reconciles the resulting durable state.
 
-SolidJS owns fine-grained display updates and local presentation state. It never owns a second
-authoritative game state or an alternative mutation path. `src/render/game_controller.ts` is the
-single controller boundary between UI intent and the framework-free engine.
+## Board composition
 
-## Component tree
+The default 1280 x 800 (16:10) composition is a living game board rather than a page of controls.
+A shallow `GameHud` keeps cells, production rate, stage, local-save state, number formatting, and
+specimen inspection available without competing with play. `GameBoard` then arranges four stable
+areas:
 
-```text
-main.tsx
-  App (controller boundary and mounted shell)
-    GameShell
-      StatusBar / NumberDisplay
-      ColonyPanel / ColonyView (direct visible cancer-cell action)
-      StagePanel / HallmarkTree / PrestigePanel
-      ProducersPanel -> ProducerRow
-      EndingView (optional Chicago-scale layer above live play)
-      OfflineReport / SaveNotice / DebugControls
-```
+| Area                  | Solid owner                                       | Player purpose                                                                                              |
+| --------------------- | ------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Living tumor arena    | `TumorArena` through `ColonyPanel`                | Directly divide a rendered cancer cell and read immediate count/rate feedback.                              |
+| Evolution family      | `EvolutionDock` plus the selected tab             | Keep one progression family active at a time: stage/hallmarks, routes, reset, culture, or network.          |
+| Upgrade rack          | `ProducersPanel`                                  | Inspect illustrated molecular machinery, choose a buy quantity, and purchase from an always-present Store.  |
+| Rewards and inspector | `GameRewardDock`, `EndingView`, `InspectorDrawer` | Surface short feedback, the optional scale report, and on-demand specimen facts without crowding the board. |
 
-`App` consumes the controller store, persistence scheduling, injected active-time clock, and typed
-actions. It may pass callbacks such as `onDivide` and `onBuyProducer`, but never a store setter.
-Components render read-only state and express player intent; parsing, event recording, persistence,
-and replay observation stay in the controller and state modules.
+The active evolution tab, drawer open state, tooltip visibility, and transient reward feedback are
+presentation state in `src/render/game_ui_state.ts`. They never enter saves or replay. The game
+state remains the only durable source for costs, eligibility, rates, morphology, prestige, and
+ending evidence.
 
-`EndingView` is a leaf above the same board. Once the explicit p8 soft-ending event is accepted, it
-shows the Chicago-scale culmination while direct cancer-cell action, producer purchases, culture,
-and network interactions continue. It restores in normal reading order after reload.
+## Direct rendered-cell interaction
 
-## Reactivity and state
+`TumorArena` exposes one native `button` named `Divide cell`, containing the inline colony SVG.
+Pointer and touch activation succeeds only when its coordinate lands in a rendered cell membrane or
+nucleus; background tissue, voids, and board whitespace remain inert. Enter, Space, and virtual
+assistive activation use that same button and typed divide intent once. There are no per-cell tab
+stops or duplicate mutation paths.
 
-| State class                  | Solid primitive                                | Contract                                                          |
-| ---------------------------- | ---------------------------------------------- | ----------------------------------------------------------------- |
-| Durable `GameState` snapshot | one controller-owned `createStore<GameState>`  | Components receive read-only data and typed actions only.         |
-| Display projection           | nearest-owner `createMemo`                     | Derived text, affordability, and rows are not copied into state.  |
-| UI-only presentation         | narrow `createSignal`                          | Dialog, help, and motion preference do not enter saves or replay. |
-| Lifecycle handles            | local variables with `onMount` and `onCleanup` | Timers and listeners are not store fields.                        |
+The control includes a short visible-accessible instruction, stage-aware specimen description,
+focus treatment, authoritative count/rate outputs, and a local division response. The colony is a
+fictional scientific game abstraction, not a patient image, diagnosis, clinical prediction, or
+medical advice. [ART_DIRECTION.md](ART_DIRECTION.md) and
+[MORPHOLOGY_REFERENCE.md](MORPHOLOGY_REFERENCE.md) define that boundary.
 
-Use `<For>` for identity-keyed rows, `<Show>` for one optional surface, and `<Switch>`/`<Match>`
-for mutually exclusive states. Read reactive props at use sites. Components use semantic controls,
-visible focus, and `class` JSX attributes.
+## Icons, tooltips, and keyboard routes
 
-## Direct-cell action
+`src/svg/icons.ts` supplies compact, editable 24 by 24 SVG glyph geometry. `ActionIcon` places a
+decorative glyph beside an existing visible text label; the label remains the native accessible
+name. Icon-first utility controls use `ActionTooltip`, which supplies an explicit accessible name
+and focusable tooltip. `HelpTooltip` attaches the same concise explanation to an existing button
+without changing its action.
 
-The normal board is a 1280 x 800 (16:10) landscape: direct colony action at left, the living
-tumor/progression world in the middle, and the always-upgradable Store at right. `ColonyPanel` and
-the SVG colony expose one native colony control plus visible cell geometry. Pointer, touch, Enter,
-and Space reach the same typed `controller.divide()` intent exactly once. The controller alone
-constructs the durable `click-divide` event and reconciles only after persistence succeeds.
+Tooltips open for pointer, focus, and pointer-down input, expose `role="tooltip"`, and connect to
+the trigger with `aria-describedby`. The optional specimen drawer moves focus to its close control,
+closes with Escape, and restores focus to its invoker. These are presentation routes; no tooltip or
+drawer state changes gameplay.
 
-The first view shows the colony, count/rate, active stage and hallmark progression, producer
-quantities, next costs, affordability, production contribution, and save status. Locked content
-states biological unlock conditions. Narrow layouts keep the readable order of colony action,
-progression, then full-width Store; reduced-motion users receive the same static state cue without
-requiring animation.
+## Responsive and motion contract
 
-## Persistence and replay seam
+The board holds three columns above 72rem, becomes arena plus progression with a full-width Store
+at intermediate widths, and becomes one readable sequence below 48rem: tumor arena, active
+evolution family, upgrade rack, then rewards. At a 360px viewport the direct action and every
+native control retain their accessible names and full keyboard operation; detail moves into the
+drawer and tooltips rather than being omitted.
 
-The controller clones its current store, routes each raw or typed input through `recordEvent`, and
-persists the accepted candidate. A successful storage result is required before reconciliation.
-Parser, reducer, clock, or storage failure preserves the displayed durable state and gives a narrow
-visible status. Recovery begins through the same validated persistence boundary.
+`prefers-reduced-motion: reduce` removes transitions and animation while retaining the same durable
+state, direct-cell focus route, board ordering, and static response cues. Responsive and
+reduced-motion behavior belong to production browser tests and rendered review, not to a second
+state model.
 
-The controller may attach an optional development accepted-event observer. It receives an event only
-after persistence and reconciliation are successful, and observer diagnostics cannot recast that
-successful player action as a failure. `src/state/replay.ts` owns recording and semantic replay; UI
-components do not own a replay format.
+## Verification ownership
 
-## Client and build contract
-
-| Boundary       | Current behavior                                                                                                          |
-| -------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| Browser client | SolidJS rendering, local typed intents, accessibility behavior, and browser storage through the state owner.              |
-| Static build   | `tools/build_solid.mjs` bundles `src/main.tsx` to `dist/main.js`; `build_github_pages.sh` remains the public build entry. |
-| Server         | None. The release has no router, loader, request, session, account, API route, or network data boundary.                  |
-
-`src/style.css` provides the base stylesheet. Named domain stylesheets are explicit `src/index.html`
-assets, allowlisted by the production build, and use stable semantic class names and CSS custom
-properties. Browser proof verifies linked stylesheets are present in `dist/`.
-
-## Test ownership
-
-Node/tsx tests own DOM-free controller, parsing, reducer, persistence, replay, and signal-isolation
-behavior. Production-dist Playwright owns transformed JSX, keyboard and pointer interaction, focus,
-accessibility, responsive layout, reduced motion, browser errors, and real storage lifecycle.
-`./check_codebase.sh` is the canonical aggregate TypeScript gate. Production build, browser capture,
-and visual inspection are separately named one-time acceptance evidence when a client change needs
-rendered review.
-
-## Risks and scope
-
-React-shaped prop snapshots, direct store mutation, and a second store would bypass fine-grained
-updates and the event funnel. The controller boundary and typed callbacks keep that risk visible.
-Adopting a server runtime would add deployment and serialization obligations; this static client
-does not own those obligations.
+Node and tsx tests cover controller, parser, reducer, persistence, replay, and presentation-state
+isolation. Production-dist Playwright covers transformed JSX, rendered-cell pointer behavior,
+keyboard parity, focus restoration, accessible names, responsive layout, reduced motion, and
+browser-local saves. `./check_codebase.sh` is the canonical aggregate TypeScript gate. Build and
+captured-board review are separate one-time evidence when visual work changes.

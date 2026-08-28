@@ -27,6 +27,7 @@ const COLONY_PROBE_REQUEST = {
   sceneSeed: 17,
   morphology: resolve_stage_morphology(17, "microcolony"),
   detail: "representative",
+  burdenTier: "dense",
 } as const;
 const RAW_COLONY_SILHOUETTE = {
   stageId: stageId("microcolony"),

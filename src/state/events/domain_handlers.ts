@@ -18,15 +18,10 @@ import { plasticityDefinition } from "../../hallmarks/plasticity_catalog.js";
 import { findLateProgramOption } from "../../hallmarks/program_catalog.js";
 import { removeRegionProjection } from "../region_projection.js";
 import { phenotypeEligibilityQuote } from "../../hallmarks/late_hallmark_effects.js";
-import {
-  canonicalOrganTags,
-  ORGAN_SITE_CATALOG,
-} from "../../prestige/seeding.js";
+import { canonicalOrganTags, ORGAN_SITE_CATALOG } from "../../prestige/seeding.js";
 import { LINEAGE_BOON_CATALOG } from "../../prestige/hosts.js";
 import type { LineageBoonApplication, LineageLedger } from "../../prestige/layers.js";
-import {
-  completeActiveCampaignWithRenewal,
-} from "../../prestige/network.js";
+import { completeActiveCampaignWithRenewal } from "../../prestige/network.js";
 import {
   cultureLateProgramInterfacesAvailable,
   cultureProtocolCooldownDeadline,
@@ -505,7 +500,10 @@ export function applyCoreSixEvent(state: GameState, event: GameEvent): GameState
 }
 
 /** Applies a trusted extended-hallmark projection without assigning a sequence number. */
-export function applyExtendedHallmarkEvent(state: GameState, event: GameEvent): GameState | undefined {
+export function applyExtendedHallmarkEvent(
+  state: GameState,
+  event: GameEvent,
+): GameState | undefined {
   const isExtendedHallmarkEvent =
     event.type === "convert-substrate" ||
     event.type === "set-region-mask" ||

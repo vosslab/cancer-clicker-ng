@@ -120,8 +120,8 @@ export function createColonySvgDefinitions(scene: ColonySceneRequest): ColonySvg
       ids.nucleusGradient,
       { x1: "20%", y1: "12%", x2: "80%", y2: "88%" },
       [
-        definitionNode("stop", { offset: "0%", stopColor: "#5d5276", stopOpacity: 0.98 }),
-        definitionNode("stop", { offset: "100%", stopColor: "#211e3c", stopOpacity: 1 }),
+        definitionNode("stop", { offset: "0%", stopColor: "#9664a2", stopOpacity: 0.98 }),
+        definitionNode("stop", { offset: "100%", stopColor: "#452859", stopOpacity: 1 }),
       ],
     ),
     definition("radialGradient", ids.hypoxiaGradient, { cx: "50%", cy: "50%", r: "60%" }, [

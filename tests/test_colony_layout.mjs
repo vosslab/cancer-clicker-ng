@@ -13,7 +13,13 @@ import {
 import { resolve_stage_morphology } from "../src/svg/morphology.ts";
 
 function request(stageId, seed = 17, detail = "representative") {
-  return { stageId, sceneSeed: seed, morphology: resolve_stage_morphology(seed, stageId), detail };
+  return {
+    stageId,
+    sceneSeed: seed,
+    morphology: resolve_stage_morphology(seed, stageId),
+    detail,
+    burdenTier: "dense",
+  };
 }
 
 function independentlyCollides(a, b) {
@@ -161,4 +167,6 @@ test("layout rejects invalid requests", () => {
   const good = request("transformed_cell");
   assert.throws(() => createColonyLayout({ ...good, sceneSeed: Number.NaN }));
   assert.throws(() => createColonyLayout({ ...good, stageId: "unknown-stage" }));
+  assert.throws(() => createColonyLayout({ ...good, burdenTier: undefined }));
+  assert.throws(() => createColonyLayout({ ...good, burdenTier: "unbounded" }));
 });

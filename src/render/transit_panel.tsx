@@ -3,57 +3,70 @@ import type { JSX } from "solid-js";
 
 import { transitPresentation } from "../prestige/presentation.js";
 import type { GameState } from "../types/state.js";
+import { PrestigeRouteProp } from "../svg/prestige_route_props.js";
+import { ActionTooltip } from "./action_tooltip.js";
 import type { GameController } from "./game_controller.js";
-import { ActionIcon } from "./action_icon.js";
 
 type TransitPanelProps = Readonly<{ game: GameState; controller: GameController }>;
 
-/** Keeps live transit choices beside the current stage rather than blending them into reset decisions. */
+/** A blood-route decision strip; typed controller dispatch remains the only transit mutation path. */
 export function TransitPanel(props: TransitPanelProps): JSX.Element {
   const transits = createMemo(() => transitPresentation(props.game));
   return (
     <Show when={transits().length > 0}>
-      <section class="panel transit-panel" aria-labelledby="transit-panel-title">
-        <div class="section-heading">
+      <section
+        class="panel transit-panel transit-route-board"
+        aria-labelledby="transit-panel-title"
+      >
+        <header class="transit-route-header">
+          <PrestigeRouteProp kind="transit" />
           <div>
-            <p class="eyebrow">Transit decisions</p>
-            <h2 id="transit-panel-title">Choose a compatible destination</h2>
+            <p class="eyebrow">Circulation</p>
+            <h2 id="transit-panel-title">Choose a landing</h2>
           </div>
-        </div>
-        <ul class="prestige-card-grid">
+          <span class="transit-route-count" aria-label="Pending circulating cells">
+            {transits().length}
+          </span>
+        </header>
+        <div class="transit-route-list">
           <For each={transits()}>
             {(transit) => (
-              <li>
-                <article class="prestige-card">
-                  <h3>
-                    <ActionIcon name="transit" />{" "}
-                    {transit.outcome === "arrived" ? "Arrived transit" : "Lost transit"}
-                  </h3>
-                  <p>
-                    {transit.outcome === "arrived"
-                      ? "Resolve this successful transit at one compatible organ site."
-                      : "This transit was lost; resolve it to clear the finished route event."}
-                  </p>
-                  <div class="prestige-card-grid" aria-label="Compatible destinations">
-                    <For each={transit.destinations}>
-                      {(destination) => (
-                        <button
-                          type="button"
-                          disabled={props.controller.recoveryBlocked()}
-                          onClick={() =>
-                            props.controller.resolveTransit(transit.eventId, destination.siteId)
-                          }
-                        >
-                          <ActionIcon name="transit" /> Resolve at {destination.title}
-                        </button>
-                      )}
-                    </For>
-                  </div>
-                </article>
-              </li>
+              <article
+                class="transit-route-event"
+                classList={{ "is-lost": transit.outcome === "lost" }}
+              >
+                <PrestigeRouteProp kind="transit" />
+                <span class="transit-route-status" role="status">
+                  {transit.outcome === "arrived" ? "Arrived" : "Lost"}
+                </span>
+                <div class="transit-destination-rack" aria-label="Compatible destinations">
+                  <For each={transit.destinations}>
+                    {(destination) => (
+                      <ActionTooltip
+                        label={"Resolve transit at " + destination.title}
+                        tooltip={
+                          transit.outcome === "arrived"
+                            ? "Seed this circulating cell at the compatible " +
+                              destination.title +
+                              " organ site."
+                            : "Resolve the lost transit to clear this finished route event."
+                        }
+                        class="transit-destination"
+                        disabled={props.controller.recoveryBlocked()}
+                        onClick={() =>
+                          props.controller.resolveTransit(transit.eventId, destination.siteId)
+                        }
+                      >
+                        <PrestigeRouteProp kind="organ" />
+                        <span>{destination.title}</span>
+                      </ActionTooltip>
+                    )}
+                  </For>
+                </div>
+              </article>
             )}
           </For>
-        </ul>
+        </div>
       </section>
     </Show>
   );

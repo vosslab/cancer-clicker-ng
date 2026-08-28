@@ -77,8 +77,8 @@ and scale ratio.
 **Decision.** The Chicago scale report is a compact Solid leaf above the live board only once the
 global-laboratory scale boundary makes it relevant. An available native button sends one typed
 controller intent; a reached report keeps the live cell count, modeled volume, Chicago high-rise
-ratio, and next network action in ordinary reading order beside a silent, editable lakefront-scale
-graphic.
+ratio, and next network action in an optional drawer aligned to the upgrade-rack lane beside a
+silent, editable lakefront-scale graphic.
 
 **Why.** The early transformed-cell board needs a clear direct-cell and Store loop. The city-scale
 analogy earns its space only after the relevant global-laboratory boundary, then provides a fast
@@ -91,8 +91,10 @@ viewBox, grouped lake, shoreline, grid, skyline, and signal geometry, no embedde
 `aria-hidden` because the adjacent report contains the semantic scale information. The
 controller routes `reachSoftEnding()` through parse/reduce/persist/reconcile; it exposes no UI
 state or DOM work. The presentation honors shared reduced motion and uses intrinsic responsive
-layout at 1280 x 800 and narrow widths. A newly accepted source sequence focuses the report
-heading once, then is consumed so later ticks preserve the player's chosen focus. Hiding the
+layout at 1280 x 800 and narrow widths. At the desktop target the drawer stays clear of the complete
+central tumor action surface, preserving direct-cell play while the report is open. A newly accepted
+source sequence focuses the report heading once, then is consumed so later ticks preserve the
+player's chosen focus. Hiding the
 reached report is local presentation state only; its mounted reopen control receives focus and
 the saved `SoftEndingState` stays unchanged. `NumberDisplay.unitPresentation` owns alternate
 scientific unit vocabulary without importing ending state.
@@ -510,21 +512,59 @@ test-only fixture files.
 
 ## Dependencies
 
+### Living progression and bounded tumor motion
+
+**Decision.** The center visual is one living progression scene. Desktop reading order is active
+evolution, dominant tumor arena, then upgrade rack; task and compact layouts put the direct tumor
+action first. The scene opens with one large transformed cell, grows through bounded non-regressive
+biomass tiers, and layers stage-owned hypoxia, necrosis, vascular maturation, invasion, and
+satellites on top. Local division feedback occurs only after an accepted durable action; newly
+accepted stages receive one transient presentation emphasis.
+
+**Why.** The incremental loop needs a biological object that visibly earns the player's attention
+and changes with progression. A bounded source-owned tier model keeps growing extent, density,
+lobulation, and negative space readable without treating arbitrary values as clinical measurement.
+The direct click must confirm a real accepted division rather than rewarding inert background input.
+
+**Consequence.** `src/svg/colony_visual_state.ts` owns the four magnitude tiers and
+`src/svg/colony_layout.ts` owns their bounded composition response. `src/svg/morphology.ts` and
+the visual catalog remain the authority for stage and hallmark grammar. `TumorArena` derives a
+pointer location only from rendered membrane or nucleus geometry, then emits division feedback only
+after the controller accepts the event. `StageTransitionEmphasis` is keyed presentation state, not
+durable biology. Tissue breathing, cycling, perfusion, invasion, and feedback use synchronized,
+bounded motion; generic full-arena scanner rings are retired. Reduced-motion rendering preserves
+the same static morphology, division result, and arrival state.
+
+**Owner.** `src/render/tumor_arena.tsx`, `src/svg/colony_visual_state.ts`,
+`src/svg/colony_layout.ts`, `src/svg/tumor_feedback.tsx`,
+`src/svg/stage_transition_emphasis.tsx`, `src/tumor_arena.css`,
+`docs/ART_DIRECTION.md`, and `docs/MORPHOLOGY_REFERENCE.md`
+
 ### Decorative biological action icons
 
-**Decision.** Action controls use a shared inline SVG catalog and one Solid renderer. Each glyph is
-decorative, fixed to a 24 by 24 viewBox, inherits its nearby control color, and appears beside the
-native text label rather than replacing it.
+**Decision.** The first-view interface is an SVG-first game canvas. Action controls use a shared
+inline SVG catalog and Solid renderers at micro, standard, feature, and spectacle sizes. Each glyph
+is decorative, inherits the control's visual state, and sits inside a native named action. Essential
+names, numbers, costs, and states may stay visible; deeper explanation belongs in focusable
+tooltips or the optional specimen drawer.
 
 **Why.** The living-tumor game needs quick recognition across producer, hallmark, progression,
-lineage, culture, network, transit, and scale-report actions. Text remains the accessible name and
-keeps a dense upgrade surface understandable for first-time and returning players.
+lineage, culture, network, transit, and scale-report actions. A visually dominant tumor and
+illustrated upgrade machinery create the immediate play invitation, while accessible names and
+progressive disclosure preserve the complete biological model without turning the board into a
+science poster.
 
 **Consequence.** `src/svg/icons.ts` owns editable geometry, while `src/render/action_icon.tsx`
-owns inline rendering. Components select a recognizable family mark only for meaningful action or
-status groups. The glyphs are `aria-hidden` and unfocusable, so keyboard order and native labels
-remain the interaction contract.
+owns the common 24 by 24 rendering path; domain SVG modules own larger tumor, machine, stage,
+culture, route, and reward illustrations. Components select a recognizable family mark for every
+meaningful action or status group. SVG remains hidden from the accessibility tree, so native HTML
+controls, accessible names, tooltip descriptions, focus restoration, and the specimen drawer own
+the interaction contract. The 1280 x 800 first view renders one shallow scoreboard, one dominant
+tumor arena, one active evolution family, one illustrated upgrade rack, and one compact reward
+strip.
 
-**Owner.** `src/svg/icons.ts`, `src/render/action_icon.tsx`, and `docs/ART_DIRECTION.md`
+**Owner.** `src/svg/`, `src/render/action_icon.tsx`, `src/render/game_ui_state.ts`,
+`src/render/action_tooltip.tsx`, `src/render/inspector_drawer.tsx`,
+`docs/ART_DIRECTION.md`, and `docs/active_plans/reports/game_visual_redesign.md`
 
 ## Generated artifacts

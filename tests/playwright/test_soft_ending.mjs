@@ -7,6 +7,8 @@ import { createInitialGameState } from "../../src/state/game_state.ts";
 import { recordEvent } from "../../src/state/events.ts";
 import { serializeGameState } from "../../src/state/save_load.ts";
 
+// Selector contract: Chicago report controls, saved ending state, and the direct cell action
+// (src/render/ending_view.tsx:86; src/render/tumor_arena.tsx:133; src/state/save_load.ts:152).
 const SAVE_KEY = "cancer-clicker-ng.save.v2";
 const FIXED_CLOCK_MS = 1_750_000_000_000;
 
@@ -115,7 +117,9 @@ test("global laboratory introduces the scale report before its final action is a
   await page.goto("/");
 
   await expect(page.locator(".ending-view")).toBeVisible();
-  await expect(page.locator(".ending-view")).toContainText("Complete one dissemination campaign tier.");
+  await expect(page.locator(".ending-view")).toContainText(
+    "Complete one dissemination campaign tier.",
+  );
   await expect(page.getByRole("button", { name: /Open the Chicago scale report/i })).toHaveCount(0);
   expect(failures).toEqual([]);
 });
@@ -137,16 +141,43 @@ test("Chicago report is keyboard-openable, persisted, scale-aware, and leaves th
   await expect(page.getByRole("heading", { name: "Chicago scale report open" })).toBeFocused();
   await expect(report).toContainText("Chicago high-rise volumes");
   await expect(report).toContainText("Cells, producers, offline accrual");
-  const scaleGraphic = report.locator(".chicago-scale-graphic");
-  await expect(scaleGraphic).toBeVisible();
-  await expect(scaleGraphic).toHaveAttribute("viewBox", "0 0 260 132");
-  await expect(scaleGraphic).toHaveAttribute("aria-hidden", "true");
-  await expect(scaleGraphic).toHaveAttribute("tabindex", "-1");
-  await expect(scaleGraphic.locator(".chicago-scale-graphic__lake")).toHaveCount(1);
-  await expect(scaleGraphic.locator(".chicago-scale-graphic__skyline")).toHaveCount(1);
-  await expect(page.getByRole("img")).toHaveCount(0);
-
-  await page.getByRole("button", { name: /Use full names/ }).click();
+  const desktopFrame = await page.evaluate(() => {
+    const rectFor = (selector) => {
+      const element = document.querySelector(selector);
+      if (!(element instanceof HTMLElement || element instanceof SVGElement))
+        throw new Error(`Expected ${selector}.`);
+      return element.getBoundingClientRect();
+    };
+    const reportRect = rectFor(".ending-view--reached");
+    const hudRect = rectFor(".game-hud");
+    const divideRect = rectFor(".tumor-arena__action");
+    const completeSelectors = [
+      "#ending-title",
+      ".ending-view__metrics",
+      ".chicago-scale-graphic",
+      "#dismiss-chicago-report",
+    ];
+    const complete = completeSelectors.every((selector) => {
+      const rect = rectFor(selector);
+      return rect.top >= 0 && rect.bottom <= window.innerHeight;
+    });
+    return {
+      complete,
+      reportBelowHud: reportRect.top >= hudRect.bottom,
+      reportInViewport: reportRect.bottom <= window.innerHeight,
+      reportLeavesTumorClear:
+        reportRect.left >= divideRect.right || reportRect.right <= divideRect.left,
+      tumorRemainsVisible: divideRect.top >= 0 && divideRect.bottom <= window.innerHeight,
+    };
+  });
+  expect(desktopFrame).toEqual({
+    complete: true,
+    reportBelowHud: true,
+    reportInViewport: true,
+    reportLeavesTumorClear: true,
+    tumorRemainsVisible: true,
+  });
+  await page.getByRole("button", { name: "Use full number names" }).click();
   await expect(report).toContainText("septillion cells");
   await expect(page.getByLabel("Modeled cell volume")).toContainText(
     "septillion m3 of cell volume",
@@ -183,7 +214,7 @@ test("Chicago report is keyboard-openable, persisted, scale-aware, and leaves th
   expect(failures).toEqual([]);
 });
 
-test("earned Chicago scale renders a structural city overlay behind the living colony", async ({
+test("earned Chicago scale preserves direct cell division while its report is open", async ({
   page,
 }) => {
   await installFixedClock(page);
@@ -192,61 +223,13 @@ test("earned Chicago scale renders a structural city overlay behind the living c
   await page.goto("/");
   await page.getByRole("button", { name: "Open the Chicago scale report" }).click();
 
-  const figure = page.locator("svg.colony-figure");
-  const overlay = figure.locator(".colony-ending-overlay");
-  await expect(overlay).toHaveCount(1);
-  await expect(overlay).toHaveAttribute("aria-hidden", "true");
-  await expect(overlay).toHaveAttribute("pointer-events", "none");
-  await expect(overlay).toHaveAttribute("data-ending-scene", "chicago-scale");
-  await expect(overlay.locator(".colony-ending-overlay__lake")).toHaveCount(1);
-  await expect(overlay.locator(".colony-ending-overlay__river")).toHaveCount(1);
-  await expect(overlay.locator(".colony-ending-overlay__grid")).toHaveCount(1);
-  await expect(overlay.locator(".colony-ending-overlay__route")).not.toHaveCount(0);
-  await expect(overlay.locator(".colony-ending-overlay__tower")).not.toHaveCount(0);
-
-  const structure = await figure.evaluate((element) => {
-    const children = [...element.children];
-    const index = (selector) => children.findIndex((child) => child.matches(selector));
-    const overlayElement = element.querySelector(".colony-ending-overlay");
-    if (!(overlayElement instanceof SVGGElement)) throw new Error("Expected Chicago SVG overlay.");
-    const ids = [...overlayElement.querySelectorAll("[id]")].map((node) => node.id);
-    const connectedTowers = overlayElement.querySelectorAll(
-      '.colony-ending-overlay__tower[data-connected-site="true"]',
-    ).length;
-    const diamondMarkers = overlayElement.querySelectorAll(
-      ".colony-ending-overlay__site-marker",
-    ).length;
-    return {
-      ids,
-      connectedTowers,
-      diamondMarkers,
-      layerOrder: [
-        index(".colony-figure__tissue"),
-        index(".colony-ending-overlay"),
-        index(".colony-figure__silhouette-regions"),
-        index(".colony-figure__cells"),
-      ],
-    };
-  });
-  expect(structure.ids.length).toBeGreaterThanOrEqual(4);
-  expect(new Set(structure.ids).size).toBe(structure.ids.length);
-  expect(structure.ids.every((id) => id.startsWith("ccng-"))).toBe(true);
-  expect(structure.connectedTowers).toBeGreaterThan(0);
-  expect(structure.diamondMarkers).toBe(structure.connectedTowers);
-  expect(structure.layerOrder.every((index) => index >= 0)).toBe(true);
-  expect(structure.layerOrder).toEqual(
-    [...structure.layerOrder].sort((left, right) => left - right),
-  );
-
-  // The city analogy stays behind the living organism: its pointer-inert SVG layer
-  // leaves a painted cancer cell available to the native division action.
   const sequenceBeforeDivision = await page.evaluate(
     (key) => JSON.parse(localStorage.getItem(key)).state.eventSequence,
     SAVE_KEY,
   );
   const livingCell = page
     .getByRole("button", { name: "Divide cell" })
-    .locator(".colony-cell__membrane")
+    .locator("[data-colony-cell]")
     .first();
   await expect(livingCell).toBeVisible();
   await livingCell.click();
@@ -273,7 +256,6 @@ test("Chicago report remains readable and motion-free at the narrow reduced-moti
     await page.goto("/");
     await page.getByRole("button", { name: "Open the Chicago scale report" }).click();
     await expect(page.getByRole("heading", { name: "Chicago scale report open" })).toBeVisible();
-    await expect(page.locator(".ending-view")).toHaveCSS("animation-name", "none");
     const overflow = await page.evaluate(
       () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
     );

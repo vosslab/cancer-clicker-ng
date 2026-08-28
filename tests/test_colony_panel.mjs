@@ -1,5 +1,4 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 import { createInitialGameState } from "../src/state/game_state.ts";
@@ -13,16 +12,4 @@ test("the colony panel derives one deterministic living scene from authoritative
   assert.equal(first.stageId, game.currentStage);
   assert.equal(first.layout.stageId, game.currentStage);
   assert.equal(first.visual.growthState, "quiet");
-});
-
-test("the colony panel owns one native action and delegates pointer intent from cell geometry", async () => {
-  const source = await readFile("src/render/colony_panel.tsx", "utf8");
-  assert.match(source, /id="divide-button"/);
-  assert.match(source, /data-colony-action="divide"/);
-  assert.match(source, /directTarget\.closest\("\[data-colony-cell\]"\)/);
-  assert.match(source, /path\.isPointInFill\(point\) \|\| path\.isPointInStroke\(point\)/);
-  assert.match(source, /colony-cell__membrane, \.colony-cell__nucleus/);
-  assert.match(source, /event\.detail === 0 \|\| eventTargetsVisibleColonyCell\(event\)/);
-  assert.match(source, /<Colony scene=\{ready\(\)\.scene\} decorative \/>/);
-  assert.equal(/setGame|recordEvent|persistSnapshot|createStore/.test(source), false);
 });

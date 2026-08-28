@@ -76,18 +76,24 @@ with one durable game state.
 ### SolidJS controller and surfaces
 
 - [src/main.tsx](../src/main.tsx) mounts [src/render/app.tsx](../src/render/app.tsx) into the
-  static page. `App` assembles the 16:10 three-rail board and keeps narrow UI-only state local.
+  static page. `App` assembles the 16:10 game canvas: shallow scoreboard HUD, dominant tumor arena,
+  one active evolution family, illustrated upgrade rack, compact reward dock, and optional
+  specimen drawer.
+- [src/render/game_ui_state.ts](../src/render/game_ui_state.ts) owns only ephemeral selection,
+  inspector, focus-restoration, and feedback state. Durable biology and economy state remains in
+  `GameState`.
 - [src/render/game_controller.ts](../src/render/game_controller.ts) is the UI mutation boundary.
   It parses and reduces an intent, persists the accepted snapshot, reconciles the Solid store, and
   then optionally notifies a development observer. A failed persistence attempt leaves the
   rendered durable state unchanged.
-- [src/render/](../src/render/) contains read-oriented panels and typed callbacks for the colony,
-  stage, hallmarks, producer store, transit, prestige, culture, network, offline report, and soft
-  ending. New interactions belong in the nearest domain panel and call a controller method rather
-  than editing the store.
-- [src/style.css](../src/style.css), [src/prestige.css](../src/prestige.css), and
-  [src/ending.css](../src/ending.css) contain the authored visual presentation copied into the
-  production artifact. They use semantic class hooks supplied by render and SVG components.
+- [src/render/](../src/render/) contains the board composition, read-oriented domain surfaces,
+  focusable tooltips, and typed callbacks for the tumor, stage, hallmarks, upgrade rack, transit,
+  prestige, culture, network, offline report, and soft ending. New interactions belong in the
+  nearest domain surface and call a controller method rather than editing the store.
+- [src/style.css](../src/style.css) owns shared tokens and controls. The board and tumor geometry
+  live in [src/game_ui.css](../src/game_ui.css) and
+  [src/tumor_arena.css](../src/tumor_arena.css); evolution, rack, culture/network, prestige/route,
+  and ending layers have focused companion stylesheets copied into the production artifact.
 
 ### Inline SVG visual system
 

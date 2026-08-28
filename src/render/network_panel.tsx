@@ -3,19 +3,26 @@ import type { JSX } from "solid-js";
 
 import { AUTHORED_NETWORK_EDGE_CATALOG } from "../prestige/network.js";
 import { networkPresentation } from "../prestige/culture_network_presentation.js";
+import { CultureNetworkProp } from "../svg/culture_network_props.js";
 import type { DisseminationMandateId, NetworkNodeId } from "../types/ids.js";
 import type { GameState } from "../types/state.js";
+import { HelpTooltip } from "./action_tooltip.js";
 import type { ApplyResult, GameController } from "./game_controller.js";
-import { ActionIcon } from "./action_icon.js";
 
 type NetworkPanelProps = Readonly<{ game: GameState; controller: GameController }>;
 type Confirmation =
   | Readonly<{ kind: "mandate"; mandateId: DisseminationMandateId; title: string; summary: string }>
   | Readonly<{ kind: "containment"; nodeId: NetworkNodeId; title: string; summary: string }>;
+type ActionStatus = Readonly<{ tone: "success" | "failure"; message: string }>;
 
-/** A topology read surface: campaign records stay reducer-owned and alternatives retire on confirmation. */
+function compactSiteName(label: string): string {
+  return label.split(" ")[0] ?? label;
+}
+
+/** A compact contamination world; topology records and credits remain domain-owned. */
 export function NetworkPanel(props: NetworkPanelProps): JSX.Element {
   const [pending, setPending] = createSignal<Confirmation>();
+  const [actionStatus, setActionStatus] = createSignal<ActionStatus>();
   const presentation = createMemo(() => networkPresentation(props.game));
   let dialog: HTMLDialogElement | undefined;
   let origin: HTMLElement | undefined;
@@ -25,9 +32,8 @@ export function NetworkPanel(props: NetworkPanelProps): JSX.Element {
     if (pending() && !dialog.open) dialog.showModal();
     if (!pending() && dialog.open) dialog.close();
   });
-  onCleanup(() => {
-    if (dialog?.open) dialog.close();
-  });
+  onCleanup(() => dialog?.open && dialog.close());
+
   function open(next: Confirmation, event: MouseEvent): void {
     if (props.controller.recoveryBlocked()) return;
     origin = event.currentTarget instanceof HTMLElement ? event.currentTarget : undefined;
@@ -52,68 +58,179 @@ export function NetworkPanel(props: NetworkPanelProps): JSX.Element {
       queueMicrotask(() => document.getElementById("network-summary")?.focus());
     }
   }
+  function announceAction(result: ApplyResult, success: string, failure: string): void {
+    if (result.ok) {
+      setActionStatus({ tone: "success", message: success });
+      return;
+    }
+    setActionStatus({
+      tone: "failure",
+      message: `${failure} ${props.controller.saveError() ?? "Try the action again."}`,
+    });
+  }
 
-  function nodeAction(nodeId: NetworkNodeId, established: boolean, stable: boolean): void {
-    if (!established) props.controller.establishDisseminationNode(nodeId);
-    else if (!stable) props.controller.stabilizeNetworkNode(nodeId);
-    else props.controller.collectTransmissionPressure(nodeId);
+  function nodeAction(
+    nodeId: NetworkNodeId,
+    label: string,
+    established: boolean,
+    stable: boolean,
+  ): void {
+    if (!established) {
+      announceAction(
+        props.controller.establishDisseminationNode(nodeId),
+        `${label} established.`,
+        `${label} was not established.`,
+      );
+    } else if (!stable) {
+      announceAction(
+        props.controller.stabilizeNetworkNode(nodeId),
+        `${label} stabilized.`,
+        `${label} was not stabilized.`,
+      );
+    } else {
+      announceAction(
+        props.controller.collectTransmissionPressure(nodeId),
+        `Pressure collected from ${label}.`,
+        `Pressure was not collected from ${label}.`,
+      );
+    }
+  }
+
+  function edgeAction(edgeId: (typeof AUTHORED_NETWORK_EDGE_CATALOG)[number]["id"]): void {
+    announceAction(
+      props.controller.commitDisseminationEdge(edgeId),
+      "Topology link committed.",
+      "Topology link was not committed.",
+    );
   }
 
   return (
     <section class="panel culture-network-panel network-panel" aria-labelledby="network-title">
-      <div class="section-heading">
-        <div>
-          <p class="eyebrow">Local dissemination topology</p>
-          <h2 id="network-title">Contamination network</h2>
+      <div class="culture-network-board">
+        <div class="culture-network-board__topline">
+          <h2 id="network-title">Network</h2>
+          <CultureNetworkProp
+            kind="containment"
+            state={presentation().available ? "ready" : "locked"}
+          />
         </div>
-        <p id="network-summary" class="section-note" tabindex="-1">
-          Tier {presentation().globalTier}; Pressure {presentation().pressure}
+        <p id="network-summary" class="culture-network-board__status" tabindex="-1">
+          <span>tier {presentation().globalTier}</span>
+          <span>pressure {presentation().pressure}</span>
         </p>
-      </div>
-      <fieldset class="hallmark-fieldset culture-network-fieldset">
-        <legend>Authored node map</legend>
-        <p>
-          Each node changes local throughput and detection. Stabilize a node, then collect its one
-          durable Pressure credit.
-        </p>
-        <ul class="culture-network-card-grid">
+        <Show when={actionStatus()}>
+          {(status) => (
+            <p
+              class="culture-network-action-status"
+              data-tone={status().tone}
+              role="status"
+              aria-live="polite"
+            >
+              {status().message}
+            </p>
+          )}
+        </Show>
+        <ul class="culture-network-map" aria-label="Contamination node map">
           <For each={presentation().nodes}>
             {(node) => (
               <li>
-                <article class="culture-network-card">
-                  <h3>
-                    <ActionIcon name="network_node" /> {node.label}
-                  </h3>
-                  <p>
-                    Throughput ×{node.throughput.toFixed(2)}; detection{" "}
-                    {node.detection >= 0 ? "+" : ""}
-                    {node.detection.toFixed(2)}.
-                  </p>
-                  <p>{node.stable ? "Stable" : node.established ? "Established" : "Unmapped"}.</p>
-                  <Show when={node.credit !== null}>
-                    <p>
-                      Pressure credit {node.credit}. {node.creditDetail}
-                    </p>
-                  </Show>
-                  <button
-                    type="button"
-                    disabled={
-                      props.controller.recoveryBlocked() ||
-                      !presentation().available ||
-                      !node.actionAvailable
-                    }
-                    onClick={() => nodeAction(node.id, node.established, node.stable)}
-                  >
-                    <ActionIcon name="network_node" />{" "}
-                    {node.stable
-                      ? "Collect Pressure"
-                      : node.established
-                        ? "Stabilize node"
-                        : "Establish node"}
-                  </button>
-                  <Show when={node.stable}>
+                <HelpTooltip
+                  tooltip={`Throughput x${node.throughput.toFixed(2)}; detection ${node.detection >= 0 ? "+" : ""}${node.detection.toFixed(2)}. ${node.stable ? "Stable." : node.established ? "Established." : "Unmapped."}${node.creditDetail ? ` Pressure credit ${node.credit}. ${node.creditDetail}` : ""}`}
+                >
+                  {(tooltip) => (
                     <button
+                      {...tooltip}
+                      class="culture-network-action"
                       type="button"
+                      disabled={
+                        props.controller.recoveryBlocked() ||
+                        !presentation().available ||
+                        !node.actionAvailable
+                      }
+                      onClick={() => nodeAction(node.id, node.label, node.established, node.stable)}
+                    >
+                      <CultureNetworkProp
+                        kind="site"
+                        state={node.stable ? "active" : node.established ? "ready" : "locked"}
+                      />
+                      <span class="culture-network-action__copy">
+                        <span class="culture-network-action__name">
+                          {compactSiteName(node.label)}
+                        </span>
+                        <span class="culture-network-action__count">
+                          {node.stable
+                            ? `+${node.credit ?? 0}`
+                            : node.established
+                              ? "stabilize"
+                              : "establish"}
+                        </span>
+                      </span>
+                    </button>
+                  )}
+                </HelpTooltip>
+              </li>
+            )}
+          </For>
+        </ul>
+        <ul class="culture-network-compact-list" aria-label="Topology links">
+          <For each={AUTHORED_NETWORK_EDGE_CATALOG}>
+            {(edge) => {
+              const committed = (): boolean =>
+                props.game.network.edges.some(
+                  (item) => item.id === edge.id && item.status === "committed",
+                );
+              const endpointsEstablished = (): boolean =>
+                props.game.network.nodes.some((node) => node.id === edge.fromNodeId) &&
+                props.game.network.nodes.some((node) => node.id === edge.toNodeId);
+              return (
+                <li>
+                  <HelpTooltip
+                    tooltip={`${edge.fromNodeId} to ${edge.toNodeId}. Commit only after both endpoints are established.`}
+                  >
+                    {(tooltip) => (
+                      <button
+                        {...tooltip}
+                        class="culture-network-action"
+                        type="button"
+                        disabled={
+                          props.controller.recoveryBlocked() ||
+                          !presentation().available ||
+                          committed() ||
+                          !endpointsEstablished()
+                        }
+                        onClick={() => edgeAction(edge.id)}
+                      >
+                        <CultureNetworkProp
+                          kind="route"
+                          state={
+                            committed() ? "active" : endpointsEstablished() ? "ready" : "locked"
+                          }
+                        />
+                        <span class="culture-network-action__copy">
+                          <span class="culture-network-action__name">link</span>
+                          <span class="culture-network-action__count">
+                            {committed() ? "committed" : "commit"}
+                          </span>
+                        </span>
+                      </button>
+                    )}
+                  </HelpTooltip>
+                </li>
+              );
+            }}
+          </For>
+          <For each={presentation().nodes.filter((node) => node.stable)}>
+            {(node) => (
+              <li>
+                <HelpTooltip
+                  tooltip={`Contain ${node.label}. ${presentation().containment.effect}`}
+                >
+                  {(tooltip) => (
+                    <button
+                      {...tooltip}
+                      class="culture-network-action"
+                      type="button"
+                      aria-pressed={presentation().containment.selected === node.label}
                       disabled={props.controller.recoveryBlocked() || !presentation().available}
                       onClick={(event) =>
                         open(
@@ -127,152 +244,97 @@ export function NetworkPanel(props: NetworkPanelProps): JSX.Element {
                         )
                       }
                     >
-                      <ActionIcon name="containment" /> Select containment
+                      <CultureNetworkProp
+                        kind="containment"
+                        state={
+                          presentation().containment.selected === node.label ? "selected" : "ready"
+                        }
+                      />
+                      <span class="culture-network-action__copy">
+                        <span class="culture-network-action__name">
+                          contain {compactSiteName(node.label)}
+                        </span>
+                        <span class="culture-network-action__count">
+                          {presentation().containment.selected === node.label
+                            ? "selected"
+                            : "select"}
+                        </span>
+                      </span>
                     </button>
-                  </Show>
-                </article>
+                  )}
+                </HelpTooltip>
               </li>
             )}
           </For>
         </ul>
-        <p class="culture-network-readout">
-          Containment: {presentation().containment.selected ?? "none"}.{" "}
-          {presentation().containment.effect}
-        </p>
-      </fieldset>
-      <fieldset class="hallmark-fieldset culture-network-fieldset">
-        <legend>Topology links</legend>
-        <ul class="culture-network-link-list">
-          <For each={AUTHORED_NETWORK_EDGE_CATALOG}>
-            {(edge) => {
-              const committed = (): boolean =>
-                props.game.network.edges.some(
-                  (item) => item.id === edge.id && item.status === "committed",
-                );
-              const endpointsEstablished = (): boolean =>
-                props.game.network.nodes.some((node) => node.id === edge.fromNodeId) &&
-                props.game.network.nodes.some((node) => node.id === edge.toNodeId);
-              return (
-                <li>
-                  <span>
-                    {edge.fromNodeId} → {edge.toNodeId}
-                  </span>
-                  <button
-                    type="button"
-                    disabled={
-                      props.controller.recoveryBlocked() ||
-                      !presentation().available ||
-                      committed() ||
-                      !endpointsEstablished()
-                    }
-                    onClick={() => props.controller.commitDisseminationEdge(edge.id)}
-                  >
-                    <ActionIcon name="network_edge" /> {committed() ? "Committed" : "Commit edge"}
-                  </button>
-                </li>
-              );
-            }}
-          </For>
-        </ul>
-      </fieldset>
-      <Show when={presentation().activeCampaign}>
-        {(campaign) => (
-          <fieldset class="hallmark-fieldset culture-network-fieldset">
-            <legend>Active {campaign().category} campaign</legend>
-            <p>{campaign().progress}</p>
-            <p>{campaign().effects}</p>
-            <p class="culture-network-readout">
-              Retired alternatives: {campaign().retiredAlternatives}.
+        <Show when={presentation().activeCampaign}>
+          {(campaign) => (
+            <p class="culture-network-board__status">
+              <span>{campaign().category}</span>
+              <span>{campaign().progress}</span>
             </p>
-            <ul class="culture-network-link-list">
-              <For
-                each={props.game.network.nodes.filter(
-                  (node) =>
-                    node.campaignId === props.game.network.activeCampaign?.mandate.campaignId,
-                )}
-              >
-                {(node) => (
-                  <li>
-                    <span>
-                      {node.id}: {node.status}
-                    </span>
-                    <button
-                      type="button"
-                      disabled={props.controller.recoveryBlocked() || node.status !== "established"}
-                      onClick={() => props.controller.stabilizeNetworkNode(node.id)}
-                    >
-                      <ActionIcon name="network_node" /> Stabilize campaign node
-                    </button>
-                  </li>
-                )}
-              </For>
-              <For
-                each={props.game.network.edges.filter(
-                  (edge) =>
-                    edge.campaignId === props.game.network.activeCampaign?.mandate.campaignId &&
-                    edge.status === "retired",
-                )}
-              >
-                {(edge) => (
-                  <li>
-                    <span>
-                      {edge.fromNodeId} → {edge.toNodeId}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => props.controller.commitDisseminationEdge(edge.id)}
-                    >
-                      <ActionIcon name="network_edge" /> Commit campaign edge
-                    </button>
-                  </li>
-                )}
-              </For>
-            </ul>
-          </fieldset>
-        )}
-      </Show>
-      <Show when={presentation().frontier}>
-        {(frontier) => (
-          <fieldset class="hallmark-fieldset culture-network-fieldset">
-            <legend>Renewable campaign frontier</legend>
-            <p>
-              Choose one deliberate route. The remaining Deepen, Widen, and Reroute alternatives
-              retire from this saved frontier.
-            </p>
-            <ul class="culture-network-card-grid">
+          )}
+        </Show>
+        <Show when={presentation().frontier}>
+          {(frontier) => (
+            <ul class="culture-network-compact-list" aria-label="Renewable campaign frontier">
               <For each={frontier()}>
                 {(mandate) => (
                   <li>
-                    <article class="culture-network-card">
-                      <h3>
-                        <ActionIcon name="campaign" /> {mandate.category}
-                      </h3>
-                      <p>{mandate.effects}</p>
-                      <button
-                        type="button"
-                        disabled={props.controller.recoveryBlocked() || !presentation().available}
-                        onClick={(event) =>
-                          open(
-                            {
-                              kind: "mandate",
-                              mandateId: mandate.id,
-                              title: "Choose dissemination mandate",
-                              summary: `Choose ${mandate.category}. This starts its campaign and retires the two alternatives in the saved frontier.`,
-                            },
-                            event,
-                          )
-                        }
-                      >
-                        <ActionIcon name="campaign" /> Choose {mandate.category}
-                      </button>
-                    </article>
+                    <HelpTooltip
+                      tooltip={`${mandate.effects} Choosing this route starts its campaign and retires the two alternatives in the saved frontier.`}
+                    >
+                      {(tooltip) => (
+                        <button
+                          {...tooltip}
+                          class="culture-network-action"
+                          type="button"
+                          disabled={props.controller.recoveryBlocked() || !presentation().available}
+                          onClick={(event) =>
+                            open(
+                              {
+                                kind: "mandate",
+                                mandateId: mandate.id,
+                                title: "Choose dissemination mandate",
+                                summary: `Choose ${mandate.category}. This starts its campaign and retires the two alternatives in the saved frontier.`,
+                              },
+                              event,
+                            )
+                          }
+                        >
+                          <CultureNetworkProp kind="mandate" state="ready" />
+                          <span class="culture-network-action__copy">
+                            <span class="culture-network-action__name">{mandate.category}</span>
+                            <span class="culture-network-action__count">route</span>
+                          </span>
+                        </button>
+                      )}
+                    </HelpTooltip>
                   </li>
                 )}
               </For>
             </ul>
-          </fieldset>
-        )}
-      </Show>
+          )}
+        </Show>
+        <details>
+          <summary>Specimen notes</summary>
+          <p>
+            Each node changes local throughput and detection. Stabilize a node, then collect its one
+            durable Pressure credit.
+          </p>
+          <p>
+            Containment: {presentation().containment.selected ?? "none"}.{" "}
+            {presentation().containment.effect}
+          </p>
+          <Show when={presentation().activeCampaign}>
+            {(campaign) => (
+              <p>
+                {campaign().effects} Retired alternatives: {campaign().retiredAlternatives}.
+              </p>
+            )}
+          </Show>
+        </details>
+      </div>
       <dialog
         ref={(element) => {
           dialog = element;
@@ -292,12 +354,12 @@ export function NetworkPanel(props: NetworkPanelProps): JSX.Element {
               <Show when={props.controller.saveError()}>
                 <p role="alert">{props.controller.saveError()}</p>
               </Show>
-              <form method="dialog">
+              <form method="dialog" class="culture-network-dialog__actions">
                 <button type="button" onClick={cancel}>
                   Cancel
                 </button>
                 <button type="button" onClick={confirm}>
-                  <ActionIcon name="campaign" /> Confirm {action().title}
+                  <CultureNetworkProp kind="mandate" state="ready" /> Confirm
                 </button>
               </form>
             </>

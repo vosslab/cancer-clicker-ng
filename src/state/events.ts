@@ -53,9 +53,7 @@ import {
   type NetworkNodeState,
 } from "../prestige/network.js";
 import { deriveSeedV1 } from "./deterministic_random.js";
-import {
-  cultureLateProgramInterfacesAvailable,
-} from "../prestige/culture_effects.js";
+import { cultureLateProgramInterfacesAvailable } from "../prestige/culture_effects.js";
 import { networkNodeCreditQuote } from "../prestige/network_effects.js";
 import { softEndingEligibility } from "../ending/trigger.js";
 

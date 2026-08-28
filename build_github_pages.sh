@@ -10,13 +10,13 @@
 #   - Type-checks via 'tsc --noEmit -p tsconfig.json'.
 #   - Resolves the entry: src/main.tsx preferred, src/main.ts legacy fallback.
 #     Aborts with an actionable error if neither exists.
-#   - Verifies src/index.html, src/style.css, src/prestige.css, and src/ending.css exist before copying;
+#   - Verifies source HTML and named game stylesheets exist before copying;
 #     aborts with an actionable error if missing.
 #   - Verifies src/index.html references dist/main.js with a module script
 #     tag (warns if missing -- the page will load but main.js is dead).
 #   - Bundles the entry into dist/main.js with esbuild (ESM, es2020,
 #     browser, minified, with sourcemap).
-#   - Copies src/index.html, src/style.css, src/prestige.css, and src/ending.css into dist/.
+#   - Copies src/index.html and named game stylesheets into dist/.
 #   - Writes dist/.nojekyll so GitHub Pages serves files starting with _.
 #   - Asserts dist/index.html and dist/main.js exist before exiting.
 #
@@ -41,7 +41,19 @@ else
 fi
 
 # Verify required static assets before any destructive step.
-for required in src/index.html src/style.css src/prestige.css src/ending.css; do
+STATIC_STYLES=(
+	"style.css"
+	"game_ui.css"
+	"tumor_arena.css"
+	"evolution_dock.css"
+	"upgrade_rack.css"
+	"prestige.css"
+	"culture_network_ui.css"
+	"prestige_route_ui.css"
+	"ending.css"
+)
+
+for required in src/index.html "${STATIC_STYLES[@]/#/src/}"; do
 	if [ ! -f "$required" ]; then
 		echo "ERROR: required source file missing: $required" >&2
 		case "$required" in
@@ -51,6 +63,8 @@ for required in src/index.html src/style.css src/prestige.css src/ending.css; do
 				echo "  Create src/style.css (empty file is fine)." >&2 ;;
 			src/prestige.css)
 				echo "  Create src/prestige.css for the prestige and transit presentation layer." >&2 ;;
+			src/game_ui.css)
+				echo "  Create src/game_ui.css for the shared game-canvas composition." >&2 ;;
 			src/ending.css)
 				echo "  Create src/ending.css for the Chicago scale report presentation layer." >&2 ;;
 		esac
@@ -73,14 +87,15 @@ npx tsc --noEmit -p tsconfig.json
 node tools/build_solid.mjs "$ENTRY"
 
 cp src/index.html dist/index.html
-cp src/style.css dist/style.css
-cp src/prestige.css dist/prestige.css
-cp src/ending.css dist/ending.css
+for stylesheet in "${STATIC_STYLES[@]}"; do
+	cp "src/$stylesheet" "dist/$stylesheet"
+done
 touch dist/.nojekyll
 
 test -f dist/index.html
 test -f dist/main.js
-test -f dist/prestige.css
-test -f dist/ending.css
+for stylesheet in "${STATIC_STYLES[@]}"; do
+	test -f "dist/$stylesheet"
+done
 
 echo "Built dist/ (GitHub Pages-ready)."

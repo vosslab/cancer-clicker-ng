@@ -25,13 +25,26 @@ graphify-out/                 Generated repository-navigation map
 
 - [src/main.tsx](../src/main.tsx) mounts the SolidJS application.
 - [src/index.html](../src/index.html) is the static page shell and stylesheet entry point.
-- [src/render/app.tsx](../src/render/app.tsx) composes the game board and startup lifecycle.
+- [src/render/app.tsx](../src/render/app.tsx) composes the visual-first game board and startup
+  lifecycle.
+- [src/render/game_hud.tsx](../src/render/game_hud.tsx),
+  [src/render/game_board.tsx](../src/render/game_board.tsx), and
+  [src/render/game_reward_dock.tsx](../src/render/game_reward_dock.tsx) own the scoreboard, main
+  16:10 composition, and compact feedback strip.
+- [src/render/tumor_arena.tsx](../src/render/tumor_arena.tsx),
+  [src/render/evolution_dock.tsx](../src/render/evolution_dock.tsx), and
+  [src/render/producers_panel.tsx](../src/render/producers_panel.tsx) own the direct-cell board,
+  single active decision family, and illustrated upgrade rack.
+- [src/render/action_tooltip.tsx](../src/render/action_tooltip.tsx) and
+  [src/render/inspector_drawer.tsx](../src/render/inspector_drawer.tsx) own progressive disclosure
+  and focus restoration; [src/render/game_ui_state.ts](../src/render/game_ui_state.ts) owns their
+  ephemeral UI state.
 - [src/render/game_controller.ts](../src/render/game_controller.ts) adapts UI intent to the
   framework-free state domain and browser persistence.
 - [src/render/](../src/render/) holds focused view components. Add a panel here when it owns a
   visible region of the board and expresses typed intent through the controller.
-- [src/style.css](../src/style.css) owns shared board styles;
-  [src/prestige.css](../src/prestige.css) and [src/ending.css](../src/ending.css) own the related
+- [src/style.css](../src/style.css) owns shared tokens and controls. Focused CSS files own the game
+  canvas, tumor arena, evolution dock, upgrade rack, culture/network, prestige/route, and ending
   presentation layers.
 - [src/content/](../src/content/) holds reusable player-facing content that is independent of a
   particular component layout.
@@ -69,6 +82,12 @@ graphify-out/                 Generated repository-navigation map
   and [src/svg/ending_overlay.tsx](../src/svg/ending_overlay.tsx) own focused visual layers.
 - [src/svg/defs.ts](../src/svg/defs.ts) holds reusable definitions; [src/svg/icons.ts](../src/svg/icons.ts)
   is the source location for small action and status icons.
+- [src/svg/producer_machines.tsx](../src/svg/producer_machines.tsx),
+  [src/svg/evolution_sigils.tsx](../src/svg/evolution_sigils.tsx),
+  [src/svg/culture_network_props.tsx](../src/svg/culture_network_props.tsx), and
+  [src/svg/prestige_route_props.tsx](../src/svg/prestige_route_props.tsx) own the larger editable
+  game-prop families. [src/svg/tumor_feedback.tsx](../src/svg/tumor_feedback.tsx) owns direct-cell
+  action feedback geometry.
 
 ## Tests and tools
 
