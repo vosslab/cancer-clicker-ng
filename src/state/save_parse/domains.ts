@@ -1,17 +1,17 @@
 import { eventId, offerId, regionId, routeId, stageId, mutationId } from "../../brands.js";
+import {
+  findM11MutationCard,
+  M11_MUTATION_OFFER_CARD_COUNT,
+  M11_MUTATION_POOL_ID,
+} from "../../hallmarks/m11_catalog.js";
+import type { SaveNotice } from "../../types/save.js";
 import type { GameState } from "../../types/state.js";
-import { isStageId } from "../catalog.js";
-import { array, exact, fraction, identifier, ids, natural, nonnegative, unique } from "./guards.js";
-
-export type ParseNotice = {
-  code: "field-defaulted" | "storage-error" | "save-rejected";
-  field: string;
-  message: string;
-};
+import { isImmediateStageTransition, isStageId } from "../catalog.js";
+import { array, exact, fraction, identifier, ids, natural, unique } from "./guards.js";
 
 export function parseRegions(
   value: unknown,
-  notices: ParseNotice[],
+  notices: SaveNotice[],
 ): GameState["regions"] | undefined {
   const values = array(value);
   if (!values) return undefined;
@@ -28,7 +28,7 @@ export function parseRegions(
         "senescenceEventId",
       ]) ||
       !identifier(item.id) ||
-      !nonnegative(item.capacity) ||
+      !natural(item.capacity) ||
       !fraction(item.viability) ||
       !["proliferative", "migratory", "stress-tolerant"].includes(String(item.phenotype))
     )
@@ -66,24 +66,84 @@ export function parseOffers(value: unknown): GameState["mutationOffers"] | undef
   const result: GameState["mutationOffers"][number][] = [];
   for (const item of values) {
     if (
-      !exact(item, ["id", "poolId", "mutationIds", "sourceSeed", "sourceSequence"]) ||
+      !exact(item, [
+        "id",
+        "poolId",
+        "cards",
+        "sourceSeed",
+        "sourceSequence",
+        "sourceStage",
+        "threshold",
+      ]) ||
       !identifier(item.id) ||
-      !identifier(item.poolId) ||
+      item.poolId !== M11_MUTATION_POOL_ID ||
       !natural(item.sourceSeed) ||
-      !natural(item.sourceSequence)
+      !natural(item.sourceSequence) ||
+      !identifier(item.sourceStage) ||
+      !isStageId(item.sourceStage) ||
+      !natural(item.threshold) ||
+      item.threshold < 1
     )
       return undefined;
-    const mutationIds = ids(item.mutationIds, mutationId);
-    if (!mutationIds || mutationIds.length === 0) return undefined;
+    const cardsValue = array(item.cards);
+    if (!cardsValue || cardsValue.length !== M11_MUTATION_OFFER_CARD_COUNT) return undefined;
+    const cards = cardsValue.map(parseMutationCard);
+    const [first, second, third] = cards;
+    if (
+      !first ||
+      !second ||
+      !third ||
+      new Set(cards.map((card) => card?.id)).size !== M11_MUTATION_OFFER_CARD_COUNT
+    )
+      return undefined;
     result.push({
       id: offerId(item.id),
-      poolId: item.poolId,
-      mutationIds,
+      poolId: M11_MUTATION_POOL_ID,
+      cards: [first, second, third],
       sourceSeed: item.sourceSeed,
       sourceSequence: item.sourceSequence,
+      sourceStage: stageId(item.sourceStage),
+      threshold: item.threshold,
     });
   }
   return unique(result.map((item) => item.id)) ? result : undefined;
+}
+
+function parseMutationCard(value: unknown): ReturnType<typeof findM11MutationCard> | undefined {
+  if (
+    !exact(value, ["id", "displayName", "benefit", "liability", "genomeBurden", "effects"]) ||
+    !identifier(value.id) ||
+    !natural(value.genomeBurden) ||
+    !exact(value.benefit, ["label", "effect"]) ||
+    !exact(value.liability, ["label", "effect"]) ||
+    !exact(value.effects, [
+      "producerMultiplier",
+      "producerCostMultiplier",
+      "conversionYieldMultiplier",
+      "maskTokenCost",
+      "routeDiscoveryBonus",
+      "damagePressure",
+      "immunePressure",
+    ]) ||
+    !identifier(value.benefit.label) ||
+    !identifier(value.benefit.effect) ||
+    !identifier(value.liability.label) ||
+    !identifier(value.liability.effect)
+  )
+    return undefined;
+  const expected = findM11MutationCard(mutationId(value.id));
+  if (
+    expected === undefined ||
+    expected.displayName !== value.displayName ||
+    expected.benefit.label !== value.benefit.label ||
+    expected.benefit.effect !== value.benefit.effect ||
+    expected.liability.label !== value.liability.label ||
+    expected.liability.effect !== value.liability.effect ||
+    expected.genomeBurden !== value.genomeBurden ||
+    JSON.stringify(expected.effects) !== JSON.stringify(value.effects)
+  )
+    return undefined;
+  return expected;
 }
 export function parseTransition(value: unknown): GameState["lastStageTransition"] | undefined {
   if (
@@ -92,6 +152,7 @@ export function parseTransition(value: unknown): GameState["lastStageTransition"
     !identifier(value.to) ||
     !isStageId(value.from) ||
     !isStageId(value.to) ||
+    !isImmediateStageTransition(stageId(value.from), stageId(value.to)) ||
     !natural(value.atMs)
   )
     return undefined;

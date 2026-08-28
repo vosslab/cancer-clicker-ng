@@ -16,7 +16,12 @@ import type {
   SenescenceAction,
   SignalingAllocation,
   TriageAction,
+  PendingProgression,
+  TrackedResourceSnapshot,
 } from "./state.js";
+import type { PurchaseQuantity } from "../economy/costs.js";
+import type { CanonicalBigNumDto } from "../hallmarks/m11_types.js";
+import type { AtpSinkId } from "../hallmarks/m11_types.js";
 
 export type ClickDivideEvent = Readonly<{
   type: "click-divide";
@@ -26,7 +31,7 @@ export type ClickDivideEvent = Readonly<{
 export type PurchaseProducerEvent = Readonly<{
   type: "purchase-producer";
   producerId: ProducerId;
-  quantity: number;
+  quantity: PurchaseQuantity;
   atMs: number;
 }>;
 
@@ -49,6 +54,8 @@ export type ApplyOfflineAccrualEvent = Readonly<{
   type: "apply-offline-accrual";
   elapsedMs: number;
   atMs: number;
+  resourceSnapshot: TrackedResourceSnapshot;
+  newlyObservedProgression: readonly PendingProgression[];
 }>;
 
 export type SetNumberFormatEvent = Readonly<{
@@ -73,6 +80,20 @@ export type ResolveTriageEvent = Readonly<{
   action: TriageAction;
   atMs: number;
 }>;
+export type SpendTelomeraseEvent =
+  | Readonly<{
+      type: "spend-telomerase";
+      target: "refill-region";
+      regionId: RegionId;
+      charges: number;
+      atMs: number;
+    }>
+  | Readonly<{
+      type: "spend-telomerase";
+      target: "bank-reserve-floor";
+      charges: number;
+      atMs: number;
+    }>;
 export type SetVesselLinkEvent = Readonly<{
   type: "set-vessel-link";
   regionId: RegionId;
@@ -87,8 +108,24 @@ export type CommitRouteEvent = Readonly<{
 }>;
 export type SetAtpBudgetEvent = Readonly<{
   type: "set-atp-budget";
-  sink: string;
+  sink: AtpSinkId;
   amount: number;
+  atMs: number;
+}>;
+export type ConvertSubstrateEvent = Readonly<{
+  type: "convert-substrate";
+  amount: CanonicalBigNumDto;
+  atMs: number;
+}>;
+export type SetRegionMaskEvent = Readonly<{
+  type: "set-region-mask";
+  regionId: RegionId;
+  masked: boolean;
+  atMs: number;
+}>;
+export type ActivateInflammationEvent = Readonly<{
+  type: "activate-inflammation";
+  regionId: RegionId;
   atMs: number;
 }>;
 export type SelectMutationEvent = Readonly<{
@@ -135,9 +172,13 @@ export type GameEvent =
   | SetSignalingAllocationEvent
   | SelectCheckpointEvent
   | ResolveTriageEvent
+  | SpendTelomeraseEvent
   | SetVesselLinkEvent
   | CommitRouteEvent
   | SetAtpBudgetEvent
+  | ConvertSubstrateEvent
+  | SetRegionMaskEvent
+  | ActivateInflammationEvent
   | SelectMutationEvent
   | SwitchPhenotypeEvent
   | EditProgramEvent
@@ -156,9 +197,13 @@ export const EVENT_TYPES = [
   "set-signaling-allocation",
   "select-checkpoint",
   "resolve-triage",
+  "spend-telomerase",
   "set-vessel-link",
   "commit-route",
   "set-atp-budget",
+  "convert-substrate",
+  "set-region-mask",
+  "activate-inflammation",
   "select-mutation",
   "switch-phenotype",
   "edit-program",

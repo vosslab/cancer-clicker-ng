@@ -1,5 +1,6 @@
 import { bigNum, stageId } from "../brands.js";
 import type { GameState } from "../types/state.js";
+import { STAGE_ONE_PRODUCERS } from "../economy/producers.js";
 
 /** Creates the one canonical state shape; mechanics fill these durable fields in later milestones. */
 export function createInitialGameState(): GameState {
@@ -7,10 +8,12 @@ export function createInitialGameState(): GameState {
     cells: bigNum(0, 0),
     substrate: bigNum(0, 0),
     atp: bigNum(0, 0),
-    producerLevels: [],
+    producerLevels: STAGE_ONE_PRODUCERS.map((producer) => ({ id: producer.id, level: 0 })),
     hallmarkLevels: [],
     currentStage: stageId("transformed_cell"),
     stageStartedAtMs: 0,
+    activeTimeMs: 0,
+    pendingProgression: [],
     stageProgress: 0,
     stageGateProgress: {},
     oxygenPressure: 0,

@@ -1,7 +1,11 @@
 import { bigNum } from "../../brands.js";
+import { MAX_PENDING_PROGRESSION } from "../../types/state.js";
 import type { BigNum } from "../../types/bignum.js";
+import type { SerializedGameState } from "../../types/save.js";
+import type { GameState } from "../../types/state.js";
 
-export const MAX_COLLECTION = 256;
+/** Shared durable queue/work bound. Other generic collections inherit this repository limit. */
+export const MAX_COLLECTION = MAX_PENDING_PROGRESSION;
 const RESERVED = new Set(["__proto__", "prototype", "constructor"]);
 
 export function object(value: unknown): value is Record<string, unknown> {
@@ -96,7 +100,8 @@ export function numberValue(value: unknown): BigNum | undefined {
 export function serial(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(serial);
   if (object(value)) {
-    const result: Record<string, unknown> = Object.create(null) as Record<string, unknown>;
+    const result: Record<string, unknown> = {};
+    Object.setPrototypeOf(result, null);
     for (const [key, item] of Object.entries(value)) {
       if (!identifier(key)) throw new Error("Unsafe state key.");
       result[key] = serial(item);
@@ -104,4 +109,15 @@ export function serial(value: unknown): unknown {
     return result;
   }
   return value;
+}
+
+/** Typed current-state serializer for the durable p4 writer boundary. */
+export function serialGameState(state: GameState): SerializedGameState {
+  const result: Record<string, unknown> = {};
+  Object.setPrototypeOf(result, null);
+  for (const [key, item] of Object.entries(state)) {
+    if (!identifier(key)) throw new Error("Unsafe state key.");
+    result[key] = serial(item);
+  }
+  return result;
 }

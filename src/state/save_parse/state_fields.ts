@@ -1,9 +1,8 @@
 import { hallmarkId, microbiomePoolId, offerId, programOptionId } from "../../brands.js";
+import type { SaveNotice } from "../../types/save.js";
 import type { GameState } from "../../types/state.js";
 import { isHallmarkId } from "../catalog.js";
 import { exact, identifier, ids, natural, object } from "./guards.js";
-
-export type FieldNotice = { code: string; field: string; message: string };
 
 export function parsePrograms(value: unknown): GameState["programs"] | undefined {
   if (
@@ -47,7 +46,7 @@ export function parsePrograms(value: unknown): GameState["programs"] | undefined
 
 export function parseMicrobiome(
   value: unknown,
-  notices: FieldNotice[],
+  notices: SaveNotice[],
 ): GameState["microbiome"] | undefined {
   if (
     !exact(value, [

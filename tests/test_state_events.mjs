@@ -4,19 +4,22 @@ import test from "node:test";
 import {
   eventId,
   hallmarkId,
-  mutationId,
   offerId,
   producerId,
   programOptionId,
   regionId,
   routeId,
   stageId,
+  bigNum,
 } from "../src/brands.ts";
+import { createInitialGameState } from "../src/state/game_state.ts";
 import { EVENT_TYPES } from "../src/types/events.ts";
 import { STAGE_IDS, nextStageId } from "../src/state/catalog.ts";
 import { recordEvent } from "../src/state/events.ts";
+import { createMutationOffer } from "../src/hallmarks/mutation_offer_generator.ts";
 import { parseSave, serializeGameState } from "../src/state/save_load.ts";
 import { CONTRACT_SLICE_LABELS } from "../tools/contract_slices.ts";
+import { stageGateFixture } from "./stage_fixture.mjs";
 
 const fixtureUrl = new URL("./fixtures/m4_populated_v2.json", import.meta.url);
 const expectedTypes = [
@@ -30,9 +33,13 @@ const expectedTypes = [
   "set-signaling-allocation",
   "select-checkpoint",
   "resolve-triage",
+  "spend-telomerase",
   "set-vessel-link",
   "commit-route",
   "set-atp-budget",
+  "convert-substrate",
+  "set-region-mask",
+  "activate-inflammation",
   "select-mutation",
   "switch-phenotype",
   "edit-program",
@@ -56,7 +63,7 @@ function valid(state, event, verify) {
   assert.deepEqual(state, before, event.type);
   assert.equal(after.eventSequence, state.eventSequence + 1, event.type);
   verify(after, state);
-  const reread = parseSave(serializeGameState(after, 500, 2));
+  const reread = parseSave(serializeGameState(after, 500));
   assert.equal(reread.status, "loaded", event.type);
   assert.deepEqual(reread.state, after, event.type);
   assert.deepEqual(reread.notices, [], event.type);
@@ -92,7 +99,7 @@ function routeCascadeState() {
       },
     ],
     committedCellCommitments: { route: 2, shared: 7 },
-    routeRiskById: { route: 1, shared: 3 },
+    routeRiskById: { route: 1, shared: 0.3 },
     pendingTransitEvents: [
       { id: eventId("transit"), routeId: routeId("route"), outcome: "arrived" },
       { id: eventId("shared-transit"), routeId: shared, outcome: "lost" },
@@ -114,13 +121,35 @@ function microbiomeState() {
   };
 }
 
+function m11MutationState() {
+  const state = baseState();
+  const { lastStageTransition: _previousTransition, ...withoutPreviousTransition } = state;
+  const currentStage = stageId("angiogenic_primary");
+  const source = {
+    deterministicSeed: state.deterministicSeed,
+    eventSequence: state.eventSequence,
+    currentStage,
+    genomeBurden: 0,
+  };
+  return {
+    ...withoutPreviousTransition,
+    currentStage,
+    activeTimeMs: 10,
+    atp: bigNum(1, 0),
+    atpSinks: ["mutation-drafting"],
+    atpBudget: { "mutation-drafting": 25 },
+    hallmarkLevels: [{ id: hallmarkId("genome_instability_mutation"), level: 1 }],
+    mutationOffers: [createMutationOffer(source)],
+  };
+}
+
 function stageState(currentStage, prestigeAvailability = baseState().prestigeAvailability) {
   return { ...baseState(), currentStage: stageId(currentStage), prestigeAvailability };
 }
 
-test("GameEvent runtime inventory has all 18 unique expected discriminants", () => {
-  assert.equal(EVENT_TYPES.length, 18);
-  assert.equal(new Set(EVENT_TYPES).size, 18);
+test("GameEvent runtime inventory has all 22 unique expected discriminants", () => {
+  assert.equal(EVENT_TYPES.length, 22);
+  assert.equal(new Set(EVENT_TYPES).size, 22);
   assert.deepEqual([...EVENT_TYPES], expectedTypes);
 });
 
@@ -128,16 +157,12 @@ test("stage events follow every canonical immediate successor and retain exact s
   for (const fromStage of STAGE_IDS) {
     const toStage = nextStageId(stageId(fromStage));
     if (toStage === undefined) continue;
-    const prestigeAvailability =
-      fromStage === "host_collapse"
-        ? [{ id: "L3", status: "earned" }]
-        : baseState().prestigeAvailability;
     valid(
-      stageState(fromStage, prestigeAvailability),
-      { type: "advance-stage", fromStageId: stageId(fromStage), toStageId: toStage, atMs: 10 },
+      stageGateFixture(toStage),
+      { type: "advance-stage", fromStageId: stageId(fromStage), toStageId: toStage, atMs: 110 },
       (after) => {
         assert.equal(after.currentStage, toStage);
-        assert.deepEqual(after.lastStageTransition, { from: fromStage, to: toStage, atMs: 10 });
+        assert.deepEqual(after.lastStageTransition, { from: fromStage, to: toStage, atMs: 110 });
       },
     );
   }
@@ -195,38 +220,42 @@ test("every M4 event has payload-sensitive valid behavior and an atomic invalid 
   invalid(baseState(), { type: "click-divide", atMs: -1 });
 
   valid(
-    baseState(),
-    { type: "purchase-producer", producerId: producerId("producer"), quantity: 2, atMs: 10 },
-    (after) => assert.equal(after.producerLevels[0]?.level, 4),
+    { ...createInitialGameState(), cells: bigNum(1_000, 0) },
+    { type: "purchase-producer", producerId: producerId("producer"), quantity: 1, atMs: 10 },
+    (after) => assert.equal(after.producerLevels[0]?.level, 1),
   );
+  invalid(
+    { ...createInitialGameState(), cells: bigNum(1_000, 0) },
+    {
+      type: "purchase-producer",
+      producerId: producerId("producer"),
+      quantity: 0,
+      atMs: 10,
+    },
+  );
+
+  // M10 freezes each core-six acquisition at its catalog-owned first level.
   invalid(baseState(), {
-    type: "purchase-producer",
-    producerId: producerId("producer"),
-    quantity: 0,
+    type: "purchase-hallmark",
+    hallmarkId: hallmarkId("proliferative_signaling"),
     atMs: 10,
   });
-
-  valid(
-    baseState(),
-    { type: "purchase-hallmark", hallmarkId: hallmarkId("proliferative_signaling"), atMs: 10 },
-    (after) => assert.equal(after.hallmarkLevels[0]?.level, 4),
-  );
   invalid(baseState(), { type: "purchase-hallmark", hallmarkId: hallmarkId("missing"), atMs: 10 });
 
   valid(
-    baseState(),
+    stageGateFixture("avascular_lesion"),
     {
       type: "advance-stage",
       fromStageId: stageId("microcolony"),
       toStageId: stageId("avascular_lesion"),
-      atMs: 10,
+      atMs: 110,
     },
     (after) => {
       assert.equal(after.currentStage, "avascular_lesion");
       assert.deepEqual(after.lastStageTransition, {
         from: "microcolony",
         to: "avascular_lesion",
-        atMs: 10,
+        atMs: 110,
       });
     },
   );
@@ -242,58 +271,74 @@ test("every M4 event has payload-sensitive valid behavior and an atomic invalid 
 
   valid(
     baseState(),
-    { type: "apply-offline-accrual", elapsedMs: 11, atMs: 10 },
+    {
+      type: "apply-offline-accrual",
+      elapsedMs: 11,
+      atMs: 2,
+      resourceSnapshot: {
+        cells: baseState().cells,
+        substrate: baseState().substrate,
+        atp: baseState().atp,
+      },
+      newlyObservedProgression: [],
+    },
     (after, before) => {
       assert.equal(after.totalOfflineMs, before.totalOfflineMs + 11);
     },
   );
   valid(
     baseState(),
-    { type: "apply-offline-accrual", elapsedMs: 17, atMs: 10 },
+    {
+      type: "apply-offline-accrual",
+      elapsedMs: 17,
+      atMs: 2,
+      resourceSnapshot: {
+        cells: baseState().cells,
+        substrate: baseState().substrate,
+        atp: baseState().atp,
+      },
+      newlyObservedProgression: [],
+    },
     (after, before) => {
       assert.equal(after.totalOfflineMs, before.totalOfflineMs + 17);
     },
   );
-  invalid(baseState(), { type: "apply-offline-accrual", elapsedMs: -1, atMs: 10 });
+  invalid(baseState(), {
+    type: "apply-offline-accrual",
+    elapsedMs: -1,
+    atMs: 2,
+    resourceSnapshot: {
+      cells: baseState().cells,
+      substrate: baseState().substrate,
+      atp: baseState().atp,
+    },
+    newlyObservedProgression: [],
+  });
 
   valid(baseState(), { type: "set-number-format", numberFormat: "short", atMs: 10 }, (after) => {
     assert.equal(after.numberFormat, "short");
   });
   invalid(baseState(), { type: "set-number-format", numberFormat: "bad", atMs: 10 });
 
-  valid(
-    baseState(),
-    { type: "set-vessel-link", regionId: regionId("r"), linked: true, atMs: 10 },
-    (after) => {
-      assert.deepEqual(after.regions[0]?.vesselLinkIds, ["vessel", "vessel:r"]);
-    },
-  );
-  valid(
-    baseState(),
-    { type: "set-signaling-allocation", allocation: "burst", atMs: 10 },
-    (after) => {
-      assert.equal(after.signalingAllocation, "burst");
-    },
-  );
+  // M10 routes core actions through catalog-gated handlers; base M4 state is intentionally locked.
+  invalid(baseState(), {
+    type: "set-vessel-link",
+    regionId: regionId("r"),
+    linked: true,
+    atMs: 10,
+  });
+  invalid(baseState(), { type: "set-signaling-allocation", allocation: "burst", atMs: 10 });
   invalid(baseState(), { type: "set-signaling-allocation", allocation: "bad", atMs: 10 });
 
-  valid(
-    baseState(),
-    { type: "select-checkpoint", checkpoint: "contact-inhibition", atMs: 10 },
-    (after) => {
-      assert.ok(after.bypassedCheckpoints.includes("contact-inhibition"));
-    },
-  );
+  invalid(baseState(), { type: "select-checkpoint", checkpoint: "contact-inhibition", atMs: 10 });
   invalid(baseState(), { type: "select-checkpoint", checkpoint: "bad", atMs: 10 });
 
-  valid(
-    baseState(),
-    { type: "resolve-triage", eventId: eventId("damage"), action: "repair", atMs: 10 },
-    (after) => {
-      assert.equal(after.pendingDamageEvents.length, 0);
-      assert.equal(after.regions[0]?.viability, 1);
-    },
-  );
+  invalid(baseState(), {
+    type: "resolve-triage",
+    eventId: eventId("damage"),
+    action: "repair",
+    atMs: 10,
+  });
   invalid(baseState(), {
     type: "resolve-triage",
     eventId: eventId("damage"),
@@ -301,13 +346,12 @@ test("every M4 event has payload-sensitive valid behavior and an atomic invalid 
     atMs: 10,
   });
 
-  valid(
-    baseState(),
-    { type: "set-vessel-link", regionId: regionId("r"), linked: false, atMs: 10 },
-    (after) => {
-      assert.deepEqual(after.regions[0]?.vesselLinkIds, []);
-    },
-  );
+  invalid(baseState(), {
+    type: "set-vessel-link",
+    regionId: regionId("r"),
+    linked: false,
+    atMs: 10,
+  });
   invalid(baseState(), {
     type: "set-vessel-link",
     regionId: regionId("r"),
@@ -315,48 +359,44 @@ test("every M4 event has payload-sensitive valid behavior and an atomic invalid 
     atMs: 10,
   });
 
-  valid(
-    baseState(),
-    { type: "commit-route", routeId: routeId("route"), cells: 9, atMs: 10 },
-    (after) => {
-      assert.equal(after.committedCellCommitments.route, 9);
-    },
-  );
-  valid(
-    baseState(),
-    { type: "commit-route", routeId: routeId("route"), cells: 13, atMs: 10 },
-    (after) => {
-      assert.equal(after.committedCellCommitments.route, 13);
-    },
-  );
+  invalid(baseState(), { type: "commit-route", routeId: routeId("route"), cells: 9, atMs: 10 });
+  invalid(baseState(), { type: "commit-route", routeId: routeId("route"), cells: 13, atMs: 10 });
   invalid(baseState(), { type: "commit-route", routeId: routeId("route"), cells: 0, atMs: 10 });
 
-  valid(baseState(), { type: "set-atp-budget", sink: "repair", amount: 9, atMs: 10 }, (after) => {
-    assert.equal(after.atpBudget.repair, 9);
-    assert.ok(after.atpSinks.includes("repair"));
-  });
-  valid(baseState(), { type: "set-atp-budget", sink: "repair", amount: 12, atMs: 10 }, (after) => {
-    assert.equal(after.atpBudget.repair, 12);
-  });
-  invalid(baseState(), { type: "set-atp-budget", sink: "__proto__", amount: 9, atMs: 10 });
-
   valid(
     baseState(),
+    { type: "set-atp-budget", sink: "acceleration", amount: 9, atMs: 2 },
+    (after) => {
+      assert.equal(after.atpBudget.acceleration, 9);
+      assert.ok(after.atpSinks.includes("acceleration"));
+    },
+  );
+  valid(
+    baseState(),
+    { type: "set-atp-budget", sink: "acceleration", amount: 12, atMs: 2 },
+    (after) => {
+      assert.equal(after.atpBudget.acceleration, 12);
+    },
+  );
+  invalid(baseState(), { type: "set-atp-budget", sink: "__proto__", amount: 9, atMs: 2 });
+
+  valid(
+    m11MutationState(),
     {
       type: "select-mutation",
-      offerId: offerId("mutation-offer"),
-      mutationId: mutationId("mutation"),
+      offerId: m11MutationState().mutationOffers[0].id,
+      mutationId: m11MutationState().mutationOffers[0].cards[0].id,
       atMs: 10,
     },
     (after) => {
       assert.equal(after.mutationOffers.length, 0);
-      assert.ok(after.chosenMutations.includes(mutationId("mutation")));
+      assert.ok(after.chosenMutations.includes(m11MutationState().mutationOffers[0].cards[0].id));
     },
   );
-  invalid(baseState(), {
+  invalid(m11MutationState(), {
     type: "select-mutation",
     offerId: offerId("missing"),
-    mutationId: mutationId("mutation"),
+    mutationId: m11MutationState().mutationOffers[0].cards[0].id,
     atMs: 10,
   });
 
@@ -432,32 +472,12 @@ test("every M4 event has payload-sensitive valid behavior and an atomic invalid 
 });
 
 test("destructive actions cascade every region relation and microbiome selection is bounded", () => {
-  valid(
-    routeCascadeState(),
-    { type: "resolve-triage", eventId: eventId("damage"), action: "lose-region", atMs: 10 },
-    (after) => {
-      assert.deepEqual(
-        after.regions.map((region) => region.id),
-        ["survivor"],
-      );
-      assert.deepEqual(after.seededSites, []);
-      assert.deepEqual(after.maskedRegions, []);
-      assert.deepEqual(after.senescentRegions, []);
-      assert.deepEqual(after.pendingDamageEvents, []);
-      assert.deepEqual(after.inflammationEpisodes, []);
-      assert.deepEqual(after.clearanceQueue, []);
-      assert.deepEqual(after.telomereReserveByRegion, {});
-      assert.deepEqual(after.immuneVisibilityByRegion, {});
-      assert.deepEqual(after.regionalInflammation, {});
-      assert.deepEqual(after.phenotypeCooldowns, {});
-      assert.deepEqual(after.regionalModifiers, {});
-      assert.deepEqual(after.committedCellCommitments, { shared: 7 });
-      assert.deepEqual(after.routeRiskById, { shared: 3 });
-      assert.deepEqual(after.pendingTransitEvents, [
-        { id: "shared-transit", routeId: "shared", outcome: "lost" },
-      ]);
-    },
-  );
+  invalid(routeCascadeState(), {
+    type: "resolve-triage",
+    eventId: eventId("damage"),
+    action: "lose-region",
+    atMs: 10,
+  });
 
   valid(
     routeCascadeState(),
@@ -470,7 +490,7 @@ test("destructive actions cascade every region relation and microbiome selection
       assert.deepEqual(after.seededSites, []);
       assert.deepEqual(after.clearanceQueue, []);
       assert.deepEqual(after.committedCellCommitments, { shared: 7 });
-      assert.deepEqual(after.routeRiskById, { shared: 3 });
+      assert.deepEqual(after.routeRiskById, { shared: 0.3 });
       assert.deepEqual(after.pendingTransitEvents, [
         { id: "shared-transit", routeId: "shared", outcome: "lost" },
       ]);
@@ -489,7 +509,7 @@ test("destructive actions cascade every region relation and microbiome selection
   });
   assert.deepEqual(selected.microbiome.selectedNiches, ["niche-a", "niche-b"]);
   assert.deepEqual(selected.microbiome.compatibilitySnapshot, ["niche-a", "niche-b"]);
-  assert.equal(parseSave(serializeGameState(selected, 500, 2)).status, "loaded");
+  assert.equal(parseSave(serializeGameState(selected, 500)).status, "loaded");
   invalid(selected, { type: "select-microbiome", offerId: offerId("niche-c"), atMs: 12 });
   invalid(selected, { type: "select-microbiome", offerId: offerId("niche-a"), atMs: 12 });
 });
@@ -536,4 +556,76 @@ test("contract slices import and assert the deliberate pre-M13 prestige boundary
     "60000",
     "set number format full",
   ]);
+});
+
+test("M5 offline accrual parser and reducer reject hostile atomic payload variants", () => {
+  const state = baseState();
+  const snapshot = { cells: state.cells, substrate: state.substrate, atp: state.atp };
+  const event = {
+    type: "apply-offline-accrual",
+    elapsedMs: 1,
+    atMs: state.activeTimeMs,
+    resourceSnapshot: snapshot,
+    newlyObservedProgression: [],
+  };
+  const duplicateState = {
+    ...state,
+    pendingProgression: [
+      { kind: "stage", id: stageId("microcolony"), firstObservedAtActiveMs: state.activeTimeMs },
+    ],
+  };
+  const cases = [
+    [state, { ...event, extra: true }, "event extra key"],
+    [state, { ...event, atMs: state.activeTimeMs - 1 }, "stale atMs"],
+    [state, { ...event, elapsedMs: -1 }, "negative elapsed"],
+    [
+      state,
+      { ...event, resourceSnapshot: { cells: state.cells, substrate: state.substrate } },
+      "missing tuple key",
+    ],
+    [
+      state,
+      { ...event, resourceSnapshot: { ...snapshot, lactate: state.cells } },
+      "extra tuple key",
+    ],
+    [
+      state,
+      { ...event, resourceSnapshot: { ...snapshot, atp: { mantissa: 20, exponent: 1 } } },
+      "noncanonical tuple",
+    ],
+    [
+      state,
+      {
+        ...event,
+        newlyObservedProgression: [
+          { kind: "stage", id: "missing", firstObservedAtActiveMs: state.activeTimeMs },
+        ],
+      },
+      "unknown progression",
+    ],
+    [
+      state,
+      {
+        ...event,
+        newlyObservedProgression: [
+          { kind: "stage", id: "microcolony", firstObservedAtActiveMs: state.activeTimeMs },
+          { kind: "stage", id: "microcolony", firstObservedAtActiveMs: state.activeTimeMs },
+        ],
+      },
+      "duplicate additions",
+    ],
+    [
+      duplicateState,
+      {
+        ...event,
+        newlyObservedProgression: [
+          { kind: "stage", id: "microcolony", firstObservedAtActiveMs: state.activeTimeMs },
+        ],
+      },
+      "already queued",
+    ],
+  ];
+  for (const [before, raw, label] of cases) invalidRaw(before, raw, label);
+  const overflow = { ...state, totalOfflineMs: Number.MAX_SAFE_INTEGER };
+  invalidRaw(overflow, event, "offline total overflow");
 });

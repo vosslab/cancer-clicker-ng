@@ -66,10 +66,11 @@ proves them against five compile-only vertical slices; the freeze is its own mil
 M3 through M7 have used them for real.
 
 Rejected alternative: `break_infinity.js` as a dependency. It would save the numbers lane, but
-the repo has zero runtime dependencies today, and the Egg, Inc. naming requirement means a custom
-formatter has to be written regardless. Owning a small `{mantissa, exponent}` type keeps
-dependency count at zero and puts the naming table beside the arithmetic. Cites **Long-term over
-short-term** and **Design for adaptability** from `docs/REPO_STYLE.md`.
+the repo has no runtime math dependency, and the Egg, Inc. naming requirement means a custom
+formatter has to be written regardless. Owning a small `{mantissa, exponent}` type keeps math
+dependency-free and puts the naming table beside the arithmetic. SolidJS is separately approved
+as the sole UI runtime in `docs/SOLID_MODEL.md`. Cites **Long-term over short-term**
+and **Design for adaptability** from `docs/REPO_STYLE.md`.
 
 Second deliberate trade: hallmark effects and prestige layers are **data plus typed handlers**,
 never hardcoded branches in the tick loop. Adding hallmark 15 is a table entry plus one handler.
@@ -84,7 +85,7 @@ Cites **Design for adaptability** and **Atomic task decomposition**.
 
 ## Scope
 
-- Author all game source under `src/`, entry `src/main.ts`, styles in `src/style.css`, markup in
+- Author all game source under `src/`, entry `src/main.tsx` from M7, styles in `src/style.css`, markup in
   `src/index.html` (the three paths `build_github_pages.sh` requires).
 - Build a custom `BigNum` whose operation set is derived from the economy's actual needs, plus an
   Egg, Inc.-style formatter with Conway-Wechsler illion names and a display toggle.
@@ -107,7 +108,8 @@ Cites **Design for adaptability** and **Atomic task decomposition**.
 
 ## Non-goals
 
-- Add any runtime npm dependency. Dev dependencies stay as shipped.
+- Add runtime npm dependencies other than the approved client-only `solid-js` UI runtime and its
+  required build integration. Dev dependencies otherwise stay as shipped.
 - Build a backend, accounts, cloud saves, leaderboards, or analytics.
 - Build monetization of any kind: no ads, no microtransactions, no timers-for-money.
 - Add quizzes, graded assessment, or explicit teaching panels. This is not a trainer;
@@ -224,19 +226,19 @@ src/
 
 ### Mapping (milestones / workstreams -> components / patches)
 
-| Milestone / Workstream | Component | Review boundary |
-| --- | --- | --- |
-| A0 Contracts | `src/types/*` | `typescript-engineer` designs; frozen at M8, not M1 |
-| A Numbers | `src/bignum/*` | unit-tested in isolation; imports nothing from `src/` |
-| B State and persistence | `src/state/*` | sole owner of `localStorage` |
-| C Economy | `src/economy/*` | pure functions over state; no DOM |
-| D Hallmarks and stages | `src/hallmarks/*`, `src/stages/*` | data plus handlers; no DOM |
-| E Prestige and ending | `src/prestige/*`, `src/ending/*` | only module allowed to wipe state |
-| F UI shell and render | `src/render/*`, `src/index.html`, `src/style.css` | only DOM owner |
-| G Art | `src/svg/*` | pure producers; no state reads |
-| H Content and tone | `src/content/*` | strings only; guarded by an automated lint |
-| I Test and balance | `tests/**`, `output_balance/` | never edits `src/` |
-| J Design artifacts | `docs/*` | writes the four gating documents |
+| Milestone / Workstream  | Component                                                             | Review boundary                                       |
+| ----------------------- | --------------------------------------------------------------------- | ----------------------------------------------------- |
+| A0 Contracts            | `src/types/*`                                                         | `typescript-engineer` designs; frozen at M8, not M1   |
+| A Numbers               | `src/bignum/*`                                                        | unit-tested in isolation; imports nothing from `src/` |
+| B State and persistence | `src/state/*`                                                         | sole owner of `localStorage`                          |
+| C Economy               | `src/economy/*`                                                       | pure functions over state; no DOM                     |
+| D Hallmarks and stages  | `src/hallmarks/*`, `src/stages/*`                                     | data plus handlers; no DOM                            |
+| E Prestige and ending   | `src/prestige/*`, `src/ending/*`                                      | only module allowed to wipe state                     |
+| F UI shell and render   | `src/main.tsx`, `src/render/*.tsx`, `src/index.html`, `src/style.css` | only DOM owner                                        |
+| G Art                   | `src/svg/*`                                                           | pure producers; no state reads                        |
+| H Content and tone      | `src/content/*`                                                       | strings only; guarded by an automated lint            |
+| I Test and balance      | `tests/**`, `output_balance/`                                         | never edits `src/`                                    |
+| J Design artifacts      | `docs/*`                                                              | writes the four gating documents                      |
 
 Ownership rule on every dispatch: an agent edits only its own column. A cross-module type need
 pauses the agent, routes to `typescript-engineer`, and resumes after the stub lands.
@@ -245,30 +247,30 @@ pauses the agent, routes to `typescript-engineer`, and resumes after the stub la
 
 Twenty-two milestones. Each reaches green independently. No milestone waits on a human.
 
-| M | Title | Summary | Goal |
-| --- | --- | --- | --- |
-| M1 | Contracts and slice probe | Types plus five compile-only vertical slices | Contracts exist and are provisionally sufficient |
-| M2 | Progression design | `docs/PROGRESSION_DESIGN.md` for all 14 hallmarks | Distinctness specified before anything depends on it |
-| M3 | Numbers | BigNum over a derived operation set, illion names | Economy math proven, not just formatting |
-| M4 | State and persistence | Canonical state, event funnel, versioned save | Save round-trips and migrates |
-| M5 | Offline semantics | One documented model, implemented and tested | Away time matches live time within tolerance |
-| M6 | Economy and tick | Producers, costs, bulk buy, frame integration | Numbers go up correctly |
-| M7 | Minimal playable | Click, buy, idle, reload, offline report | Genre-complete idle game, one stage |
-| M8 | Contract freeze | Evidence review of `src/types/*` after real use | Contracts frozen on evidence |
-| M9 | Stage ladder | 12 stages, gates, transitions, UI modes | Full arc traversable in simulation |
-| M10 | Hallmarks, core six | Six 2000-era branches | Six distinct mechanics live |
-| M11 | Hallmarks, 2011 four | Metabolism, immune evasion, inflammation, instability | ATP resource live |
-| M12 | Hallmarks, 2022 four | Plasticity, epigenetics, microbiome, senescence | Tree complete at 14 |
+| M   | Title                           | Summary                                                  | Goal                                                     |
+| --- | ------------------------------- | -------------------------------------------------------- | -------------------------------------------------------- |
+| M1  | Contracts and slice probe       | Types plus five compile-only vertical slices             | Contracts exist and are provisionally sufficient         |
+| M2  | Progression design              | `docs/PROGRESSION_DESIGN.md` for all 14 hallmarks        | Distinctness specified before anything depends on it     |
+| M3  | Numbers                         | BigNum over a derived operation set, illion names        | Economy math proven, not just formatting                 |
+| M4  | State and persistence           | Canonical state, event funnel, versioned save            | Save round-trips and migrates                            |
+| M5  | Offline semantics               | One documented model, implemented and tested             | Away time matches live time within tolerance             |
+| M6  | Economy and tick                | Producers, costs, bulk buy, frame integration            | Numbers go up correctly                                  |
+| M7  | Minimal playable                | Click, buy, idle, reload, offline report                 | Genre-complete idle game, one stage                      |
+| M8  | Contract freeze                 | Evidence review of `src/types/*` after real use          | Contracts frozen on evidence                             |
+| M9  | Stage ladder                    | 12 stages, gates, transitions, UI modes                  | Full arc traversable in simulation                       |
+| M10 | Hallmarks, core six             | Six 2000-era branches                                    | Six distinct mechanics live                              |
+| M11 | Hallmarks, 2011 four            | Metabolism, immune evasion, inflammation, instability    | ATP resource live                                        |
+| M12 | Hallmarks, 2022 four            | Plasticity, epigenetics, microbiome, senescence          | Tree complete at 14                                      |
 | M13 | Prestige and interaction design | `docs/PRESTIGE_DESIGN.md`, `docs/SYSTEM_INTERACTIONS.md` | Four systems that reach into each other, not four resets |
-| M14 | Prestige layers 1 and 2 | Metastasis seeding, host draft | Reset scopes verified by unit test |
-| M15 | Prestige layers 3 and 4 | Immortalization tree, contamination network | Endless scaling confirmed |
-| M16 | Morphology reference | `docs/MORPHOLOGY_REFERENCE.md` plus noise and grammar | Biology mapped before drawing |
-| M17 | Colony layout subsystem | `colony_layout.ts`: macro composition | Stage reads correctly with cell detail suppressed |
-| M18 | Cell rendering and defs | `cell.ts`, `blob.ts`, `defs.ts`, `describe.ts`, icons | Cells unique, same-stage family recognizable |
-| M19 | Soft ending | Trigger, sequence, scale reframing, continuation | The payoff is a system, not a text screen |
-| M20 | Deterministic replay | Record and replay over the event funnel | Any bug or balance finding reproduces exactly |
-| M21 | Balance laboratory | Five strategy bots, machine-readable report, tuning | Pacing decided on evidence across play styles |
-| M22 | Release evidence package | `docs/RELEASE_EVIDENCE.md`, staged candidate | One compact artifact a human approves from |
+| M14 | Prestige layers 1 and 2         | Metastasis seeding, host draft                           | Reset scopes verified by unit test                       |
+| M15 | Prestige layers 3 and 4         | Immortalization tree, contamination network              | Endless scaling confirmed                                |
+| M16 | Morphology reference            | `docs/MORPHOLOGY_REFERENCE.md` plus noise and grammar    | Biology mapped before drawing                            |
+| M17 | Colony layout subsystem         | `colony_layout.ts`: macro composition                    | Stage reads correctly with cell detail suppressed        |
+| M18 | Cell rendering and defs         | `cell.ts`, `blob.ts`, `defs.ts`, `describe.ts`, icons    | Cells unique, same-stage family recognizable             |
+| M19 | Soft ending                     | Trigger, sequence, scale reframing, continuation         | The payoff is a system, not a text screen                |
+| M20 | Deterministic replay            | Record and replay over the event funnel                  | Any bug or balance finding reproduces exactly            |
+| M21 | Balance laboratory              | Five strategy bots, machine-readable report, tuning      | Pacing decided on evidence across play styles            |
+| M22 | Release evidence package        | `docs/RELEASE_EVIDENCE.md`, staged candidate             | One compact artifact a human approves from               |
 
 ### Milestone: M1 contracts and slice probe
 
@@ -377,14 +379,38 @@ Twenty-two milestones. Each reaches green independently. No milestone waits on a
 ### Milestone: M7 minimal playable
 
 - Depends on: M6.
-- Deliverables: `src/render/shell.ts`, `producers_panel.ts`, `number_display.ts`, first Playwright
-  smoke, first captured screenshot, debug fast-forward hooks behind a URL flag.
-- Workstreams: F, with I writing the smoke.
+- Deliverables: `docs/SOLID_MODEL.md`; `src/main.tsx`; no-JSX DOM-free
+  `src/render/game_controller.ts`; `src/render/app.tsx`, `shell.tsx`, `producers_panel.tsx`, and
+  `number_display.tsx`; `tools/build_solid.mjs` using
+  `esbuild-plugin-solid`; `tests/test_solid_controller.mjs`; committed production-dist Playwright
+  smoke, first captured screenshot, and debug fast-forward hooks behind a URL flag. F owns the
+  Solid/controller/render/toolchain package, and I owns the Node and Playwright proof. The
+  `build_github_pages.sh` front door and `dist/` contract remain intact.
+- Toolchain: add production `solid-js` and development `esbuild-plugin-solid`, changing package
+  and lockfile together only during M7. `tsconfig.json` preserves JSX with `solid-js` import source
+  and includes TSX; the lint project and ESLint test glob include TSX without dropping Node types.
+  The existing Node/tsx discovery in `check_codebase.sh` runs pure controller/store atomicity and
+  signal-isolation tests requiring no DOM. `tools/build_solid.mjs` is the sole esbuild JavaScript-API/plugin
+  production bundle; `build_github_pages.sh` resolves `main.tsx` first, invokes only that bundle,
+  and preserves existing `dist/`, assets, `.nojekyll`, and assertions. TSX DOM behavior is proven
+  only in committed production-dist Playwright through `run_playwright_tests.sh`.
+- Workstreams: F owns the no-JSX controller, render, build, and toolchain. Its controller uses
+  separate safe-nonnegative-integer `ActiveClock` event timestamps and `SaveClock` envelope
+  samples, and a result-aware `PersistSnapshot(state, savedAtMs)` adapter over
+  `saveToStorage` notices. I owns Node controller tests and production Playwright proof.
 - Entry criteria: M6 exit met.
 - Exit criteria: a player can click, buy, idle, reload, and see offline gains. Playwright asserts
   page load with zero console errors, first click increments, save survives reload, and an offline
-  grant appears after a clock-skewed reload. The debug hooks ship here because every later
-  automated milestone depends on them.
+  grant appears after a clock-skewed reload. The controller clones `unwrap` snapshots before every
+  `recordEvent`, persists an isolated accepted next snapshot before reconciling the store, and
+  keeps parser/reducer/storage failures visibly honest. A nonempty `saveToStorage` notice or a
+  thrown save-clock/adapter call retains the old visible store and sets unsaved status; only an
+  intentional reissue after recovery retries the action. Node/tsx tests import only
+  `game_controller.ts` and prove clone/BigNum integrity, hostile-raw no-persist, one event funnel,
+  UI-signal isolation, and dual-clock persistence atomicity. Production-dist Playwright alone
+  proves granular JSX/effect instrumentation, `<For>` identity/focus, `onCleanup`, accessibility,
+  reload, and browser-error behavior. The debug hooks ship here because every later automated
+  milestone depends on them.
 - Parallel-plan ready: yes.
 
 ### Milestone: M8 contract freeze
@@ -402,7 +428,7 @@ Twenty-two milestones. Each reaches green independently. No milestone waits on a
 ### Milestone: M9 stage ladder
 
 - Depends on: M8.
-- Deliverables: `src/stages/*`, `src/render/stage_panel.ts`, twelve stages.
+- Deliverables: `src/stages/*`, `src/render/stage_panel.tsx`, twelve stages.
 - Workstreams: D, F.
 - Entry criteria: contracts frozen.
 - Exit criteria: all twelve stages reachable in a fast-forwarded run; each stage declares its
@@ -417,9 +443,14 @@ Twenty-two milestones. Each reaches green independently. No milestone waits on a
 - Depends on: M2, M9.
 - Deliverables: sustaining proliferative signaling, evading growth suppressors, resisting cell
   death, enabling replicative immortality, inducing angiogenesis, activating invasion and
-  metastasis; `src/render/hallmark_tree.ts`.
+  metastasis; `src/render/hallmark_tree.tsx`.
 - Workstreams: D, F.
 - Entry criteria: `docs/PROGRESSION_DESIGN.md` complete.
+- Frozen-contract amendment: before source implementation, activate `HallmarkEffect` and add
+  exactly one closed `spend-telomerase` `GameEvent`. The D3 owner inventories parser, reducer,
+  save, controller, UI, test, and M20 replay consumers; hostile requests must leave debit, effect,
+  event queue, persistence, and protected recovery untouched. Full static, Node, build, and
+  production-dist Playwright reruns are required before dependent work resumes.
 - Exit criteria: each branch implements its assigned mechanic class as specified; the balance
   laboratory shows that acquiring each branch measurably changes the optimal purchase order,
   which is the automated proxy for "it changed a decision."
@@ -469,8 +500,8 @@ Twenty-two milestones. Each reaches green independently. No milestone waits on a
   - **L4 Dissemination** -- a network. Spread across a graph of labs and cities; each contaminated
     node raises global scaling and opens adjacent nodes. The decision is breadth versus depth.
     This layer is the endless engine.
-Three cross-cutting questions this milestone must answer in writing, because each one is a place
-where "endless" quietly degrades into "bigger numbers":
+    Three cross-cutting questions this milestone must answer in writing, because each one is a place
+    where "endless" quietly degrades into "bigger numbers":
 
 - **Early run-to-run variation.** The L2 host draft supplies excellent variety, but it arrives
   deep. Does L1 organ-site allocation already make consecutive early runs feel different? If yes,
@@ -500,7 +531,7 @@ where "endless" quietly degrades into "bigger numbers":
 
 - Depends on: M11, M13.
 - Deliverables: `src/prestige/layers.ts`, `reset.ts`, `seeding.ts`, `hosts.ts`;
-  `src/render/prestige_panel.ts`; `tests/test_prestige_reset.mjs`.
+  `src/render/prestige_panel.tsx`; `tests/test_prestige_reset.mjs`.
 - Workstreams: E, F.
 - Entry criteria: `docs/PRESTIGE_DESIGN.md` complete.
 - Exit criteria: each reset function is unit-tested for exactly what it clears and preserves; a
@@ -549,7 +580,9 @@ where "endless" quietly degrades into "bigger numbers":
 ### Milestone: M17 colony layout subsystem
 
 - Depends on: M16.
-- Deliverables: `src/svg/colony_layout.ts`, the negative-space and depth metrics in `tests/`.
+- Deliverables: `src/svg/colony_layout.ts`, `tests/test_colony_layout.mjs`, and the negative-space
+  and depth metrics. The public request and output are readonly data; the module creates no JSX,
+  SVG path, CSS class, or DOM node.
 - Workstreams: G.
 - Entry criteria: M16 exit met.
 - Exit criteria: layout owns macro-silhouette, regional density, negative-space topology, depth
@@ -558,15 +591,31 @@ where "endless" quietly degrades into "bigger numbers":
   module makes any other order impossible. The decisive test: contact sheets rendered with all
   internal cell detail suppressed remain stage-distinguishable. If the stages only differ once
   cells are drawn, the layout layer is not carrying its weight.
+- Binding construction and budgets: private opaque phase brands make the only construction order
+  `silhouette -> regions -> clusters -> cell slots`; the convenient entry point calls all four
+  phases. Deterministic, bounded jittered-lattice allocation uses at most 24 candidates per slot,
+  caps representative/inspection scenes at 180/240 slots, and reports valid partial layouts as
+  `underfilled` rather than clipping, overlap, or unbounded retry. M17 measures finite occupancy,
+  components, voids, gaps, asymmetry, depth, collision/clearance, and normalized macro
+  fingerprints. Its Node oracle proves all twelve fixtures, fixed seeds, independent O(n^2)
+  collision agreement, stage-family coherence (mean >= 0.88; individual >= 0.78), and stage
+  separation (adjacent >= 0.18; nonadjacent >= 0.28 except the declared void-fraction pair).
+- M18 handoff: M17 delivers slot geometry and a suppressed-detail serialization only. M18 consumes
+  it at 320x224, 560x392, and 1000x700, owns actual inline SVG/DOM rendering and accessibility,
+  and records the initial 1,050-elements-per-colony ceiling. Neither milestone uses pixel
+  equivalence as an acceptance substitute.
 - Parallel-plan ready: no. This is the shared upstream for M18.
 
 ### Milestone: M18 cell rendering and defs
 
 - Depends on: M17.
-- Deliverables: `blob.ts`, `cell.ts`, `colony.ts`, `defs.ts`, `describe.ts`, `icons.ts`; the full
-  visual-metrics battery.
+- Deliverables: `blob.ts`, `cell.ts`, `colony.ts`, `defs.ts`, `describe.ts`, `icons.ts`, and
+  `src/render/colony_panel.tsx`; the full visual-metrics battery.
 - Workstreams: G.
 - Entry criteria: M17 exit met.
+- `src/render/colony_panel.tsx` is the dedicated M18 UI integration owner: it consumes accepted
+  layout and cell contracts, supplies accessible SVG naming and consumer-size presentation, and
+  does not redefine morphology, layout, or shared `<defs>` semantics.
 - Exit criteria: cells render as volumes (silhouette, irregular nucleus offset from center,
   cytoplasmic value variation, restrained cross-contour marks following the local membrane,
   overlap, directional light). One thousand generated cells are unique by path hash, while cells
@@ -580,7 +629,7 @@ where "endless" quietly degrades into "bigger numbers":
 
 - Depends on: M15, M18.
 - Deliverables: `docs/GAME_DESIGN.md` ending section; `src/ending/trigger.ts`, `sequence.ts`;
-  `src/render/ending_view.ts`; `src/content/ending_copy.ts`.
+  `src/render/ending_view.tsx`; `src/content/ending_copy.ts`.
 - Workstreams: J specifies with E and H; E and F implement.
 - Entry criteria: M15 and M18 exit met.
 - Exit criteria: the ending is specified as a system before it is written, covering trigger
@@ -638,7 +687,7 @@ where "endless" quietly degrades into "bigger numbers":
   It also opens with a **progression narrative**, because this project is design-heavy and gate
   evidence alone cannot show whether the intended experience exists:
   `single transformed cell -> early tumor -> carcinoma in situ -> invasion -> first metastasis ->
-  host death -> immortalized culture -> global contamination -> Chicago ending -> continued play`.
+host death -> immortalized culture -> global contamination -> Chicago ending -> continued play`.
   Each transition links its captured screenshot, its dominant mechanic, and the automated result
   that proves it is reachable. The document should demonstrate the game, not only the correctness
   of the repository. The human approves a finished candidate from this one document rather than
@@ -783,13 +832,13 @@ Some hallmarks change morphology, not only rates. This is what makes the tree re
 teaching panel. D's handlers write `MorphologyParams`; G renders it. Each row cites
 `docs/MORPHOLOGY_REFERENCE.md`.
 
-| Hallmark | Visual consequence |
-| --- | --- |
-| Genome instability and mutation | Rising nuclear irregularity; occasional multinucleation |
-| Unlocking phenotypic plasticity | Rising variance between neighboring cells |
-| Sustaining proliferative signaling | Mitotic figures appear more often |
-| Enabling replicative immortality | Older visual cohorts persist instead of senescing out |
-| Inducing angiogenesis | Vascular motifs infiltrate the colony margin |
+| Hallmark                           | Visual consequence                                                       |
+| ---------------------------------- | ------------------------------------------------------------------------ |
+| Genome instability and mutation    | Rising nuclear irregularity; occasional multinucleation                  |
+| Unlocking phenotypic plasticity    | Rising variance between neighboring cells                                |
+| Sustaining proliferative signaling | Mitotic figures appear more often                                        |
+| Enabling replicative immortality   | Older visual cohorts persist instead of senescing out                    |
+| Inducing angiogenesis              | Vascular motifs infiltrate the colony margin                             |
 | Activating invasion and metastasis | Margin shifts from coherent mass to protrusive fronts and detached cells |
 
 ### Visual baseline
@@ -838,16 +887,16 @@ The art plan comes from the `svg-creator-expert` local corpus. WP-G.0A reads the
 what each changed in `docs/ART_DIRECTION.md`. Routing follows that skill's
 `references/local_books.md`.
 
-| Need | Source | Search route |
-| --- | --- | --- |
-| Programmatic construction, seeded randomness, noise, reuse, animation, filters | `svg_authoring/Generative_Art_with_JavaScript_and_SVG-2024.md` | `Grouping and Reusing Elements`; randomness and noise chapters |
-| Coordinate system, `viewBox`, paths, transforms, masks, accessibility | `svg_authoring/Mastering_SVG-2018.md` | `viewBox and viewport in SVG` |
-| Depth and line hierarchy so a crowded colony still reads | `scientific_illustration/A_Handbook_of_Biological_Illustration-1988.md` | `heaviest lines are used to draw the closest parts`; `CLARITY` |
-| Simplification discipline: what to omit | `scientific_illustration/Preparing_Scientific_Illustrations_a_Guide_to_Better_Posters_Presentations-1996.md` | simplification and figure-purpose chapters |
-| Normal-reference comprehension, visual storytelling of the abnormal | `scientific_illustration/Medical_Illustration_in_the_Courtroom_Proving_Injury_Causation_and_Damages-2024.md` | normal-reference and visual-explanation sections |
-| Organic form, grouping, focal points, negative space | `drawing_fundamentals/The_Everything_Drawing_Book-2005.md`; `scientific_illustration/Botanical_Art_with_Scientific_Illustration-2018.md` | `Thumbnail Sketches and Working Drawings`; contour and negative-space chapters |
-| Foreground silhouette strength, value falloff with distance | `object_construction/How_to_Draw_Drawing_and_Sketching_Objects_and_Environments_from_Your_Imagination-2013.md` | volume construction and depth-contrast sections |
-| Bezier and anchor control, Boolean construction | `vector_tools/Quick_and_Easy_Vector_Graphics-2020.md` | primitives, Boolean operations, Bezier curves |
+| Need                                                                           | Source                                                                                                                                   | Search route                                                                   |
+| ------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| Programmatic construction, seeded randomness, noise, reuse, animation, filters | `svg_authoring/Generative_Art_with_JavaScript_and_SVG-2024.md`                                                                           | `Grouping and Reusing Elements`; randomness and noise chapters                 |
+| Coordinate system, `viewBox`, paths, transforms, masks, accessibility          | `svg_authoring/Mastering_SVG-2018.md`                                                                                                    | `viewBox and viewport in SVG`                                                  |
+| Depth and line hierarchy so a crowded colony still reads                       | `scientific_illustration/A_Handbook_of_Biological_Illustration-1988.md`                                                                  | `heaviest lines are used to draw the closest parts`; `CLARITY`                 |
+| Simplification discipline: what to omit                                        | `scientific_illustration/Preparing_Scientific_Illustrations_a_Guide_to_Better_Posters_Presentations-1996.md`                             | simplification and figure-purpose chapters                                     |
+| Normal-reference comprehension, visual storytelling of the abnormal            | `scientific_illustration/Medical_Illustration_in_the_Courtroom_Proving_Injury_Causation_and_Damages-2024.md`                             | normal-reference and visual-explanation sections                               |
+| Organic form, grouping, focal points, negative space                           | `drawing_fundamentals/The_Everything_Drawing_Book-2005.md`; `scientific_illustration/Botanical_Art_with_Scientific_Illustration-2018.md` | `Thumbnail Sketches and Working Drawings`; contour and negative-space chapters |
+| Foreground silhouette strength, value falloff with distance                    | `object_construction/How_to_Draw_Drawing_and_Sketching_Objects_and_Environments_from_Your_Imagination-2013.md`                           | volume construction and depth-contrast sections                                |
+| Bezier and anchor control, Boolean construction                                | `vector_tools/Quick_and_Easy_Vector_Graphics-2020.md`                                                                                    | primitives, Boolean operations, Bezier curves                                  |
 
 The corpus also lists `local-only/LOCAL_SERVIER_SVG_FILE_PATHS.txt`, a Servier-derived asset
 inventory. It is **not present on this machine**, so the plan assumes none of it. If it appears,
@@ -961,15 +1010,15 @@ not how many hours it survives.
 
 Falsifiable claims, measured against the greedy-payback bot at M21.
 
-| Checkpoint | Target elapsed active play | Fail condition |
-| --- | --- | --- |
-| First producer purchase | under 15 seconds | over 30 seconds; the opening feels dead |
-| First hallmark unlocked | 2 to 5 minutes | over 10 minutes |
-| Stage 4, carcinoma in situ | 20 to 40 minutes | over 90 minutes |
-| First prestige, Metastasis | 1.5 to 3 hours | over 6 hours; the reset arrives too late to teach |
-| Second prestige layer reachable | within 3 runs of the first | more than 6 runs |
-| Soft ending | reachable, presentation changes | an economic wall appears at the ending |
-| Post-ending and post-L4 | still accelerating | flat, which means it is not endless |
+| Checkpoint                      | Target elapsed active play      | Fail condition                                    |
+| ------------------------------- | ------------------------------- | ------------------------------------------------- |
+| First producer purchase         | under 15 seconds                | over 30 seconds; the opening feels dead           |
+| First hallmark unlocked         | 2 to 5 minutes                  | over 10 minutes                                   |
+| Stage 4, carcinoma in situ      | 20 to 40 minutes                | over 90 minutes                                   |
+| First prestige, Metastasis      | 1.5 to 3 hours                  | over 6 hours; the reset arrives too late to teach |
+| Second prestige layer reachable | within 3 runs of the first      | more than 6 runs                                  |
+| Soft ending                     | reachable, presentation changes | an economic wall appears at the ending            |
+| Post-ending and post-L4         | still accelerating              | flat, which means it is not endless               |
 
 ## Migration and compatibility policy
 
@@ -983,30 +1032,30 @@ Falsifiable claims, measured against the greedy-payback bot at M21.
 
 ## Risk register
 
-| Risk | Impact | Trigger | Owner | Mitigation |
-| --- | --- | --- | --- | --- |
-| Contracts frozen before evidence | Every lane rebases; parallelism advantage evaporates | A feature agent needs a shape that does not exist | A0 | Freeze moved to M8; five compile-only slices at M1 |
-| Save schema designed before mechanics are known | Migration churn on a live schema | Progression design written after M4 | J | `docs/PROGRESSION_DESIGN.md` is M2, before state |
-| Float drift in BigNum at extreme exponents | Wrong numbers, broken late game | Mantissa denormalizes past 10^300 | A | Normalize every operation; test the economy's real operations |
-| Offline diverges from live once nonlinearity lands | Player returns to wrong numbers; trust gone | A hallmark makes production non-constant | B | Coarse-step replay through the real tick; 2 percent equivalence test from M5 |
-| 14 hallmarks collapse into 14 multipliers | The content spine is hollow | Handlers all reduce to scaling a rate | D | M2 specification gates dispatch; purchase-order test per branch |
-| Four prestige layers feel like one repeated reset | The "endless depth" claim fails | Layers differ only in cost | E | M13 identity document; M21 proves no single strategy wins all four |
-| Balance measured against an arbitrary bot | Pacing numbers are meaningless | Simulator hardcodes one purchase rule | I | Five declared bots; bands stated against the primary, cross-checked against the rest |
-| A balance or save bug cannot be reproduced | Debugging becomes guesswork | Nondeterministic run reports a symptom | B, I | Deterministic replay at M20 |
-| Colony reads as uniform noise | Art effort produces an unreadable field | Cells generated before composition | G | `colony_layout.ts` split makes layout-first structural; suppressed-detail test |
-| Art invents plausible-looking but wrong biology | Loses the science-accurate premise | Generator tuned by eye alone | G | `docs/MORPHOLOGY_REFERENCE.md` gates all drawing code; every visual change cites a row |
-| Cells unique but visually unrelated | The colony looks like a sticker sheet | Per-cell parameters drawn independently | G | Family-coherence metric: within-stage variance bounded, between-stage separation required |
-| SVG node count tanks framerate | Colony stutters late game | Cell count exceeds a few thousand nodes | G | Representative sampling, `<defs>` reuse, CSS-class styling, explicit node budget |
-| Systems are individually strong but do not interact | A pile of good subsystems, no emergent game | Each lane validated only against itself | J, D, E | `docs/SYSTEM_INTERACTIONS.md` at M13; M21 checks prestige changes which hallmarks are attractive |
-| Hallmark tree is a menu, not a tree | Player ranks 14 branches independently and always buys in the same order | No specified synergies or tensions | D | M2 requires named synergies and at least three tensions; purchase-order divergence measured |
-| Stages are reskins | The clearest progression signal carries no gameplay | Stage spec is visual only | D, J | M2 assigns each stage a gameplay identity; M9 requires purchase-order change across boundaries |
-| L4 network gets solved | The endless engine stops producing decisions; only currency rises | Authored graph fully conquered | E | M13 specifies the renewal mechanism; M21 measures decision availability, not just acceleration |
-| Early L1 runs feel repetitive | Player quits before the L2 draft supplies variety | Organ-site allocation is the only early variable | E | M13 must answer whether L1 supplies real variation, and deepen organ sites if not |
-| `MorphologyParams` becomes a dumping ground | Later visual features silently overwrite earlier ones | Multiple systems write the same parameter | A0, G, D | Named resolution chain, per-parameter combination rule, clamps, contributor provenance |
-| Tuning to the bots | Mechanics optimized for the simulator, experimentation stripped out | One correct build per situation is treated as the goal | I, J | Bots report degeneracy; near-optimal ties are left alone |
-| The ending is a text screen | The payoff undersells the whole game | Ending treated as copy | E, J | M19 specifies it as a system with its own milestone and validation |
-| Tone lands wrong | Satire reads as mocking patients | Copy drifts toward the disease rather than the cell | H | Automated copy guard plus `reviewer` checklist; versioned boundary statement |
-| A milestone stalls waiting on a person | The plan cannot finish overnight | Any gate phrased as human judgment | Orchestrator | Every gate is a command, a metric, or an agent review with written criteria |
+| Risk                                                | Impact                                                                   | Trigger                                                | Owner        | Mitigation                                                                                       |
+| --------------------------------------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------ | ------------ | ------------------------------------------------------------------------------------------------ |
+| Contracts frozen before evidence                    | Every lane rebases; parallelism advantage evaporates                     | A feature agent needs a shape that does not exist      | A0           | Freeze moved to M8; five compile-only slices at M1                                               |
+| Save schema designed before mechanics are known     | Migration churn on a live schema                                         | Progression design written after M4                    | J            | `docs/PROGRESSION_DESIGN.md` is M2, before state                                                 |
+| Float drift in BigNum at extreme exponents          | Wrong numbers, broken late game                                          | Mantissa denormalizes past 10^300                      | A            | Normalize every operation; test the economy's real operations                                    |
+| Offline diverges from live once nonlinearity lands  | Player returns to wrong numbers; trust gone                              | A hallmark makes production non-constant               | B            | Coarse-step replay through the real tick; 2 percent equivalence test from M5                     |
+| 14 hallmarks collapse into 14 multipliers           | The content spine is hollow                                              | Handlers all reduce to scaling a rate                  | D            | M2 specification gates dispatch; purchase-order test per branch                                  |
+| Four prestige layers feel like one repeated reset   | The "endless depth" claim fails                                          | Layers differ only in cost                             | E            | M13 identity document; M21 proves no single strategy wins all four                               |
+| Balance measured against an arbitrary bot           | Pacing numbers are meaningless                                           | Simulator hardcodes one purchase rule                  | I            | Five declared bots; bands stated against the primary, cross-checked against the rest             |
+| A balance or save bug cannot be reproduced          | Debugging becomes guesswork                                              | Nondeterministic run reports a symptom                 | B, I         | Deterministic replay at M20                                                                      |
+| Colony reads as uniform noise                       | Art effort produces an unreadable field                                  | Cells generated before composition                     | G            | `colony_layout.ts` split makes layout-first structural; suppressed-detail test                   |
+| Art invents plausible-looking but wrong biology     | Loses the science-accurate premise                                       | Generator tuned by eye alone                           | G            | `docs/MORPHOLOGY_REFERENCE.md` gates all drawing code; every visual change cites a row           |
+| Cells unique but visually unrelated                 | The colony looks like a sticker sheet                                    | Per-cell parameters drawn independently                | G            | Family-coherence metric: within-stage variance bounded, between-stage separation required        |
+| SVG node count tanks framerate                      | Colony stutters late game                                                | Cell count exceeds a few thousand nodes                | G            | Representative sampling, `<defs>` reuse, CSS-class styling, explicit node budget                 |
+| Systems are individually strong but do not interact | A pile of good subsystems, no emergent game                              | Each lane validated only against itself                | J, D, E      | `docs/SYSTEM_INTERACTIONS.md` at M13; M21 checks prestige changes which hallmarks are attractive |
+| Hallmark tree is a menu, not a tree                 | Player ranks 14 branches independently and always buys in the same order | No specified synergies or tensions                     | D            | M2 requires named synergies and at least three tensions; purchase-order divergence measured      |
+| Stages are reskins                                  | The clearest progression signal carries no gameplay                      | Stage spec is visual only                              | D, J         | M2 assigns each stage a gameplay identity; M9 requires purchase-order change across boundaries   |
+| L4 network gets solved                              | The endless engine stops producing decisions; only currency rises        | Authored graph fully conquered                         | E            | M13 specifies the renewal mechanism; M21 measures decision availability, not just acceleration   |
+| Early L1 runs feel repetitive                       | Player quits before the L2 draft supplies variety                        | Organ-site allocation is the only early variable       | E            | M13 must answer whether L1 supplies real variation, and deepen organ sites if not                |
+| `MorphologyParams` becomes a dumping ground         | Later visual features silently overwrite earlier ones                    | Multiple systems write the same parameter              | A0, G, D     | Named resolution chain, per-parameter combination rule, clamps, contributor provenance           |
+| Tuning to the bots                                  | Mechanics optimized for the simulator, experimentation stripped out      | One correct build per situation is treated as the goal | I, J         | Bots report degeneracy; near-optimal ties are left alone                                         |
+| The ending is a text screen                         | The payoff undersells the whole game                                     | Ending treated as copy                                 | E, J         | M19 specifies it as a system with its own milestone and validation                               |
+| Tone lands wrong                                    | Satire reads as mocking patients                                         | Copy drifts toward the disease rather than the cell    | H            | Automated copy guard plus `reviewer` checklist; versioned boundary statement                     |
+| A milestone stalls waiting on a person              | The plan cannot finish overnight                                         | Any gate phrased as human judgment                     | Orchestrator | Every gate is a command, a metric, or an agent review with written criteria                      |
 
 ## Rollout and release checklist
 
@@ -1076,8 +1125,9 @@ Settled with the user; each becomes a `docs/DESIGN_DECISIONS.md` entry.
 - **Endless means endless decisions.** Rising production is necessary but not sufficient. L4 must
   keep generating choices after its authored network is conquered, and M21 measures decision
   availability directly rather than inferring it from acceleration.
-- **Custom BigNum, zero runtime dependencies.** `{mantissa, exponent}` plus Conway-Wechsler illion
-  names, because Egg, Inc.-style full names are a stated feature and no library provides them.
+- **Custom BigNum, no runtime math dependency; SolidJS is the sole deliberate UI runtime.**
+  `{mantissa, exponent}` plus Conway-Wechsler illion names satisfy the stated full-name feature;
+  `docs/SOLID_MODEL.md` keeps the UI runtime at the DOM boundary.
 - **Offline is bounded coarse-step replay through the real tick.** Not `rate * elapsed`. Chosen so
   nonlinear hallmark effects behave identically online and offline; verified by a 2 percent
   equivalence test.

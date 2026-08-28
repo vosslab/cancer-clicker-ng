@@ -3,14 +3,15 @@ import {
   hallmarkId,
   mutationId,
   prestigeId,
-  producerId,
   regionId,
+  routeId,
   stageId,
 } from "../brands.js";
-import type { SaveFileV2, SerializedGameState } from "../types/save.js";
+import type { CurrentSaveFileV2, SaveNotice, SerializedGameState } from "../types/save.js";
 import type { GameState } from "../types/state.js";
 import { isHallmarkId, isPrestigeId, isStageId } from "./catalog.js";
 import { createInitialGameState } from "./game_state.js";
+import { assertM11SaveInvariants, hasM11RecoveryNotice } from "./m11_save_invariants.js";
 import {
   parseDamage,
   parseEpisodes,
@@ -20,10 +21,17 @@ import {
   parseTransition,
 } from "./save_parse/domains.js";
 import { parseMicrobiome, parsePrograms } from "./save_parse/state_fields.js";
+import { parsePendingProgression } from "./save_parse/progression.js";
+import {
+  hasDuplicateRecordIds,
+  normalizeParsedLegacyProducerLevels,
+  parseCanonicalProducerLevels,
+} from "./save_parse/producers.js";
 import {
   array,
   exact,
   finite,
+  fraction,
   hasOversizedCollection,
   identifier,
   ids,
@@ -33,11 +41,13 @@ import {
   numericRecord,
   object,
   serial,
+  serialGameState,
   unique,
 } from "./save_parse/guards.js";
 export { MAX_COLLECTION } from "./save_parse/guards.js";
 
 export const SAVE_KEY = "cancer-clicker-ng.save.v2";
+export const CURRENT_PROGRESSION_VERSION = 4;
 const MAX_SAVE_BYTES = 250_000;
 const STATE_KEYS = [
   "cells",
@@ -47,6 +57,8 @@ const STATE_KEYS = [
   "hallmarkLevels",
   "currentStage",
   "stageStartedAtMs",
+  "activeTimeMs",
+  "pendingProgression",
   "stageProgress",
   "stageGateProgress",
   "lastStageTransition",
@@ -109,27 +121,28 @@ export type StorageLike = Readonly<{
   getItem(key: string): string | null;
   setItem(key: string, value: string): void;
 }>;
-export type RecoveryNotice = Readonly<{
-  code: "field-defaulted" | "storage-error" | "save-rejected";
-  field: string;
-  message: string;
-}>;
-export type LoadResult = Readonly<{
-  status: "absent" | "loaded" | "rejected";
-  state?: GameState;
-  notices: readonly RecoveryNotice[];
-  retainedRaw?: string;
-  version?: 2;
-  savedAtMs?: number;
-  progressionVersion?: number;
-}>;
+export type LoadResult =
+  | Readonly<{ status: "absent"; notices: readonly SaveNotice[] }>
+  | Readonly<{
+      status: "loaded";
+      state: GameState;
+      notices: readonly SaveNotice[];
+      version: 2;
+      savedAtMs: number;
+      progressionVersion: 4;
+    }>
+  | Readonly<{
+      status: "rejected";
+      notices: readonly SaveNotice[];
+      retainedRaw?: string;
+    }>;
 
 function field<T>(
   source: Record<string, unknown>,
   name: string,
   fallback: T,
   parse: (v: unknown) => T | undefined,
-  notices: RecoveryNotice[],
+  notices: SaveNotice[],
 ): T {
   const result = parse(source[name]);
   if (result !== undefined) return result;
@@ -140,31 +153,23 @@ function field<T>(
   });
   return fallback;
 }
-export function serializeGameState(
-  state: GameState,
-  savedAtMs: number,
-  progressionVersion = 1,
-): string {
-  if (!natural(savedAtMs) || !natural(progressionVersion) || progressionVersion < 1)
-    throw new Error("Save metadata is invalid.");
-  return JSON.stringify({
-    version: 2,
-    savedAtMs,
-    progressionVersion,
-    state: serial(state) as SerializedGameState,
-  } satisfies SaveFileV2);
+export function serializeGameState(state: GameState, savedAtMs: number): string {
+  if (!natural(savedAtMs)) throw new Error("Save metadata is invalid.");
+  const raw = encodeCurrentP4Envelope(state, savedAtMs);
+  validateCurrentP4Envelope(raw, savedAtMs);
+  return raw;
 }
 
-function hasDuplicateRecordIds(value: unknown): boolean {
-  const values = array(value);
-  if (!values) return false;
-  const ids = values.map((item) => (object(item) && typeof item.id === "string" ? item.id : null));
-  return ids.some((id) => id === null) || new Set(ids).size !== ids.length;
+function encodeCurrentP4Envelope(state: GameState, savedAtMs: number): string {
+  const encoded = {
+    version: 2,
+    savedAtMs,
+    progressionVersion: CURRENT_PROGRESSION_VERSION,
+    state: serialGameState(state),
+  } satisfies CurrentSaveFileV2;
+  return JSON.stringify(encoded);
 }
-function parseState(
-  source: Record<string, unknown>,
-  notices: RecoveryNotice[],
-): GameState | undefined {
+function parseState(source: Record<string, unknown>, notices: SaveNotice[]): GameState | undefined {
   if (
     !exact(source, STATE_KEYS) ||
     hasOversizedCollection(source) ||
@@ -184,29 +189,36 @@ function parseState(
       parseMicrobiome(source.microbiome, []) === undefined)
   )
     return undefined;
+  if (
+    !Object.prototype.hasOwnProperty.call(source, "activeTimeMs") ||
+    !Object.prototype.hasOwnProperty.call(source, "pendingProgression") ||
+    !natural(source.activeTimeMs)
+  )
+    return undefined;
+  const pendingProgression = parsePendingProgression(
+    source.pendingProgression,
+    source.activeTimeMs,
+  );
+  if (pendingProgression === undefined) return undefined;
+  const producerLevels = parseCanonicalProducerLevels(source.producerLevels);
+  if (producerLevels === undefined) return undefined;
   const i = createInitialGameState();
+  const transition =
+    source.lastStageTransition === undefined
+      ? undefined
+      : parseTransition(source.lastStageTransition);
+  if (source.lastStageTransition !== undefined && transition === undefined)
+    notices.push({
+      code: "field-defaulted",
+      field: "lastStageTransition",
+      message: "Recovered lastStageTransition with its safe default.",
+    });
   let state: GameState = {
     ...i,
     cells: field(source, "cells", i.cells, numberValue, notices),
     substrate: field(source, "substrate", i.substrate, numberValue, notices),
     atp: field(source, "atp", i.atp, numberValue, notices),
-    producerLevels: field(
-      source,
-      "producerLevels",
-      i.producerLevels,
-      (v) => {
-        const a = array(v);
-        if (!a) return undefined;
-        const r = [];
-        for (const x of a) {
-          if (!exact(x, ["id", "level"]) || !identifier(x.id) || !natural(x.level))
-            return undefined;
-          r.push({ id: producerId(x.id), level: x.level });
-        }
-        return unique(r.map((x) => x.id)) ? r : undefined;
-      },
-      notices,
-    ),
+    producerLevels,
     hallmarkLevels: field(
       source,
       "hallmarkLevels",
@@ -243,6 +255,8 @@ function parseState(
       (v) => (natural(v) ? v : undefined),
       notices,
     ),
+    activeTimeMs: source.activeTimeMs,
+    pendingProgression,
     stageProgress: field(
       source,
       "stageProgress",
@@ -257,17 +271,7 @@ function parseState(
       (v) => numericRecord(v, nonnegative),
       notices,
     ),
-    ...(source.lastStageTransition === undefined
-      ? {}
-      : {
-          lastStageTransition: field(
-            source,
-            "lastStageTransition",
-            undefined,
-            parseTransition,
-            notices,
-          ),
-        }),
+    ...(transition === undefined ? {} : { lastStageTransition: transition }),
     oxygenPressure: field(
       source,
       "oxygenPressure",
@@ -387,7 +391,7 @@ function parseState(
       source,
       "routeRiskById",
       i.routeRiskById,
-      (v) => numericRecord(v, nonnegative),
+      (v) => numericRecord(v, fraction),
       notices,
     ),
     seededSites: field(source, "seededSites", i.seededSites, (v) => ids(v, regionId), notices),
@@ -580,6 +584,19 @@ function parseState(
     ),
   };
   if (
+    state.lastStageTransition !== undefined &&
+    (state.lastStageTransition.to !== state.currentStage ||
+      state.lastStageTransition.atMs !== state.stageStartedAtMs)
+  ) {
+    const { lastStageTransition: _discardedTransition, ...withoutTransition } = state;
+    state = withoutTransition;
+    notices.push({
+      code: "field-defaulted",
+      field: "lastStageTransition",
+      message: "Recovered lastStageTransition with its safe default.",
+    });
+  }
+  if (
     notices.some(
       (notice) =>
         notice.field.startsWith("regions[") && notice.field.endsWith(".senescenceEventId"),
@@ -594,7 +611,9 @@ function parseState(
     };
   }
   const regionSet = new Set(state.regions.map((x) => String(x.id)));
-  const routeSet = new Set(Object.keys(state.committedCellCommitments));
+  // A revealed route exists when a region exposes it. Commitment is a later player choice,
+  // so it cannot define the universe that durable risk and transit relations validate against.
+  const discoveredRouteSet = new Set(state.regions.flatMap((region) => region.routeIds));
   const senescenceIds = state.regions.flatMap((region) =>
     region.senescenceEventId === undefined ? [] : [region.senescenceEventId],
   );
@@ -616,21 +635,70 @@ function parseState(
     !Object.keys(state.immuneVisibilityByRegion).every((key) => regionSet.has(key)) ||
     !Object.keys(state.regionalInflammation).every((key) => regionSet.has(key)) ||
     !Object.keys(state.phenotypeCooldowns).every((key) => regionSet.has(key)) ||
-    !Object.keys(state.routeRiskById).every((key) => routeSet.has(key)) ||
+    !Object.keys(state.routeRiskById).every((key) => discoveredRouteSet.has(routeId(key))) ||
+    ![...discoveredRouteSet].every((route) =>
+      Object.prototype.hasOwnProperty.call(state.routeRiskById, route),
+    ) ||
+    !Object.keys(state.committedCellCommitments).every((key) =>
+      discoveredRouteSet.has(routeId(key)),
+    ) ||
     !Object.keys(state.atpBudget).every((key) => state.atpSinks.includes(key)) ||
     !state.pendingDamageEvents.every((x) => regionSet.has(x.regionId)) ||
     !state.inflammationEpisodes.every((x) => regionSet.has(x.regionId)) ||
     !state.regions.every(
-      (x) =>
-        x.routeIds.every((id) => routeSet.has(id)) &&
-        (x.senescenceEventId === undefined || clearanceSet.has(x.senescenceEventId)),
+      (x) => x.senescenceEventId === undefined || clearanceSet.has(x.senescenceEventId),
     ) ||
-    !state.pendingTransitEvents.every((x) => routeSet.has(x.routeId)) ||
+    !state.pendingTransitEvents.every((x) =>
+      Object.prototype.hasOwnProperty.call(state.committedCellCommitments, x.routeId),
+    ) ||
     state.clearanceQueue.length !== senescenceIds.length ||
     !state.clearanceQueue.every((id) => senescenceIds.includes(id))
   )
     return undefined;
-  return state;
+  if (notices.some((notice) => hasM11RecoveryNotice(notice.field))) return undefined;
+  try {
+    assertM11SaveInvariants(state);
+  } catch {
+    return undefined;
+  }
+  return state.activeTimeMs < state.stageStartedAtMs ? undefined : state;
+}
+
+function migrateLegacyState(
+  source: Record<string, unknown>,
+  progressionVersion: 1 | 2 | 3,
+): SerializedGameState | undefined {
+  const legacyKeys = STATE_KEYS.filter(
+    (key) => key !== "activeTimeMs" && key !== "pendingProgression",
+  );
+  const expectedKeys = progressionVersion === 3 ? STATE_KEYS : legacyKeys;
+  if (!exact(source, expectedKeys) || !natural(source.stageStartedAtMs)) return undefined;
+  const producerLevels = normalizeParsedLegacyProducerLevels(source.producerLevels);
+  if (producerLevels === undefined) return undefined;
+  const migrated: Record<string, unknown> = {};
+  for (const key of expectedKeys) {
+    if (Object.prototype.hasOwnProperty.call(source, key)) migrated[key] = source[key];
+  }
+  migrated.producerLevels = producerLevels;
+  // M11 closes formerly provisional ATP/visibility/mutation placeholders. Historical p1-p3
+  // saves cannot contain an M11 offer snapshot, so migrate them to the one canonical empty state.
+  const initial = createInitialGameState();
+  migrated.atpBudget = initial.atpBudget;
+  migrated.atpSinks = initial.atpSinks;
+  migrated.immuneVisibilityByRegion = initial.immuneVisibilityByRegion;
+  migrated.concealmentTokens = initial.concealmentTokens;
+  migrated.maskedRegions = initial.maskedRegions;
+  migrated.inflammationEpisodes = initial.inflammationEpisodes;
+  migrated.regionalInflammation = initial.regionalInflammation;
+  migrated.mutationOffers = initial.mutationOffers;
+  migrated.chosenMutations = initial.chosenMutations;
+  migrated.mutationLiabilities = initial.mutationLiabilities;
+  migrated.genomeBurden = initial.genomeBurden;
+  if (progressionVersion !== 3) {
+    migrated.activeTimeMs = source.stageStartedAtMs;
+    migrated.pendingProgression = [];
+  }
+  return migrated;
 }
 function reject(raw: string, field: string, message: string): LoadResult {
   return {
@@ -651,7 +719,7 @@ export function parseSave(raw: string): LoadResult {
   }
   if (!object(e) || !natural(e.version) || !natural(e.savedAtMs) || !object(e.state))
     return reject(raw, "envelope", "Save envelope is invalid.");
-  let current: SaveFileV2;
+  let current: CurrentSaveFileV2;
   if (e.version === 1) {
     if (
       !exact(e, ["version", "savedAtMs", "state"]) ||
@@ -663,36 +731,51 @@ export function parseSave(raw: string): LoadResult {
       !natural(e.state.eventSequence)
     )
       return reject(raw, "envelope", "Save version is unsupported.");
+    const initializedState = JSON.parse(
+      JSON.stringify(
+        serial({
+          ...createInitialGameState(),
+          cells: numberValue(e.state.cells),
+          atp: numberValue(e.state.atp),
+          currentStage: stageId(e.state.stageId),
+          eventSequence: e.state.eventSequence,
+        }),
+      ),
+    ) as SerializedGameState;
+    const {
+      activeTimeMs: _activeTimeMs,
+      pendingProgression: _pendingProgression,
+      ...p1State
+    } = initializedState;
+    const migratedState = migrateLegacyState(p1State, 1);
+    if (migratedState === undefined) return reject(raw, "state", "Save state is invalid.");
     current = {
       version: 2,
       savedAtMs: e.savedAtMs,
-      progressionVersion: 1,
-      state: JSON.parse(
-        JSON.stringify(
-          serial({
-            ...createInitialGameState(),
-            cells: numberValue(e.state.cells),
-            atp: numberValue(e.state.atp),
-            currentStage: stageId(e.state.stageId),
-            eventSequence: e.state.eventSequence,
-          }),
-        ),
-      ) as SerializedGameState,
+      progressionVersion: CURRENT_PROGRESSION_VERSION,
+      state: migratedState,
     };
   } else if (
     e.version === 2 &&
     exact(e, ["version", "savedAtMs", "progressionVersion", "state"]) &&
     natural(e.progressionVersion) &&
-    e.progressionVersion >= 1
+    e.progressionVersion >= 1 &&
+    e.progressionVersion <= CURRENT_PROGRESSION_VERSION
   ) {
+    let state: SerializedGameState | undefined;
+    if (e.progressionVersion === CURRENT_PROGRESSION_VERSION) state = e.state;
+    else if (e.progressionVersion === 1) state = migrateLegacyState(e.state, 1);
+    else if (e.progressionVersion === 2) state = migrateLegacyState(e.state, 2);
+    else state = migrateLegacyState(e.state, 3);
+    if (state === undefined) return reject(raw, "state", "Save state is invalid.");
     current = {
       version: 2,
       savedAtMs: e.savedAtMs,
-      progressionVersion: e.progressionVersion,
-      state: e.state,
+      progressionVersion: CURRENT_PROGRESSION_VERSION,
+      state,
     };
   } else return reject(raw, "envelope", "Save version is unsupported.");
-  const notices: RecoveryNotice[] = [];
+  const notices: SaveNotice[] = [];
   const state = parseState(current.state, notices);
   return state === undefined
     ? reject(raw, "state", "Save state is invalid.")
@@ -705,6 +788,22 @@ export function parseSave(raw: string): LoadResult {
         progressionVersion: current.progressionVersion,
       };
 }
+
+/** ASVS 1.5.2 and 2.2.1: validate the complete writer envelope without recursion. */
+function validateCurrentP4Envelope(raw: string, savedAtMs: number): void {
+  const result = parseSave(raw);
+  const loadedState = result.status === "loaded" ? result.state : undefined;
+  if (
+    result.status !== "loaded" ||
+    loadedState === undefined ||
+    result.notices.length !== 0 ||
+    result.savedAtMs !== savedAtMs ||
+    result.progressionVersion !== CURRENT_PROGRESSION_VERSION ||
+    encodeCurrentP4Envelope(loadedState, savedAtMs) !== raw
+  )
+    throw new Error("Current save state is invalid.");
+}
+
 export function loadFromStorage(storage: StorageLike): LoadResult {
   try {
     const raw = storage.getItem(SAVE_KEY);
@@ -723,7 +822,7 @@ export function saveToStorage(
   storage: StorageLike,
   state: GameState,
   savedAtMs: number,
-): readonly RecoveryNotice[] {
+): readonly SaveNotice[] {
   try {
     storage.setItem(SAVE_KEY, serializeGameState(state, savedAtMs));
     return [];
@@ -733,10 +832,4 @@ export function saveToStorage(
     ];
   }
 }
-export function browserStorage(): StorageLike | undefined {
-  try {
-    return globalThis.localStorage;
-  } catch {
-    return undefined;
-  }
-}
+export { browserStorage } from "./save_storage.js";

@@ -1,103 +1,106 @@
 # Cancer Clicker NG
 
-An educational browser strategy game in development for learners who want to explore how one transformed cell grows, adapts, and confronts tradeoffs through a scientific incremental-game model.
+An educational browser strategy game for learners who want to explore how one transformed cell grows, adapts, and faces resource tradeoffs through a science-informed incremental model.
 
-**Pre-production status:** the current browser experience is an accessible M1 contract probe,
-not the planned full cancer strategy game. M1-M3 foundations are complete; M4 state and
-persistence work remains under active validation.
+## Grow under pressure
+
+Cancer Clicker NG turns cancer-biology concepts into consequential systems rather than a
+memorization exercise. You will guide an optimizing transformed cell through resource pressure,
+growth, adaptation, and eventually a deliberately dark, science-informed escalation. It is not
+clinical advice and does not depict patients; the satire targets the cell's relentless
+optimization.
+
+The signature promise is an endless incremental game where biology changes the choices, not just
+the labels on larger numbers. The completed foundations make that promise concrete:
+
+- Eight data-defined producers support `1`, `10`, `100`, and maximum affordable purchases with
+  deterministic costs.
+- Custom BigNum arithmetic and Conway-Wechsler illion names keep enormous quantities readable.
+- A typed event funnel, strict V2/p4 local-save migration, and one bounded replay seam make
+  growth and return-from-away accounting inspectable.
+- A progression design maps 14 cancer-biology branches and 12 stages to future player decisions
+  instead of a memorization checklist.
+- A client-only SolidJS surface turns those framework-free systems into a saved, playable loop
+  without adding a server or account boundary.
+
+## Current proof
+
+M1 through M7 are accepted. The first playable SolidJS slice now lets you divide a cell, buy
+producers, watch cells accumulate while the tab is open, reload preserved local progress, and see
+meaningful offline gains on return. It keeps the game local to the browser: no account, network,
+or clinical data is involved.
+
+The accepted M7 evidence includes 75 Node/tsx tests and 6 production-dist Playwright tests. The
+browser suite proves keyboard play, purchase and idle behavior, reload, offline gains, recovery,
+focus identity, narrow layout, and zero browser diagnostics. There is no confirmed hosted
+deployment URL, and no checked-in screenshot asset yet.
 
 <!-- screenshots:begin (managed by screenshot-docs) -->
 <!-- screenshots:end -->
 
-## Grow under pressure
+## Play the first loop
 
-This project aims to turn cancer-biology concepts into consequential systems rather than a
-memorization exercise. You guide an optimizing transformed cell through resource pressure,
-tradeoffs, and adaptation; the roadmap treats the science with care and does not present gameplay
-as clinical advice.
-
-The implemented foundation already provides:
-
-- A clinical-dark, keyboard-operable browser shell with visible focus treatment and a narrow
-  viewport layout.
-- Typed event contracts and a live probe that records division and number-format actions.
-- Deterministic BigNum arithmetic, bulk-cost solving, and short/full illion formatting for the
-  scales an incremental game needs.
-- A progression-design contract that maps 14 cancer-biology branches and a 12-stage dramatic arc
-  into distinct future player decisions.
-- A strict local save, migration, and runtime-event boundary with fixtures and hostile-input tests;
-  it is not yet connected to the browser shell.
-
-## Try the current probe
-
-Prerequisites: a current Node.js and npm installation. The setup command installs the repository's
-development dependencies; the server command builds the production-shaped `dist/` artifact and
-serves it locally.
+Prerequisites: a current Node.js and npm installation. Install dependencies, then build and serve
+the GitHub Pages-shaped `dist/` artifact locally:
 
 ```bash
-./devel/setup_typescript.sh
-./run_web_server.sh
+npm install
+npm run serve
 ```
 
-Open the local URL printed by Python's server. The current shell shows **Contract probe online**.
-Select **Divide once** to increment the visible division count, then select **Toggle format** to
-change the event message between short and full number formatting. Both controls also work by
-keyboard. Stop the foreground server with `Ctrl-C`.
+Open the printed URL. Select **Divide cell** to create cells, then spend cells on a producer in
+the **Division apparatus** panel. The producer raises ongoing cells per second; reload the page to
+confirm that progress is local and durable. After time away, the **Offline progress** panel shows
+the applied gain when it is meaningful. Controls remain keyboard-operable. Stop the foreground
+server with `Ctrl-C`.
 
-If dependencies are already installed, `./build_github_pages.sh` is the shortest way to produce
-the same browser artifact in `dist/`.
+Use `npm run build` to create `dist/` without starting a server.
 
-## A small, real interaction
+## Verify the foundation
 
-The present UI is deliberately small so its typed boundary is easy to inspect. Its status line
-shows the event the interface sent:
+The normal repository validation front door is not Vitest. Run the owned Node/tsx test and static
+gate:
 
-```text
-M1 contract probe: 1 divisions; division signal received.
-M1 contract probe: 1 divisions; number format set to full.
+```bash
+./check_codebase.sh
 ```
 
-That interaction is current browser evidence, not a claim that producers, stages, prestige, or the
-full hallmark tree are playable. Those systems remain roadmap work in the canonical plan.
+It type-checks source and test/tool surfaces, runs ESLint and Prettier checks, then runs
+`tests/test_*.mjs` with Node's test runner and the `tsx` loader. The accepted M7 run contains 75
+Node/tsx tests. This is not Vitest. Verify the production-built browser surface separately:
 
-## Status and limits
+```bash
+npm run test:playwright -- --build
+```
 
-The project is in active pre-production. The interactive page currently proves the initial typed
-event-to-interface slice only; it does not yet simulate idle growth, purchases, offline accrual,
-save/reload behavior, the planned 14-branch system, 12 stages, prestige, or colony visuals. There
-is no confirmed hosted deployment URL.
+That command rebuilds `dist/` and runs the committed production Playwright suite.
 
-M7 is the first milestone that will make the game minimally playable and add committed
-production-browser proof for click, buy, idle, reload, and offline behavior. Until then, use this
-repository to follow and validate the foundation rather than to play a completed game.
+## What comes next
+
+M8 is now hardening the game contracts. Later milestones add the 12-stage arc, 14 mechanically
+distinct hallmark branches, prestige systems, and editable SVG colony visuals. The active plan
+keeps those milestones explicit so the game's ambition stays testable as it grows.
 
 ## Documentation
 
+- `docs/SOLID_MODEL.md` - the client-only SolidJS boundary, one-store model, and
+  production-browser proof contract. It is shown as an inline path while its shared-worktree
+  document remains untracked.
+- [docs/GAME_DESIGN.md](docs/GAME_DESIGN.md) - offline replay, clocks, and the shared economy
+  tick semantics.
+- [docs/STATE_PERSISTENCE.md](docs/STATE_PERSISTENCE.md) - local V2/p4 save ownership,
+  migration, recovery, and writer-reader closure.
+- [docs/BIGNUM_OPS.md](docs/BIGNUM_OPS.md) - the arithmetic, bulk-cost, and illion-display
+  contract.
+- [docs/PROGRESSION_DESIGN.md](docs/PROGRESSION_DESIGN.md) - the 14 branch decisions and
+  12-stage gameplay arc.
 - [docs/active_plans/implementation_plan.md](docs/active_plans/implementation_plan.md) - the
-  canonical roadmap, milestone criteria, and scope boundaries.
+  canonical 22-milestone roadmap and acceptance criteria.
 - [docs/active_plans/active/cancer_clicker_build_plan.md](docs/active_plans/active/cancer_clicker_build_plan.md)
-  - the concise live execution ledger and accepted evidence status.
-- [docs/PROGRESSION_DESIGN.md](docs/PROGRESSION_DESIGN.md) - the player-decision design for the
-  biology-inspired progression arc.
-- [docs/BIGNUM_OPS.md](docs/BIGNUM_OPS.md) - the numeric contract for costs, scale, and display.
-- [docs/E2E_TESTS.md](docs/E2E_TESTS.md) - how fast tests, browser tests, and full-system tests
-  are separated in this repository.
-- [docs/PLAYWRIGHT_USAGE.md](docs/PLAYWRIGHT_USAGE.md) - the browser-automation guidance used by
-  later real-stack UI validation.
-
-## Next proof artifact
-
-Outcome: let a new visitor see the current interactive shell before deciding whether to run it.
-
-- Owner: `screenshot-docs`
-- Target files: `README.md`, `docs/screenshots/cancer_clicker_contract_probe.png`
-- Evidence: the production `dist/` page and its verified desktop/mobile interaction smoke
-- Work: capture the contract probe after one division and a format toggle, then populate the
-  managed screenshot block above with descriptive alt text and a concise caption.
-- Success criteria: the dark clinical shell, both controls, and changed status are readable at a
-  useful size; the image documents current M1 behavior without implying unbuilt gameplay.
-- Verification: inspect the rendered README and image at repository viewing size, then run
-  `source source_me.sh && python3 -m pytest tests/test_markdown_links.py`.
+  - the live execution ledger and accepted evidence.
+- [docs/E2E_TESTS.md](docs/E2E_TESTS.md) and
+  [docs/PLAYWRIGHT_USAGE.md](docs/PLAYWRIGHT_USAGE.md) - the difference between fast Node checks
+  and production-shaped browser evidence.
 
 ## License
 

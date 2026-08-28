@@ -1,4 +1,5 @@
 import type { BigNum } from "./bignum.js";
+import type { M11MutationOffer } from "../hallmarks/m11_types.js";
 import type {
   EventId,
   HallmarkId,
@@ -23,6 +24,11 @@ export type ProducerLevel = Readonly<{ id: ProducerId; level: number }>;
 export type HallmarkLevel = Readonly<{ id: HallmarkId; level: number }>;
 /** Declarative only: M13 owns currencies, rewards, and reset behavior. */
 export type PrestigeAvailability = Readonly<{ id: PrestigeId; status: "unavailable" | "earned" }>;
+export type PendingProgression =
+  | Readonly<{ kind: "stage"; id: StageId; firstObservedAtActiveMs: number }>
+  | Readonly<{ kind: "prestige"; id: PrestigeId; firstObservedAtActiveMs: number }>;
+/** One durable bound protects save parsing, runtime events, and offline adapter work. */
+export const MAX_PENDING_PROGRESSION = 256;
 export type RegionState = Readonly<{
   id: RegionId;
   capacity: number;
@@ -31,14 +37,6 @@ export type RegionState = Readonly<{
   vesselLinkIds: readonly EventId[];
   routeIds: readonly RouteId[];
   senescenceEventId?: EventId;
-}>;
-export type MutationOffer = Readonly<{
-  id: OfferId;
-  /** Stable deterministic offer-pool identity; M11 supplies pool generation. */
-  poolId: string;
-  mutationIds: readonly MutationId[];
-  sourceSeed: number;
-  sourceSequence: number;
 }>;
 export type PendingDamageEvent = Readonly<{
   id: EventId;
@@ -78,6 +76,10 @@ export type GameState = Readonly<{
   hallmarkLevels: readonly HallmarkLevel[];
   currentStage: StageId;
   stageStartedAtMs: number;
+  /** Monotonic simulation time; never derived from a wall-clock save sample. */
+  activeTimeMs: number;
+  /** Identity-only eligibility observations awaiting an explicit M9/M13 action. */
+  pendingProgression: readonly PendingProgression[];
   stageProgress: number;
   /** Saved per-stage gate progress; M9 owns semantic gate evaluation. */
   stageGateProgress: Readonly<Record<string, number>>;
@@ -109,7 +111,8 @@ export type GameState = Readonly<{
   inflammationEpisodes: readonly InflammationEpisode[];
   regionalInflammation: Readonly<Record<string, number>>;
   routeDiscoveryProgress: number;
-  mutationOffers: readonly MutationOffer[];
+  /** M11 persists at most one closed, deterministic three-card offer snapshot. */
+  mutationOffers: readonly M11MutationOffer[];
   chosenMutations: readonly MutationId[];
   mutationLiabilities: readonly MutationId[];
   genomeBurden: number;
@@ -129,6 +132,47 @@ export type GameState = Readonly<{
   numberFormat: NumberFormat;
   endingReached: boolean;
 }>;
+
+export type BigNumKeys<T> = {
+  [K in keyof T]-?: T[K] extends BigNum ? K : never;
+}[keyof T];
+export type BigNumGameStateKey = BigNumKeys<GameState>;
+export const TRACKED_RESOURCE_KEYS = [
+  "cells",
+  "substrate",
+  "atp",
+] as const satisfies readonly BigNumGameStateKey[];
+export type TrackedResourceKey = (typeof TRACKED_RESOURCE_KEYS)[number];
+export type TrackedResourceSnapshot = Readonly<Record<TrackedResourceKey, BigNum>>;
+type AllBigNumResourcesTrackedFor<T, Keys extends readonly PropertyKey[]> =
+  Exclude<BigNumKeys<T>, Keys[number]> extends never
+    ? Exclude<Keys[number], BigNumKeys<T>> extends never
+      ? true
+      : never
+    : never;
+type AllBigNumResourcesTracked = AllBigNumResourcesTrackedFor<
+  GameState,
+  typeof TRACKED_RESOURCE_KEYS
+>;
+export const ALL_BIG_NUM_RESOURCES_TRACKED: AllBigNumResourcesTracked = true;
+type SyntheticLactateState = GameState & Readonly<{ lactate: BigNum }>;
+// @ts-expect-error A new BigNum field must join TRACKED_RESOURCE_KEYS.
+const _SYNTHETIC_LACTATE_COVERAGE: AllBigNumResourcesTrackedFor<
+  SyntheticLactateState,
+  typeof TRACKED_RESOURCE_KEYS
+> = true;
+function compileSnapshotProbe(value: TrackedResourceSnapshot): TrackedResourceSnapshot {
+  return value;
+}
+// @ts-expect-error A resource snapshot cannot omit a tracked resource.
+compileSnapshotProbe({ cells: {} as BigNum, substrate: {} as BigNum });
+compileSnapshotProbe({
+  cells: {} as BigNum,
+  substrate: {} as BigNum,
+  atp: {} as BigNum,
+  // @ts-expect-error A resource snapshot cannot add non-resource state.
+  oxygenPressure: {} as BigNum,
+});
 /** Ephemeral state that must not be written to a save file. */
 export type RuntimeState = Readonly<{
   game: GameState;

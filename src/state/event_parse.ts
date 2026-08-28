@@ -1,8 +1,10 @@
 import {
+  bigNum,
   eventId,
   hallmarkId,
   mutationId,
   offerId,
+  prestigeId,
   producerId,
   programOptionId,
   regionId,
@@ -10,7 +12,12 @@ import {
   stageId,
 } from "../brands.js";
 import type { GameEvent } from "../types/events.js";
-import { isStageId } from "./catalog.js";
+import type { PurchaseQuantity } from "../economy/costs.js";
+import type { PendingProgression, TrackedResourceSnapshot } from "../types/state.js";
+import { MAX_PENDING_PROGRESSION, TRACKED_RESOURCE_KEYS } from "../types/state.js";
+import { isPrestigeId, isStageId } from "./catalog.js";
+import { parsePositiveCanonicalBigNumDto } from "../hallmarks/m11_types.js";
+import { ATP_SINK_CATALOG } from "../hallmarks/m11_catalog.js";
 
 const RESERVED = new Set(["__proto__", "prototype", "constructor"]);
 const CHECKPOINTS = new Set(["contact-inhibition", "nutrient-arrest", "damage-arrest"]);
@@ -20,6 +27,10 @@ type EventValues = Readonly<Record<string, unknown>>;
 
 function natural(value: unknown): value is number {
   return typeof value === "number" && Number.isSafeInteger(value) && value >= 0;
+}
+
+function positiveNatural(value: unknown): value is number {
+  return natural(value) && value > 0;
 }
 
 function boundedAmount(value: unknown): value is number {
@@ -81,6 +92,14 @@ function discriminant(raw: unknown): string {
   return descriptor.value;
 }
 
+function ownDataValue(raw: unknown, key: string): unknown {
+  const descriptor = ownDataProperties(raw)[key];
+  if (!descriptor || !("value" in descriptor) || !descriptor.enumerable) {
+    throw new Error("Event properties must be enumerable data properties.");
+  }
+  return descriptor.value;
+}
+
 function valuesFor(raw: unknown, keys: readonly string[]): EventValues {
   const values = eventValues(raw, keys);
   if (!natural(values.atMs)) throw new Error("Event time is invalid.");
@@ -97,6 +116,61 @@ function requireDeadline(value: unknown, label: string, atMs: number): number {
   return value;
 }
 
+function purchaseQuantity(value: unknown): PurchaseQuantity {
+  if (value === "max" || value === 1 || value === 10 || value === 100) return value;
+  throw new Error("Producer quantity is invalid.");
+}
+
+function parseSnapshot(raw: unknown): TrackedResourceSnapshot {
+  const values = eventValues(raw, TRACKED_RESOURCE_KEYS);
+  const result: Record<string, ReturnType<typeof bigNum>> = {};
+  for (const key of TRACKED_RESOURCE_KEYS) {
+    const value = values[key];
+    const fields = eventValues(value, ["mantissa", "exponent"]);
+    if (
+      typeof fields.mantissa !== "number" ||
+      !Number.isFinite(fields.mantissa) ||
+      typeof fields.exponent !== "number" ||
+      !Number.isSafeInteger(fields.exponent)
+    )
+      throw new Error("Offline resource snapshot is invalid.");
+    const restored = bigNum(fields.mantissa, fields.exponent);
+    if (restored.mantissa !== fields.mantissa || restored.exponent !== fields.exponent)
+      throw new Error("Offline resource snapshot is not canonical.");
+    result[key] = restored;
+  }
+  return result as TrackedResourceSnapshot;
+}
+
+function parseProgression(raw: unknown, atMs: number): readonly PendingProgression[] {
+  if (!Array.isArray(raw) || raw.length > MAX_PENDING_PROGRESSION)
+    throw new Error("Offline progression is invalid.");
+  const result: PendingProgression[] = [];
+  const identities = new Set<string>();
+  for (const item of raw) {
+    const values = eventValues(item, ["kind", "id", "firstObservedAtActiveMs"]);
+    if (!natural(values.firstObservedAtActiveMs) || values.firstObservedAtActiveMs !== atMs)
+      throw new Error("Offline progression timestamp is invalid.");
+    if (values.kind !== "stage" && values.kind !== "prestige")
+      throw new Error("Offline progression kind is invalid.");
+    const id = requireIdentifier(values.id, "Offline progression identifier");
+    if (
+      (values.kind === "stage" && !isStageId(id)) ||
+      (values.kind === "prestige" && !isPrestigeId(id))
+    )
+      throw new Error("Offline progression identifier is unknown.");
+    const identity = `${values.kind}:${id}`;
+    if (identities.has(identity)) throw new Error("Offline progression is duplicated.");
+    identities.add(identity);
+    result.push(
+      values.kind === "stage"
+        ? { kind: "stage", id: stageId(id), firstObservedAtActiveMs: atMs }
+        : { kind: "prestige", id: prestigeId(id), firstObservedAtActiveMs: atMs },
+    );
+  }
+  return result;
+}
+
 /**
  * ASVS 2.1.1, 2.3.1, and 15.3.5: reconstruct a discriminated event from an
  * untrusted runtime record without reading inherited properties or spreading it.
@@ -110,12 +184,10 @@ export function parseRuntimeEvent(raw: unknown): GameEvent {
     }
     case "purchase-producer": {
       const values = valuesFor(raw, ["type", "producerId", "quantity", "atMs"]);
-      if (!natural(values.quantity) || values.quantity === 0)
-        throw new Error("Producer quantity is invalid.");
       return {
         type,
         producerId: producerId(requireIdentifier(values.producerId, "Producer identifier")),
-        quantity: values.quantity,
+        quantity: purchaseQuantity(values.quantity),
         atMs: values.atMs as number,
       };
     }
@@ -145,9 +217,24 @@ export function parseRuntimeEvent(raw: unknown): GameEvent {
       return { type, atMs: values.atMs as number };
     }
     case "apply-offline-accrual": {
-      const values = valuesFor(raw, ["type", "elapsedMs", "atMs"]);
+      const values = valuesFor(raw, [
+        "type",
+        "elapsedMs",
+        "atMs",
+        "resourceSnapshot",
+        "newlyObservedProgression",
+      ]);
       if (!natural(values.elapsedMs)) throw new Error("Offline elapsed time is invalid.");
-      return { type, elapsedMs: values.elapsedMs, atMs: values.atMs as number };
+      const atMs = values.atMs as number;
+      const resourceSnapshot = parseSnapshot(values.resourceSnapshot);
+      const newlyObservedProgression = parseProgression(values.newlyObservedProgression, atMs);
+      return {
+        type,
+        elapsedMs: values.elapsedMs,
+        atMs,
+        resourceSnapshot,
+        newlyObservedProgression,
+      };
     }
     case "set-number-format": {
       const values = valuesFor(raw, ["type", "numberFormat", "atMs"]);
@@ -186,6 +273,26 @@ export function parseRuntimeEvent(raw: unknown): GameEvent {
         atMs: values.atMs as number,
       };
     }
+    case "spend-telomerase": {
+      const target = ownDataValue(raw, "target");
+      if (target === "refill-region") {
+        const values = valuesFor(raw, ["type", "target", "regionId", "charges", "atMs"]);
+        if (!positiveNatural(values.charges)) throw new Error("Telomerase charges are invalid.");
+        return {
+          type,
+          target,
+          regionId: regionId(requireIdentifier(values.regionId, "Region identifier")),
+          charges: values.charges,
+          atMs: values.atMs as number,
+        };
+      }
+      if (target === "bank-reserve-floor") {
+        const values = valuesFor(raw, ["type", "target", "charges", "atMs"]);
+        if (!positiveNatural(values.charges)) throw new Error("Telomerase charges are invalid.");
+        return { type, target, charges: values.charges, atMs: values.atMs as number };
+      }
+      throw new Error("Telomerase target is invalid.");
+    }
     case "set-vessel-link": {
       const values = valuesFor(raw, ["type", "regionId", "linked", "atMs"]);
       if (typeof values.linked !== "boolean") throw new Error("Vessel-link value is invalid.");
@@ -210,10 +317,37 @@ export function parseRuntimeEvent(raw: unknown): GameEvent {
     case "set-atp-budget": {
       const values = valuesFor(raw, ["type", "sink", "amount", "atMs"]);
       if (!boundedAmount(values.amount)) throw new Error("ATP budget is invalid.");
+      const requestedSink = requireIdentifier(values.sink, "ATP budget sink");
+      const sink = ATP_SINK_CATALOG.find((candidate) => candidate.id === requestedSink);
+      if (sink === undefined) throw new Error("ATP budget sink is invalid.");
       return {
         type,
-        sink: requireIdentifier(values.sink, "ATP budget sink"),
+        sink: sink.id,
         amount: values.amount,
+        atMs: values.atMs as number,
+      };
+    }
+    case "convert-substrate": {
+      const values = valuesFor(raw, ["type", "amount", "atMs"]);
+      // ASVS 1.5.2, 2.2.1, 15.3.3, and 15.3.5: allowlisted DTO reconstruction.
+      const amount = parsePositiveCanonicalBigNumDto(values.amount);
+      return { type, amount, atMs: values.atMs as number };
+    }
+    case "set-region-mask": {
+      const values = valuesFor(raw, ["type", "regionId", "masked", "atMs"]);
+      if (typeof values.masked !== "boolean") throw new Error("Region mask value is invalid.");
+      return {
+        type,
+        regionId: regionId(requireIdentifier(values.regionId, "Region identifier")),
+        masked: values.masked,
+        atMs: values.atMs as number,
+      };
+    }
+    case "activate-inflammation": {
+      const values = valuesFor(raw, ["type", "regionId", "atMs"]);
+      return {
+        type,
+        regionId: regionId(requireIdentifier(values.regionId, "Region identifier")),
         atMs: values.atMs as number,
       };
     }

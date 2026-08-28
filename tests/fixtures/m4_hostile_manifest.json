@@ -26,7 +26,8 @@
     "orphan-clearance",
     "program-relation",
     "microbiome-relation",
-    "prototype-pollution"
+    "prototype-pollution",
+    "reserved-map-key"
   ],
-  "recovered": ["reserved-map-key"]
+  "recovered": []
 }
