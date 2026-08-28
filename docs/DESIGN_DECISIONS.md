@@ -639,4 +639,29 @@ one capture, not future byte, pixel, or performance requirements.
 **Owner.** `src/tumor_arena_neutral_light.css`, `tools/build_solid.mjs`, and
 `tools/colony_contact_sheet.mjs`
 
+### Reachable cell-target layout
+
+**Decision.** Canonical layout data keeps a real cell target at every reachable stage.
+
+**Why.** The direct division loop is a player-visible contract, so a reachable scene cannot be
+valid if its composition leaves only inert background.
+
+**Consequence.** Bounded layout checks and real production-browser clicks are permanent evidence.
+The sparse-void multiplier `0.97` is the largest simple two-decimal value green across seeds
+`0..255`; `0.98` failed three avascular seeds. That sweep is one-time calibration evidence.
+
+### Durable evidence and state boundary
+
+**Decision.** Permanent tests retain semantic behavior only; arbitrary slow, calibration, and
+source-token tests do not enter the permanent suite. Balance semantic provenance is
+`canonical-decision-surface-v1`. Current saves are the exact schema 8 shape, and obsolete
+migration helpers are removed.
+
+**Why.** Stable behavior must remain testable through ordinary tuning and refactoring, while
+calibration measurements and retired compatibility code would make the suite misleading.
+
+**Consequence.** Candidate manifests publish only after byte-stable re-projection. Calibration
+sweeps remain dated reports, and current save parsing rejects obsolete shapes rather than
+migrating them.
+
 ## Generated artifacts

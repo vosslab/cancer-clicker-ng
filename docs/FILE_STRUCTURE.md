@@ -6,9 +6,11 @@
 AGENTS.md                     Local working rules
 README.md                     Project landing page
 package.json                  Node, SolidJS, and tooling manifest
+.github/                      GitHub Pages deployment workflow
 src/                          Authored application source
 tests/                        Node, browser, and cross-ecosystem checks
 tools/                        Focused build, capture, and calibration tools
+devel/                        Setup, candidate, version, and release-maintenance tools
 docs/                         Durable project documentation and active plans
 build_github_pages.sh         Canonical static production build
 check_codebase.sh             Canonical TypeScript and Node quality gate
@@ -16,6 +18,7 @@ run_playwright_tests.sh       Production-browser test runner
 run_web_server.sh             Local production-artifact preview
 dist/                         Generated static deployment artifact
 output_balance/               Generated calibration reports
+output_release/               Generated candidate-integrity manifest
 output_visual/                Generated contact-sheet and renderer-calibration artifacts
 graphify-out/                 Generated repository-navigation map
 ```
@@ -113,10 +116,11 @@ graphify-out/                 Generated repository-navigation map
   [tools/colony_contact_sheet.mjs](../tools/colony_contact_sheet.mjs) support rendered SVG review;
   they own `output_visual/colony-rendering-verification/` and
   `output_visual/colony-contact-sheet/`, respectively.
-- `devel/verify_candidate.py`, documented in
-  [devel/DEVEL_README.md](../devel/DEVEL_README.md), projects the complete nonignored working tree
-  through disposable Git storage, runs repository-hygiene checks, writes a candidate manifest,
-  and verifies the real Git index remains unchanged.
+- [devel/verify_candidate.py](../devel/verify_candidate.py), documented in
+  [devel/DEVEL_README.md](../devel/DEVEL_README.md), owns candidate integrity: it projects the
+  complete nonignored tree, runs `pytest`, then reprojects and compares path/mode/blob entries
+  before manifest publication. It preserves exact real-index bytes; ignored generated output is
+  permitted. `tests/test_candidate_verifier.py` covers the comparison contract.
 - [devel/verify_pages_workflow.py](../devel/verify_pages_workflow.py) validates the local Pages
   workflow contract, including template parity and the build, artifact-upload, and deploy shape.
 
@@ -133,11 +137,11 @@ graphify-out/                 Generated repository-navigation map
   tool clears and recreates only `output_visual/colony-rendering-verification/`, including
   `report.json`. Both artifacts regenerate from their canonical tool commands and are dated
   evidence, not authored source.
-- `output_release/candidate_manifest.json` is an ignored, regenerated candidate-projection
-  manifest written by `devel/verify_candidate.py`, as documented in
-  [devel/DEVEL_README.md](../devel/DEVEL_README.md). Its sorted path/mode/blob entries and digest
-  identify one working-tree projection; the verifier isolates all projection writes in disposable
-  Git storage and preserves the real index.
+- `output_release/candidate_manifest.json` is an ignored, regenerated candidate-integrity
+  manifest written atomically by [devel/verify_candidate.py](../devel/verify_candidate.py), as
+  documented in [devel/DEVEL_README.md](../devel/DEVEL_README.md). It identifies a complete
+  nonignored-tree projection only after its pre- and post-`pytest` path/mode/blob entries match.
+  Ignored generated output remains permitted, and the verifier preserves exact real-index bytes.
 - `graphify-out/` holds a generated navigation graph. Use it to narrow source
   investigation, then confirm conclusions in the current files and tests.
 - `test-results/` and Playwright report directories are transient browser-test

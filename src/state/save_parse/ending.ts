@@ -9,7 +9,7 @@ export type EndingSaveContext = Readonly<{
   networkGlobalTier: number;
 }>;
 
-/** Rebuilds ending evidence from an exact p8 record without manufacturing old proof. */
+/** Rebuilds ending evidence from an exact current-schema record without fabrication. */
 export function parseEnding(
   value: unknown,
   context: EndingSaveContext,

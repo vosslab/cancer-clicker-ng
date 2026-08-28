@@ -18,19 +18,19 @@ appropriate repo root or package.
 
 ## Current root scripts
 
-| File | Kind of work |
-| --- | --- |
-| [bump_version.py](bump_version.py) | Preview and save repo version changes; enter `patch` for the next patch release. |
-| [version_lib.py](version_lib.py) | Shared version parsing and normalization behavior. |
-| [version_files.py](version_files.py) | Discover and update files that carry version metadata. |
-| [changelog_lib.py](changelog_lib.py) | Shared parser and helpers for changelog tools. |
-| [commit_changelog.py](commit_changelog.py) | Draft a commit message from new changelog entries. |
-| [query_changelog.py](query_changelog.py) | Search active and archived changelog entries. |
-| [rotate_changelog.py](rotate_changelog.py) | Move old changelog day blocks into archive files. |
-| [flatten_broken_md_links.py](flatten_broken_md_links.py) | Repair or flatten broken Markdown links. |
-| [dist_clean.sh](dist_clean.sh) | Remove build artifacts, caches, and dependency installs. |
-| `verify_candidate.py` | Project the complete nonignored working tree into a disposable Git index/object store, write `output_release/candidate_manifest.json`, run the full Python suite, and prove the real index unchanged. |
-| `verify_pages_workflow.py` | Verify the local Pages workflow contract: template parity, build/upload/deploy order, permissions, and triggers. |
+| File                                                     | Kind of work                                                                                                                                                                                                                          |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [bump_version.py](bump_version.py)                       | Preview and save repo version changes; enter `patch` for the next patch release.                                                                                                                                                      |
+| [version_lib.py](version_lib.py)                         | Shared version parsing and normalization behavior.                                                                                                                                                                                    |
+| [version_files.py](version_files.py)                     | Discover and update files that carry version metadata.                                                                                                                                                                                |
+| [changelog_lib.py](changelog_lib.py)                     | Shared parser and helpers for changelog tools.                                                                                                                                                                                        |
+| [commit_changelog.py](commit_changelog.py)               | Draft a commit message from new changelog entries.                                                                                                                                                                                    |
+| [query_changelog.py](query_changelog.py)                 | Search active and archived changelog entries.                                                                                                                                                                                         |
+| [rotate_changelog.py](rotate_changelog.py)               | Move old changelog day blocks into archive files.                                                                                                                                                                                     |
+| [flatten_broken_md_links.py](flatten_broken_md_links.py) | Repair or flatten broken Markdown links.                                                                                                                                                                                              |
+| [dist_clean.sh](dist_clean.sh)                           | Remove build artifacts, caches, and dependency installs.                                                                                                                                                                              |
+| [verify_candidate.py](verify_candidate.py)               | Project the complete nonignored tree, run `pytest`, reproject and require identical path/mode/blob entries, then atomically publish the manifest while preserving exact real-index bytes; ignored generated output remains permitted. |
+| `verify_pages_workflow.py`                               | Verify the local Pages workflow contract: template parity, build/upload/deploy order, permissions, and triggers.                                                                                                                      |
 
 ## Propagated devel scripts
 
@@ -64,9 +64,10 @@ Verify the autonomous Pages workflow contract from the repository root:
 source source_me.sh && python3 devel/verify_pages_workflow.py
 ```
 
-Verify the complete local candidate without changing the real Git index. This route writes the
-ignored candidate manifest, projects the nonignored working tree into disposable Git storage, and
-runs the full Python suite against that projection:
+Verify the complete local candidate while preserving the exact real-index bytes. The verifier
+projects the complete nonignored tree, runs `pytest`, and reprojects it. It publishes the ignored
+manifest atomically only when path, mode, and blob entries are identical; ignored generated output
+is permitted. `tests/test_candidate_verifier.py` covers this candidate-integrity boundary.
 
 ```bash
 source source_me.sh && python3 devel/verify_candidate.py

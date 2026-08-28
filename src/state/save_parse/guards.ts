@@ -122,7 +122,7 @@ export function serial(value: unknown): unknown {
   return value;
 }
 
-/** Typed current-state serializer for the durable p4 writer boundary. */
+/** Typed current-state serializer for the durable save writer boundary. */
 export function serialGameState(state: GameState): SerializedGameState {
   const result: Record<string, unknown> = {};
   Object.setPrototypeOf(result, null);

@@ -2,10 +2,10 @@
 
 ### Additions and New Features
 
-- Completed M22 autonomous local-candidate closure: fresh independent release audit PASS, 5/5
-  source checks plus 372 Node tests, 48/48 production-browser tests, Pages workflow verification,
-  selected zero-blocker balance evidence, and a post-report 1,520-test disposable candidate
-  projection that preserved the real Git index.
+- Historical evidence: completed M22 autonomous local-candidate closure with fresh independent
+  release audit PASS, 5/5 source checks plus 372 Node tests, 48/48 production-browser tests,
+  Pages workflow verification, selected zero-blocker balance evidence, and a post-report 1,520-test
+  disposable candidate projection that preserved the real Git index.
 
 - Added the supported scoped neutral-light tumor-arena specimen treatment and made it an explicit
   build asset rather than a capture-only label.
@@ -136,6 +136,10 @@
   explicit base/domain stylesheet assets that the Pages build must preflight, copy, and prove in a
   browser.
 
+- Refreshed the complete documentation set with evidence-backed architecture and file maps,
+  installation and usage guides, related-project context, newcomer README routes, focused
+  maintenance references, and lean `AGENTS.md` operational-pointer verification.
+
 ### Behavior or Interface Changes
 
 - Reframed release-candidate closure as a manager-and-subagent evidence contract: canonical code,
@@ -144,6 +148,25 @@
   history and remote distribution add evidence without changing candidate status.
 
 ### Fixes and Maintenance
+
+- Reconciled M22's current-candidate evidence from base HEAD
+  `28591cc98ec5e2bb9cd2acc4678468b99c4092b9`: 5/5 source checks with 368 Node tests in 1.60
+  seconds, build, 48/48 browser tests, Pages verification, and a 1,533-test byte-stable candidate
+  projection that preserved the real index. Historical counts remain labeled as such.
+
+- Updated visual provenance to the 2026-08-28T21:31:14.013Z 216-frame contact manifest and
+  recorded the independent PASS review of 44 originals: all 36 repaired-lesion combinations plus
+  eight progression samples. The seven 1280 x 800 README frames were recaptured and reviewed at
+  original resolution; six remained byte-identical, while the perfused-tumor frame received its
+  current recorded identity.
+
+- Recorded the permanent real-cell-target layout contract, the one-time sparse-void sweep, the
+  semantic-only regression boundary, canonical balance provenance, and exact schema-8 cutover.
+
+- Separated offline cap and macro-step planning from callback execution. Permanent tests now
+  exercise the pure plan, short and irregular live/offline parity, the three sparse avascular
+  regression seeds, and canonical early-lesion scenes. Three repeated 10,080-step executions and
+  the wider sparse calibration sample no longer burden the fast lane.
 
 - Made reset stage observations durable and coherent: L1/L2 record their reset to transformed
   cells, immortalization records entry to culture, and a same-stage L4 campaign begins without
@@ -203,19 +226,26 @@
   controller persistence, and decision outcomes now use durable domain filenames. Historical
   milestone-style test-file references are removed from active documentation.
 
-### Removals
-
 ### Decisions and Failures
+
+- Kept `docs/YAML_FILE_FORMAT.md` absent because YAML is currently limited to the paired GitHub
+  Pages workflow files and their local semantic-parity verifier; JSON remains the documented
+  game-data and evidence interface. Create a YAML format reference when a versioned authored YAML
+  domain schema, validator, and supported examples exist.
 
 ### Developer Tests and Notes
 
-- Final local verification passed all five `./check_codebase.sh` lanes with 372 Node tests, the
+- Historical final local verification passed all five `./check_codebase.sh` lanes with 372 Node tests, the
   GitHub Pages build, and 48 production-browser tests. A synthetic full-candidate Git projection
   passed all 1,484 Python tests while preserving the real index; the ordinary tracked projection
   reported only the two intentionally untracked new screenshot links.
 - Recaptured all seven 1280 x 800 documentation frames with no browser diagnostics or horizontal
   overflow. Independent original-resolution review accepted every frame, including the final
-  right-rail Chicago drawer with the central living tumor fully unobscured.
+  right-rail Chicago drawer with the central living tumor fully unobscured; six retained their
+  prior bytes and the perfused-tumor frame has fresh current provenance.
+- One-time isolated profiling observed the default Node lane fall from 2.44 to 1.12-1.41 seconds,
+  the sequential diagnostic lane from 8.94 to 7.04 seconds, and the complete five-lane front door
+  from 12.03 to 8.23-9.20 seconds. These are local observations, not permanent timing thresholds.
 
 ## 2026-08-27
 

@@ -14,6 +14,10 @@ click cells that you can see, spend the cells you earn on a permanent upgrade su
 single transformed cell become a vascularized, hypoxic, invasive tumor with decisions that remain
 meaningful as the system grows.
 
+**Play locally:** follow the two-command [first-loop path](#play-the-first-loop) to open the
+current game in your browser. The checked-in Pages workflow is ready to distribute a verified
+artifact; the pre-production candidate does not claim a published live site yet.
+
 ## A living clicker board
 
 The primary 1280 x 800 (16:10) view is a visual game canvas:
@@ -152,6 +156,8 @@ For architecture, persistence, and development work:
   protected recovery, and semantic replay.
 - [docs/PLAYWRIGHT_USAGE.md](docs/PLAYWRIGHT_USAGE.md) - production-browser verification and the
   screenshot workflow.
+- [docs/RELEASE_EVIDENCE.md](docs/RELEASE_EVIDENCE.md) - current local-candidate evidence and the
+  boundary between verified work and future publication.
 - [docs/active_plans/implementation_plan.md](docs/active_plans/implementation_plan.md) - the
   durable implementation roadmap and autonomous closure contract.
 

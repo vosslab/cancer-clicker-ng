@@ -18,7 +18,7 @@ export type EndingPresentation = Readonly<{
   nextNetworkAction: string;
 }>;
 
-/** Local future-state seam; p8 GameState supplies this exact read-only projection. */
+/** Read-only state projection consumed by the ending presentation. */
 export type EndingPresentationState = SoftEndingTriggerState &
   Readonly<{
     numberFormat: NumberFormat;

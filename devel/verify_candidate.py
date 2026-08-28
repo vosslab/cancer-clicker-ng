@@ -235,6 +235,67 @@ def projected_entries(
 
 
 #============================================
+def changed_candidate_paths(
+	before_entries: list[dict[str, str]],
+	after_entries: list[dict[str, str]],
+) -> list[str]:
+	"""Return sorted paths whose candidate mode or content changed.
+
+	Args:
+		before_entries: Candidate entries captured before running projected tests.
+		after_entries: Candidate entries captured after running projected tests.
+
+	Returns:
+		Sorted paths added, removed, or changed between the two projections.
+	"""
+	before_by_path = {
+		entry["path"]: (entry["mode"], entry["blob_id"])
+		for entry in before_entries
+	}
+	after_by_path = {
+		entry["path"]: (entry["mode"], entry["blob_id"])
+		for entry in after_entries
+	}
+	paths = set(before_by_path) | set(after_by_path)
+	changed_paths = []
+	for path in sorted(paths):
+		if before_by_path.get(path) != after_by_path.get(path):
+			changed_paths.append(path)
+	return changed_paths
+
+
+#============================================
+def verify_candidate_entries_unchanged(
+	before_entries: list[dict[str, str]],
+	after_entries: list[dict[str, str]],
+) -> None:
+	"""Reject a candidate whose nonignored working tree changed during testing.
+
+	Args:
+		before_entries: Candidate entries captured before running projected tests.
+		after_entries: Candidate entries captured after running projected tests.
+
+	Raises:
+		RuntimeError: Projected tests changed a nonignored candidate path.
+	"""
+	if before_entries == after_entries:
+		return
+	changed_paths = changed_candidate_paths(before_entries, after_entries)
+	if changed_paths:
+		path_text = ", ".join(changed_paths)
+		message = (
+			"FAIL: the nonignored candidate changed while projected tests were running. "
+			f"Changed candidate paths: {path_text}"
+		)
+	else:
+		message = (
+			"FAIL: the nonignored candidate changed while projected tests were running, "
+			"but changed paths could not be determined."
+		)
+	raise RuntimeError(message)
+
+
+#============================================
 def manifest_digest(source_head: str, entries: list[dict[str, str]]) -> str:
 	"""Return the canonical digest for the projected candidate content.
 
@@ -365,8 +426,10 @@ def main() -> None:
 				temporary_root,
 			)
 			entries = projected_entries(repo_root, environment)
-			content = manifest_content(source_head, entries)
 			run_projected_tests(repo_root, environment)
+			entries_after_tests = projected_entries(repo_root, environment)
+			verify_candidate_entries_unchanged(entries, entries_after_tests)
+			content = manifest_content(source_head, entries)
 			try:
 				manifest_path = publish_manifest(manifest_path, content)
 			except OSError as error:

@@ -75,7 +75,7 @@ export function colonyRenderContractForgeryProof(): void {
       mitosis: undefined,
     }),
   );
-  // @ts-expect-error Render cells cannot accept coordinate overrides outside M17 slots.
+  // @ts-expect-error Render cells cannot accept coordinate overrides outside canonical slots.
   cell.x = 0;
   createCellRenderModel(scene, {
     slotKey: "x",
@@ -116,12 +116,12 @@ export const LOAD_RESULT_CONTRACT_PROBE = {
   savedAtMs: 0,
   stateSchemaVersion: 8,
 } satisfies LoadResult;
-const _LEGACY_LOADED_RESULT_PROBE = {
+const _INVALID_SCHEMA_LOADED_RESULT_PROBE = {
   ...LOAD_RESULT_CONTRACT_PROBE,
   // @ts-expect-error A loaded current save uses the settled state schema.
   stateSchemaVersion: 3,
 } satisfies LoadResult;
-void _LEGACY_LOADED_RESULT_PROBE;
+void _INVALID_SCHEMA_LOADED_RESULT_PROBE;
 const _REJECTED_WITH_STATE_PROBE = {
   status: "rejected",
   // @ts-expect-error A rejected result cannot masquerade as a loaded state.

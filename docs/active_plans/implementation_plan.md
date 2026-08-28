@@ -1349,6 +1349,12 @@ with a documented tradeoff, including after the ending and through L4 renewal.
 
 Every item is executable by the manager or a subagent and is required for M22 closure.
 
+Current evidence is reconciled from base HEAD `28591cc98ec5e2bb9cd2acc4678468b99c4092b9`:
+`./check_codebase.sh` is 5/5 with 368 Node tests in 1.60 seconds; build, 48/48 browser, and Pages
+workflow verification pass; and the candidate projection reports 1,533 Python tests with stable
+projected worktree path, mode, and blobs while preserving the real index. Candidate manifests
+publish only after byte-stable re-projection. Prior M22 counts remain historical observations.
+
 - [x] `./check_codebase.sh` passes with zero warnings.
 - [x] `source source_me.sh && python3 devel/verify_candidate.py` runs the full `pytest tests/`
       suite through a disposable candidate projection, including ASCII, indentation, line-limit,

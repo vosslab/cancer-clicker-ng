@@ -16,7 +16,7 @@ is the whole interface: drive the repo through them and you never need to open
 | `./build_github_pages.sh`   | Bundle `src/` into `dist/` (the Pages artifact).           |
 | `./run_web_server.sh`       | Build `dist/`, serve a local preview on a random port.     |
 | `./run_playwright_tests.sh` | Run browser tests; builds `dist/` as needed.               |
-| `./dist_clean.sh`           | Wipe `dist/`.                                              |
+| `./devel/clean_build.sh`    | Remove build, cache, and test outputs; keep dependencies.  |
 
 Run `./check_codebase.sh --help` for usage. `./run_web_server.sh` picks a
 random port each run so the browser cache stays fresh; set `PORT` to override.
@@ -62,9 +62,10 @@ A typical edit loop runs the tiers in this order:
 
 - Run `./build_github_pages.sh` to emit `dist/`, including `dist/.nojekyll` so
   Pages serves files whose names start with an underscore.
-- Deploy runs as a GitHub Action from `dist/`. The seed workflow ships as a
-  root-level `deploy-pages.yml`; move it into your repository workflows
-  directory to activate it.
+- Deploy runs as a GitHub Action from `dist/`. The installed workflow is
+  `.github/workflows/deploy-pages.yml`; it runs on pushes to `main` and by
+  manual dispatch. Verify that it remains equivalent to the root template with
+  `source source_me.sh && python3 devel/verify_pages_workflow.py`.
 - Once the site is live, link `https://<owner>.github.io/<repo>/` near the top
   of `README.md` so readers can open the app in one click.
 

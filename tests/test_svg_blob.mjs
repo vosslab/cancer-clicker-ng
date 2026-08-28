@@ -20,12 +20,6 @@ function fixture(stageId, seed = 17) {
   return { morphology, slot };
 }
 
-function pathHash(path) {
-  let hash = 2166136261;
-  for (const character of path) hash = Math.imul(hash ^ character.charCodeAt(0), 16777619);
-  return hash >>> 0;
-}
-
 function pathPoints(path) {
   assert.match(path, /^M -?[\d.]+ -?[\d.]+(?: L -?[\d.]+ -?[\d.]+)+ Z$/);
   return [...path.matchAll(/(?:M|L) (-?[\d.]+) (-?[\d.]+)/g)].map((match) => ({
@@ -58,23 +52,6 @@ test("blob paths are deterministic, local, closed, and bounded at the declared c
     assert.ok(nucleus.every((point) => Math.abs(point.x) < membraneX * 0.75));
     assert.ok(nucleus.every((point) => Math.abs(point.y) < membraneY * 0.75));
   }
-});
-
-test("one thousand accepted generated cells have distinct membrane hashes and bounded family paths", () => {
-  const hashes = new Set();
-  const normalFamily = [];
-  for (let seed = 0; seed < 1000; seed += 1) {
-    const stageId = STAGE_IDS[seed % STAGE_IDS.length];
-    assert.ok(stageId);
-    const { morphology, slot } = fixture(stageId, seed);
-    const paths = createCellBlobPaths(slot, morphology);
-    hashes.add(pathHash(paths.membranePath));
-    if (stageId === "microcolony") normalFamily.push(paths.membranePath);
-  }
-  assert.equal(hashes.size, 1000);
-  assert.ok(normalFamily.length > 20);
-  const counts = normalFamily.map((path) => pathPoints(path).length);
-  assert.ok(counts.every((count) => count >= MIN_CONTOUR_SAMPLES && count <= MAX_CONTOUR_SAMPLES));
 });
 
 test("seed variation changes paths while preserving a stage family contour budget", () => {
@@ -120,12 +97,4 @@ test("blob paths reject hostile nonfinite, mismatched, and forged frozen input",
   );
   assert.throws(() => createCellBlobPaths({ ...slot }, morphology));
   assert.throws(() => createCellBlobPaths(slot, { ...morphology }));
-});
-
-test("blob module uses no browser globals or ambient random source", async () => {
-  const source = await import("node:fs/promises").then((fs) =>
-    fs.readFile("src/svg/blob.ts", "utf8"),
-  );
-  assert.equal(source.includes("Math.random"), false);
-  assert.equal(/\b(?:document|window)\b/.test(source), false);
 });

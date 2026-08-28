@@ -15,7 +15,7 @@ export type SoftEndingEligibility =
       reason: "stage" | "network-tier" | "cell-scale" | "already-reached";
     }>;
 
-/** Local future-state seam; p8 GameState supplies this exact read-only projection. */
+/** Read-only state projection used to determine ending availability. */
 export type SoftEndingTriggerState = Readonly<{
   cells: BigNum;
   currentStage: string;

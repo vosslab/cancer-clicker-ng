@@ -10,15 +10,20 @@ import {
   planRegions,
   populateClusters,
 } from "../src/svg/colony_layout.ts";
+import { stageId } from "../src/brands.ts";
+import { createGameColonyScene } from "../src/svg/colony_visual_state.ts";
 import { resolve_stage_morphology } from "../src/svg/morphology.ts";
+import { stageGateFixture } from "./stage_fixture.mjs";
 
-function request(stageId, seed = 17, detail = "representative") {
+const SPARSE_AVASCULAR_REGRESSION_SEEDS = [39, 134, 191];
+
+function request(stageId, seed = 17, detail = "representative", burdenTier = "dense") {
   return {
     stageId,
     sceneSeed: seed,
     morphology: resolve_stage_morphology(seed, stageId),
     detail,
-    burdenTier: "dense",
+    burdenTier,
   };
 }
 
@@ -122,6 +127,31 @@ test("representative colony layouts stay finite, contained, and clear of each ot
       `${stageId}: finite metrics`,
     );
     assertIndependentGeometry(layout, stageId);
+  }
+});
+
+test("sparse early lesions retain accepted cells for direct division", () => {
+  for (const seed of SPARSE_AVASCULAR_REGRESSION_SEEDS) {
+    const layout = createColonyLayout(
+      request("avascular_lesion", seed, "representative", "sparse"),
+    );
+    assert.ok(layout.slots.length > 0, `avascular_lesion ${seed}: sparse visible colony`);
+    assert.deepEqual(
+      layout.voids.map((voidFeature) => voidFeature.kind),
+      ["cleft"],
+    );
+  }
+  const hypoxic = createColonyLayout(request("hypoxic_lesion", 17, "representative", "sparse"));
+  assert.ok(hypoxic.slots.length > 0, "hypoxic_lesion: sparse visible colony");
+  assert.deepEqual(
+    hypoxic.voids.map((voidFeature) => voidFeature.kind),
+    ["core_void"],
+  );
+  for (const stageName of ["avascular_lesion", "hypoxic_lesion"]) {
+    const game = { ...stageGateFixture(stageName), currentStage: stageId(stageName) };
+    const canonicalLayout = createGameColonyScene(game).layout;
+    assert.equal(canonicalLayout.burdenTier, "sparse");
+    assert.ok(canonicalLayout.slots.length > 0, `${stageName}: canonical sparse visible colony`);
   }
 });
 

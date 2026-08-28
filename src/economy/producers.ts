@@ -13,7 +13,7 @@ export type ProducerDefinition = Readonly<{
 }>;
 
 /**
- * Opening-economy values are deliberately provisional: balance calibration tunes these data,
+ * Opening-economy values are catalog-owned balance inputs; calibration tunes these data,
  * never the purchasing or production algorithms.
  */
 export const STAGE_ONE_PRODUCERS = [
@@ -115,21 +115,4 @@ export function assertCanonicalProducerLevels(
       throw new Error("Producer levels are not canonical.");
   }
   return levels;
-}
-
-/** Migrates sparse historical inventories only; current saves must use the strict validator. */
-export function normalizeLegacyProducerLevels(
-  levels: readonly ProducerLevel[],
-): readonly ProducerLevel[] {
-  const known = new Map<ProducerId, number>();
-  for (const level of levels) {
-    if (!validLevel(level) || known.has(level.id))
-      throw new Error("Legacy producer levels are invalid.");
-    producerDefinition(level.id);
-    known.set(level.id, level.level);
-  }
-  return STAGE_ONE_PRODUCERS.map((producer) => ({
-    id: producer.id,
-    level: known.get(producer.id) ?? 0,
-  }));
 }

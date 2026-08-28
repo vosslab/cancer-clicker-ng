@@ -47,7 +47,7 @@ export type ResolveTriageOperation = Readonly<{
   action: TriageAction;
 }>;
 
-/** D3 maps the announced spend-telomerase event into this parsed domain operation. */
+/** The event parser maps a spend-telomerase command into this domain operation. */
 export type SpendTelomeraseOperation =
   | Readonly<{
       type: "spend-telomerase";

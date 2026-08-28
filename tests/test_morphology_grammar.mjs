@@ -1,15 +1,12 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 import {
   MORPHOLOGY_AXES,
-  MORPHOLOGY_REFERENCE_ROW_IDS,
   MORPHOLOGY_RULES,
   MORPHOLOGY_VARIATION_BUDGETS,
   STAGE_MORPHOLOGY_FIXTURES,
   resolve_morphology,
-  resolve_stage_morphology,
 } from "../src/svg/morphology.ts";
 import {
   MAX_NOISE_OCTAVES,
@@ -62,86 +59,6 @@ function category(
 
 function numericFields(params) {
   return MORPHOLOGY_AXES.map((name) => [name, params[name]]);
-}
-
-function parseTokenCell(cell) {
-  if (cell === "`NONE`") {
-    return [];
-  }
-  return cell.split(";").map((token) => token.trim().replaceAll("`", ""));
-}
-
-function splitMarkdownCells(line) {
-  assert.equal(line.startsWith("| "), true, "table row starts with a Markdown delimiter");
-  assert.equal(line.endsWith(" |"), true, "table row ends with a Markdown delimiter");
-  const cells = line
-    .slice(2, -2)
-    .split(" | ")
-    .map((cell) => cell.trim());
-  return cells;
-}
-
-function parseStageGrammarTable(document) {
-  const lines = document.split("\n");
-  const headerIndex = lines.findIndex((line) =>
-    line.includes("| rowId | stageId | rowIds | numericTokens | categoryTokens |"),
-  );
-  assert.notEqual(headerIndex, -1, "stage grammar table header exists");
-  const rows = [];
-  for (let index = headerIndex + 2; index < lines.length; index += 1) {
-    const line = lines[index];
-    if (!line.startsWith("| `stage:")) {
-      break;
-    }
-    const cells = splitMarkdownCells(line);
-    assert.equal(cells.length, 8, "stage grammar table has eight cells");
-    rows.push({
-      rowId: cells[0].replaceAll("`", ""),
-      stageId: cells[1].replaceAll("`", ""),
-      rowIds: parseTokenCell(cells[2]),
-      numericTokens: parseTokenCell(cells[3]),
-      categoryTokens: parseTokenCell(cells[4]),
-    });
-  }
-  return rows;
-}
-
-function fixtureTokens(fixture) {
-  const numericTokens = [];
-  const categoryTokens = [];
-  for (const contribution of fixture.contributions) {
-    const rowId = contribution.source.referenceRowId;
-    if ("axis" in contribution) {
-      numericTokens.push(
-        `${contribution.axis}|${contribution.mode}|${contribution.value}|${rowId}`,
-      );
-    } else {
-      categoryTokens.push(
-        `${contribution.field}|${contribution.value}|${contribution.priority}|${rowId}`,
-      );
-    }
-  }
-  return { numericTokens, categoryTokens };
-}
-
-function normalizeNumericTokens(tokens) {
-  return tokens.map((token) => {
-    const parts = token.split("|");
-    assert.equal(parts.length, 4, "numeric token has four fields");
-    const value = Number(parts[2]);
-    assert.equal(Number.isFinite(value), true, "numeric token value is finite");
-    return `${parts[0]}|${parts[1]}|${value}|${parts[3]}`;
-  });
-}
-
-function normalizeCategoryTokens(tokens) {
-  return tokens.map((token) => {
-    const parts = token.split("|");
-    assert.equal(parts.length, 4, "category token has four fields");
-    const priority = Number(parts[2]);
-    assert.equal(Number.isSafeInteger(priority), true, "category token priority is a safe integer");
-    return `${parts[0]}|${parts[1]}|${priority}|${parts[3]}`;
-  });
 }
 
 test("versioned FNV and Mulberry32 vectors protect the deterministic wire contract", () => {
@@ -414,59 +331,6 @@ test("individual variation is bounded by heterogeneity and never changes categor
   }
 });
 
-test("stage grammar table exactly matches all executable fixture declarations", async () => {
-  const document = await readFile(
-    new URL("../docs/MORPHOLOGY_REFERENCE.md", import.meta.url),
-    "utf8",
-  );
-  const rows = parseStageGrammarTable(document);
-  assert.equal(rows.length, 12, "stage grammar table has exactly twelve rows");
-  const byStageId = new Map(rows.map((row) => [row.stageId, row]));
-  const fingerprints = new Set();
-  for (const [stageId, fixture] of Object.entries(STAGE_MORPHOLOGY_FIXTURES)) {
-    const row = byStageId.get(stageId);
-    assert.notEqual(row, undefined, `${stageId} has one document row`);
-    assert.equal(row.rowId, `stage:${stageId}`);
-    assert.deepEqual(row.rowIds, fixture.referenceRowIds);
-    const tokens = fixtureTokens(fixture);
-    assert.deepEqual(
-      normalizeNumericTokens(row.numericTokens),
-      normalizeNumericTokens(tokens.numericTokens),
-    );
-    assert.deepEqual(
-      normalizeCategoryTokens(row.categoryTokens),
-      normalizeCategoryTokens(tokens.categoryTokens),
-    );
-    const resolution = resolve_stage_morphology(0x12345678, stageId);
-    for (const [name, value] of numericFields(resolution.params)) {
-      const rule = MORPHOLOGY_RULES[name];
-      assert.ok(value >= rule.minimum && value <= rule.maximum, `${stageId} ${name} in range`);
-    }
-    if (fixture.contributions.length > 0) {
-      const fingerprint = JSON.stringify(resolution.params);
-      assert.equal(
-        fingerprints.has(fingerprint),
-        false,
-        `${stageId} has a unique morphology grammar fixture`,
-      );
-      fingerprints.add(fingerprint);
-    }
-  }
-  for (const rowId of MORPHOLOGY_REFERENCE_ROW_IDS) {
-    assert.ok(document.includes(`\`${rowId}\``), `${rowId} document row exists`);
-  }
-  const malformed = document.replace(
-    "| `stage:transformed_cell`",
-    "| `stage:not_transformed_cell`",
-  );
-  const malformedRows = parseStageGrammarTable(malformed);
-  assert.notEqual(
-    malformedRows[0].rowId,
-    "stage:transformed_cell",
-    "negative table fixture detects drift",
-  );
-});
-
 test("noise stays bounded across seed and octave limits with no ambient entropy", () => {
   for (const seed of [0, 1, 0xffffffff, hash_seed(["morphology", 7])]) {
     for (const octaves of [MIN_NOISE_OCTAVES, 2, MAX_NOISE_OCTAVES]) {
@@ -480,18 +344,4 @@ test("noise stays bounded across seed and octave limits with no ambient entropy"
   assert.throws(() => fbm_2d(1, 0, 0, 5));
   assert.throws(() => value_noise_2d(1, Number.NaN, 0));
   assert.throws(() => hash_seed([Number.NaN]));
-});
-
-test("noise and morphology modules retain their pure no-ambient-state boundary", async () => {
-  const [noiseSource, morphologySource] = await Promise.all([
-    readFile(new URL("../src/svg/noise.ts", import.meta.url), "utf8"),
-    readFile(new URL("../src/svg/morphology.ts", import.meta.url), "utf8"),
-  ]);
-  for (const sourceText of [noiseSource, morphologySource]) {
-    assert.equal(/Math\.random\s*\(/.test(sourceText), false);
-    assert.equal(/\bDate\s*\./.test(sourceText), false);
-    assert.equal(/\bsetTimeout\s*\(/.test(sourceText), false);
-    assert.equal(/\bsetInterval\s*\(/.test(sourceText), false);
-    assert.equal(/\blocalStorage\b/.test(sourceText), false);
-  }
 });

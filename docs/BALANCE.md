@@ -70,7 +70,7 @@ completions. Its observations are starting points for design review:
 ## Candidate selection
 
 The generated `candidateSelection` record identifies the current shipped
-`catalog-2026-08-28` curve with `p8-visible-surface-v1` semantics and the five declared policy
+`catalog-2026-08-28` curve with `canonical-decision-surface-v1` semantics and the five declared policy
 inputs. Every decision witness declares nonempty visible event types and action tags. The report
 records the policy, decision window, and action IDs where a declared type-and-tag match is exposed.
 It treats a bounded nonselection, an aggregate tie, or a later tier absent from an earlier witness

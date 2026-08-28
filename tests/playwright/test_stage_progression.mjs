@@ -39,6 +39,13 @@ function currentSaveForFixture(targetStageId, options) {
   return JSON.stringify(envelope);
 }
 
+async function rewardSequence(page) {
+  const feedback = page.locator(".tumor-arena .reward-feedback");
+  const value = await feedback.getAttribute("data-reward-sequence");
+  if (value === null) throw new Error("Division feedback sequence is unavailable.");
+  return Number(value);
+}
+
 async function seedStageGate(page, targetStageId, options) {
   const raw = currentSaveForFixture(targetStageId, options);
   await page.addInitScript(({ key, value }) => window.localStorage.setItem(key, value), {
@@ -96,6 +103,15 @@ test("stage progression production stage control reaches every seeded gate throu
       await expect(advance).toBeEnabled();
       await advance.click();
       await expect(page.getByRole("heading", { name: title })).toBeVisible();
+      const livingCell = page
+        .getByRole("button", { name: "Divide cell" })
+        .locator("[data-colony-cell]")
+        .first();
+      await expect(livingCell).toBeVisible();
+      const sequenceBeforeDivision = await rewardSequence(page);
+      await livingCell.locator(".colony-cell__membrane").click();
+      await expect.poll(() => rewardSequence(page)).toBeGreaterThan(sequenceBeforeDivision);
+      await expect(page.locator(".tumor-feedback__division")).toBeVisible();
       expect(diagnostics, `${title}: browser diagnostics`).toEqual([]);
     } finally {
       await context.close();

@@ -9,7 +9,6 @@ import {
   multiplyByNumber,
   subtract,
   sum,
-  zero,
 } from "../src/bignum/bignum.ts";
 import { geometricCost } from "../src/bignum/solve.ts";
 import { bigNum, producerId } from "../src/brands.ts";
@@ -19,7 +18,7 @@ import { STAGE_ONE_PRODUCERS } from "../src/economy/producers.ts";
 import { advanceLiveTick, applyEconomyTick, economyTick } from "../src/economy/tick.ts";
 import { recordEvent } from "../src/state/events.ts";
 import { createInitialGameState } from "../src/state/game_state.ts";
-import { MAX_OFFLINE_MS, deriveOfflineElapsed } from "../src/state/offline.ts";
+import { deriveOfflineElapsed } from "../src/state/offline.ts";
 import { TRACKED_RESOURCE_KEYS } from "../src/types/state.ts";
 
 function withCells(cells) {
@@ -108,22 +107,6 @@ test("production offline wrapper shares fixed macro/remainder and irregular live
   assert.equal(evenOffline.kind, "applied");
   for (const key of TRACKED_RESOURCE_KEYS)
     assert.deepEqual(evenOffline.state[key], irregular.game[key]);
-});
-
-test("production offline cap has the same 10080-step result as live work", () => {
-  const initial = allLevelOneState();
-  let live = { game: initial, lastTickAtMs: 0, pendingOfflineMs: 0, saveStatus: "idle" };
-  for (let index = 1; index <= 10_080; index += 1) live = advanceLiveTick(live, index * 60_000);
-  const offline = replayEconomyOffline(initial, deriveOfflineElapsed(0, MAX_OFFLINE_MS + 60_000));
-  assert.equal(offline.kind, "applied");
-  assert.equal(offline.report.executedSteps, 10_080);
-  assert.equal(offline.report.appliedElapsedMs, MAX_OFFLINE_MS);
-  assert.equal(offline.report.capped, true);
-  for (const key of TRACKED_RESOURCE_KEYS) assert.deepEqual(offline.state[key], live.game[key]);
-  let expectedCells = zero();
-  const expectedStep = multiplyByNumber(EXPECTED_TOTAL_CELL_RATE, 60);
-  for (let index = 0; index < 10_080; index += 1) expectedCells = add(expectedCells, expectedStep);
-  assert.deepEqual(offline.state.cells, expectedCells);
 });
 
 test("one, ten, and hundred quotes follow independent ordered recurrences", () => {

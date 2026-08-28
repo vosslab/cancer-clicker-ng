@@ -4,7 +4,7 @@ import { MAX_PENDING_PROGRESSION } from "../../types/state.js";
 import { isPrestigeId, isStageId } from "../catalog.js";
 import { array, exact, identifier, natural } from "./guards.js";
 
-/** P3 queue records are structural simulation history, never recoverable leaves. */
+/** Pending progression records are structural simulation history, never recoverable leaves. */
 export function parsePendingProgression(
   value: unknown,
   activeTimeMs: number,

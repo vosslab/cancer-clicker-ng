@@ -14,7 +14,7 @@ function region(name, routes = []) {
   };
 }
 
-/** A valid p4 baseline with all extended-hallmark branches available, but none acquired. */
+/** A valid current-save baseline with all extended-hallmark branches available, but none acquired. */
 export function extendedHallmarkBrowserFixture() {
   const initial = createInitialGameState();
   const primary = region("extended-hallmark-rim", ["extended-hallmark-route"]);

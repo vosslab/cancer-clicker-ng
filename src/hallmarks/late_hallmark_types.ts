@@ -170,7 +170,7 @@ export type LateHallmarksState = Readonly<{
   }>;
 }>;
 
-/** Creates the p5 migration baseline without retaining any provisional late-hallmark scaffolding. */
+/** Creates the canonical empty state for all late-hallmark mechanics. */
 export function emptyLateHallmarksState(): LateHallmarksState {
   const state = {
     plasticity: Object.freeze({ switchCooldownByRegion: Object.freeze({}) }),

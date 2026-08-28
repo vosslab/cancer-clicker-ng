@@ -262,7 +262,7 @@ function retainedRecords(
 
 /**
  * ASVS 1.5.2, 2.1.1-2.1.3, 2.2.1-2.2.3, and 15.3.3/15.3.5-15.3.6:
- * rebuild the exact bounded p5 aggregate from own, allowlisted plain records;
+ * rebuild the exact bounded late-hallmark aggregate from own, allowlisted plain records;
  * catalog identities and cross-record region/decision relations are validated here.
  */
 export function parseLateHallmarks(

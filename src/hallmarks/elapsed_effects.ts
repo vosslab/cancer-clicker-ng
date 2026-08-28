@@ -53,12 +53,12 @@ export function replicativeCapacityExhausted(state: GameState): boolean {
   );
 }
 
-/** D3 uses this pure policy before recording manual division. */
+/** The event reducer uses this pure policy before recording manual division. */
 export function manualDivisionAllowed(state: GameState): boolean {
   return !replicativeCapacityExhausted(state);
 }
 
-/** Avoids changing legacy arithmetic when no elapsed core-six state can change at a boundary. */
+/** Identifies whether elapsed time can change a core-six state boundary. */
 export function hasElapsedHallmarkEffect(state: GameState): boolean {
   const changingReserve =
     owns(state, "replicative_immortality") &&

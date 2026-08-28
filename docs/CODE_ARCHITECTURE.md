@@ -37,8 +37,9 @@ with one durable game state.
 - [src/economy/tick.ts](../src/economy/tick.ts) advances active simulation time and production.
   [src/economy/offline.ts](../src/economy/offline.ts) applies the same economy semantics to a
   bounded absence interval.
-- [src/state/offline.ts](../src/state/offline.ts) defines the offline report and clock-skew policy.
-  The reducer records offline accrual through the same event boundary as direct play.
+- [src/state/offline.ts](../src/state/offline.ts) owns clock-skew handling, the pure cap and
+  macro-step replay plan, and the offline report. The reducer records offline accrual through the
+  same event boundary as direct play.
 - [src/economy/producers.ts](../src/economy/producers.ts),
   [src/economy/costs.ts](../src/economy/costs.ts), and
   [src/economy/production.ts](../src/economy/production.ts) own producer definitions, purchase
@@ -69,6 +70,10 @@ with one durable game state.
 - [src/state/replay.ts](../src/state/replay.ts) and
   [src/types/replay.ts](../src/types/replay.ts) own a development semantic replay log. It records
   already accepted, persisted events and replays them through the normal parser and reducer.
+- [src/render/game_controller.ts](../src/render/game_controller.ts) accepts an optional development
+  observer. It emits a cloned post-save state only for accepted events; rejected, failed, snapshot,
+  tick, and recovery writes stay outside the replay trace. The contract is exercised by
+  [tests/test_replay_controller.mjs](../tests/test_replay_controller.mjs).
 - [src/state/decision_surface.ts](../src/state/decision_surface.ts) projects legal, visible
   actions from catalogs, gates, and quotes. It is presentation-independent and validates each
   projected candidate against the reducer, making it a shared seam for replay and balance work.
@@ -133,9 +138,10 @@ On reload, [src/render/app.tsx](../src/render/app.tsx) loads the local save thro
 the shared economy replay when appropriate, and persists that accepted result through the same
 controller. A malformed retained save enters a visible recovery path; it is not silently replaced.
 
-The optional replay observer runs after this durable transaction. It stores an initial normalized
-state, accepted events, normalized outcomes, and the visible-progression projection. Replaying
-therefore checks decision semantics rather than DOM structure, formatted strings, or timing.
+When a development caller supplies the optional replay observer, its recorder stores an initial
+normalized state, accepted events, normalized outcomes, and the visible-progression projection.
+Replaying therefore checks decision semantics rather than DOM structure, formatted strings, or
+timing.
 
 ## Calibration flow
 
@@ -163,12 +169,13 @@ path nor a replacement for player-facing browser tests.
   artifact. Rendered captures and independent agent original-resolution review are dated evidence
   for visual changes; structural and browser assertions retain the durable behavioral contract
   without pixel equivalence.
-- `devel/verify_candidate.py`, documented in
-  [devel/DEVEL_README.md](../devel/DEVEL_README.md), owns the complete-candidate projection
-  boundary. It projects every nonignored working-tree path through a disposable Git index and
-  object store, runs the full repository-hygiene Python suite against that projection, writes the
-  ignored `output_release/candidate_manifest.json`, and proves the real index bytes remain
-  unchanged. This is an explicit release-evidence tool lane rather than a permanent test.
+- [devel/verify_candidate.py](../devel/verify_candidate.py), documented in
+  [devel/DEVEL_README.md](../devel/DEVEL_README.md), owns the complete-candidate integrity
+  boundary. It projects every nonignored working-tree path, runs `pytest`, and reprojects to
+  require identical path/mode/blob entries before atomically publishing the ignored
+  `output_release/candidate_manifest.json`. Exact real-index bytes remain unchanged, while ignored
+  generated output is permitted. `tests/test_candidate_verifier.py` covers the comparison contract.
+  This is an explicit release-evidence tool lane rather than a permanent test.
 - [devel/verify_pages_workflow.py](../devel/verify_pages_workflow.py) owns the offline Pages
   workflow-contract lane. It checks the root template and published workflow for equivalent
   triggers, permissions, ordered build/upload steps, and deploy dependency without requiring a
@@ -197,8 +204,3 @@ path nor a replacement for player-facing browser tests.
 - Add a balance investigation as a named scenario under
   [tools/balance_scenarios/](../tools/balance_scenarios/); keep generated reports in
   `output_balance/`.
-
-## Known gaps
-
-- Review the development replay recorder's caller wiring after the controller integration lands,
-  so the architecture documentation can name its concrete development entry point.

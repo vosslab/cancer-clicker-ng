@@ -84,7 +84,7 @@ test("late hallmark commands use the closed current event vocabulary", () => {
   );
 });
 
-test("prestige commands replace the retired placeholder in the closed event vocabulary", () => {
+test("prestige commands use the closed event vocabulary", () => {
   for (const type of [
     "resolve-transit",
     "perform-metastasis-reset",
@@ -150,7 +150,7 @@ test("late hallmark reducer commits each accepted command once and preserves rej
   assert.deepEqual(installed, snapshot);
 });
 
-test("late program writer sorts assignments so an event-built state round-trips through the p5 parser", () => {
+test("late program writer sorts assignments so an event-built state round-trips through the parser", () => {
   const first = recordEvent(serializableLateState(), {
     type: "reconfigure-hallmark-program",
     hallmarkId: "proliferative_signaling",

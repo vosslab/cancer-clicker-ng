@@ -1,43 +1,85 @@
 # TODO
 
-This list tracks follow-on work after the first Cancer Clicker NG release candidate. Detailed
-execution history remains in [active_plans/](active_plans/).
+The first Cancer Clicker NG release candidate has no remaining local release blockers. Its
+autonomous evidence and optional distribution boundary are recorded in
+[RELEASE_EVIDENCE.md](RELEASE_EVIDENCE.md). This is a small, dispatchable follow-on backlog;
+active sequencing and dated investigations belong in [active_plans/](active_plans/).
 
-## Release blockers
+## Follow-on capabilities
 
-All release-candidate blockers are closed by autonomous evidence. The balance review, release
-evidence, seven-frame capture, independent agent image report, active ledger, CalVer
-synchronization, `source source_me.sh && python3 devel/verify_candidate.py`, static workflow
-contract, and final local gates are complete. The candidate route writes ignored
-`output_release/candidate_manifest.json`, runs the full Python suite in disposable Git storage,
-and proves the real index unchanged.
+### Measure the colony renderer at high density
 
-## Later improvements
+- **Owner:** SVG rendering lane.
+- **Files:** [src/svg/](../src/svg/), [tools/](../tools/), and
+  [DESIGN_DECISIONS.md](DESIGN_DECISIONS.md).
+- **Outcome:** Capture representative highest-reachable colony scenes and compare SVG cost,
+  interaction behavior, editability, and visual fidelity before changing renderer ownership.
+- **Success criteria:** A dated design decision retains SVG or approves a replacement based on
+  measured scenes and the observed tradeoff; the board still supports direct visible-cell
+  interaction and accessible descriptions.
+- **Verification:** Run the owning capture/performance route, inspect the captured scenes at
+  1280 x 800 and a narrow viewport, and run the affected deterministic and browser behavior
+  lanes. Record observations rather than introducing an arbitrary timing threshold.
 
-- [ ] Measure high-density colony SVG rendering before deciding whether a canvas renderer earns a
-      replacement of the current editable SVG system. Record the observed cost and visual tradeoff in
-      a design decision before changing renderer ownership.
-- [ ] Extend the shared icon language only where it clarifies routine actions, resources,
-      hallmarks, or prestige choices. Preserve adjacent text and accessible names for unfamiliar or
-      consequential controls.
-- [ ] Evaluate achievements and muted-by-default audio as separate player-feedback additions after
-      the release candidate. Each proposal names its event, save, and feedback purpose before it adds
-      interface complexity.
+### Extend the shared action-icon language
 
-## Optional distribution and repository administration
+- **Owner:** visual-system lane.
+- **Files:** [src/svg/icons.ts](../src/svg/icons.ts), [src/render/](../src/render/),
+  [src/svg/](../src/svg/), and the owning CSS files.
+- **Outcome:** Give recurring routine actions, resources, hallmark choices, and prestige choices
+  recognizable small icons while preserving concise adjacent labels and accessible names for
+  unfamiliar or consequential choices.
+- **Success criteria:** The chosen recurring surfaces use one coherent editable SVG vocabulary;
+  the living tumor remains the dominant 1280 x 800 interaction surface; focusable tooltips and
+  the specimen drawer retain the supporting biology.
+- **Verification:** Capture representative board states, inspect keyboard focus and accessible
+  names in the production-browser route, and keep permanent behavior checks limited to durable
+  interaction contracts.
 
-These activities can distribute an already-complete candidate and never gate its completion.
+### Add achievements as a replay-safe feedback system
 
-- [ ] Copy the first paragraph of [../README.md](../README.md) into the GitHub About field if its
-      repository description needs updating.
-- [ ] Transfer the candidate through the repository's normal history workflow when a distribution
-      record is useful.
-- [ ] Publish through the configured Pages workflow when remote availability is useful.
+- **Owner:** state and feedback lane.
+- **Files:** [src/state/events.ts](../src/state/events.ts), [src/state/save_load.ts](../src/state/save_load.ts),
+  [src/state/replay.ts](../src/state/replay.ts), [src/render/](../src/render/), and
+  [src/content/](../src/content/).
+- **Outcome:** Define a small achievement catalog whose awarded state and visible feedback follow
+  accepted game events without becoming a second progression currency.
+- **Success criteria:** Each achievement has a named feedback purpose, a deterministic award
+  rule, a save/replay contract, and a concise player-facing presentation.
+- **Verification:** Exercise award, reload, and replay equivalence through the canonical state
+  paths; add focused permanent tests only for those durable contracts and review a representative
+  production-browser capture.
 
-## Working agreement
+### Add muted-by-default audio with a durable preference
 
-- Use [REPO_STYLE.md](REPO_STYLE.md) for durable ownership and file placement.
-- Run [../check_codebase.sh](../check_codebase.sh) as the canonical TypeScript gate; browser,
-  screenshot, calibration, and visual review remain separate evidence lanes.
-- Keep permanent tests deterministic and semantic. Use generated reports and rendered captures as
-  dated evidence when they inform a release or design review.
+- **Owner:** interaction-feedback lane.
+- **Files:** [src/render/](../src/render/), [src/state/](../src/state/), [src/content/](../src/content/),
+  and an owned static-asset location selected by the implementation.
+- **Outcome:** Associate a small, purposeful sound palette with major feedback moments while the
+  initial experience remains silent and the player controls the preference.
+- **Success criteria:** Playback is activated only after a player-enabled preference and a
+  browser-permitted interaction; the preference survives reload; audio never obscures essential
+  visual or accessible feedback.
+- **Verification:** Exercise enabled and muted preference restoration in the production-browser
+  route and capture the visible preference state. Keep implementation tests offline and focused on
+  preference and event-selection contracts.
+
+### Establish the supported Node.js policy
+
+- **Owner:** build-tooling lane.
+- **Files:** [package.json](../package.json), [INSTALL.md](INSTALL.md), and any affected local
+  workflow documentation.
+- **Outcome:** Declare the minimum Node.js version that the verified build, deterministic suite,
+  and production-browser tooling support.
+- **Success criteria:** The manifest and installation guidance express one compatible policy that
+  matches a tested toolchain rather than an unverified package-range inference.
+- **Verification:** Run [check_codebase.sh](../check_codebase.sh),
+  [build_github_pages.sh](../build_github_pages.sh), and the production-browser lane on the
+  selected supported version.
+
+## Backlog maintenance
+
+- Keep this file for small, unscheduled capabilities. Move an accepted cross-cutting design into
+  [active_plans/](active_plans/) with its own owner and evidence record.
+- Keep distribution actions out of this list: the local candidate is already closed, and remote
+  publication is optional work described in [RELEASE_EVIDENCE.md](RELEASE_EVIDENCE.md).

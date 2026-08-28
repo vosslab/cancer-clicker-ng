@@ -6,7 +6,7 @@
 
 This review evaluates the seven current 1280 x 800 PNGs in `docs/screenshots/` produced by
 `node tools/capture_readme_screenshots.mjs`. It is an independent static-image review of the
-current working tree at `127aac26bc8b9ac388afb31940b7d43db649245e`.
+current candidate projected from base HEAD `28591cc98ec5e2bb9cd2acc4678468b99c4092b9`.
 
 The working tree contains concurrent documentation, tooling, workflow, and asset changes. The
 assigned report had no local diff when this review began. This report owns only the visual verdict;
@@ -39,9 +39,11 @@ original PNG resolution. It creates no pixel, byte, rank, or timing equivalence 
 2026-08-28, regenerated all seven documented 1280 x 800 PNGs, and passed its runtime assertions:
 the opening board performed a direct visible-cell click; every fixed-state frame had no horizontal
 overflow and the expected scene overlay; narrow Chicago preserved its 44px evolution action; and
-the normal-motion walkthrough exposed both expected animations. The fresh PNG hashes match the
-artifact identities below. This is capture provenance only; an independent image evaluator owns
-the renewed visual verdict.
+the normal-motion walkthrough exposed both expected animations. In this docset pass, all seven
+current files were independently reviewed at original resolution and received PASS. Six recaptured
+files remained byte-identical to their prior approved copies; the perfused-tumor frame changed and
+its current SHA-256 is recorded below. This is capture provenance and a dated visual verdict only;
+it does not establish a future byte- or pixel-equivalence requirement.
 
 ## Reviewed artifacts
 
@@ -52,7 +54,7 @@ current images only.
 | ----------------------- | -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
 | Opening board           | [cancer_clicker_ng_board.png](../../screenshots/cancer_clicker_ng_board.png)                       | `8ffeac5c5b3ffe6531aa509c20ec1edfadff630ba0bb68d5077e39c437a5fc28` |
 | Hypoxic/necrotic lesion | [cancer_clicker_ng_hypoxic_necrotic.png](../../screenshots/cancer_clicker_ng_hypoxic_necrotic.png) | `35fc1be6020a4c8951888b7c30a3b6d3b38d59e5c8a265cff68995b368a2ce68` |
-| Perfused tumor          | [cancer_clicker_ng_perfused_tumor.png](../../screenshots/cancer_clicker_ng_perfused_tumor.png)     | `bb6e0e8ad1464cf66a585fdaf14a11a93ef33058e3ea50665f345107e91fd9d5` |
+| Perfused tumor          | [cancer_clicker_ng_perfused_tumor.png](../../screenshots/cancer_clicker_ng_perfused_tumor.png)     | `2f18efcbb1d0795beb38b41c6ed850d8a0ce8a1755ffe7ed9f7ece62ab7ae4f4` |
 | Invasive route          | [cancer_clicker_ng_invasive_route.png](../../screenshots/cancer_clicker_ng_invasive_route.png)     | `a291355fbdf879c97f542f406fad5892f4187acbb48ed79ff517dda4741c77df` |
 | Culture laboratory      | [cancer_clicker_ng_culture_lab.png](../../screenshots/cancer_clicker_ng_culture_lab.png)           | `af9f382366396eab189ee440671543cac35a9f397f74b53bbdc0d016d803eac2` |
 | Dissemination network   | [cancer_clicker_ng_network_map.png](../../screenshots/cancer_clicker_ng_network_map.png)           | `d8e7c50a4489897605bd62b35e7f76e5c8d124db2178adcfce18cc88b0e56ed8` |

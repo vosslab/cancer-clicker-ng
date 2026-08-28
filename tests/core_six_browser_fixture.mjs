@@ -23,7 +23,7 @@ function fixtureRegion(name, routes = []) {
   };
 }
 
-/** A p4 baseline permits UI acquisition but never pre-owns a core-six branch. */
+/** A current-save baseline permits UI acquisition but never pre-owns a core-six branch. */
 export function coreSixBrowserFixture(branch, { allBranches = false } = {}) {
   const stage = BRANCH_STAGE[branch];
   if (stage === undefined) throw new Error("Unknown core-six browser branch.");

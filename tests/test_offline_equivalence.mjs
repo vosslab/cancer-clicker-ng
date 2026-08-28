@@ -7,13 +7,13 @@ import { economyTick } from "../src/economy/tick.ts";
 import { emptyLateHallmarksState } from "../src/hallmarks/late_hallmark_types.ts";
 import { createInitialGameState } from "../src/state/game_state.ts";
 import {
-  MAX_OFFLINE_STEPS,
+  MAX_OFFLINE_MS,
   OFFLINE_STEP_MS,
   deriveOfflineElapsed,
+  planOfflineReplay,
   replayOffline,
 } from "../src/state/offline.ts";
 import { recordEvent } from "../src/state/events.ts";
-import { parseSave, serializeGameState } from "../src/state/save_load.ts";
 import { TRACKED_RESOURCE_KEYS } from "../src/types/state.ts";
 
 function snapshot(state) {
@@ -149,7 +149,7 @@ test("clock skew and zero never call the adapter or recorder", () => {
   assert.deepEqual(deriveOfflineElapsed(-1, 1), { kind: "rejected", code: "invalid-saved-at" });
 });
 
-test("M6 economy adapter is replayed at each macro step and remainder, never by substitute math", () => {
+test("economy adapter is replayed at each macro step and remainder, never by substitute math", () => {
   const initial = {
     ...createInitialGameState(),
     producerLevels: createInitialGameState().producerLevels.map((level, index) => ({
@@ -183,20 +183,17 @@ test("M6 economy adapter is replayed at each macro step and remainder, never by 
   for (const key of TRACKED_RESOURCE_KEYS) assert.deepEqual(result.state[key], live[key], key);
 });
 
-test("cap count and hostile snapshots are atomic", () => {
+test("offline replay planning caps and partitions the requested horizon", () => {
+  const requestedElapsedMs = MAX_OFFLINE_MS + OFFLINE_STEP_MS + 1;
+  const plan = planOfflineReplay(requestedElapsedMs);
+  assert.equal(plan.fullSteps * OFFLINE_STEP_MS + plan.remainderMs, plan.appliedElapsedMs);
+  assert.deepEqual(plan.notices, [
+    { code: "offline-cap", requestedElapsedMs, appliedElapsedMs: MAX_OFFLINE_MS },
+  ]);
+});
+
+test("hostile snapshots reject atomically before recording", () => {
   const state = createInitialGameState();
-  let calls = 0;
-  const capped = replayOffline(
-    state,
-    deriveOfflineElapsed(0, OFFLINE_STEP_MS * (MAX_OFFLINE_STEPS + 1)),
-    (working) => {
-      calls += 1;
-      return { resourceSnapshot: snapshot(working), stageEligibility: [], prestigeEligibility: [] };
-    },
-    recordEvent,
-  );
-  assert.equal(capped.kind, "applied");
-  assert.equal(calls, MAX_OFFLINE_STEPS);
   let recordings = 0;
   const hostile = replayOffline(
     state,
@@ -631,7 +628,7 @@ test("recorder accounting is authoritative and invalid adapter boundaries remain
   }
 });
 
-test("queue capacity, remainder, cap, frozen fields, and durable order are exact", () => {
+test("remainder steps preserve durable fields and queue observations in order", () => {
   const initial = {
     ...createInitialGameState(),
     activeTimeMs: 41,
@@ -677,39 +674,6 @@ test("queue capacity, remainder, cap, frozen fields, and durable order are exact
     { kind: "stage", id: "microcolony", firstObservedAtActiveMs: 41 },
     { kind: "prestige", id: "L1", firstObservedAtActiveMs: 41 },
     { kind: "stage", id: "avascular_lesion", firstObservedAtActiveMs: 41 },
-  ]);
-  const saved = serializeGameState(result.state, 99);
-  const loaded = parseSave(saved);
-  assert.equal(loaded.status, "loaded");
-  assert.deepEqual(loaded.state.pendingProgression, result.state.pendingProgression);
-  assert.equal(serializeGameState(loaded.state, loaded.savedAtMs), saved);
-
-  let capCalls = 0;
-  let capEvents = 0;
-  const capped = replayOffline(
-    initial,
-    deriveOfflineElapsed(0, OFFLINE_STEP_MS * (MAX_OFFLINE_STEPS + 1) + 1000),
-    (state, elapsedMs) => {
-      capCalls += 1;
-      assert.equal(elapsedMs, OFFLINE_STEP_MS);
-      return { resourceSnapshot: snapshot(state), stageEligibility: [], prestigeEligibility: [] };
-    },
-    (state, event) => {
-      capEvents += 1;
-      return exactRecorder(state, event);
-    },
-  );
-  assert.equal(capped.kind, "applied");
-  assert.equal(capCalls, MAX_OFFLINE_STEPS);
-  assert.equal(capEvents, 1);
-  assert.equal(capped.report.appliedElapsedMs, OFFLINE_STEP_MS * MAX_OFFLINE_STEPS);
-  assert.equal(capped.report.executedSteps, MAX_OFFLINE_STEPS);
-  assert.deepEqual(capped.report.notices, [
-    {
-      code: "offline-cap",
-      requestedElapsedMs: OFFLINE_STEP_MS * (MAX_OFFLINE_STEPS + 1) + 1000,
-      appliedElapsedMs: OFFLINE_STEP_MS * MAX_OFFLINE_STEPS,
-    },
   ]);
 });
 

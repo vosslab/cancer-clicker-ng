@@ -164,7 +164,7 @@ const BURDEN_PROFILES: Readonly<Record<ColonyBurdenTier, BurdenProfile>> = Objec
     targetMultiplier: 0.48,
     radiusMultiplier: 0.76,
     lobulationMultiplier: 0.72,
-    voidMultiplier: 1.24,
+    voidMultiplier: 0.97,
   }),
   established: Object.freeze({
     targetMultiplier: 0.76,

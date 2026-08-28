@@ -11,27 +11,29 @@ I reviewed the portable corpus at `output_visual/colony-contact-sheet` from its 
 its manifest/index metadata. The digests below identify this reviewed artifact; they are
 provenance evidence, not byte- or pixel-equivalence requirements for future visual work.
 
-| Item                                 | Observed value                                                                     |
-| ------------------------------------ | ---------------------------------------------------------------------------------- |
-| Manifest schema                      | `cancer-clicker-ng.colony-contact-sheet/v2`                                        |
-| Manifest SHA-256                     | `50958c9678adbb704e0e9a74745ace89df8c76e10c310307959ea1d362474696`                 |
-| Browserable index SHA-256            | `3989e3065f3eb1a76edeef9d33ea96446473e8147e3c8917a5adc5e33202f54e`                 |
-| Current and manifest-recorded bundle | `dist/main.js`, `a28d63f981f836e20171a9ba95cf350199b569f9979ba3900ccf447d2ffb2ecb` |
-| Capture time                         | `2026-08-28T17:44:26.291Z`                                                         |
-| Visual-asset aggregate               | `7735f1f1c9f8c01c3fdb826e61ad7d73641253493842309b8aa4c588f341e3de`                 |
-| Aggregate algorithm                  | `sha256 of UTF-8 path, tab, SHA-256, newline records sorted by path`               |
-| Captured visual assets               | 12 sorted assets, including `dist/tumor_arena_neutral_light.css`                   |
-| Corpus contents                      | 216 manifest records, 216 unique PNGs, and 216 index figures                       |
+| Item                                 | Observed value                                                                                                        |
+| ------------------------------------ | --------------------------------------------------------------------------------------------------------------------- |
+| Manifest schema                      | `cancer-clicker-ng.colony-contact-sheet/v2`                                                                           |
+| Manifest SHA-256                     | `7788e971d8caf90fa4f9035708efdc8dfd7eb173f3b534c741ce150b7466f3fe`                                                    |
+| Browserable index SHA-256            | `3989e3065f3eb1a76edeef9d33ea96446473e8147e3c8917a5adc5e33202f54e`                                                    |
+| Current and manifest-recorded bundle | `dist/main.js`, `2e3671f6824bdb6152dd36409d1183c70c3cb8593262179c7c0d73073dd89610`                                    |
+| Capture time                         | `2026-08-28T21:31:14.013Z`                                                                                            |
+| Visual-asset aggregate               | `5b2492f97c893b24550557fae4d9466ff674c990ffbdf41926247a14c9f3d155`                                                    |
+| Aggregate algorithm                  | `sha256 of UTF-8 path, tab, SHA-256, newline records sorted by path`                                                  |
+| Captured visual assets               | 12 sorted assets, including `dist/tumor_arena_neutral_light.css`                                                      |
+| Renderer corpus                      | 36 samples and 1,257 unique hashes; report SHA-256 `638610d38525ce6fb422d6bd61ae54ad9decea8f4e3e9309e0782d8ea87af304` |
 
-Direct metadata checks found all 216 panel and figure boxes nonzero and fully visible, all 216
-box sets finite, and no recorded horizontal document overflow. The records span all twelve
-stages, seeds `17`, `91`, and `2026`, and the `compact-360` (360 x 900), `standard-560`
-(626 x 1200), and `inspection-1000` (1120 x 1500) viewport families. Each reports the declared
-reduced-motion state: `animationName: none` and `transitionDuration: 1e-05s`. The browserable
-index contains 216 figures, and all 108 dark/neutral-light pairs have distinct image bytes. That
-last measurement supports the observed theme change but is not the basis of the visual verdict.
+The current corpus contains 216 frames across all 12 stages, three seeds, three viewport families,
+and two treatments. The current independent review inspected 44 originals: all 36 combinations for
+the repaired avascular and hypoxic lesions, plus eight transformed, angiogenic, and invasive
+progression samples. It confirmed finite, visible geometry and no recorded horizontal overflow in
+those reviewed frames. The 216-frame corpus is dated provenance, not a future threshold.
 
-## Original-resolution inspection
+## Prior whole-ladder inspection record
+
+The following 24-original matrix is a historical review record from the prior whole-ladder visual
+pass. Its sample names and observations remain useful context; current-candidate provenance comes
+from the regenerated 216-frame manifest and the 44-original review above.
 
 I opened paired dark and neutral-light PNGs at original resolution for every stage, deliberately
 rotating the three seeds and three viewport families across the complete stage sequence:
@@ -72,8 +74,8 @@ samples retain readable contour, reticle, nuclei, routes, and voids.
 | Morphology progression | The twelve paired samples vary in silhouette, core/void, vascular route, spread, islands, culture moat, and enclosure. | Progression is legible through topology. | PASS |
 | Neutral-light coherence | Original PNGs show the ivory surround, warm specimen well, adapted rose tissue/cells, cream reticle/edges, and readable warm HUD. | This is a complete, visually coherent alternate treatment rather than a theme label. | PASS |
 | Dark coherence | Original PNGs retain the inky teal field, cyan/mint tissue, high-contrast reticle, route accents, and readable score chip. | The dark board remains cohesive and game-readable. | PASS |
-| Declared viewport fit | All 216 records have fully visible nonzero panel/figure boxes, finite geometry, and no horizontal overflow; compact, standard, and inspection originals were inspected. | The captured panel remains framed across its declared viewport families. | PASS |
-| Reduced-motion capture | All 216 records report no animation and the same `1e-05s` transition duration. | The corpus consistently represents its declared reduced-motion state. | PASS |
+| Declared viewport fit | The current 44 reviewed originals have visible finite geometry and no horizontal overflow. | The captured panel remains framed across its reviewed viewport families. | PASS |
+| Reduced-motion capture | The current reviewed samples declare reduced motion. | The corpus represents its declared reduced-motion state. | PASS |
 | Accessible stage explanation | The manifest contains twelve distinct stage descriptions, each naming topology and the direct cell/keyboard action. | The static evidence supplies stage-specific nonvisual context. | PASS |
 | Current-bundle provenance | Manifest/current bundle hashes agree; v2 identity records 12 served visual assets and the stated aggregate; record/file/index counts all agree. | The reviewed images are attributable to the current production bundle. | PASS |
 

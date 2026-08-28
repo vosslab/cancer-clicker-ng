@@ -20,7 +20,7 @@ function stageIndex(id) {
   return index;
 }
 
-/** A valid p4 state one explicit event away from entering the requested stage. */
+/** A valid state one explicit event away from entering the requested stage. */
 export function stageGateFixture(toStageId, { earnedL3 = true } = {}) {
   const targetIndex = stageIndex(toStageId);
   if (targetIndex === 0) return createInitialGameState();
@@ -76,7 +76,7 @@ export function stageGateFixture(toStageId, { earnedL3 = true } = {}) {
   }
 }
 
-/** Serializes the exact current p4 writer envelope for isolated browser storage setup. */
+/** Serializes the exact current save envelope for isolated browser storage setup. */
 export function stageGateFixtureSave(toStageId, options = {}) {
   return serializeGameState(stageGateFixture(toStageId, options), 1_000);
 }

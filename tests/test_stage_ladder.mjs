@@ -177,7 +177,7 @@ test("every semantic gate rejects atomically when false and permits only its imm
   }
 });
 
-test("deterministic fast-forward records all eleven legal boundaries and p4 round-trips", () => {
+test("deterministic fast-forward records all eleven legal boundaries and round-trips", () => {
   let working = stageGateFixture("microcolony");
   for (const target of STAGE_IDS.slice(1)) {
     const gateState = stageGateFixture(target);

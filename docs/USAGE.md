@@ -1,105 +1,89 @@
 # Usage
 
-Cancer Clicker NG lets you grow a stylized transformed-cell colony by clicking visible cells,
-spending the resulting cells on producers, and making biological tradeoffs as the tumor changes.
+Cancer Clicker NG is a visual incremental game: click rendered tumor cells, spend cells on
+illustrated producers, and make biological tradeoffs as the living tumor changes.
 
-## Start a local game
+## Quick start
 
-From the repository root, build and serve the GitHub Pages-shaped artifact:
+From the repository root, use the local-production preview front door:
 
 ```bash
-npm run serve
+./run_web_server.sh
 ```
 
-The server prints a local URL and rebuilds `dist/` before it serves it. Open that URL in a browser.
-Use `Ctrl-C` in the terminal to stop the foreground server.
+The script builds `dist/`, prints a local URL, and serves only that GitHub Pages-shaped artifact.
+Open the URL in a browser and use `Ctrl-C` in the terminal to stop the foreground server. The
+`npm run serve` alias invokes the same script.
 
-## First successful loop
+## First loop
 
-1. Click a rendered cancer cell in the tumor arena. Keyboard users can focus **Divide cell** and
+1. Click a visible cancer cell in the tumor arena. Keyboard users can focus **Divide cell** and
    press Enter or Space.
-2. Watch the local division pulse and read the cell count and cells-per-second rate in the shallow
-   scoreboard HUD.
-3. Buy an affordable illustrated machine in the always-present upgrade rack. Its row shows the
-   cost, owned level, and marginal production increase.
-4. Follow the evolution dock as growth opens stage and hallmark decisions. Six icon tabs expose
-   one decision family at a time; focusable tooltips and the optional specimen drawer explain the
-   biology and tradeoffs when requested.
-5. Reload the same local URL to continue from browser-local progress. Returning after time away
-   can show an **Offline progress** report with the bounded applied gain.
+2. Read the cell total and cells-per-second rate in the shallow scoreboard.
+3. Buy an affordable illustrated machine from the upgrade rack; each row shows its cost, owned
+   level, and marginal production.
+4. Use the evolution dock's icon tabs as new stage and hallmark decisions become available.
+   Focusable tooltips and the specimen drawer provide optional biology detail.
+5. Reload the same local URL to continue from browser-local progress. A return after time away may
+   show a bounded offline-progress report.
 
-The tumor is the game board and the primary manual action: a click must land on a rendered cell, while the
-surrounding tissue and whitespace remain inert. The biological scene is a stylized game abstraction,
-not clinical advice or a depiction of patients.
+The tumor is the board and its rendered cells are the manual target. Surrounding tissue and
+whitespace have no manual click action. The scene is a stylized teaching abstraction rather than
+clinical advice or a depiction of patients.
 
-## Local progress and recovery
+## Local save and debug
 
-- Progress is stored only in this browser origin under the versioned local save key documented in
-  [STATE_PERSISTENCE.md](STATE_PERSISTENCE.md). A new port is a new browser origin, so use the
-  same printed URL when you want to revisit a local save.
-- A missing save starts a new game. Valid saved progress reloads and applies bounded offline
-  economics before play resumes.
-- When saved data cannot be safely read, the game preserves that data and presents an explicit
-  replacement action. Choose that action only when starting fresh is appropriate.
-- The number-format control switches between short and full large-number names without changing
-  gameplay state.
+- Progress is stored under the current browser origin as described in
+  [STATE_PERSISTENCE.md](STATE_PERSISTENCE.md). A new server port is a new browser origin.
+- A missing save starts a new game. The protected recovery flow preserves unreadable saved data
+  and presents an explicit replacement action.
+- Append `?debug=1` to a local game URL to show development inspection controls, including a
+  60-second fast-forward and prepared offline-reload baseline. Normal play starts without that
+  query parameter.
 
-## Local debug controls
+## Development commands
 
-Append `?debug=1` to a local game URL to expose the built-in local debug panel:
-
-```text
-http://localhost:PORT/?debug=1
-```
-
-It provides a 60-second fast-forward, a prepared offline-reload baseline, producer-order and
-lifecycle probes, and a hostile-event check. The debug panel exists for local inspection and
-automated browser evidence; normal play begins without the query parameter.
-
-## Development validation
-
-Use the validation lane that matches the question you are asking:
+Run each named front door for the question it answers:
 
 ```bash
 ./check_codebase.sh
 ./build_github_pages.sh
 ./run_playwright_tests.sh --build
+source source_me.sh && python3 devel/verify_pages_workflow.py
+source source_me.sh && python3 devel/verify_candidate.py
 ```
 
 - `./check_codebase.sh` checks TypeScript, lint, formatting, and deterministic Node behavior.
-- `./build_github_pages.sh` creates the static deployment artifact.
-- `./run_playwright_tests.sh --build` exercises the rebuilt artifact in a browser.
+- `./build_github_pages.sh` produces the static deployment artifact.
+- `./run_playwright_tests.sh --build` exercises that rebuilt artifact in supported browser tests.
+- `source source_me.sh && python3 devel/verify_pages_workflow.py` checks the local Pages workflow
+  contract without contacting GitHub.
+- `source source_me.sh && python3 devel/verify_candidate.py` projects the nonignored candidate,
+  runs the Python suite, writes an ignored `output_release/candidate_manifest.json`, and confirms
+  the real Git index remains unchanged.
 
-## Advanced balance experiment
+## Balance experiment
 
-The balance simulator is a development review tool, not a player command. Its default aggregate
-run compares every tracked scenario against the five canonical policies `greedy-payback`,
-`naive-cheapest`, `hallmark-first`, `prestige-rush`, and `check-in-idle`, then writes one
-format-3 machine-readable report below the root `output_balance/` directory:
+The balance simulator is a development review tool rather than a player command. Its aggregate
+run writes a machine-readable report under the ignored `output_balance/` directory:
 
 ```bash
 node --import tsx tools/balance_sim.mjs --suite \
   --output output_balance/balance_report.json
 ```
 
-With no selector, the same command runs the aggregate suite. Use
-`--scenario tools/balance_scenarios/<file>.json` for one focused question. `greedy-payback` uses
-the displayed producer cells cost divided by the same authoritative marginal `+cells/s` quote shown
-in the Store. The aggregate report records policy behavior, scenario assumptions, decision
-witnesses, traces, completions, idle windows, progression outcomes, and outliers. Use it to
-investigate a proposed tuning change; keep final balance claims tied to the accepted balance review
-rather than to one generated report.
+Use `--scenario tools/balance_scenarios/<file>.json` for one focused question. The generated
+report records policy behavior and diagnostic observations; accepted conclusions belong in
+[BALANCE.md](BALANCE.md).
 
 ## Related documentation
 
-- [GAME_DESIGN.md](GAME_DESIGN.md) explains the economy, offline clock, and player-facing model.
-- [PRESTIGE_DESIGN.md](PRESTIGE_DESIGN.md) explains the reset layers and durable culture/network
-  decisions.
-- [STATE_PERSISTENCE.md](STATE_PERSISTENCE.md) defines the current save, recovery, and replay
-  ownership.
-- [PLAYWRIGHT_USAGE.md](PLAYWRIGHT_USAGE.md) explains browser-test and screenshot workflows.
+- [GAME_DESIGN.md](GAME_DESIGN.md) explains the player economy and offline clock.
+- [PRESTIGE_DESIGN.md](PRESTIGE_DESIGN.md) explains reset layers and culture/network choices.
+- [PLAYWRIGHT_USAGE.md](PLAYWRIGHT_USAGE.md) explains browser and screenshot workflows.
+- [RELEASE_EVIDENCE.md](RELEASE_EVIDENCE.md) records the candidate closure evidence.
 
 ## Known gaps
 
-- Publish the accepted balance review before presenting generated simulator reports as a tuning
-  conclusion; this guide intentionally treats them as development evidence.
+- Confirm the intended audience for the local debug panel before exposing it beyond development
+  and automated browser evidence.

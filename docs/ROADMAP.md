@@ -1,22 +1,25 @@
 # Roadmap
 
-Cancer Clicker NG is building its first pre-production release candidate: a lasting incremental
-game whose biology, decisions, and living SVG colony explain one another. This roadmap names the
-product priorities that remain after the current implementation pass; detailed execution status
-lives in [active_plans/](active_plans/).
+Cancer Clicker NG has closed its first audited local pre-production release candidate: a lasting
+incremental game whose biology, decisions, and living SVG colony explain one another. This roadmap
+names the durable product and distribution priorities that follow that closure; detailed execution
+status and dated evidence live in [active_plans/](active_plans/) and
+[RELEASE_EVIDENCE.md](RELEASE_EVIDENCE.md).
 
-## Release candidate evidence
+## Preserve a reproducible release path
 
-- Maintain `docs/RELEASE_EVIDENCE.md` as the manager-owned record of the working build, save
-  migration, browser behavior, accessibility, independent-agent visual report, and known limits.
-  Success is reproducible evidence that links each release claim to its command or captured artifact.
-- Run the headless calibration owner in [tools/balance_sim.mjs](../tools/balance_sim.mjs) and turn
-  its observations into `docs/BALANCE.md`. Success is a manager-recorded calibration policy for
-  cost curves and decision witnesses, with measurements informing decisions rather than arbitrary
-  pass thresholds.
-- Prepare the static Pages release surface through [build_github_pages.sh](../build_github_pages.sh)
-  and the repository's release documentation. Success is a reproducible local candidate with the
-  maintained artifacts present; publication is an optional external distribution action.
+- Refresh [RELEASE_EVIDENCE.md](RELEASE_EVIDENCE.md) when a candidate changes. It owns the working
+  build, save migration, browser behavior, accessibility, visual review, and known-limit record.
+  Success is reproducible evidence that links each changed release claim to its command or captured
+  artifact; historical counts, hashes, and captures remain provenance rather than future thresholds.
+- Use the headless calibration owner in [tools/balance_sim.mjs](../tools/balance_sim.mjs) when a
+  curve or scenario changes, then record the resulting decision in [BALANCE.md](BALANCE.md).
+  Success is a reviewed calibration policy and visible decision witnesses, with measurements
+  informing design rather than becoming arbitrary pass thresholds.
+- Use [build_github_pages.sh](../build_github_pages.sh) and the repository's release documentation
+  to prepare future local candidates. Repository-history transfer, remote workflow execution, and
+  Pages publication add distribution evidence to the already-closed local candidate; each remains
+  a separate optional release-administration action.
 
 ## Make the living board legible
 
@@ -47,11 +50,12 @@ lives in [active_plans/](active_plans/).
 - Evaluate a canvas renderer only after measuring the SVG colony at the highest reachable density.
   The owner is [src/svg/](../src/svg/); success is a measured reason to change renderer ownership,
   not a speculative rewrite.
-- Consider achievements and muted-by-default audio as later product additions after the first
-  release candidate. The event funnel and save contract provide their future integration points;
-  each addition needs a distinct player decision or feedback purpose.
-- Keep backend accounts, cloud saves, leaderboards, analytics, and monetization outside this
-  roadmap. The first release remains a self-contained client-side game with local persistence.
+- Consider achievements and muted-by-default audio as later product additions. The event funnel
+  and save contract provide their future integration points; each addition needs a distinct player
+  decision or feedback purpose.
+- Keep backend accounts, cloud saves, leaderboards, analytics, and monetization out of the
+  self-contained client-side game unless a later product decision establishes a new ownership and
+  privacy model.
 
 ## Working agreement
 

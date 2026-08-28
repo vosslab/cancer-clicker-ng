@@ -158,7 +158,7 @@ export function applyDamageTriage(
   return applyDamageTriageWithProjection(context, removeRegionProjection);
 }
 
-/** D3 supplies the reducer's one removal projection when constructing its dispatch map. */
+/** The reducer supplies its one removal projection when constructing this dispatch map. */
 export function createDamageTriageHandler(
   projectRemoval: RemoveRegionProjection,
 ): CoreSixHandler<ResolveTriageOperation> {

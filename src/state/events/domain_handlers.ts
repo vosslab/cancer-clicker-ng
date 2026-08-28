@@ -274,7 +274,7 @@ function ownsLateHallmark(state: GameState, key: Parameters<typeof findLateHallm
 }
 
 /**
- * Applies one p5 command without a sequence change. ASVS 2.3.1/2.3.3:
+ * Applies one late-hallmark command without a sequence change. ASVS 2.3.1/2.3.3:
  * each prerequisite is checked before one complete immutable projection is returned.
  */
 export function applyLateHallmarkEvent(state: GameState, event: GameEvent): GameState | undefined {

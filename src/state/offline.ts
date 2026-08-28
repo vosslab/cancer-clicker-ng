@@ -40,6 +40,14 @@ export type { EconomyTick, OfflineStepResult, TickMode } from "../economy/tick.j
 export type OfflineNotice =
   | Readonly<{ code: "clock-skew"; savedAtMs: number; nowMs: number }>
   | Readonly<{ code: "offline-cap"; requestedElapsedMs: number; appliedElapsedMs: number }>;
+export type OfflineReplayPlan = Readonly<{
+  requestedElapsedMs: number;
+  appliedElapsedMs: number;
+  fullSteps: number;
+  remainderMs: number;
+  capped: boolean;
+  notices: readonly OfflineNotice[];
+}>;
 export type OfflineErrorCode =
   | "invalid-saved-at"
   | "invalid-now-at"
@@ -343,6 +351,28 @@ function configurationIsValid(): boolean {
     MAX_OFFLINE_MS === OFFLINE_STEP_MS * MAX_OFFLINE_STEPS
   );
 }
+
+/** Own the cap and macro-step partition before any economy callback executes. */
+export function planOfflineReplay(requestedElapsedMs: number): OfflineReplayPlan {
+  if (!natural(requestedElapsedMs)) throw new Error("Offline elapsed time is invalid.");
+  if (!configurationIsValid()) throw new Error("Offline replay configuration is invalid.");
+  const appliedElapsedMs = Math.min(requestedElapsedMs, MAX_OFFLINE_MS);
+  const fullSteps = Math.floor(appliedElapsedMs / OFFLINE_STEP_MS);
+  const remainderMs = appliedElapsedMs % OFFLINE_STEP_MS;
+  const capped = appliedElapsedMs !== requestedElapsedMs;
+  const notices: readonly OfflineNotice[] = capped
+    ? [{ code: "offline-cap", requestedElapsedMs, appliedElapsedMs }]
+    : [];
+  return {
+    requestedElapsedMs,
+    appliedElapsedMs,
+    fullSteps,
+    remainderMs,
+    capped,
+    notices,
+  };
+}
+
 function rejected(state: GameState, code: OfflineErrorCode): OfflineReplayResult {
   return {
     kind: "rejected",
@@ -398,14 +428,12 @@ export function replayOffline(
     };
   }
   if (!natural(elapsed.requestedElapsedMs)) return rejected(state, "invalid-now-at");
-  const appliedElapsedMs = Math.min(elapsed.requestedElapsedMs, MAX_OFFLINE_MS);
+  const plan = planOfflineReplay(elapsed.requestedElapsedMs);
   if (
     !natural(state.totalOfflineMs) ||
-    state.totalOfflineMs > Number.MAX_SAFE_INTEGER - appliedElapsedMs
+    state.totalOfflineMs > Number.MAX_SAFE_INTEGER - plan.appliedElapsedMs
   )
     return rejected(state, "unsafe-total-offline");
-  const fullSteps = Math.floor(appliedElapsedMs / OFFLINE_STEP_MS);
-  const remainder = appliedElapsedMs % OFFLINE_STEP_MS;
   let working = state;
   let additions: readonly PendingProgression[] = [];
   try {
@@ -474,8 +502,8 @@ export function replayOffline(
         totalOfflineMs: elapsedSoFar,
       };
     };
-    for (let index = 0; index < fullSteps; index += 1) applyStep(OFFLINE_STEP_MS);
-    if (remainder > 0) applyStep(remainder);
+    for (let index = 0; index < plan.fullSteps; index += 1) applyStep(OFFLINE_STEP_MS);
+    if (plan.remainderMs > 0) applyStep(plan.remainderMs);
   } catch {
     return rejected(state, "step-failed");
   }
@@ -491,13 +519,9 @@ export function replayOffline(
   } catch {
     return rejected(state, "delta-failed");
   }
-  const notices: OfflineNotice[] =
-    appliedElapsedMs === elapsed.requestedElapsedMs
-      ? []
-      : [{ code: "offline-cap", requestedElapsedMs: elapsed.requestedElapsedMs, appliedElapsedMs }];
   const event: ApplyOfflineAccrualEvent = {
     type: "apply-offline-accrual",
-    elapsedMs: appliedElapsedMs,
+    elapsedMs: plan.appliedElapsedMs,
     atMs: state.activeTimeMs,
     resourceSnapshot: resourceSnapshotFromState(working),
     newlyObservedProgression: additions,
@@ -508,11 +532,11 @@ export function replayOffline(
     if (!exactDataEqual(recorded, expected)) return rejected(state, "accounting-failed");
     const report: OfflineReplayReport = {
       requestedElapsedMs: elapsed.requestedElapsedMs,
-      appliedElapsedMs,
+      appliedElapsedMs: plan.appliedElapsedMs,
       accountedAtMs: state.activeTimeMs,
-      capped: notices.length > 0,
-      executedSteps: fullSteps + (remainder > 0 ? 1 : 0),
-      notices,
+      capped: plan.capped,
+      executedSteps: plan.fullSteps + (plan.remainderMs > 0 ? 1 : 0),
+      notices: plan.notices,
       resources: resources as Record<TrackedResourceKey, OfflineResourceRecord>,
       pendingProgression: expected.pendingProgression,
       newlyObservedProgression: additions,
