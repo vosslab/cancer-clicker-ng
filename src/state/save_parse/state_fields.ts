@@ -1,10 +1,9 @@
 import { hallmarkId, microbiomePoolId, offerId, programOptionId } from "../../brands.js";
 import type { SaveNotice } from "../../types/save.js";
-import type { GameState } from "../../types/state.js";
 import { isHallmarkId } from "../catalog.js";
 import { exact, identifier, ids, natural, object } from "./guards.js";
 
-export function parsePrograms(value: unknown): GameState["programs"] | undefined {
+export function parsePrograms(value: unknown): unknown | undefined {
   if (
     !exact(value, [
       "allowedByHallmark",
@@ -44,10 +43,7 @@ export function parsePrograms(value: unknown): GameState["programs"] | undefined
   };
 }
 
-export function parseMicrobiome(
-  value: unknown,
-  notices: SaveNotice[],
-): GameState["microbiome"] | undefined {
+export function parseMicrobiome(value: unknown, notices: SaveNotice[]): unknown | undefined {
   if (
     !exact(value, [
       "poolId",

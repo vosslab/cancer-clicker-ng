@@ -12,10 +12,10 @@ function installDiagnostics(page) {
 async function inspectColonyFigure(page) {
   const svg = page.locator("svg.colony-figure");
   await expect(svg).toHaveCount(1);
-  await expect(svg).toHaveAttribute("role", "img");
-  await expect(svg.locator("title")).toHaveCount(1);
-  await expect(svg.locator("desc")).toHaveCount(1);
-  await expect(page.locator(".colony-panel figcaption")).toBeVisible();
+  await expect(svg).toHaveAttribute("aria-hidden", "true");
+  await expect(svg.locator("title")).toHaveCount(0);
+  await expect(svg.locator("desc")).toHaveCount(0);
+  await expect(page.locator("#colony-caption")).toBeVisible();
   return svg.evaluate((element) => {
     const allNodes = [element, ...element.querySelectorAll("*")];
     const ids = new Set([...element.querySelectorAll("[id]")].map((node) => node.id));
@@ -25,12 +25,27 @@ async function inspectColonyFigure(page) {
       for (const attribute of [...node.attributes]) {
         const value = attribute.value;
         if (/^(?:https?:|\/\/|data:)/i.test(value)) externalReferences.push(value);
-        for (const match of value.matchAll(/#([A-Za-z][\w:.-]*)/g)) {
+        const references = [
+          ...value.matchAll(/url\(#([A-Za-z][\w:.-]*)\)/g),
+          ...(attribute.name === "href" ? value.matchAll(/^#([A-Za-z][\w:.-]*)$/g) : []),
+        ];
+        for (const match of references) {
           if (!ids.has(match[1])) unresolvedReferences.push(match[1]);
         }
       }
     }
     const box = element.getBoundingClientRect();
+    const layerSelectors = [
+      ".colony-figure__tissue",
+      ".colony-figure__silhouette-regions",
+      ".colony-figure__hypoxia-necrosis",
+      ".colony-figure__perfusion",
+      ".colony-figure__cells",
+      ".colony-figure__hallmark-accents",
+      ".colony-figure__invasion",
+      ".colony-figure__outline",
+    ];
+    const directChildren = [...element.children];
     return {
       externalReferences,
       unresolvedReferences,
@@ -42,15 +57,21 @@ async function inspectColonyFigure(page) {
       inlineHandlers: allNodes.some((node) =>
         [...node.attributes].some((attribute) => attribute.name.toLowerCase().startsWith("on")),
       ),
+      layerOrder: layerSelectors.map((selector) =>
+        directChildren.findIndex((node) => node.matches(selector)),
+      ),
     };
   });
 }
 
-test("the production page provides one accessible static colony figure with local SVG resources", async ({
+test("the production page keeps local finite SVG geometry beneath one named colony action", async ({
   page,
 }) => {
   const diagnostics = installDiagnostics(page);
   await page.goto("/");
+  const action = page.getByRole("button", { name: "Divide cell" });
+  await expect(action).toBeVisible();
+  await expect(action.locator("svg.colony-figure")).toHaveCount(1);
   const inspection = await inspectColonyFigure(page);
   expect(inspection.visible).toBe(true);
   expect(inspection.finiteBox).toBe(true);
@@ -58,6 +79,10 @@ test("the production page provides one accessible static colony figure with loca
   expect(inspection.unresolvedReferences).toEqual([]);
   expect(inspection.focusable).toBe(0);
   expect(inspection.inlineHandlers).toBe(false);
+  expect(inspection.layerOrder.every((index) => index >= 0)).toBe(true);
+  expect(inspection.layerOrder).toEqual(
+    [...inspection.layerOrder].sort((left, right) => left - right),
+  );
   expect(diagnostics).toEqual([]);
 });
 

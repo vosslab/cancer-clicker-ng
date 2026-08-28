@@ -1,0 +1,191 @@
+import { expect, test } from "@playwright/test";
+
+const SAVE_KEY = "cancer-clicker-ng.save.v2";
+
+function savedCellCount(raw) {
+  if (raw === null) return 0;
+  const envelope = JSON.parse(raw);
+  return envelope.state.cells.mantissa * 10 ** envelope.state.cells.exponent;
+}
+
+async function readSavedCellCount(page) {
+  const raw = await page.evaluate((key) => localStorage.getItem(key), SAVE_KEY);
+  return savedCellCount(raw);
+}
+
+async function expectInViewport(page, selectors) {
+  const visibility = await page.evaluate(
+    (requestedSelectors) =>
+      requestedSelectors.map((selector) => {
+        const element = document.querySelector(selector);
+        if (element === null) return { selector, visible: false };
+        const box = element.getBoundingClientRect();
+        return {
+          selector,
+          visible:
+            box.width > 0 && box.height > 0 && box.top >= 0 && box.bottom <= window.innerHeight,
+        };
+      }),
+    selectors,
+  );
+  expect(visibility).toEqual(selectors.map((selector) => ({ selector, visible: true })));
+}
+
+test("the 1280 by 800 colony board keeps its primary clicker surfaces visible and actionable", async ({
+  browser,
+}) => {
+  const context = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+  try {
+    const page = await context.newPage();
+    await page.goto("/");
+
+    await expect(page.getByRole("button", { name: "Divide cell" })).toBeVisible();
+    await expect(page.getByLabel("Cell count")).toBeVisible();
+    await expect(page.getByLabel("Cell production rate")).toBeVisible();
+    await expect(page.locator('[aria-label="Tumor progression"]')).toBeVisible();
+    await expect(page.locator('[aria-label="Division apparatus store"]')).toBeVisible();
+    await expect(page.locator('[aria-label="Producer purchase quantity"]')).toBeVisible();
+    await expect(page.locator("#stage-title")).toBeVisible();
+    await expect(page.locator("#producers-title")).toBeVisible();
+    await expect(page.locator("#save-status")).toBeVisible();
+
+    const firstProducer = page.locator("[data-producer-id]").first();
+    await expect(firstProducer).toContainText(/Owned level \d+/);
+    await expect(firstProducer).toContainText(/\d+(?:\.\d+)? cells\/s/);
+    await expect(firstProducer).toContainText(/Next 1 cost:/);
+    await expect(firstProducer).toContainText(/affordable|unavailable/);
+
+    await expectInViewport(page, [
+      ".colony-panel__action",
+      '[aria-label="Tumor progression"]',
+      '[aria-label="Division apparatus store"]',
+      '[aria-label="Producer purchase quantity"]',
+      "#stage-title",
+      "#producers-title",
+      "#save-status",
+    ]);
+    const storeScrolling = await page.locator(".producers-panel").evaluate((element) => {
+      element.scrollTop = element.scrollHeight;
+      return {
+        scrollable: element.scrollHeight > element.clientHeight,
+        scrolled: element.scrollTop > 0,
+      };
+    });
+    expect(storeScrolling.scrollable).toBe(true);
+    expect(storeScrolling.scrolled).toBe(true);
+    await expect(page.locator("[data-producer-id]").last()).toBeVisible();
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
+      ),
+    ).toBe(false);
+  } finally {
+    await context.close();
+  }
+});
+
+test("visible cells accept pointer division while tissue whitespace stays inert and keyboard uses one native action", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const action = page.getByRole("button", { name: "Divide cell" });
+  const cell = action.locator(".colony-cell__membrane").first();
+  const whitespace = action.locator(".colony-figure__plate");
+
+  await expect(cell).toBeVisible();
+  await cell.click();
+  expect(await readSavedCellCount(page)).toBe(1);
+
+  await whitespace.click({ position: { x: 8, y: 8 } });
+  expect(await readSavedCellCount(page)).toBe(1);
+
+  await action.focus();
+  await page.keyboard.press("Enter");
+  expect(await readSavedCellCount(page)).toBe(2);
+  await expect(action).toBeFocused();
+
+  await page.keyboard.press("Space");
+  expect(await readSavedCellCount(page)).toBe(3);
+  await expect(action).toBeFocused();
+});
+
+test("recovery and failed persistence preserve the saved state and tell the player what happened", async ({
+  browser,
+}) => {
+  const recovery = await browser.newContext();
+  const persistence = await browser.newContext();
+  try {
+    const recoveryPage = await recovery.newPage();
+    await recoveryPage.addInitScript(
+      (key) => localStorage.setItem(key, "{unreadable-colony-save"),
+      SAVE_KEY,
+    );
+    await recoveryPage.goto("/");
+    const recoveryAction = recoveryPage.getByRole("button", { name: "Divide cell" });
+    const recoveryCells = await recoveryPage.getByLabel("Cell count").textContent();
+    await expect(recoveryAction).toBeDisabled();
+    await recoveryAction.click({ force: true });
+    await expect(recoveryPage.getByLabel("Cell count")).toHaveText(recoveryCells ?? "");
+    expect(await recoveryPage.evaluate((key) => localStorage.getItem(key), SAVE_KEY)).toBe(
+      "{unreadable-colony-save",
+    );
+
+    const persistencePage = await persistence.newPage();
+    await persistencePage.addInitScript((key) => {
+      const originalSetItem = Storage.prototype.setItem;
+      globalThis.__rejectColonyPersistence = false;
+      Storage.prototype.setItem = function rejectColonyPersistence(candidateKey, value) {
+        if (candidateKey === key && globalThis.__rejectColonyPersistence) {
+          throw new Error("storage write denied");
+        }
+        return originalSetItem.call(this, candidateKey, value);
+      };
+    }, SAVE_KEY);
+    await persistencePage.goto("/");
+    const beforeRaw = await persistencePage.evaluate((key) => localStorage.getItem(key), SAVE_KEY);
+    await persistencePage.evaluate(() => {
+      globalThis.__rejectColonyPersistence = true;
+    });
+    await persistencePage.getByRole("button", { name: "Divide cell" }).press("Enter");
+    await expect(persistencePage.getByLabel("Cell count")).toHaveText(/0(?:\.0+)? cells/);
+    await expect(persistencePage.locator("#save-status")).toHaveText("Unsaved changes");
+    await expect(persistencePage.locator("#game-status")).toContainText("Progress is not saved");
+    expect(await persistencePage.evaluate((key) => localStorage.getItem(key), SAVE_KEY)).toBe(
+      beforeRaw,
+    );
+  } finally {
+    await recovery.close();
+    await persistence.close();
+  }
+});
+
+test("reduced motion retains the colony action cue without running colony animation", async ({
+  browser,
+}) => {
+  const context = await browser.newContext({
+    viewport: { width: 1280, height: 800 },
+    reducedMotion: "reduce",
+  });
+  try {
+    const page = await context.newPage();
+    await page.goto("/");
+    const action = page.getByRole("button", { name: "Divide cell" });
+    await expect(action).toBeVisible();
+    await expect(page.locator(".colony-panel__instruction")).toContainText("Click a visible cell");
+    await expect(action.locator("svg.colony-figure")).toBeVisible();
+    const motion = await action.evaluate((element) => ({
+      reduced: matchMedia("(prefers-reduced-motion: reduce)").matches,
+      animationNames: [element, ...element.querySelectorAll("*")].map(
+        (node) => getComputedStyle(node).animationName,
+      ),
+      activeAnimations: element.getAnimations({ subtree: true }).length,
+    }));
+    expect(motion.reduced).toBe(true);
+    expect(motion.animationNames).toEqual(
+      expect.not.arrayContaining([expect.not.stringMatching(/^none$/)]),
+    );
+    expect(motion.activeAnimations).toBe(0);
+  } finally {
+    await context.close();
+  }
+});

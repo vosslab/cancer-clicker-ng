@@ -151,10 +151,14 @@ type Signature = Readonly<{
 /** Exhaustive, data-only macro contracts.  Values are deliberately broad visual families. */
 export const STAGE_LAYOUT_SIGNATURES = {
   transformed_cell: {
-    radius: 34,
+    // The opening scene is the first direct-action lesson: keep one distinct,
+    // biologically irregular transformed cell large enough to read and acquire
+    // inside its own tissue boundary, rather than treating it as a dense-field
+    // slot at the same scale as later colonies.
+    radius: 100,
     target: 1,
     components: 1,
-    lobe: 0.65,
+    lobe: 0.12,
     regionKinds: ["core"],
     voidKinds: [],
     clearance: 14,
@@ -648,6 +652,7 @@ function slotFor(
   request: ColonyLayoutRequest,
   depth: DepthStratum,
 ): CellSlot | undefined {
+  const isOpeningCell = stageName(request.stageId) === "transformed_cell";
   const random = seeded(request, "slot", cluster.key, index);
   const angle = random() * Math.PI * 2;
   const ring = Math.min(
@@ -655,17 +660,24 @@ function slotFor(
     Math.sqrt(random()) *
       (1 + (random() - 0.5) * request.morphology.params.tissueDisorganization * 0.5),
   );
-  const centre =
-    stageName(request.stageId) === "transformed_cell"
-      ? cluster.centre
-      : point(
-          cluster.centre.x + Math.cos(angle) * cluster.rx * ring,
-          cluster.centre.y + Math.sin(angle) * cluster.ry * ring,
-        );
-  const scale = 0.78 + random() * 0.32;
+  const centre = isOpeningCell
+    ? cluster.centre
+    : point(
+        cluster.centre.x + Math.cos(angle) * cluster.rx * ring,
+        cluster.centre.y + Math.sin(angle) * cluster.ry * ring,
+      );
+  const scale = isOpeningCell ? 1 : 0.86 + random() * 0.3;
   const disorganization = request.morphology.params.tissueDisorganization;
-  const rx = (6.5 + random() * 3) * scale * (1 + (random() - 0.5) * disorganization * 0.24);
-  const ry = (5.5 + random() * 2.5) * scale * (1 + (random() - 0.5) * disorganization * 0.2);
+  // A representative board has fewer drawn cells than a real lesion. These
+  // deliberately legible cell bodies make later cellular regions readable and
+  // directly targetable while the allocator continues to enforce containment
+  // and collision policy from the same authoritative dimensions.
+  const rx = isOpeningCell
+    ? 48
+    : (8.25 + random() * 3.5) * scale * (1 + (random() - 0.5) * disorganization * 0.24);
+  const ry = isOpeningCell
+    ? 40
+    : (7 + random() * 3) * scale * (1 + (random() - 0.5) * disorganization * 0.2);
   const clusterOrdinal = cluster.key.split(":")[cluster.key.split(":").length - 1]!;
   return freeze({
     key: `layout-v1:${request.stageId}:cell:${clusterOrdinal}:${index}`,

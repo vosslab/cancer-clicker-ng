@@ -56,13 +56,26 @@ function unavailablePanelState(): JSX.Element {
   );
 }
 
-function targetIsVisibleColonyCell(target: EventTarget | null): boolean {
-  return target instanceof Element && target.closest("[data-colony-cell]") !== null;
+function eventTargetsVisibleColonyCell(event: MouseEvent): boolean {
+  const directTarget = event.target;
+  if (directTarget instanceof Element && directTarget.closest("[data-colony-cell]") !== null) {
+    return true;
+  }
+  return event
+    .composedPath()
+    .some((candidate) => candidate instanceof Element && candidate.matches("[data-colony-cell]"));
 }
 
 /** Shows the visual cell field as one accessible action without per-cell tab stops. */
 export function ColonyPanel(props: ColonyPanelProps): JSX.Element {
-  const panelScene = createMemo(() => derivePanelScene(props.game));
+  const panelScene = createMemo(() => {
+    const currentStage = props.game.currentStage;
+    const resolved = derivePanelScene(props.game);
+    if (resolved.kind === "ready" && resolved.scene.stageId !== currentStage) {
+      throw new Error("Colony scene must match the authoritative current stage.");
+    }
+    return resolved;
+  });
   const readyScene = createMemo(() => {
     const result = panelScene();
     return result.kind === "ready" ? result : undefined;
@@ -72,7 +85,7 @@ export function ColonyPanel(props: ColonyPanelProps): JSX.Element {
   function divideFromColony(event: MouseEvent): void {
     // Keyboard and assistive activation has detail 0. Pointer/touch intent must
     // originate from a rendered cell rather than the surrounding plate.
-    if (event.detail === 0 || targetIsVisibleColonyCell(event.target)) props.onDivide();
+    if (event.detail === 0 || eventTargetsVisibleColonyCell(event)) props.onDivide();
   }
 
   return (
@@ -112,7 +125,7 @@ export function ColonyPanel(props: ColonyPanelProps): JSX.Element {
               disabled={props.disabled}
               aria-label="Divide cell"
               aria-describedby="colony-instruction colony-caption"
-              onClick={divideFromColony}
+              on:click={divideFromColony}
             >
               <ErrorBoundary fallback={unavailablePanelState()}>
                 <Colony scene={ready().scene} decorative />

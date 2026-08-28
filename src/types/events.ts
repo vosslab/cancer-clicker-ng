@@ -1,10 +1,12 @@
 import type {
   EventId,
   HallmarkId,
+  LateProgramOptionId,
+  MicrobiomeCompositionId,
+  MicrobiomeOfferId,
   MutationId,
   OfferId,
   ProducerId,
-  ProgramOptionId,
   RegionId,
   RouteId,
   StageId,
@@ -12,10 +14,9 @@ import type {
 import type {
   CheckpointId,
   NumberFormat,
-  Phenotype,
-  SenescenceAction,
   SignalingAllocation,
   TriageAction,
+  Phenotype,
   PendingProgression,
   TrackedResourceSnapshot,
 } from "./state.js";
@@ -134,29 +135,28 @@ export type SelectMutationEvent = Readonly<{
   mutationId: MutationId;
   atMs: number;
 }>;
-export type SwitchPhenotypeEvent = Readonly<{
-  type: "switch-phenotype";
+export type AssignRegionPhenotypeEvent = Readonly<{
+  type: "assign-region-phenotype";
   regionId: RegionId;
   phenotype: Phenotype;
-  cooldownDeadlineMs: number;
   atMs: number;
 }>;
-export type EditProgramEvent = Readonly<{
-  type: "edit-program";
+export type ReconfigureHallmarkProgramEvent = Readonly<{
+  type: "reconfigure-hallmark-program";
   hallmarkId: HallmarkId;
-  optionId: ProgramOptionId;
-  cooldownDeadlineMs: number;
+  optionId: LateProgramOptionId;
   atMs: number;
 }>;
-export type SelectMicrobiomeEvent = Readonly<{
-  type: "select-microbiome";
-  offerId: OfferId;
+export type InstallMicrobiomeCompositionEvent = Readonly<{
+  type: "install-microbiome-composition";
+  offerId: MicrobiomeOfferId;
+  compositionId: MicrobiomeCompositionId;
   atMs: number;
 }>;
-export type ResolveSenescenceEvent = Readonly<{
-  type: "resolve-senescence";
-  eventId: EventId;
-  action: SenescenceAction;
+export type ResolveSenescenceDecisionEvent = Readonly<{
+  type: "resolve-senescence-decision";
+  decisionId: EventId;
+  action: "keep" | "clear";
   atMs: number;
 }>;
 
@@ -180,10 +180,10 @@ export type GameEvent =
   | SetRegionMaskEvent
   | ActivateInflammationEvent
   | SelectMutationEvent
-  | SwitchPhenotypeEvent
-  | EditProgramEvent
-  | SelectMicrobiomeEvent
-  | ResolveSenescenceEvent;
+  | AssignRegionPhenotypeEvent
+  | ReconfigureHallmarkProgramEvent
+  | InstallMicrobiomeCompositionEvent
+  | ResolveSenescenceDecisionEvent;
 
 /** A canonical runtime inventory: additions to GameEvent must update reducer conformance tests. */
 export const EVENT_TYPES = [
@@ -205,10 +205,10 @@ export const EVENT_TYPES = [
   "set-region-mask",
   "activate-inflammation",
   "select-mutation",
-  "switch-phenotype",
-  "edit-program",
-  "select-microbiome",
-  "resolve-senescence",
+  "assign-region-phenotype",
+  "reconfigure-hallmark-program",
+  "install-microbiome-composition",
+  "resolve-senescence-decision",
 ] as const satisfies readonly GameEvent["type"][];
 type EventTypeRegistryIsExhaustive =
   Exclude<GameEvent["type"], (typeof EVENT_TYPES)[number]> extends never ? true : never;

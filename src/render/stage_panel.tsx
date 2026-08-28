@@ -122,7 +122,7 @@ function modeReadout(game: GameState, mode: StageUiMode): ModeReadout {
         heading: "Culture bench metrics",
         metrics: [
           `L3 availability: ${l3 ? "earned" : "unavailable"}`,
-          `Senescent regions: ${game.senescentRegions.length}`,
+          `Senescent regions: ${game.lateHallmarks.senescence.retainedRegions.length}`,
         ],
       };
     }

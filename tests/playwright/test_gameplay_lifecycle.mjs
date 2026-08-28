@@ -14,9 +14,43 @@ function installDiagnostics(page) {
   return failures;
 }
 
+function targetableCellPoint(actionElement) {
+  const paintedPaths = actionElement.querySelectorAll(
+    "[data-colony-cell] .colony-cell__nucleus, [data-colony-cell] .colony-cell__membrane",
+  );
+  for (const path of paintedPaths) {
+    const matrix = path.getScreenCTM();
+    const cell = path.closest("[data-colony-cell]");
+    if (matrix === null || cell === null) continue;
+    const bounds = path.getBBox();
+    for (let row = 1; row < 10; row += 1) {
+      for (let column = 1; column < 10; column += 1) {
+        const local = new DOMPoint(
+          bounds.x + (bounds.width * column) / 10,
+          bounds.y + (bounds.height * row) / 10,
+        );
+        if (!path.isPointInFill(local)) continue;
+        const screen = local.matrixTransform(matrix);
+        const screenPoint = { x: Math.floor(screen.x), y: Math.floor(screen.y) };
+        const target = document.elementFromPoint(screenPoint.x, screenPoint.y);
+        if (target?.closest("[data-colony-cell]") === cell) return screenPoint;
+      }
+    }
+  }
+  throw new Error("No filled colony-cell point is targetable.");
+}
+
+async function clickVisibleCell(page) {
+  const action = page.locator("#divide-button");
+  await action.scrollIntoViewIfNeeded();
+  const initialPoint = await action.evaluate(targetableCellPoint);
+  await page.mouse.move(initialPoint.x, initialPoint.y);
+  const hoveredPoint = await action.evaluate(targetableCellPoint);
+  await page.mouse.click(hoveredPoint.x, hoveredPoint.y);
+}
+
 async function earnAndBuyCyclin(page) {
-  const cell = page.locator("#divide-button [data-colony-cell]").first();
-  for (let count = 0; count < 10; count += 1) await cell.click();
+  for (let count = 0; count < 10; count += 1) await clickVisibleCell(page);
   const cyclin = page.locator('[data-producer-id="producer"]');
   const buyOne = cyclin.getByRole("button", { name: "Buy 1", exact: true });
   await expect(buyOne).toBeEnabled();
@@ -85,11 +119,11 @@ test("gameplay lifecycle production dist is playable, persistent, accessible, an
   await expect(page.getByRole("button", { name: "Divide cell" })).toBeFocused();
 
   const { cyclin, buyOne } = await earnAndBuyCyclin(page);
-  await expect(cyclin).toContainText("Level 1");
+  await expect(cyclin).toContainText("Owned level 1");
   await expect(buyOne).toBeFocused();
   await page.reload();
   await expect(page.getByRole("heading", { name: "Offline progress" })).toHaveCount(0);
-  await expect(page.locator('[data-producer-id="producer"]')).toContainText("Level 1");
+  await expect(page.locator('[data-producer-id="producer"]')).toContainText("Owned level 1");
   await expect(page.getByRole("button", { name: "Buy 1", exact: true }).first()).toBeEnabled();
 
   const storage = await page.evaluate(
@@ -175,7 +209,7 @@ test("gameplay lifecycle production dist awards meaningful offline production th
   await expect(page.getByRole("heading", { name: "Offline progress" })).toBeVisible();
   await expect(offlinePanel).toContainText(/Applied 1[2-9]\d{4,} ms/);
   await expect(page.getByLabel("Cell count")).not.toHaveText(beforeOffline ?? "");
-  await expect(cyclin).toContainText("Level 1");
+  await expect(cyclin).toContainText("Owned level 1");
   expect(diagnostics).toEqual([]);
 });
 
@@ -184,7 +218,7 @@ test("gameplay lifecycle production dist reports clock skew separately and visib
 }) => {
   const diagnostics = installDiagnostics(page);
   await page.goto("/");
-  await page.locator("#divide-button [data-colony-cell]").first().click();
+  await clickVisibleCell(page);
   const saved = await page.evaluate((key) => window.localStorage.getItem(key), SAVE_KEY);
   expect(saved).not.toBeNull();
   const skewed = JSON.parse(saved);
@@ -220,7 +254,7 @@ test("gameplay lifecycle production dist remains usable at a narrow reduced-moti
 
   const divide = page.getByRole("button", { name: "Divide cell" });
   await expect(divide).toBeVisible();
-  await page.locator("#divide-button [data-colony-cell]").first().click();
+  await clickVisibleCell(page);
   await expect(page.getByLabel("Cell count")).toContainText("1");
   await expect(page.locator(".game-board")).toBeVisible();
   await expect(page.locator("#producer-list")).toBeVisible();

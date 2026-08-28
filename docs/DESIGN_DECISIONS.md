@@ -121,14 +121,40 @@ and L4 Dissemination is a renewable graph frontier.
 design proves L1 supplies early-run variation, L2 choices are reload-stable, L3 preserves a narrow
 automation decision, and L4 continues supplying decisions after authored nodes are stabilized.
 
-**Consequence.** `LineageLedger` stores reset-surviving identity and one-time claims; saved,
-deterministic draft and frontier derivation own visible choice identity; `NetworkState` owns L4
-tiers, pressure, graph, mandates, and campaigns. M14/M15 extend closed `GameEvent` and save
-contracts now; M20 owns `ReplayLog` transport, recording lifecycle, and normalized durable-state
-replay proof. M21 reviews decision witnesses and tuning observations rather than accepting cosmetic
-layer variation.
+**Consequence.** `LineageLedger` is the sole reset-surviving history record, including explicit
+`currentHostRunId`, canonical-order organ-tag history, and future L3/L4 seams. Separate
+authoritative L1 `MetastasisState` and L2 `HostTransferState` own their currencies and visible
+choices; history never duplicates either. Terminal rewards are transient trusted quotes whose
+`sourceEventSequence` is a required revision, never UI-supplied reward state. `deriveSeedV1` is
+the sole versioned seed derivation API, and `generateHostDraftV1` saves one complete ordered
+four-card draft before display, including its reveal list and source revision. One complete-state
+projection module owns all L1/L2 and future L3/L4 resets; helpers return projections while
+`recordEvent()` remains the exclusive durable-mutation and sequence owner. M14 advances the save
+schema through its single p5-to-p6 forward projection after M12 has established p5. M20 owns
+`ReplayLog` transport, recording lifecycle, and normalized durable-state replay proof. UI confirmation sends stable IDs
+and revision only, then preserves the controller's persist-before-reconcile rule. M21 reviews
+decision witnesses and tuning observations rather than accepting cosmetic layer variation.
 
 **Owner.** [PRESTIGE_DESIGN.md](PRESTIGE_DESIGN.md)
+
+### Prestige-owned catalog-backed transit history
+
+**Decision.** M14 resolves an arrived transit through a catalog-backed `OrganSiteId`, then records
+the destination's canonical `OrganTagId` values and transit count in the lineage ledger. Current
+`RegionId` values remain local stage projections rather than organ-history identities.
+
+**Why.** A region's layout identity cannot truthfully establish its biological destination. The
+ledger needs reset-surviving, catalog-owned route evidence for Metastasis and later portfolio
+decisions.
+
+**Consequence.** M12 completes the progression state before M14 begins, while M14 owns the full
+organ-site, ledger, and transit contract rather than splitting their writers across milestones.
+`resolve-transit` validates a pending transit and compatible destination once,
+creates or marks its local seeded region, and records ledger tags only for arrival. Lost and invalid
+transits are atomic. M14 computes viable current regions from the run but consumes persisted ledger
+organ tags for eligibility and diversity; it never infers an organ from a `RegionId`.
+
+**Owner.** [PRESTIGE_DESIGN.md](PRESTIGE_DESIGN.md) and `src/prestige/seeding.ts`
 
 ### Stages and morphology are data contracts
 

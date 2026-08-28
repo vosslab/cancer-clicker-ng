@@ -70,12 +70,21 @@ function seededOverlays(
   });
 }
 
+function systemicInvasiveFront(layout: ColonyLayout): string {
+  const edge = layout.silhouette.vertices.reduce((rightmost, point) =>
+    point.x > rightmost.x ? point : rightmost,
+  );
+  const endX = Math.min(970, edge.x + 78);
+  const endY = Math.max(30, Math.min(670, edge.y - 34));
+  return `M ${edge.x} ${edge.y} C ${edge.x + 26} ${edge.y - 18}, ${endX - 26} ${endY + 16}, ${endX} ${endY}`;
+}
+
 /** Renders condition-backed oxygen and necrosis interiors under individual cells. */
 export function OxygenOverlays(props: OverlayProps): JSX.Element {
   const hypoxic = overlaysFor(props.layout, props.visual, "hypoxic");
   const necrotic = overlaysFor(props.layout, props.visual, "necrotic");
   return (
-    <g class="colony-figure__hypoxia-necrosis" aria-hidden="true">
+    <g class="colony-figure__hypoxia-necrosis" aria-hidden="true" pointer-events="none">
       <For each={hypoxic}>
         {(overlay) => (
           <ellipse
@@ -109,7 +118,7 @@ export function OxygenOverlays(props: OverlayProps): JSX.Element {
 export function PerfusionOverlays(props: OverlayProps): JSX.Element {
   const perfused = overlaysFor(props.layout, props.visual, "perfused");
   return (
-    <g class="colony-figure__perfusion" aria-hidden="true">
+    <g class="colony-figure__perfusion" aria-hidden="true" pointer-events="none">
       <For each={perfused}>
         {(overlay) => {
           const startX = Math.max(24, overlay.region.centre.x - overlay.region.rx * 1.9);
@@ -144,7 +153,7 @@ export function HallmarkOverlays(props: OverlayProps): JSX.Element {
   const hasMetabolicCue = hasEffect(props.visual, "metabolic-state");
   const hasCheckpointCue = hasEffect(props.visual, "checkpoint-disorganization");
   return (
-    <g class="colony-figure__hallmark-accents" aria-hidden="true">
+    <g class="colony-figure__hallmark-accents" aria-hidden="true" pointer-events="none">
       <For each={masked}>
         {(overlay) => (
           <ellipse
@@ -184,12 +193,13 @@ export function HallmarkOverlays(props: OverlayProps): JSX.Element {
 
 /** Adds invasive protrusions and remote anchors only after the authoritative route condition exists. */
 export function InvasionOverlays(props: OverlayProps): JSX.Element {
-  if (!hasEffect(props.visual, "invasive-route"))
-    return <g class="colony-figure__invasion" aria-hidden="true" />;
   const routes = routeOverlays(props.layout, props.visual);
   const seeds = seededOverlays(props.layout, props.visual);
+  const needsSystemicFront = props.visual.invasion.routeCommitted && routes.length === 0;
+  if (!needsSystemicFront && routes.length === 0 && seeds.length === 0)
+    return <g class="colony-figure__invasion" aria-hidden="true" pointer-events="none" />;
   return (
-    <g class="colony-figure__invasion" aria-hidden="true">
+    <g class="colony-figure__invasion" aria-hidden="true" pointer-events="none">
       <For each={routes}>
         {(overlay) => {
           const { centre, rx, ry } = overlay.region;
@@ -206,6 +216,14 @@ export function InvasionOverlays(props: OverlayProps): JSX.Element {
           );
         }}
       </For>
+      {needsSystemicFront ? (
+        <path
+          class="colony-figure__invasive-front colony-figure__invasive-front--systemic"
+          data-scope="systemic"
+          d={systemicInvasiveFront(props.layout)}
+          fill="none"
+        />
+      ) : undefined}
       <For each={seeds}>
         {(overlay) => {
           const { centre, rx, ry } = overlay.region;

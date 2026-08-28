@@ -19,8 +19,8 @@ test("the colony panel owns one native action and delegates pointer intent from 
   const source = await readFile("src/render/colony_panel.tsx", "utf8");
   assert.match(source, /id="divide-button"/);
   assert.match(source, /data-colony-action="divide"/);
-  assert.match(source, /target\.closest\("\[data-colony-cell\]"\)/);
-  assert.match(source, /event\.detail === 0 \|\| targetIsVisibleColonyCell\(event\.target\)/);
+  assert.match(source, /directTarget\.closest\("\[data-colony-cell\]"\)/);
+  assert.match(source, /event\.detail === 0 \|\| eventTargetsVisibleColonyCell\(event\)/);
   assert.match(source, /<Colony scene=\{ready\(\)\.scene\} decorative \/>/);
   assert.equal(/setGame|recordEvent|persistSnapshot|createStore/.test(source), false);
 });

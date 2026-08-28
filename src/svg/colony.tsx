@@ -4,7 +4,7 @@
  * This module deliberately consumes the frozen scene boundary: it makes no
  * placement, depth, morphology, or random decisions of its own.
  */
-import { For } from "solid-js";
+import { For, createMemo } from "solid-js";
 import type { JSX } from "solid-js";
 
 import { createCellBlobPaths } from "./blob.js";
@@ -116,29 +116,29 @@ function silhouettePoints(scene: ColonySceneRequest): string {
 
 /** Renders the living colony as a meaningful image or a decorative named-button surface. */
 export function Colony(props: ColonyProps): JSX.Element {
-  const scene = createColonySceneRequest(props.scene);
-  const model = describeColonySvg(scene);
-  const definitions = createColonySvgDefinitions(scene);
-  const label = `${model.titleId} ${model.descriptionId}`;
-  const points = silhouettePoints(scene);
+  const scene = createMemo(() => createColonySceneRequest(props.scene));
+  const model = createMemo(() => describeColonySvg(scene()));
+  const definitions = createMemo(() => createColonySvgDefinitions(scene()));
+  const label = createMemo(() => `${model().titleId} ${model().descriptionId}`);
+  const points = createMemo(() => silhouettePoints(scene()));
   const decorative = props.decorative === true;
   return (
     <svg
-      class={`colony-figure colony-figure--${scene.visual.growthState}`}
+      class={`colony-figure colony-figure--${scene().visual.growthState}`}
       role={decorative ? undefined : "img"}
       viewBox={VIEW_BOX}
       preserveAspectRatio="xMidYMid meet"
       aria-hidden={decorative ? "true" : undefined}
-      aria-labelledby={decorative ? undefined : label}
+      aria-labelledby={decorative ? undefined : label()}
     >
-      {decorative ? undefined : <title id={model.titleId}>{model.description.title}</title>}
+      {decorative ? undefined : <title id={model().titleId}>{model().description.title}</title>}
       {decorative ? undefined : (
-        <desc id={model.descriptionId}>{model.description.description}</desc>
+        <desc id={model().descriptionId}>{model().description.description}</desc>
       )}
       <defs>
-        <For each={definitions.definitions}>{renderDefinition}</For>
+        <For each={definitions().definitions}>{renderDefinition}</For>
       </defs>
-      <g class="colony-figure__tissue" aria-hidden="true">
+      <g class="colony-figure__tissue" aria-hidden="true" pointer-events="none">
         <rect class="colony-figure__plate" x="0" y="0" width="1000" height="700" rx="32" />
         <path
           class="colony-figure__tissue-fascia"
@@ -149,13 +149,13 @@ export function Colony(props: ColonyProps): JSX.Element {
           d="M 0 562 C 202 508 410 624 622 558 S 838 504 1000 584"
         />
       </g>
-      <g class="colony-figure__silhouette-regions" aria-hidden="true">
+      <g class="colony-figure__silhouette-regions" aria-hidden="true" pointer-events="none">
         <polygon
           class="colony-figure__silhouette"
-          points={points}
-          fill={localSvgReference(definitions.ids.tissueGradient)}
+          points={points()}
+          fill={localSvgReference(definitions().ids.tissueGradient)}
         />
-        <For each={scene.layout.regions}>
+        <For each={scene().layout.regions}>
           {(region) => (
             <ellipse
               class={`colony-figure__region colony-figure__region--${region.kind}`}
@@ -166,7 +166,7 @@ export function Colony(props: ColonyProps): JSX.Element {
             />
           )}
         </For>
-        <For each={scene.layout.voids}>
+        <For each={scene().layout.voids}>
           {(voidFeature) => (
             <ellipse
               class={`colony-figure__void colony-figure__void--${voidFeature.kind}`}
@@ -178,35 +178,39 @@ export function Colony(props: ColonyProps): JSX.Element {
           )}
         </For>
       </g>
-      <OxygenOverlays layout={scene.layout} visual={scene.visual} definitionIds={definitions.ids} />
+      <OxygenOverlays
+        layout={scene().layout}
+        visual={scene().visual}
+        definitionIds={definitions().ids}
+      />
       <PerfusionOverlays
-        layout={scene.layout}
-        visual={scene.visual}
-        definitionIds={definitions.ids}
+        layout={scene().layout}
+        visual={scene().visual}
+        definitionIds={definitions().ids}
       />
       <g class="colony-figure__cells" aria-hidden="true">
-        <For each={model.cells}>
+        <For each={model().cells}>
           {(cell) => (
             <Cell
               cell={cell}
-              definitionIds={definitions.ids}
-              growthState={scene.visual.growthState}
+              definitionIds={definitions().ids}
+              growthState={scene().visual.growthState}
             />
           )}
         </For>
       </g>
       <HallmarkOverlays
-        layout={scene.layout}
-        visual={scene.visual}
-        definitionIds={definitions.ids}
+        layout={scene().layout}
+        visual={scene().visual}
+        definitionIds={definitions().ids}
       />
       <InvasionOverlays
-        layout={scene.layout}
-        visual={scene.visual}
-        definitionIds={definitions.ids}
+        layout={scene().layout}
+        visual={scene().visual}
+        definitionIds={definitions().ids}
       />
-      <g class="colony-figure__outline" aria-hidden="true">
-        <polygon class="colony-figure__outline" points={points} />
+      <g class="colony-figure__outline" aria-hidden="true" pointer-events="none">
+        <polygon class="colony-figure__outline" points={points()} />
       </g>
     </svg>
   );

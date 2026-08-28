@@ -1,5 +1,6 @@
 import type { BigNum } from "./bignum.js";
 import type { MutationDraftOffer } from "../hallmarks/extended_hallmark_types.js";
+import type { LateHallmarksState } from "../hallmarks/late_hallmark_types.js";
 import type {
   EventId,
   HallmarkId,
@@ -36,7 +37,6 @@ export type RegionState = Readonly<{
   phenotype: Phenotype;
   vesselLinkIds: readonly EventId[];
   routeIds: readonly RouteId[];
-  senescenceEventId?: EventId;
 }>;
 export type PendingDamageEvent = Readonly<{
   id: EventId;
@@ -116,13 +116,7 @@ export type GameState = Readonly<{
   chosenMutations: readonly MutationId[];
   mutationLiabilities: readonly MutationId[];
   genomeBurden: number;
-  phenotypeCooldowns: Readonly<Record<string, number>>;
-  regionalModifiers: Readonly<Record<string, number>>;
-  programs: ProgramState;
-  microbiome: MicrobiomeState;
-  senescentRegions: readonly RegionId[];
-  secretoryEffects: Readonly<Record<string, number>>;
-  clearanceQueue: readonly EventId[];
+  lateHallmarks: LateHallmarksState;
   pendingDamageEvents: readonly PendingDamageEvent[];
   pendingTransitEvents: readonly PendingTransitEvent[];
   deterministicSeed: number;

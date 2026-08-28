@@ -113,7 +113,7 @@ export const LOAD_RESULT_CONTRACT_PROBE = {
   notices: [],
   version: 2,
   savedAtMs: 0,
-  progressionVersion: 4,
+  progressionVersion: 5,
 } satisfies LoadResult;
 const _LEGACY_LOADED_RESULT_PROBE = {
   ...LOAD_RESULT_CONTRACT_PROBE,
@@ -176,14 +176,14 @@ export function describeGameEvent(event: GameEvent): string {
       return `activate inflammation ${event.regionId}`;
     case "select-mutation":
       return `select mutation ${event.mutationId} from ${event.offerId}`;
-    case "switch-phenotype":
-      return `switch ${event.regionId} to ${event.phenotype}`;
-    case "edit-program":
-      return `edit program ${event.hallmarkId} to ${event.optionId}`;
-    case "select-microbiome":
-      return `select microbiome ${event.offerId}`;
-    case "resolve-senescence":
-      return `resolve senescence ${event.eventId} with ${event.action}`;
+    case "assign-region-phenotype":
+      return `assign ${event.regionId} to ${event.phenotype}`;
+    case "reconfigure-hallmark-program":
+      return `reconfigure ${event.hallmarkId} with ${event.optionId}`;
+    case "install-microbiome-composition":
+      return `install ${event.compositionId} from ${event.offerId}`;
+    case "resolve-senescence-decision":
+      return `resolve senescence ${event.decisionId} with ${event.action}`;
     default: {
       const exhaustiveEvent: never = event;
       return exhaustiveEvent;

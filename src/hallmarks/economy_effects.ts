@@ -104,30 +104,9 @@ function checkpointModifier(state: GameState, producerId: ProducerId): EconomyMo
 }
 
 function triageModifier(state: GameState, producerId: ProducerId): EconomyModifier {
-  if (!owns(state, "cell_death_resistance")) return NEUTRAL_MODIFIER;
-  const triageOutcomes = Object.entries(state.regionalModifiers).filter(([key, value]) => {
-    return key.startsWith("triage:") && isFiniteNonnegativeInteger(value) && value > 0;
-  });
-  if (triageOutcomes.length === 0) return NEUTRAL_MODIFIER;
-  const viableRegions = state.regions.filter((region) => region.viability > 0).length;
-  if (!isFiniteNonnegativeInteger(viableRegions) || viableRegions === 0) {
-    throw new Error("Damage-triage economy requires a viable regional outcome.");
-  }
-  const absorbWasChosen = triageOutcomes.some(([, value]) => value === 2);
-  const recoveredSubstrate = state.substrate.mantissa > 0;
-  if (absorbWasChosen) {
-    return producerMatch(producerId, ["cdk4", "myc", "replication_fork"])
-      ? modifier(1.4, 0.6)
-      : modifier(0.65, 1.4);
-  }
-  if (recoveredSubstrate) {
-    return producerMatch(producerId, ["cdk4", "pi3k", "egfr"])
-      ? modifier(1.4, 0.6)
-      : modifier(0.65, 1.4);
-  }
-  return producerMatch(producerId, ["telomerase", "cdk4"])
-    ? modifier(1.4, 0.6)
-    : modifier(0.65, 1.4);
+  void state;
+  void producerId;
+  return NEUTRAL_MODIFIER;
 }
 
 function replicativeModifier(state: GameState, producerId: ProducerId): EconomyModifier {

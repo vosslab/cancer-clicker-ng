@@ -54,14 +54,27 @@ export type ColonyRegionOverlay = Readonly<{
   phenotype: Phenotype;
 }>;
 
+/** Durable whole-run invasion facts stay separate from mapped regional correspondence. */
+export type ColonySystemicInvasion = Readonly<{
+  routeCommitted: boolean;
+  seeded: boolean;
+}>;
+
 export type ColonyVisualState = Readonly<{
   declarations: MorphologyDeclarations;
   effects: readonly ColonyVisualEffect[];
   growthState: "quiet" | "cycling" | "energized";
+  invasion: ColonySystemicInvasion;
   overlays: readonly ColonyRegionOverlay[];
 }>;
 
-const VISUAL_STATE_KEYS = ["declarations", "effects", "growthState", "overlays"] as const;
+const VISUAL_STATE_KEYS = [
+  "declarations",
+  "effects",
+  "growthState",
+  "invasion",
+  "overlays",
+] as const;
 const EFFECT_KEYS = [
   "id",
   "sourceId",
@@ -80,6 +93,7 @@ const OVERLAY_KEYS = [
   "seeded",
   "phenotype",
 ] as const;
+const SYSTEMIC_INVASION_KEYS = ["routeCommitted", "seeded"] as const;
 const DECLARATION_KEYS = ["stage", "hallmark", "prestige", "regional"] as const;
 const REGIONAL_DECLARATION_KEYS = ["siteProgram", "host", "node"] as const;
 const SOURCE_KEYS = ["layer", "contributorId", "label", "referenceRowId"] as const;
@@ -219,6 +233,12 @@ function isSeeded(game: GameState, region: RegionState): boolean {
   return game.seededSites.includes(region.id);
 }
 
+function systemicInvasionFor(game: GameState): ColonySystemicInvasion {
+  const routeCommitted = Object.values(game.committedCellCommitments).some((cells) => cells > 0);
+  const seeded = game.seededSites.length > 0;
+  return freeze({ routeCommitted, seeded });
+}
+
 function viabilityCondition(region: RegionState): ColonyRegionCondition {
   if (region.viability <= 0) return "necrotic";
   if (region.viability < 1) return "hypoxic";
@@ -238,7 +258,7 @@ function conditionsForRegion(
   ) {
     conditions.push("inflamed");
   }
-  if (game.senescentRegions.includes(region.id)) conditions.push("senescent");
+  if (game.lateHallmarks.senescence.retainedRegions.some((record) => record.regionId === region.id)) conditions.push("senescent");
   return conditions;
 }
 
@@ -343,6 +363,7 @@ export function resolveColonyVisualState(game: GameState, layout: ColonyLayout):
     declarations,
     effects,
     growthState: currentGrowthState(game),
+    invasion: systemicInvasionFor(game),
     overlays: overlaysFor(game, layout),
   };
   return freeze(visual);
@@ -504,6 +525,14 @@ function isVisualOverlay(value: unknown, layout: ColonyLayout): value is ColonyR
   );
 }
 
+function isSystemicInvasion(value: unknown): value is ColonySystemicInvasion {
+  return (
+    hasExactFrozenDataKeys(value, SYSTEMIC_INVASION_KEYS) &&
+    typeof value.routeCommitted === "boolean" &&
+    typeof value.seeded === "boolean"
+  );
+}
+
 /** Rejects hostile or mutable semantic payloads before SVG components can project them. */
 export function assertColonyVisualState(
   value: unknown,
@@ -514,6 +543,9 @@ export function assertColonyVisualState(
   }
   if (!isDeclarations(value.declarations)) {
     throw new Error("Colony visual declarations must retain the M16 layer contract.");
+  }
+  if (!isSystemicInvasion(value.invasion)) {
+    throw new Error("Colony systemic invasion state must be frozen and exact.");
   }
   if (
     !isFrozenArray(value.effects) ||

@@ -1,5 +1,4 @@
 import {
-  eventId,
   hallmarkId,
   mutationId,
   prestigeId,
@@ -23,7 +22,7 @@ import {
   parseTransit,
   parseTransition,
 } from "./save_parse/domains.js";
-import { parseMicrobiome, parsePrograms } from "./save_parse/state_fields.js";
+import { parseLateHallmarks } from "./save_parse/late_hallmarks.js";
 import { parsePendingProgression } from "./save_parse/progression.js";
 import {
   hasDuplicateRecordIds,
@@ -33,7 +32,6 @@ import {
 import {
   array,
   exact,
-  finite,
   fraction,
   hasOversizedCollection,
   identifier,
@@ -50,7 +48,7 @@ import {
 export { MAX_COLLECTION } from "./save_parse/guards.js";
 
 export const SAVE_KEY = "cancer-clicker-ng.save.v2";
-export const CURRENT_PROGRESSION_VERSION = 4;
+export const CURRENT_PROGRESSION_VERSION = 5;
 const MAX_SAVE_BYTES = 250_000;
 const STATE_KEYS = [
   "cells",
@@ -95,13 +93,7 @@ const STATE_KEYS = [
   "chosenMutations",
   "mutationLiabilities",
   "genomeBurden",
-  "phenotypeCooldowns",
-  "regionalModifiers",
-  "programs",
-  "microbiome",
-  "senescentRegions",
-  "secretoryEffects",
-  "clearanceQueue",
+  "lateHallmarks",
   "pendingDamageEvents",
   "pendingTransitEvents",
   "deterministicSeed",
@@ -132,7 +124,7 @@ export type LoadResult =
       notices: readonly SaveNotice[];
       version: 2;
       savedAtMs: number;
-      progressionVersion: 4;
+      progressionVersion: 5;
     }>
   | Readonly<{
       status: "rejected";
@@ -158,12 +150,12 @@ function field<T>(
 }
 export function serializeGameState(state: GameState, savedAtMs: number): string {
   if (!natural(savedAtMs)) throw new Error("Save metadata is invalid.");
-  const raw = encodeCurrentP4Envelope(state, savedAtMs);
-  validateCurrentP4Envelope(raw, savedAtMs);
+  const raw = encodeCurrentP5Envelope(state, savedAtMs);
+  validateCurrentP5Envelope(raw, savedAtMs);
   return raw;
 }
 
-function encodeCurrentP4Envelope(state: GameState, savedAtMs: number): string {
+function encodeCurrentP5Envelope(state: GameState, savedAtMs: number): string {
   const encoded = {
     version: 2,
     savedAtMs,
@@ -186,10 +178,7 @@ function parseState(source: Record<string, unknown>, notices: SaveNotice[]): Gam
     ["mutationOffers", "pendingDamageEvents", "pendingTransitEvents", "inflammationEpisodes"].some(
       (name) => hasDuplicateRecordIds(source[name]),
     ) ||
-    (Object.prototype.hasOwnProperty.call(source, "programs") &&
-      parsePrograms(source.programs) === undefined) ||
-    (Object.prototype.hasOwnProperty.call(source, "microbiome") &&
-      parseMicrobiome(source.microbiome, []) === undefined)
+    false
   )
     return undefined;
   if (
@@ -470,49 +459,7 @@ function parseState(source: Record<string, unknown>, notices: SaveNotice[]): Gam
       (v) => (nonnegative(v) ? v : undefined),
       notices,
     ),
-    phenotypeCooldowns: field(
-      source,
-      "phenotypeCooldowns",
-      i.phenotypeCooldowns,
-      (v) => numericRecord(v, natural),
-      notices,
-    ),
-    regionalModifiers: field(
-      source,
-      "regionalModifiers",
-      i.regionalModifiers,
-      (v) => numericRecord(v, finite),
-      notices,
-    ),
-    programs: field(source, "programs", i.programs, parsePrograms, notices),
-    microbiome: field(
-      source,
-      "microbiome",
-      i.microbiome,
-      (v) => parseMicrobiome(v, notices),
-      notices,
-    ),
-    senescentRegions: field(
-      source,
-      "senescentRegions",
-      i.senescentRegions,
-      (v) => ids(v, regionId),
-      notices,
-    ),
-    secretoryEffects: field(
-      source,
-      "secretoryEffects",
-      i.secretoryEffects,
-      (v) => numericRecord(v, finite),
-      notices,
-    ),
-    clearanceQueue: field(
-      source,
-      "clearanceQueue",
-      i.clearanceQueue,
-      (v) => ids(v, eventId),
-      notices,
-    ),
+    lateHallmarks: i.lateHallmarks,
     pendingDamageEvents: field(
       source,
       "pendingDamageEvents",
@@ -599,45 +546,26 @@ function parseState(source: Record<string, unknown>, notices: SaveNotice[]): Gam
       message: "Recovered lastStageTransition with its safe default.",
     });
   }
-  if (
-    notices.some(
-      (notice) =>
-        notice.field.startsWith("regions[") && notice.field.endsWith(".senescenceEventId"),
-    )
-  ) {
-    state = {
-      ...state,
-      // A malformed optional relation defaults away; remove only the queue edge it orphaned.
-      clearanceQueue: state.clearanceQueue.filter((id) =>
-        state.regions.some((region) => region.senescenceEventId === id),
-      ),
-    };
-  }
+  const lateHallmarks = parseLateHallmarks(source.lateHallmarks, state);
+  if (lateHallmarks === undefined) return undefined;
+  state = { ...state, lateHallmarks };
   const regionSet = new Set(state.regions.map((x) => String(x.id)));
   // A revealed route exists when a region exposes it. Commitment is a later player choice,
   // so it cannot define the universe that durable risk and transit relations validate against.
   const discoveredRouteSet = new Set(state.regions.flatMap((region) => region.routeIds));
-  const senescenceIds = state.regions.flatMap((region) =>
-    region.senescenceEventId === undefined ? [] : [region.senescenceEventId],
-  );
   const durableEventIds = [
     ...state.pendingDamageEvents.map((x) => x.id),
     ...state.pendingTransitEvents.map((x) => x.id),
     ...state.inflammationEpisodes.map((x) => x.id),
-    ...senescenceIds,
   ];
   const eventSet = new Set(durableEventIds);
-  const clearanceSet = new Set(state.clearanceQueue);
   if (
     eventSet.size !== durableEventIds.length ||
-    clearanceSet.size !== state.clearanceQueue.length ||
     !state.seededSites.every((x) => regionSet.has(x)) ||
     !state.maskedRegions.every((x) => regionSet.has(x)) ||
-    !state.senescentRegions.every((x) => regionSet.has(x)) ||
     !Object.keys(state.telomereReserveByRegion).every((key) => regionSet.has(key)) ||
     !Object.keys(state.immuneVisibilityByRegion).every((key) => regionSet.has(key)) ||
     !Object.keys(state.regionalInflammation).every((key) => regionSet.has(key)) ||
-    !Object.keys(state.phenotypeCooldowns).every((key) => regionSet.has(key)) ||
     !Object.keys(state.routeRiskById).every((key) => discoveredRouteSet.has(routeId(key))) ||
     ![...discoveredRouteSet].every((route) =>
       Object.prototype.hasOwnProperty.call(state.routeRiskById, route),
@@ -648,14 +576,10 @@ function parseState(source: Record<string, unknown>, notices: SaveNotice[]): Gam
     !Object.keys(state.atpBudget).every((key) => state.atpSinks.includes(key)) ||
     !state.pendingDamageEvents.every((x) => regionSet.has(x.regionId)) ||
     !state.inflammationEpisodes.every((x) => regionSet.has(x.regionId)) ||
-    !state.regions.every(
-      (x) => x.senescenceEventId === undefined || clearanceSet.has(x.senescenceEventId),
-    ) ||
     !state.pendingTransitEvents.every((x) =>
       Object.prototype.hasOwnProperty.call(state.committedCellCommitments, x.routeId),
     ) ||
-    state.clearanceQueue.length !== senescenceIds.length ||
-    !state.clearanceQueue.every((id) => senescenceIds.includes(id))
+    false
   )
     return undefined;
   if (notices.some((notice) => hasExtendedHallmarkRecoveryNotice(notice.field))) return undefined;
@@ -667,14 +591,18 @@ function parseState(source: Record<string, unknown>, notices: SaveNotice[]): Gam
   return state.activeTimeMs < state.stageStartedAtMs ? undefined : state;
 }
 
+const P4_RETIRED_STATE_KEYS = [
+  "phenotypeCooldowns", "regionalModifiers", "programs", "microbiome", "senescentRegions", "secretoryEffects", "clearanceQueue",
+] as const;
+const P4_STATE_KEYS = STATE_KEYS.flatMap((key) => key === "lateHallmarks" ? P4_RETIRED_STATE_KEYS : [key]);
 function migrateLegacyState(
   source: Record<string, unknown>,
-  progressionVersion: 1 | 2 | 3,
+  progressionVersion: 1 | 2 | 3 | 4,
 ): SerializedGameState | undefined {
-  const legacyKeys = STATE_KEYS.filter(
+  const legacyKeys = P4_STATE_KEYS.filter(
     (key) => key !== "activeTimeMs" && key !== "pendingProgression",
   );
-  const expectedKeys = progressionVersion === 3 ? STATE_KEYS : legacyKeys;
+  const expectedKeys = progressionVersion === 3 || progressionVersion === 4 ? P4_STATE_KEYS : legacyKeys;
   if (!exact(source, expectedKeys) || !natural(source.stageStartedAtMs)) return undefined;
   const producerLevels = normalizeParsedLegacyProducerLevels(source.producerLevels);
   if (producerLevels === undefined) return undefined;
@@ -697,6 +625,21 @@ function migrateLegacyState(
   migrated.chosenMutations = initial.chosenMutations;
   migrated.mutationLiabilities = initial.mutationLiabilities;
   migrated.genomeBurden = initial.genomeBurden;
+  delete migrated.phenotypeCooldowns;
+  delete migrated.regionalModifiers;
+  delete migrated.programs;
+  delete migrated.microbiome;
+  delete migrated.senescentRegions;
+  delete migrated.secretoryEffects;
+  delete migrated.clearanceQueue;
+  if (Array.isArray(migrated.regions)) {
+    migrated.regions = migrated.regions.map((region) => {
+      if (!object(region)) return region;
+      const { senescenceEventId: _retiredSenescenceLink, ...currentRegion } = region;
+      return currentRegion;
+    });
+  }
+  migrated.lateHallmarks = initial.lateHallmarks;
   if (progressionVersion !== 3) {
     migrated.activeTimeMs = source.stageStartedAtMs;
     migrated.pendingProgression = [];
@@ -769,7 +712,8 @@ export function parseSave(raw: string): LoadResult {
     if (e.progressionVersion === CURRENT_PROGRESSION_VERSION) state = e.state;
     else if (e.progressionVersion === 1) state = migrateLegacyState(e.state, 1);
     else if (e.progressionVersion === 2) state = migrateLegacyState(e.state, 2);
-    else state = migrateLegacyState(e.state, 3);
+    else if (e.progressionVersion === 3) state = migrateLegacyState(e.state, 3);
+    else state = migrateLegacyState(e.state, 4);
     if (state === undefined) return reject(raw, "state", "Save state is invalid.");
     current = {
       version: 2,
@@ -793,7 +737,7 @@ export function parseSave(raw: string): LoadResult {
 }
 
 /** ASVS 1.5.2 and 2.2.1: validate the complete writer envelope without recursion. */
-function validateCurrentP4Envelope(raw: string, savedAtMs: number): void {
+function validateCurrentP5Envelope(raw: string, savedAtMs: number): void {
   const result = parseSave(raw);
   const loadedState = result.status === "loaded" ? result.state : undefined;
   if (
@@ -802,7 +746,7 @@ function validateCurrentP4Envelope(raw: string, savedAtMs: number): void {
     result.notices.length !== 0 ||
     result.savedAtMs !== savedAtMs ||
     result.progressionVersion !== CURRENT_PROGRESSION_VERSION ||
-    encodeCurrentP4Envelope(loadedState, savedAtMs) !== raw
+    encodeCurrentP5Envelope(loadedState, savedAtMs) !== raw
   )
     throw new Error("Current save state is invalid.");
 }

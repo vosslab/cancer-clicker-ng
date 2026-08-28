@@ -102,11 +102,13 @@ export function Cell(props: CellProps): JSX.Element {
         d={structure.membrane.d}
         fill={structure.membrane.fill}
         stroke={structure.membrane.stroke}
+        pointer-events="all"
       />
       <path
         class={structure.nucleus.className}
         d={structure.nucleus.d}
         fill={structure.nucleus.fill}
+        pointer-events="all"
       />
       {structure.mitosis === undefined ? undefined : (
         <path

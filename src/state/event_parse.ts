@@ -2,11 +2,13 @@ import {
   bigNum,
   eventId,
   hallmarkId,
+  lateProgramOptionId,
+  microbiomeCompositionId,
+  microbiomeOfferId,
   mutationId,
   offerId,
   prestigeId,
   producerId,
-  programOptionId,
   regionId,
   routeId,
   stageId,
@@ -18,10 +20,13 @@ import { MAX_PENDING_PROGRESSION, TRACKED_RESOURCE_KEYS } from "../types/state.j
 import { isPrestigeId, isStageId } from "./catalog.js";
 import { parsePositiveCanonicalBigNumDto } from "../hallmarks/extended_hallmark_types.js";
 import { ATP_SINK_CATALOG } from "../hallmarks/extended_hallmark_catalog.js";
+import { PLASTICITY_PHENOTYPES } from "../hallmarks/plasticity_catalog.js";
+import { findLateProgramOption } from "../hallmarks/program_catalog.js";
+import { findMicrobiomeComposition } from "../hallmarks/microbiome_catalog.js";
+import { isSenescenceAction } from "../hallmarks/senescence_catalog.js";
 
 const RESERVED = new Set(["__proto__", "prototype", "constructor"]);
 const CHECKPOINTS = new Set(["contact-inhibition", "nutrient-arrest", "damage-arrest"]);
-const PHENOTYPES = new Set(["proliferative", "migratory", "stress-tolerant"]);
 
 type EventValues = Readonly<Record<string, unknown>>;
 
@@ -111,10 +116,6 @@ function requireIdentifier(value: unknown, label: string): string {
   return value;
 }
 
-function requireDeadline(value: unknown, label: string, atMs: number): number {
-  if (!natural(value) || value < atMs) throw new Error(`${label} is invalid.`);
-  return value;
-}
 
 function purchaseQuantity(value: unknown): PurchaseQuantity {
   if (value === "max" || value === 1 || value === 10 || value === 100) return value;
@@ -360,57 +361,46 @@ export function parseRuntimeEvent(raw: unknown): GameEvent {
         atMs: values.atMs as number,
       };
     }
-    case "switch-phenotype": {
-      const values = valuesFor(raw, [
-        "type",
-        "regionId",
-        "phenotype",
-        "cooldownDeadlineMs",
-        "atMs",
-      ]);
-      if (typeof values.phenotype !== "string" || !PHENOTYPES.has(values.phenotype))
+    case "assign-region-phenotype": {
+      const values = valuesFor(raw, ["type", "regionId", "phenotype", "atMs"]);
+      if (typeof values.phenotype !== "string" || !PLASTICITY_PHENOTYPES.includes(values.phenotype as typeof PLASTICITY_PHENOTYPES[number]))
         throw new Error("Phenotype is invalid.");
-      const atMs = values.atMs as number;
       return {
         type,
         regionId: regionId(requireIdentifier(values.regionId, "Region identifier")),
-        phenotype: values.phenotype as "proliferative" | "migratory" | "stress-tolerant",
-        cooldownDeadlineMs: requireDeadline(values.cooldownDeadlineMs, "Phenotype cooldown", atMs),
-        atMs,
-      };
-    }
-    case "edit-program": {
-      const values = valuesFor(raw, [
-        "type",
-        "hallmarkId",
-        "optionId",
-        "cooldownDeadlineMs",
-        "atMs",
-      ]);
-      const atMs = values.atMs as number;
-      return {
-        type,
-        hallmarkId: hallmarkId(requireIdentifier(values.hallmarkId, "Program hallmark identifier")),
-        optionId: programOptionId(requireIdentifier(values.optionId, "Program option identifier")),
-        cooldownDeadlineMs: requireDeadline(values.cooldownDeadlineMs, "Program cooldown", atMs),
-        atMs,
-      };
-    }
-    case "select-microbiome": {
-      const values = valuesFor(raw, ["type", "offerId", "atMs"]);
-      return {
-        type,
-        offerId: offerId(requireIdentifier(values.offerId, "Microbiome offer identifier")),
+        phenotype: values.phenotype as typeof PLASTICITY_PHENOTYPES[number],
         atMs: values.atMs as number,
       };
     }
-    case "resolve-senescence": {
-      const values = valuesFor(raw, ["type", "eventId", "action", "atMs"]);
-      if (values.action !== "keep" && values.action !== "clear")
+    case "reconfigure-hallmark-program": {
+      const values = valuesFor(raw, ["type", "hallmarkId", "optionId", "atMs"]);
+      const optionId = lateProgramOptionId(requireIdentifier(values.optionId, "Program option identifier"));
+      if (findLateProgramOption(optionId) === undefined) throw new Error("Program option is invalid.");
+      return {
+        type,
+        hallmarkId: hallmarkId(requireIdentifier(values.hallmarkId, "Hallmark identifier")),
+        optionId,
+        atMs: values.atMs as number,
+      };
+    }
+    case "install-microbiome-composition": {
+      const values = valuesFor(raw, ["type", "offerId", "compositionId", "atMs"]);
+      const compositionId = microbiomeCompositionId(requireIdentifier(values.compositionId, "Composition identifier"));
+      if (findMicrobiomeComposition(compositionId) === undefined) throw new Error("Microbiome composition is invalid.");
+      return {
+        type,
+        offerId: microbiomeOfferId(requireIdentifier(values.offerId, "Microbiome offer identifier")),
+        compositionId,
+        atMs: values.atMs as number,
+      };
+    }
+    case "resolve-senescence-decision": {
+      const values = valuesFor(raw, ["type", "decisionId", "action", "atMs"]);
+      if (typeof values.action !== "string" || !isSenescenceAction(values.action))
         throw new Error("Senescence action is invalid.");
       return {
         type,
-        eventId: eventId(requireIdentifier(values.eventId, "Senescence event identifier")),
+        decisionId: eventId(requireIdentifier(values.decisionId, "Senescence decision identifier")),
         action: values.action,
         atMs: values.atMs as number,
       };

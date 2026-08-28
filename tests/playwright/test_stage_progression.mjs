@@ -52,7 +52,7 @@ async function seedStageGate(page, targetStageId, options) {
 
 test("stage progression stage panel turns the early gate into an accessible persisted transition", async ({
   page,
-}, testInfo) => {
+}) => {
   const diagnostics = installDiagnostics(page);
   await page.goto("/");
 
@@ -70,17 +70,21 @@ test("stage progression stage panel turns the early gate into an accessible pers
   const advance = page.getByRole("button", { name: "Advance to Microcolony" });
   await expect(advance).toBeDisabled();
   const divide = page.getByRole("button", { name: "Divide cell" });
-  for (let count = 0; count < 10; count += 1) await divide.click();
+  await divide.focus();
+  for (let count = 0; count < 10; count += 1) await page.keyboard.press("Enter");
   await expect(advance).toBeEnabled();
+  const transformedProjectionCount = await page.locator(".colony-cell__membrane").count();
   await advance.click();
   await expect(page.getByRole("heading", { name: "Microcolony" })).toBeVisible();
+  await expect
+    .poll(() => page.locator(".colony-cell__membrane").count())
+    .toBeGreaterThan(transformedProjectionCount);
   await expect(page.locator(".stage-mode")).toHaveText("Colony grid");
   await expect(page.getByRole("heading", { name: "Colony grid metrics" })).toBeVisible();
   await expect(page.locator(".stage-mode-readout")).toContainText("Producer levels:");
   await expect(page.locator(".stage-economy")).toContainText("Production runs at 1.05x");
   await page.reload();
   await expect(page.getByRole("heading", { name: "Microcolony" })).toBeVisible();
-  await page.screenshot({ path: testInfo.outputPath("stage_progression.png"), fullPage: true });
   expect(diagnostics).toEqual([]);
 });
 

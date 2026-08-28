@@ -1,11 +1,10 @@
-import { bigNum, eventId, hallmarkId, offerId, producerId, programOptionId } from "../brands.js";
-import { add } from "../bignum/bignum.js";
+import { bigNum, hallmarkId, producerId } from "../brands.js";
+import { add, compare, fromSafeInteger, subtract } from "../bignum/bignum.js";
 import { applyProducerPurchase } from "../economy/costs.js";
 import type { GameEvent } from "../types/events.js";
 import type {
   GameState,
   PendingProgression,
-  RegionState,
   TrackedResourceSnapshot,
 } from "../types/state.js";
 import { MAX_PENDING_PROGRESSION, TRACKED_RESOURCE_KEYS } from "../types/state.js";
@@ -29,6 +28,9 @@ import {
   projectManualDivisionHallmarkEffects,
 } from "../hallmarks/elapsed_effects.js";
 import { projectExtendedHallmarkDurableTickEffects } from "../hallmarks/extended_hallmark_tick.js";
+import { findLateHallmark, hasReachedLateHallmarkActivation } from "../hallmarks/late_hallmark_catalog.js";
+import { plasticityDefinition } from "../hallmarks/plasticity_catalog.js";
+import { findLateProgramOption } from "../hallmarks/program_catalog.js";
 import { removeRegionProjection } from "./region_projection.js";
 
 function natural(value: unknown): value is number {
@@ -101,27 +103,141 @@ function canonicalSnapshot(snapshot: TrackedResourceSnapshot): TrackedResourceSn
   }
   return output as TrackedResourceSnapshot;
 }
-function region(state: GameState, id: unknown): RegionState {
-  if (typeof id !== "string") throw new Error("Region identifier is invalid.");
-  const found = state.regions.find((candidate) => candidate.id === id);
-  if (!found) throw new Error("Unknown region.");
-  return found;
+
+function ownsLateHallmark(state: GameState, key: Parameters<typeof findLateHallmark>[0]): void {
+  const definition = findLateHallmark(key);
+  if (
+    definition === undefined ||
+    !hasReachedLateHallmarkActivation(state.currentStage, definition.key) ||
+    !state.hallmarkLevels.some((level) => level.id === definition.id && level.level > 0)
+  )
+    throw new Error("Late hallmark is unavailable.");
 }
-function replaceRegion(
-  state: GameState,
-  id: string,
-  change: Partial<RegionState>,
-): readonly RegionState[] {
-  return state.regions.map((candidate) =>
-    candidate.id === id ? { ...candidate, ...change } : candidate,
-  );
-}
-function clearSenescenceEvent(state: GameState, id: string): readonly RegionState[] {
-  return state.regions.map((candidate) => {
-    if (candidate.id !== id) return candidate;
-    const { senescenceEventId: _removed, ...withoutSenescenceEvent } = candidate;
-    return withoutSenescenceEvent;
-  });
+
+/**
+ * Applies one p5 command without a sequence change. ASVS 2.3.1/2.3.3:
+ * each prerequisite is checked before one complete immutable projection is returned.
+ */
+function applyLateHallmarkEvent(state: GameState, event: GameEvent): GameState | undefined {
+  const isLateHallmarkEvent =
+    event.type === "assign-region-phenotype" ||
+    event.type === "reconfigure-hallmark-program" ||
+    event.type === "install-microbiome-composition" ||
+    event.type === "resolve-senescence-decision";
+  if (!isLateHallmarkEvent) return undefined;
+  if (!natural(state.activeTimeMs) || event.atMs !== state.activeTimeMs)
+    throw new Error("Late-hallmark operation is stale.");
+  switch (event.type) {
+    case "assign-region-phenotype": {
+      ownsLateHallmark(state, hallmarkId("phenotypic_plasticity"));
+      const region = state.regions.find((candidate) => candidate.id === event.regionId);
+      const cooldown = state.lateHallmarks.plasticity.switchCooldownByRegion[event.regionId];
+      if (!region || (cooldown !== undefined && cooldown > event.atMs))
+        throw new Error("Phenotype assignment is unavailable.");
+      const definition = plasticityDefinition(event.phenotype);
+      return {
+        ...state,
+        regions: state.regions.map((candidate) =>
+          candidate.id === event.regionId ? { ...candidate, phenotype: event.phenotype } : candidate,
+        ),
+        lateHallmarks: {
+          ...state.lateHallmarks,
+          plasticity: {
+            switchCooldownByRegion: {
+              ...state.lateHallmarks.plasticity.switchCooldownByRegion,
+              [event.regionId]: event.atMs + definition.switchCooldownMs,
+            },
+          },
+        },
+      };
+    }
+    case "reconfigure-hallmark-program": {
+      ownsLateHallmark(state, hallmarkId("epigenetic_reprogramming"));
+      const option = findLateProgramOption(event.optionId);
+      const cooldown = state.lateHallmarks.epigenetic.cooldownDeadlineMs;
+      if (
+        option === undefined ||
+        option.target !== event.hallmarkId ||
+        !state.hallmarkLevels.some((level) => level.id === event.hallmarkId && level.level > 0) ||
+        (cooldown !== null && cooldown > event.atMs) ||
+        compare(state.atp, fromSafeInteger(option.atpCost)) < 0
+      )
+        throw new Error("Program reconfiguration is unavailable.");
+      const assignments = state.lateHallmarks.epigenetic.assignments.filter(
+        (assignment) => assignment.hallmarkId !== event.hallmarkId,
+      );
+      return {
+        ...state,
+        atp: subtract(state.atp, fromSafeInteger(option.atpCost)),
+        lateHallmarks: {
+          ...state.lateHallmarks,
+          epigenetic: {
+            assignments: [...assignments, { hallmarkId: event.hallmarkId, optionId: event.optionId }],
+            cooldownDeadlineMs: event.atMs + option.cooldownMs,
+          },
+        },
+      };
+    }
+    case "install-microbiome-composition": {
+      ownsLateHallmark(state, hallmarkId("polymorphic_microbiomes"));
+      const pending = state.lateHallmarks.microbiome.pendingOffer;
+      if (
+        pending === null ||
+        pending.id !== event.offerId ||
+        pending.expiresAtMs <= event.atMs
+      )
+        throw new Error("Microbiome offer is unavailable.");
+      const composition = pending.compositions.find((candidate) => candidate.id === event.compositionId);
+      if (composition === undefined) throw new Error("Microbiome composition is unavailable.");
+      return {
+        ...state,
+        lateHallmarks: {
+          ...state.lateHallmarks,
+          microbiome: {
+            ...state.lateHallmarks.microbiome,
+            activeComposition: { offerId: pending.id, composition, installedAtMs: event.atMs },
+            pendingOffer: null,
+            nextRotationDeadlineMs: null,
+          },
+        },
+      };
+    }
+    case "resolve-senescence-decision": {
+      ownsLateHallmark(state, hallmarkId("senescent_cells"));
+      const decision = state.lateHallmarks.senescence.pendingDecisions.find(
+        (candidate) => candidate.id === event.decisionId,
+      );
+      if (decision === undefined) throw new Error("Senescence decision is unavailable.");
+      if (event.action === "clear") {
+        const region = state.regions.find((candidate) => candidate.id === decision.regionId);
+        if (region === undefined) throw new Error("Senescence decision region is unavailable.");
+        return { ...state, ...removeRegionProjection(state, region) };
+      }
+      return {
+        ...state,
+        lateHallmarks: {
+          ...state.lateHallmarks,
+          senescence: {
+            pendingDecisions: state.lateHallmarks.senescence.pendingDecisions.filter(
+              (candidate) => candidate.id !== decision.id,
+            ),
+            retainedRegions: [
+              ...state.lateHallmarks.senescence.retainedRegions,
+              {
+                decisionId: decision.id,
+                regionId: decision.regionId,
+                cause: decision.cause,
+                createdAtMs: decision.createdAtMs,
+                retainedAtMs: event.atMs,
+              },
+            ],
+          },
+        },
+      };
+    }
+    default:
+      return undefined;
+  }
 }
 /** Applies a trusted core-six projection without assigning a sequence number. */
 function applyCoreSixEvent(state: GameState, event: GameEvent): GameState | undefined {
@@ -292,6 +408,8 @@ export function reduceGameEvent(state: GameState, event: GameEvent): GameState {
   if (coreSixProjection !== undefined) return next(state, coreSixProjection);
   const extendedHallmarkProjection = applyExtendedHallmarkEvent(state, event);
   if (extendedHallmarkProjection !== undefined) return next(state, extendedHallmarkProjection);
+  const lateHallmarkProjection = applyLateHallmarkEvent(state, event);
+  if (lateHallmarkProjection !== undefined) return next(state, lateHallmarkProjection);
   switch (event.type) {
     case "click-divide": {
       const projection = projectManualDivisionHallmarkEffects(state);
@@ -422,64 +540,11 @@ export function reduceGameEvent(state: GameState, event: GameEvent): GameState {
     case "activate-inflammation":
     case "select-mutation":
       throw new Error("extended-hallmark event dispatch failed.");
-    case "switch-phenotype": {
-      const target = region(state, event.regionId);
-      const deadline = event.cooldownDeadlineMs;
-      return next(state, {
-        regions: replaceRegion(state, target.id, { phenotype: event.phenotype }),
-        phenotypeCooldowns: { ...state.phenotypeCooldowns, [target.id]: deadline },
-      });
-    }
-    case "edit-program": {
-      const id = hallmarkId(event.hallmarkId);
-      const option = programOptionId(event.optionId);
-      const deadline = event.cooldownDeadlineMs;
-      if (
-        !state.programs.eligibleHallmarks.includes(id) ||
-        !state.programs.allowedByHallmark[id]?.includes(option)
-      )
-        throw new Error("Program option is invalid.");
-      return next(state, {
-        programs: {
-          ...state.programs,
-          selectedByHallmark: { ...state.programs.selectedByHallmark, [id]: option },
-          cooldownDeadlineMs: deadline,
-        },
-      });
-    }
-    case "select-microbiome": {
-      const selectedOfferId = offerId(event.offerId);
-      if (
-        !state.microbiome.offerIds.includes(selectedOfferId) ||
-        state.microbiome.selectedNiches.includes(selectedOfferId) ||
-        state.microbiome.selectedNiches.length >= 2 ||
-        state.microbiome.pendingCompatibility === null
-      )
-        throw new Error("Microbiome offer is invalid.");
-      const selectedNiches = [...state.microbiome.selectedNiches, selectedOfferId];
-      return next(state, {
-        microbiome: {
-          ...state.microbiome,
-          offerIds: state.microbiome.offerIds.filter((id) => id !== selectedOfferId),
-          selectedNiches,
-          compatibilitySnapshot: selectedNiches,
-        },
-      });
-    }
-    case "resolve-senescence": {
-      const pendingId = eventId(event.eventId);
-      if (!state.clearanceQueue.includes(pendingId))
-        throw new Error("Senescence event is unavailable.");
-      const target = state.regions.find((candidate) => candidate.senescenceEventId === pendingId);
-      if (!target) throw new Error("Senescence event has no region.");
-      if (event.action === "clear") return next(state, removeRegionProjection(state, target));
-      return next(state, {
-        clearanceQueue: state.clearanceQueue.filter((id) => id !== pendingId),
-        senescentRegions: [...new Set([...state.senescentRegions, target.id])],
-        regions: clearSenescenceEvent(state, target.id),
-        secretoryEffects: { ...state.secretoryEffects, [`senescence:${pendingId}`]: 1 },
-      });
-    }
+    case "assign-region-phenotype":
+    case "reconfigure-hallmark-program":
+    case "install-microbiome-composition":
+    case "resolve-senescence-decision":
+      throw new Error("Late-hallmark event dispatch failed.");
   }
   const unreachable: never = event;
   return unreachable;

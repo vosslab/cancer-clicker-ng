@@ -93,10 +93,20 @@ test("authoritative regional state creates named visual evidence and keeps its r
     scene.visual.overlays.some((overlay) => overlay.routeCommitted && overlay.seeded),
     true,
   );
+  assert.deepEqual(scene.visual.invasion, { routeCommitted: true, seeded: true });
   assert.deepEqual(
     unrelated.visual.overlays.map((overlay) => [overlay.sourceRegionId, overlay.layoutRegionKey]),
     scene.visual.overlays.map((overlay) => [overlay.sourceRegionId, overlay.layoutRegionKey]),
   );
+});
+
+test("systemic invasion separates durable route commitment from seeded-site evidence", () => {
+  const game = activeLivingTumorState();
+  const routeOnly = createGameColonyScene({ ...game, seededSites: [] });
+  const seededOnly = createGameColonyScene({ ...game, committedCellCommitments: {} });
+
+  assert.deepEqual(routeOnly.visual.invasion, { routeCommitted: true, seeded: false });
+  assert.deepEqual(seededOnly.visual.invasion, { routeCommitted: false, seeded: true });
 });
 
 test("render boundary rejects forged visual records before SVG projection", () => {
@@ -107,10 +117,16 @@ test("render boundary rejects forged visual records before SVG projection", () =
     Object.assign(Object.create({ inherited: true }), scene.visual),
   );
   const inherited = Object.freeze({ ...scene, visual: inheritedVisual });
+  const forgedInvasion = Object.freeze({ routeCommitted: true, seeded: false, extra: true });
+  const forgedSystemic = Object.freeze({
+    ...scene,
+    visual: Object.freeze({ ...scene.visual, invasion: forgedInvasion }),
+  });
   const accessor = { ...scene };
   Object.defineProperty(accessor, "visual", { enumerable: true, get: () => scene.visual });
 
   assert.throws(() => createColonySceneRequest(forged));
   assert.throws(() => createColonySceneRequest(inherited));
+  assert.throws(() => createColonySceneRequest(forgedSystemic));
   assert.throws(() => createColonySceneRequest(Object.freeze(accessor)));
 });

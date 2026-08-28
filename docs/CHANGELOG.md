@@ -135,6 +135,20 @@
   contract. The L3 activation adapter preserves prestige ownership, while frozen living-tumor
   provenance and grounded permanent-versus-calibration evidence preserve the 1280 x 800 board
   contract.
+- Approved the M14 Metastasis and Host Transfer implementation contract: an exact
+  `LineageLedger` with `currentHostRunId`, separate L1/L2 state owners, revision-checked transient
+  terminal quotes, one versioned deterministic seed derivation, and a saved ordered four-card host
+  draft establish durable prestige identity. One complete reset-projection owner and
+  `recordEvent()`-only mutation preserve atomicity; explicit controller/UI confirmations carry
+  stable IDs and revision. The p5-to-p6 forward migration creates empty prestige state without
+  inventing history. Permanent semantic/save/browser tests protect this behavior, while readable
+  draft and portfolio review remain one-time evidence.
+- Added M14's source-verified transit foundation after M12 progression completion: the
+  prestige-owned catalog-backed route-to-`OrganSiteId` relation and `resolve-transit` event record
+  arrived destination tags and successful transit count in the lineage ledger. Keeping organ
+  identity, ledger writing, and transit resolution in the same M14 lane prevents circular
+  cross-milestone ownership; Metastasis consumes ledger tags rather than inferring biology from a
+  current-run `RegionId`.
 
 - Approved the pre-production colony-action amendment before source changes: one native colony
   control named Divide cell receives visible-cell pointer/touch delegation and one keyboard focus

@@ -20,10 +20,7 @@ export type LateHallmarkKey =
   | "senescent_cells";
 
 export type LateHallmarkMechanicClass =
-  | "phenotype-switching"
-  | "program-editing"
-  | "community-composition"
-  | "senescence-management";
+  "phenotype-switching" | "program-editing" | "community-composition" | "senescence-management";
 
 export type LateHallmarkMorphologyContributorId =
   | "hallmark:phenotypic_plasticity"
@@ -62,9 +59,7 @@ export type PlasticityDefinition = Readonly<{
 }>;
 
 export type LateProgramTarget =
-  | "proliferative_signaling"
-  | "genome_instability_mutation"
-  | "phenotypic_plasticity";
+  "proliferative_signaling" | "genome_instability_mutation" | "phenotypic_plasticity";
 
 export type ProgramEffects = Readonly<{
   productionPerSecondMultiplier: number;
@@ -175,8 +170,30 @@ export type LateHallmarksState = Readonly<{
   }>;
 }>;
 
+/** Creates the p5 migration baseline without retaining any provisional late-hallmark scaffolding. */
+export function emptyLateHallmarksState(): LateHallmarksState {
+  const state = {
+    plasticity: Object.freeze({ switchCooldownByRegion: Object.freeze({}) }),
+    epigenetic: Object.freeze({ assignments: Object.freeze([]), cooldownDeadlineMs: null }),
+    microbiome: Object.freeze({
+      activeComposition: null,
+      pendingOffer: null,
+      nextRotationDeadlineMs: null,
+      rotationSequence: 0,
+    }),
+    senescence: Object.freeze({
+      pendingDecisions: Object.freeze([]),
+      retainedRegions: Object.freeze([]),
+    }),
+  };
+  return Object.freeze(state);
+}
+
 export type SenescenceDefinition = Readonly<{
   cause: SenescenceCause;
-  retainedEffects: Readonly<{ localSecretoryPressureDelta: number; productionPerSecondMultiplier: number }>;
+  retainedEffects: Readonly<{
+    localSecretoryPressureDelta: number;
+    productionPerSecondMultiplier: number;
+  }>;
   morphologyContributorId: "hallmark:senescent_cells";
 }>;

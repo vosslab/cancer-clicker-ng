@@ -9,10 +9,7 @@ import type { GameState } from "../../types/state.js";
 import { isImmediateStageTransition, isStageId } from "../catalog.js";
 import { array, exact, fraction, identifier, ids, natural, unique } from "./guards.js";
 
-export function parseRegions(
-  value: unknown,
-  notices: SaveNotice[],
-): GameState["regions"] | undefined {
+export function parseRegions(value: unknown, _notices: SaveNotice[]): GameState["regions"] | undefined {
   const values = array(value);
   if (!values) return undefined;
   const result: GameState["regions"][number][] = [];
@@ -25,7 +22,6 @@ export function parseRegions(
         "phenotype",
         "vesselLinkIds",
         "routeIds",
-        "senescenceEventId",
       ]) ||
       !identifier(item.id) ||
       !natural(item.capacity) ||
@@ -36,18 +32,6 @@ export function parseRegions(
     const vesselLinkIds = ids(item.vesselLinkIds, eventId);
     const routeIds = ids(item.routeIds, routeId);
     if (!vesselLinkIds || !routeIds) return undefined;
-    const senescenceEventId =
-      item.senescenceEventId === undefined
-        ? undefined
-        : identifier(item.senescenceEventId)
-          ? eventId(item.senescenceEventId)
-          : undefined;
-    if (item.senescenceEventId !== undefined && senescenceEventId === undefined)
-      notices.push({
-        code: "field-defaulted",
-        field: `regions[${result.length}].senescenceEventId`,
-        message: `Recovered regions[${result.length}].senescenceEventId with its safe default.`,
-      });
     result.push({
       id: regionId(item.id),
       capacity: item.capacity,
@@ -55,7 +39,6 @@ export function parseRegions(
       phenotype: item.phenotype as GameState["regions"][number]["phenotype"],
       vesselLinkIds,
       routeIds,
-      ...(senescenceEventId === undefined ? {} : { senescenceEventId }),
     });
   }
   return unique(result.map((item) => item.id)) ? result : undefined;

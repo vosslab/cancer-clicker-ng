@@ -118,7 +118,6 @@ function applyDamageTriageWithProjection(
         ...state,
         survivalCapacity,
         pendingDamageEvents: remainingExactDamageEvent(state, operation.eventId),
-        regionalModifiers: { ...state.regionalModifiers, [`triage:${operation.eventId}`]: 2 },
       };
       return preserveEventSequence(state, next);
     }
@@ -133,7 +132,6 @@ function applyDamageTriageWithProjection(
         damagePressure: state.damagePressure - 1,
         regions: replaceRegion(state, target, { viability: 1 }),
         pendingDamageEvents: remainingExactDamageEvent(state, operation.eventId),
-        regionalModifiers: { ...state.regionalModifiers, [`triage:${operation.eventId}`]: 1 },
       });
     }
     case "lose-region": {

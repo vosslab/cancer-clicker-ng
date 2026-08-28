@@ -617,15 +617,82 @@ Twenty-two milestones. Each reaches green independently. No milestone waits on a
 
 ### Milestone: M14 prestige layers 1 and 2
 
-- Depends on: M11, M13.
-- Deliverables: `src/prestige/layers.ts`, `reset.ts`, `seeding.ts`, `hosts.ts`;
-  `src/render/prestige_panel.tsx`; `tests/test_prestige_reset.mjs`.
-- Workstreams: E, F.
-- Entry criteria: `docs/PRESTIGE_DESIGN.md` complete.
-- Exit criteria: a declarative reset policy names retained and reset domains, reducer output
-  realizes that policy, and a representative cycle for each reset type proves its semantics. The
-  confirmation surface requires a visible deliberate action in the production build.
-- Parallel-plan ready: yes.
+- Depends on: M11, M12 completion, M13.
+- Deliverables: exact-key p6 `LineageLedger`, separate authoritative `MetastasisState` and
+  `HostTransferState`, organ/host/boon catalogs, deterministic random derivation, complete reset
+  projections, six prestige intents, strict save migration/parser support, and a confirmed Solid
+  prestige surface. The implementation owns `src/prestige/layers.ts`, `reset.ts`, `seeding.ts`,
+  `hosts.ts`, `src/state/deterministic_random.ts`, `src/state/save_parse/prestige.ts`, and
+  `src/render/prestige_panel.tsx`; domain-named Node and production-browser behavior tests follow
+  their owning APIs.
+- Transit and history foundation: after M12 completion and before reset handlers, M14 introduces
+  `OrganSiteId` and `OrganTagId`, the organ-site catalog, the route-to-site compatibility mapping,
+  and the centralized lineage-ledger writer. The exact-key `resolve-transit` event accepts one
+  pending `EventId`, compatible destination site, and authoritative `atMs` once; it creates or
+  marks the current-run seeded region, and an arrived outcome appends that site's canonical-order
+  tags and increments `successfulTransitCount`, while a lost outcome records neither. A `RegionId`
+  remains a local stage projection, never organ history. M14 owns this whole seam because organ
+  identity and the ledger are prestige contracts; M12 supplies the completed progression state it
+  consumes. This avoids circular cross-milestone ownership.
+- State and history contract: `LineageLedger` is the sole reset-surviving history record. It stores
+  a nonzero `lineageSeed`, safe `hostRunSequence`, explicit `currentHostRunId`, completed-reset and
+  transit counters, unique canonical-order organ tags/hallmarks/boons, terminal preparation, host
+  draft sequence, and reserved L3/L4 identity fields. It holds no duplicate currency, active card,
+  or renderer-derived trait. `MetastasisState` solely owns L1 Potential, allocation, and program
+  choices; `HostTransferState` solely owns L2 Imprints, purchased boons, active host, and saved
+  draft. Catalog order and uniqueness govern every saved keyed list.
+- Quote and revision contract: `captureTerminalSnapshotV1(state)` is a pure, trusted,
+  `host_collapse`-only snapshot of current cells/viable seeded regions and ledger facts. Derived
+  L1/L2 quotes are transient read models, never saved or accepted from the UI. Their
+  `sourceEventSequence` is the quote revision; every reset, allocation, program, boon, and draft
+  selection confirms the current trusted revision before mutation. A rejected stale or unavailable
+  action preserves the original state reference.
+- Deterministic draft contract: `deriveSeedV1` is the sole deterministic seed derivation API. It
+  owns versioned ASCII-domain plus ordered-unsigned-integer serialization, FNV-1a uint32 hashing,
+  and zero-to-one mapping without time, locale, DOM, or random dependencies. `generateHostDraftV1`
+  exclusively turns its host-draft seed into one frozen saved `HostDraft`: an ordered four-card
+  tuple with unique three-axis trait combinations, persisted IDs, trusted source revision, saved
+  three- or four-card reveal order, availability, and consumption. The fourth card always exists;
+  an extra reveal boon changes the saved reveal list during generation. Selection accepts only a
+  saved revealed card and creates the new `HostRunId`, updating both active host and
+  `lineageLedger.currentHostRunId`.
+- Event, reset, and UI contract: the closed additions are `perform-metastasis-reset`,
+  `allocate-organ-site`, `select-colonization-program`, `purchase-lineage-boon`,
+  `perform-host-transfer`, and `select-host-card`. Exact-key parsing brands and bounds each
+  payload. `recordEvent()` remains the exclusive durable-mutation and sequence owner: helpers
+  project complete next states, never call the event funnel, read clocks, persist, mutate a store,
+  or advance sequence. `projectL1Reset` and `projectL2Reset` each construct the complete
+  post-reset state from validated state, parsed time, and trusted snapshot/quote; they do not
+  rebuild an initial state and patch retained fields. The controller supplies simulation `atMs` and
+  current revision. The Solid surface displays derived quote/draft and requires an explicit
+  confirmation that sends stable IDs plus revision only; persist-before-reconcile keeps failed-save
+  state visibly unchanged.
+- Persistence contract: advance current progression from p5 to p6. Exact-key p6 parser/writer
+  covers ledger, L1, and L2 records and rejects unknown/missing keys, noncanonical/reordered lists,
+  unsafe counters/seeds, foreign IDs, malformed drafts, invalid BigNums, and inconsistent active
+  host/ledger run identity. The single p5-to-p6 projection adds empty M14 state, derives its
+  lineage seed once through `deriveSeedV1` from accepted p5 deterministic identity and event
+  sequence, emits documented `field-defaulted` notices, and invents no historic activity. Earlier
+  migrations first produce p5 through M12, then route through this p5-to-p6 projection; canonical
+  current p6 save round-trips with no notices.
+- Dispatch order: E.1 settles brands, organ/route catalog, ledger writer, `resolve-transit`, L1/L2
+  state, quotes, deterministic seed, and draft interfaces; E.2 adds reset/event projections after
+  that seam; B.7 adds p6 parser and migration; F.13 adds controller/panel confirmation after
+  command signatures settle; I.12 adds domain behavior proof. Each projection and later L3/L4 reset
+  lives in `reset.ts`, so later layers extend its complete-state contract rather than creating a
+  second reset path.
+- Exit criteria: an M14 compatible transit records arrival tags and count while lost or invalid
+  transit is atomic; exact-key saved state
+  migrates and round-trips; each accepted L1/L2 cycle begins at `host_collapse`, uses a transient
+  current revision, applies its declared complete projection, and records through `recordEvent()`;
+  an L2 draft remains identical across reload until selection; and the production build exposes
+  deliberate keyboard-accessible confirmation with honest persistence failure behavior. Permanent
+  tests prove representative reset preservation/clearance, formula and seed validity, one accepted
+  sequence advance, stale/foreign/hidden/reused/invalid input atomicity, saved-draft/reload
+  semantics, strict migration, and browser confirmation/focus. Readable draft dumps, portfolio and
+  card-rank comparison, and balance tuning are one-time review evidence rather than brittle test
+  fixtures, count locks, or timing limits.
+- Parallel-plan ready: yes, after the declared state/catalog seam.
 
 ### Milestone: M15 prestige layers 3 and 4
 

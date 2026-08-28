@@ -1,6 +1,7 @@
 import { bigNum, stageId } from "../brands.js";
 import type { GameState } from "../types/state.js";
 import { STAGE_ONE_PRODUCERS } from "../economy/producers.js";
+import { emptyLateHallmarksState } from "../hallmarks/late_hallmark_types.js";
 
 /** Creates the one canonical state shape; mechanics fill these durable fields in later milestones. */
 export function createInitialGameState(): GameState {
@@ -46,27 +47,7 @@ export function createInitialGameState(): GameState {
     chosenMutations: [],
     mutationLiabilities: [],
     genomeBurden: 0,
-    phenotypeCooldowns: {},
-    regionalModifiers: {},
-    programs: {
-      allowedByHallmark: {},
-      selectedByHallmark: {},
-      eligibleHallmarks: [],
-      cooldownDeadlineMs: null,
-    },
-    microbiome: {
-      offerIds: [],
-      seed: 0,
-      sequence: 0,
-      rotationCounter: 0,
-      rotationDeadlineMs: null,
-      pendingCompatibility: null,
-      selectedNiches: [],
-      compatibilitySnapshot: [],
-    },
-    senescentRegions: [],
-    secretoryEffects: {},
-    clearanceQueue: [],
+    lateHallmarks: emptyLateHallmarksState(),
     pendingDamageEvents: [],
     pendingTransitEvents: [],
     deterministicSeed: 0,

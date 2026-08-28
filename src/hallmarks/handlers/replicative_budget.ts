@@ -78,7 +78,7 @@ export function effectiveTelomereReserve(state: GameState, regionId: string): nu
 
 /** A warning means unprotected exhaustion, never merely a stored value below a banked floor. */
 export function hasDivisionLimitWarning(state: GameState, region: RegionState): boolean {
-  if (state.senescentRegions.includes(region.id)) return false;
+  if (state.lateHallmarks.senescence.retainedRegions.some((record) => record.regionId === region.id)) return false;
   const reserve = reserveFor(state, region.id);
   return state.reserveFloor === 0 && reserve === 0;
 }

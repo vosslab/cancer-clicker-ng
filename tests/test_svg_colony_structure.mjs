@@ -23,6 +23,7 @@ test("the colony render model preserves its accepted layout and visual scene bou
 
 test("the colony projection keeps ordered biological layers and its own geometry-free boundary", async () => {
   const source = await readFile("src/svg/colony.tsx", "utf8");
+  const overlays = await readFile("src/svg/colony_overlays.tsx", "utf8");
   const layers = [
     "colony-figure__tissue",
     "colony-figure__silhouette-regions",
@@ -39,7 +40,30 @@ test("the colony projection keeps ordered biological layers and its own geometry
     [...layers].sort((left, right) => left - right),
     layers,
   );
-  assert.match(source, /scene\.visual/);
+  for (const overlay of [
+    "OxygenOverlays",
+    "PerfusionOverlays",
+    "HallmarkOverlays",
+    "InvasionOverlays",
+  ]) {
+    assert.match(source, new RegExp(`<${overlay}[\\s\\S]*?visual=\\{[^}]+\\.visual\\}`));
+  }
+  assert.match(source, /colony-figure__tissue" aria-hidden="true" pointer-events="none"/);
+  assert.match(
+    source,
+    /colony-figure__silhouette-regions" aria-hidden="true" pointer-events="none"/,
+  );
+  for (const className of [
+    "colony-figure__hypoxia-necrosis",
+    "colony-figure__perfusion",
+    "colony-figure__hallmark-accents",
+    "colony-figure__invasion",
+  ]) {
+    assert.match(overlays, new RegExp(`${className}" aria-hidden="true" pointer-events="none"`));
+  }
+  assert.match(overlays, /visual\.invasion\.routeCommitted && routes\.length === 0/);
+  assert.match(overlays, /data-scope="systemic"/);
+  assert.match(overlays, /if \(!overlay\.seeded\) return \[\];/);
   assert.equal(/from "\.\/colony_layout\.js"/.test(source), false);
   assert.equal(
     /\b(?:createColonyLayout|Math\.random|document|window|localStorage)\b/.test(source),
