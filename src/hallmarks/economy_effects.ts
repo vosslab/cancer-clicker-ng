@@ -1,6 +1,7 @@
-import type { ProducerId } from "../types/ids.js";
+import type { ProducerId, RouteId } from "../types/ids.js";
 import type { GameState } from "../types/state.js";
 import { coreSixHallmarkDefinition } from "./core_six_catalog.js";
+import { effectiveRouteCommitmentRisk } from "./handlers/route_commitment.js";
 
 export type HallmarkEconomyModifier = Readonly<{
   productionMultiplier: number;
@@ -156,10 +157,7 @@ function invasionModifier(state: GameState, producerId: ProducerId): EconomyModi
   if (routeId === undefined || !isFiniteNonnegativeInteger(committed)) {
     throw new Error("Route commitment is invalid.");
   }
-  const risk = state.routeRiskById[routeId];
-  if (typeof risk !== "number" || !Number.isFinite(risk) || risk < 0 || risk > 1) {
-    throw new Error("Route risk is invalid.");
-  }
+  const risk = effectiveRouteCommitmentRisk(state, routeId as RouteId);
   if (risk === 0) {
     return producerMatch(producerId, ["cdk4", "ras", "myc", "producer"])
       ? modifier(1.4, 0.6)

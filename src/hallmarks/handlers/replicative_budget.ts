@@ -3,6 +3,7 @@ import { coreSixHallmarkDefinition, hasReachedCoreSixUnlock } from "../core_six_
 import type { CoreSixHandler, SpendTelomeraseOperation } from "../core_six_types.js";
 import type { HallmarkEffect } from "../../types/effects.js";
 import type { GameState, RegionState } from "../../types/state.js";
+import { prestigeReplicativeReserveFloor } from "../../prestige/effects.js";
 
 /** A single spend can make a meaningful local rescue without creating unbounded mutations. */
 export const MAX_TELOMERASE_CHARGES_PER_OPERATION = 3;
@@ -65,22 +66,28 @@ function reserveFor(state: GameState, regionId: string): number {
 }
 
 /**
- * A banked floor protects an exhausted region. The elapsed consumer subtracts its division cost
- * from this effective value and clamps at the same floor, so storage and live behavior agree.
+ * The durable telomerase bank and selected host each provide a floor. The larger value is the
+ * one operational floor, while durable storage remains the canonical bank and is never inflated.
  */
-export function effectiveTelomereReserve(state: GameState, regionId: string): number {
+export function effectiveReplicativeReserveFloor(state: GameState): number {
   if (!natural(state.reserveFloor) || state.reserveFloor > MAX_TELOMERE_RESERVE) {
     throw new Error("Telomere reserve floor is invalid.");
   }
+  return Math.max(state.reserveFloor, prestigeReplicativeReserveFloor(state, 0));
+}
+
+export function effectiveTelomereReserve(state: GameState, regionId: string): number {
   const reserve = reserveFor(state, regionId);
-  return Math.max(reserve, state.reserveFloor);
+  return Math.max(reserve, effectiveReplicativeReserveFloor(state));
 }
 
 /** A warning means unprotected exhaustion, never merely a stored value below a banked floor. */
 export function hasDivisionLimitWarning(state: GameState, region: RegionState): boolean {
-  if (state.lateHallmarks.senescence.retainedRegions.some((record) => record.regionId === region.id)) return false;
-  const reserve = reserveFor(state, region.id);
-  return state.reserveFloor === 0 && reserve === 0;
+  if (
+    state.lateHallmarks.senescence.retainedRegions.some((record) => record.regionId === region.id)
+  )
+    return false;
+  return effectiveTelomereReserve(state, region.id) === 0;
 }
 
 function warnedRegion(state: GameState, requestedId: string): RegionState {
@@ -133,7 +140,9 @@ function applyRefill(state: GameState, operation: SpendTelomeraseOperation): Gam
 
 function applyBank(state: GameState, operation: SpendTelomeraseOperation): GameState {
   if (operation.target !== "bank-reserve-floor") throw new Error("Telomerase target is invalid.");
-  if (state.reserveFloor !== 0) throw new Error("Telomerase reserve floor was already banked.");
+  if (effectiveReplicativeReserveFloor(state) !== 0) {
+    throw new Error("Telomerase reserve floor was already banked or protected.");
+  }
   if (!anyWarning(state)) throw new Error("Telomerase banking requires a division-limit warning.");
   const nextFloor = operation.charges * FLOOR_PER_TELOMERASE_CHARGE;
   if (!Number.isSafeInteger(nextFloor) || nextFloor > MAX_TELOMERE_RESERVE) {

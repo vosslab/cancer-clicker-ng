@@ -7,6 +7,13 @@ import { coreSixHallmarkDefinition } from "../hallmarks/core_six_catalog.js";
 import type { CoreSixHallmarkKey } from "../hallmarks/core_six_types.js";
 import { extendedHallmarkDefinition } from "../hallmarks/extended_hallmark_catalog.js";
 import type { ExtendedHallmarkKey } from "../hallmarks/extended_hallmark_types.js";
+import {
+  isLateHallmarkOperational,
+  isRetainedSenescentRegion,
+} from "../hallmarks/late_hallmark_effects.js";
+import type { LateHallmarkKey } from "../hallmarks/late_hallmark_types.js";
+import { findLateProgramOption } from "../hallmarks/program_catalog.js";
+import { networkMorphologyContributions } from "../prestige/network_effects.js";
 import type { GameState } from "../types/state.js";
 import type { MorphologyContribution, MorphologyReferenceRowId } from "./morphology.js";
 
@@ -21,6 +28,10 @@ export const COLONY_VISUAL_EFFECT_IDS = [
   "immune-mask",
   "inflammatory-region",
   "mutation-heterogeneity",
+  "phenotype-variance",
+  "chromatin-program",
+  "microbiome-surface",
+  "senescent-region",
 ] as const;
 
 export type ColonyVisualEffectId = (typeof COLONY_VISUAL_EFFECT_IDS)[number];
@@ -62,6 +73,11 @@ function noMorphology(_game: GameState): readonly MorphologyContribution[] {
   return [];
 }
 
+/** L4 topology remains a regional-node declaration rather than a global hallmark visual effect. */
+export function networkNodeMorphology(game: GameState): readonly MorphologyContribution[] {
+  return networkMorphologyContributions(game);
+}
+
 function cyclingMorphology(_game: GameState): readonly MorphologyContribution[] {
   return [
     {
@@ -100,6 +116,95 @@ function mutationMorphology(_game: GameState): readonly MorphologyContribution[]
         contributorId: "hallmark:genome_instability_mutation:family",
         label: "mutation-associated family variance",
         referenceRowId: "morphology:pleomorphism",
+      },
+    },
+  ];
+}
+
+function activeMappedRegions(game: GameState): readonly GameState["regions"][number][] {
+  return game.regions.filter(
+    (region) => region.viability > 0 && !isRetainedSenescentRegion(game, region.id),
+  );
+}
+
+function activePhenotypesDiffer(game: GameState): boolean {
+  const phenotypes = new Set(activeMappedRegions(game).map((region) => region.phenotype));
+  return phenotypes.size >= 2;
+}
+
+function activeProgramAssignment(game: GameState): boolean {
+  if (!isLateHallmarkOperational(game, "epigenetic_reprogramming")) return false;
+  return game.lateHallmarks.epigenetic.assignments.some((assignment) => {
+    const option = findLateProgramOption(assignment.optionId);
+    return option !== undefined && option.target === assignment.hallmarkId;
+  });
+}
+
+function retainedExtantRegionIds(game: GameState): readonly string[] {
+  return game.regions
+    .filter((region) => isRetainedSenescentRegion(game, region.id))
+    .map((region) => region.id);
+}
+
+function phenotypeVarianceMorphology(_game: GameState): readonly MorphologyContribution[] {
+  return [
+    {
+      axis: "heterogeneity",
+      mode: "add",
+      value: 0.1,
+      source: {
+        layer: "hallmark",
+        contributorId: "hallmark:phenotypic_plasticity",
+        label: "active regional phenotype variance",
+        referenceRowId: "morphology:phenotype_variance",
+      },
+    },
+  ];
+}
+
+function chromatinProgramMorphology(_game: GameState): readonly MorphologyContribution[] {
+  return [
+    {
+      axis: "membraneWaviness",
+      mode: "add",
+      value: 0.06,
+      source: {
+        layer: "hallmark",
+        contributorId: "hallmark:epigenetic_reprogramming",
+        label: "active program chromatin cue",
+        referenceRowId: "morphology:chromatin_texture",
+      },
+    },
+  ];
+}
+
+function microbiomeSurfaceMorphology(_game: GameState): readonly MorphologyContribution[] {
+  return [
+    {
+      axis: "membraneWaviness",
+      mode: "add",
+      value: 0.04,
+      source: {
+        layer: "hallmark",
+        contributorId: "hallmark:polymorphic_microbiomes",
+        label: "installed composition surface cue",
+        referenceRowId: "morphology:surface_motif",
+      },
+    },
+  ];
+}
+
+function senescentRegionMorphology(_game: GameState): readonly MorphologyContribution[] {
+  return [
+    {
+      axis: "elongation",
+      mode: "add",
+      value: 0.08,
+      source: {
+        layer: "hallmark",
+        contributorId: "hallmark:senescent_cells",
+        label: "retained senescent region cue",
+        referenceRowId: "morphology:senescent_shape",
       },
     },
   ];
@@ -249,7 +354,57 @@ export const EXTENDED_HALLMARK_COLONY_VISUAL_CATALOG = {
   Record<ExtendedHallmarkKey, ColonyVisualCatalogRow<ExtendedHallmarkKey>>
 >;
 
+/** Late-hallmark rows project only published p5 aggregate evidence into M16 provenance. */
+export const LATE_HALLMARK_COLONY_VISUAL_CATALOG = {
+  phenotypic_plasticity: {
+    key: "phenotypic_plasticity",
+    effectId: "phenotype-variance",
+    sourceLabel: "Unlocking phenotypic plasticity",
+    biology: "Distinct active regional phenotypes create a bounded variance cue.",
+    referenceRowIds: ["morphology:phenotype_variance"],
+    isActive: (game) =>
+      isLateHallmarkOperational(game, "phenotypic_plasticity") && activePhenotypesDiffer(game),
+    regionIds: (game) => activeMappedRegions(game).map((region) => region.id),
+    morphology: phenotypeVarianceMorphology,
+  },
+  epigenetic_reprogramming: {
+    key: "epigenetic_reprogramming",
+    effectId: "chromatin-program",
+    sourceLabel: "Nonmutational epigenetic reprogramming",
+    biology: "An active program creates a bounded chromatin texture cue.",
+    referenceRowIds: ["morphology:chromatin_texture"],
+    isActive: activeProgramAssignment,
+    regionIds: noRegions,
+    morphology: chromatinProgramMorphology,
+  },
+  polymorphic_microbiomes: {
+    key: "polymorphic_microbiomes",
+    effectId: "microbiome-surface",
+    sourceLabel: "Polymorphic microbiomes",
+    biology: "An installed composition creates a restrained contextual surface cue.",
+    referenceRowIds: ["morphology:surface_motif"],
+    isActive: (game) =>
+      isLateHallmarkOperational(game, "polymorphic_microbiomes") &&
+      game.lateHallmarks.microbiome.activeComposition !== null,
+    regionIds: noRegions,
+    morphology: microbiomeSurfaceMorphology,
+  },
+  senescent_cells: {
+    key: "senescent_cells",
+    effectId: "senescent-region",
+    sourceLabel: "Senescent cells",
+    biology: "A retained extant region creates a local nondivision cue.",
+    referenceRowIds: ["morphology:senescent_shape"],
+    isActive: (game) =>
+      isLateHallmarkOperational(game, "senescent_cells") &&
+      retainedExtantRegionIds(game).length > 0,
+    regionIds: retainedExtantRegionIds,
+    morphology: senescentRegionMorphology,
+  },
+} as const satisfies Readonly<Record<LateHallmarkKey, ColonyVisualCatalogRow<LateHallmarkKey>>>;
+
 export const COLONY_VISUAL_CATALOG = [
   ...Object.values(CORE_SIX_COLONY_VISUAL_CATALOG),
   ...Object.values(EXTENDED_HALLMARK_COLONY_VISUAL_CATALOG),
+  ...Object.values(LATE_HALLMARK_COLONY_VISUAL_CATALOG),
 ] as const;

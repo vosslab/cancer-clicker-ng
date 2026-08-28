@@ -3,6 +3,7 @@ import test from "node:test";
 
 import { bigNum, eventId, hallmarkId, regionId, routeId, stageId } from "../src/brands.ts";
 import { createInitialGameState } from "../src/state/game_state.ts";
+import { CURRENT_PROGRESSION_VERSION } from "../src/state/save_load.ts";
 import {
   createGameController,
   persistWithStorage,
@@ -243,7 +244,7 @@ test("thrown save clock or persistence adapter is atomic until the player intent
   assert.deepEqual(badSaveClock.divide(), {
     ok: false,
     kind: "persistence",
-    notices: [notice()],
+    notices: [],
   });
   assert.deepEqual(stateSnapshot(badSaveClock).cells, { mantissa: 0, exponent: 0 });
 });
@@ -288,7 +289,7 @@ test("storage adapter persists only complete game progress and reports write fai
   const persist = persistWithStorage(storage);
   assert.deepEqual(persist(createInitialGameState(), 100), { ok: true });
   assert.match(written, /"savedAtMs":100/);
-  assert.match(written, /"progressionVersion":4/);
+  assert.match(written, new RegExp(`"progressionVersion":${CURRENT_PROGRESSION_VERSION}`));
   const envelope = JSON.parse(written);
   assert.equal(Object.hasOwn(envelope.state, "saveError"), false);
   assert.equal(Object.hasOwn(envelope.state, "password"), false);

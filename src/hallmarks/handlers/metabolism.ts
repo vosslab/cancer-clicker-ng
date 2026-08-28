@@ -1,6 +1,9 @@
 import { hallmarkId } from "../../brands.js";
 import { add, compare, multiplyByNumber, subtract } from "../../bignum/bignum.js";
 import { extendedHallmarkConversionYieldMultiplier } from "../extended_hallmark_effects.js";
+import { lateHallmarkConversionYieldMultiplier } from "../late_hallmark_effects.js";
+import { prestigeSubstrateConversion } from "../../prestige/effects.js";
+import { cultureSubstrateConversion } from "../../prestige/culture_effects.js";
 import {
   hasReachedExtendedHallmarkUnlock,
   extendedHallmarkDefinition,
@@ -59,7 +62,17 @@ export function applyMetabolicConversion<State extends GameState>(
     substrate: subtract(context.state.substrate, amount),
     atp: add(
       context.state.atp,
-      multiplyByNumber(amount, extendedHallmarkConversionYieldMultiplier(context.state)),
+      multiplyByNumber(
+        amount,
+        cultureSubstrateConversion(
+          context.state,
+          prestigeSubstrateConversion(
+            context.state,
+            extendedHallmarkConversionYieldMultiplier(context.state) *
+              lateHallmarkConversionYieldMultiplier(context.state),
+          ),
+        ),
+      ),
     ),
   };
   return nextState;

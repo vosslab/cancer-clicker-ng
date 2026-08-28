@@ -31,6 +31,36 @@ async function expectInViewport(page, selectors) {
   expect(visibility).toEqual(selectors.map((selector) => ({ selector, visible: true })));
 }
 
+async function clickVisibleSvgPath(page, selector) {
+  const point = await page.locator(selector).evaluate((node) => {
+    if (!(node instanceof SVGPathElement)) throw new Error("Expected an SVG path.");
+    const matrix = node.getScreenCTM();
+    if (matrix === null) throw new Error("Visible SVG path requires a screen transform.");
+    const bounds = node.getBBox();
+    let local;
+    for (let y = Math.ceil(bounds.y); y < bounds.y + bounds.height; y += 1) {
+      for (let x = Math.ceil(bounds.x); x < bounds.x + bounds.width; x += 1) {
+        const candidate = new DOMPoint(x, y);
+        if (node.isPointInFill(candidate)) {
+          local = candidate;
+          break;
+        }
+      }
+      if (local !== undefined) break;
+    }
+    if (local === undefined) throw new Error("Visible SVG path requires a painted interior.");
+    const screen = new DOMPoint(local.x, local.y).matrixTransform(matrix);
+    return { x: Math.floor(screen.x), y: Math.floor(screen.y) };
+  });
+  const targetsCell = await page.evaluate(
+    ({ x, y }) => document.elementFromPoint(x, y)?.closest("[data-colony-cell]") !== null,
+    point,
+  );
+  await page.mouse.move(point.x, point.y);
+  await page.mouse.click(point.x, point.y);
+  return targetsCell;
+}
+
 test("the 1280 by 800 colony board keeps its primary clicker surfaces visible and actionable", async ({
   browser,
 }) => {
@@ -107,6 +137,46 @@ test("visible cells accept pointer division while tissue whitespace stays inert 
   await page.keyboard.press("Space");
   expect(await readSavedCellCount(page)).toBe(3);
   await expect(action).toBeFocused();
+});
+
+test("compact reduced-motion cell membranes and nuclei each divide once while tissue remains inert", async ({
+  browser,
+}) => {
+  const context = await browser.newContext({
+    viewport: { width: 360, height: 720 },
+    reducedMotion: "reduce",
+  });
+  try {
+    const page = await context.newPage();
+    await page.goto("/");
+    const action = page.getByRole("button", { name: "Divide cell" });
+    const membrane = action.locator(".colony-cell__membrane").first();
+    const nucleus = action.locator(".colony-cell__nucleus").first();
+    const whitespace = action.locator(".colony-figure__plate");
+
+    await expect(membrane).toBeVisible();
+    await expect(nucleus).toBeVisible();
+    expect(await page.evaluate(() => matchMedia("(prefers-reduced-motion: reduce)").matches)).toBe(
+      true,
+    );
+    expect(await clickVisibleSvgPath(page, ".colony-cell__membrane")).toBe(true);
+    expect(await readSavedCellCount(page)).toBe(1);
+
+    expect(await clickVisibleSvgPath(page, ".colony-cell__nucleus")).toBe(true);
+    expect(await readSavedCellCount(page)).toBe(2);
+
+    await whitespace.click({ position: { x: 8, y: 8 } });
+    expect(await readSavedCellCount(page)).toBe(2);
+
+    await action.focus();
+    await page.keyboard.press("Enter");
+    expect(await readSavedCellCount(page)).toBe(3);
+    await page.keyboard.press("Space");
+    expect(await readSavedCellCount(page)).toBe(4);
+    await expect(action).toBeFocused();
+  } finally {
+    await context.close();
+  }
 });
 
 test("recovery and failed persistence preserve the saved state and tell the player what happened", async ({

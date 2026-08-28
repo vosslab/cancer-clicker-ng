@@ -38,6 +38,7 @@ test("Cell projects immutable paths and exposes each real cell as a pointer targ
 test("Cell stays presentational while the parent button owns accessibility", async () => {
   const source = await readFile("src/svg/cell.tsx", "utf8");
   assert.match(source, /data-colony-cell=\{props\.cell\.key\}/);
+  assert.match(source, /<g class="colony-cell__visual">/);
   assert.equal(source.includes('pointer-events="none"'), false);
   assert.equal((source.match(/pointer-events="all"/g) ?? []).length, 2);
   assert.equal(

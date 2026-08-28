@@ -9,20 +9,16 @@ import type { GameState } from "../../types/state.js";
 import { isImmediateStageTransition, isStageId } from "../catalog.js";
 import { array, exact, fraction, identifier, ids, natural, unique } from "./guards.js";
 
-export function parseRegions(value: unknown, _notices: SaveNotice[]): GameState["regions"] | undefined {
+export function parseRegions(
+  value: unknown,
+  _notices: SaveNotice[],
+): GameState["regions"] | undefined {
   const values = array(value);
   if (!values) return undefined;
   const result: GameState["regions"][number][] = [];
   for (const item of values) {
     if (
-      !exact(item, [
-        "id",
-        "capacity",
-        "viability",
-        "phenotype",
-        "vesselLinkIds",
-        "routeIds",
-      ]) ||
+      !exact(item, ["id", "capacity", "viability", "phenotype", "vesselLinkIds", "routeIds"]) ||
       !identifier(item.id) ||
       !natural(item.capacity) ||
       !fraction(item.viability) ||

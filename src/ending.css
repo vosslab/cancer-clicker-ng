@@ -1,0 +1,122 @@
+/* Chicago scale report: a compact persisted presentation state above the live board. */
+.ending-view {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid rgb(127 188 215 / 48%);
+  border-radius: 0.9rem;
+  background: linear-gradient(100deg, rgb(17 53 65 / 82%), rgb(10 29 28 / 94%) 62%), var(--surface);
+  box-shadow: 0 1.1rem 2.8rem rgb(0 0 0 / 27%);
+}
+
+.ending-view--reached {
+  border-color: rgb(255 214 122 / 76%);
+  background:
+    linear-gradient(120deg, rgb(80 54 27 / 72%), rgb(17 56 65 / 82%) 48%, rgb(8 29 28 / 96%)),
+    var(--surface);
+}
+
+.ending-view--minimized {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.ending-view--minimized p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.ending-view__copy {
+  display: grid;
+  gap: 0.32rem;
+  min-inline-size: 0;
+}
+
+.ending-view h2,
+.ending-view p,
+.ending-view dd {
+  margin: 0;
+}
+
+.ending-view__copy > p,
+.ending-view__metrics dt {
+  color: var(--muted);
+  font-size: 0.79rem;
+  line-height: 1.38;
+  overflow-wrap: anywhere;
+}
+
+.ending-view__progress,
+.ending-view__next {
+  padding-inline-start: 0.55rem;
+  border-inline-start: 3px solid #8ed2ef;
+  color: #d8f2fc !important;
+  font-weight: 780;
+}
+
+.ending-view__continuation {
+  color: #fff0bd !important;
+}
+
+.ending-view__action {
+  max-inline-size: 16rem;
+  color: #162116;
+  background: linear-gradient(145deg, #ffe7a1, var(--atp));
+  text-align: start;
+}
+
+.ending-view__metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.45rem;
+  margin: 0.15rem 0 0;
+}
+
+.ending-view__metrics > div {
+  display: grid;
+  gap: 0.15rem;
+  min-inline-size: 0;
+  padding: 0.38rem 0.48rem;
+  border: 1px solid rgb(255 232 175 / 30%);
+  border-radius: 0.45rem;
+  background: rgb(6 26 26 / 30%);
+}
+
+.ending-view__metrics dd {
+  color: #fff1c7;
+  font-size: 0.83rem;
+  font-weight: 850;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 48rem) {
+  .ending-view,
+  .ending-view--minimized,
+  .ending-view__metrics {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ending-view__action {
+    inline-size: 100%;
+    max-inline-size: none;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .ending-view--reached {
+    animation: ending-report-arrive 360ms ease-out both;
+  }
+}
+
+@keyframes ending-report-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(-0.35rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

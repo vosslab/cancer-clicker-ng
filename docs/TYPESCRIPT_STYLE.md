@@ -330,6 +330,14 @@ esbuild produces a single deterministic ESM bundle GitHub Pages serves without p
 
 Single `dist/main.js` + `dist/index.html` + `dist/.nojekyll`. GitHub Pages serves `dist/`. No `dist-single/` portable single-file variant in the canonical base.
 
+`src/style.css` is the base stylesheet. A repository may add a domain stylesheet asset such as
+`src/prestige.css` when that domain owns a cohesive surface. The source `index.html` links every
+such asset explicitly. `build_github_pages.sh` preflights an explicit allowlist, copies every
+allowlisted asset to `dist/`, and verifies the copied names; a stylesheet never relies on a
+bundler's incidental discovery. Document each domain asset in its owning design document, keep it
+within the repository source-file line limit, and prove the linked built asset through a browser
+test. This explicit contract prevents a new stylesheet from silently disappearing in `dist/`.
+
 ### esbuild CLI vs JS-API
 
 The default canonical bundler path is the esbuild CLI, invoked inline from
@@ -512,7 +520,8 @@ This is the baseline TypeScript repository layout:
 
 - `src/main.ts` &mdash; canonical entry point (`src/main.tsx` for JSX or Solid).
 - `src/index.html` &mdash; HTML host with `<script type="module" src="main.js">`.
-- `src/style.css` &mdash; stylesheet copied verbatim into `dist/`.
+- `src/style.css` &mdash; base stylesheet copied verbatim into `dist/`.
+- `src/<domain>.css` &mdash; optional explicitly linked, build-allowlisted domain stylesheet asset.
 - `dist/` &mdash; only build output (canonical GitHub Pages artifact).
 
 Entry point: `src/main.ts` (or `src/main.tsx` for JSX/Solid) is canonical. `src/init.ts` is

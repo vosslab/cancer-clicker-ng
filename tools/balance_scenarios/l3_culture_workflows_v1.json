@@ -1,0 +1,18 @@
+{
+  "formatVersion": 1,
+  "semanticRevision": "p8-visible-surface-v1",
+  "curveRevision": "catalog-2026-08-28",
+  "seeds": [0],
+  "actionBudget": 12,
+  "elapsedScheduleMs": [1000, 5000, 10000],
+  "allowedKinds": ["divide", "producer", "hallmark", "stage", "prestige", "network", "allocation"],
+  "id": "l3_culture_workflows_v1",
+  "initial": {
+    "kind": "new-game"
+  },
+  "decisionWitness": {
+    "system": "L3",
+    "question": "Which culture workflow changes the first durable choice?",
+    "alternatives": ["producer tempo", "cryobank", "containment"]
+  }
+}

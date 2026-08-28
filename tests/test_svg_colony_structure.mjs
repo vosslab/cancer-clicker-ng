@@ -64,6 +64,15 @@ test("the colony projection keeps ordered biological layers and its own geometry
   assert.match(overlays, /visual\.invasion\.routeCommitted && routes\.length === 0/);
   assert.match(overlays, /data-scope="systemic"/);
   assert.match(overlays, /if \(!overlay\.seeded\) return \[\];/);
+  for (const effectId of [
+    "phenotype-variance",
+    "chromatin-program",
+    "microbiome-surface",
+    "senescent-region",
+  ]) {
+    assert.match(overlays, new RegExp(`data-effect="${effectId}"`));
+  }
+  assert.match(overlays, /overlaysFor\(props\.layout, props\.visual, "senescent"\)/);
   assert.equal(/from "\.\/colony_layout\.js"/.test(source), false);
   assert.equal(
     /\b(?:createColonyLayout|Math\.random|document|window|localStorage)\b/.test(source),

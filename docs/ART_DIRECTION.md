@@ -40,23 +40,24 @@ by [MORPHOLOGY_REFERENCE.md](MORPHOLOGY_REFERENCE.md).
 
 ## Specimen composition
 
-The stage is a visual composition, not a scalar damage meter. M17 makes data-only layouts in this
-fixed order: silhouette, regions, clusters, cell slots. M18 then renders the slots and may not make
-layout decisions. This order makes the following grammar structural.
+The stage is a visual composition, not a scalar damage meter. The colony-layout resolver makes
+data-only layouts in this fixed order: silhouette, regions, clusters, cell slots. The SVG cell
+renderer then renders those slots and may not make layout decisions. This order makes the following
+grammar structural.
 
-| Compositional layer | Responsibility          | Visual result                                                                                                                   |
-| ------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| Macro silhouette    | M17                     | Coherent seed, compact colony, diffusion-limited ring, voided core, asymmetric front, islands, or network constellation         |
-| Negative space      | M17                     | Early readable extracellular gaps; later compressed, fragmented, or displaced spacing                                           |
-| Depth strata        | M17 assigns; M18 styles | Surface has largest scale, strongest contrast, heaviest contour; middle is normal; deep is smaller, quieter, and lower contrast |
-| Regions             | M17                     | Hypoxic center, viable rim, vascular margin, invasive edge, and focal site differences                                          |
-| Cells               | M18                     | Cytoplasm volume, contour, dark nucleus, and rare mitosis from resolved morphology only                                         |
-| Foreground accents  | M18                     | One focal mitosis, atypical nucleus, invasive edge, or hypoxic zone; never uniform interest                                     |
+| Compositional layer | Responsibility                  | Visual result                                                                                                                   |
+| ------------------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| Macro silhouette    | Colony layout                   | Coherent seed, compact colony, diffusion-limited ring, voided core, asymmetric front, islands, or network constellation         |
+| Negative space      | Colony layout                   | Early readable extracellular gaps; later compressed, fragmented, or displaced spacing                                           |
+| Depth strata        | Layout assigns; renderer styles | Surface has largest scale, strongest contrast, heaviest contour; middle is normal; deep is smaller, quieter, and lower contrast |
+| Regions             | Colony layout                   | Hypoxic center, viable rim, vascular margin, invasive edge, and focal site differences                                          |
+| Cells               | SVG cell renderer               | Cytoplasm volume, contour, dark nucleus, and rare mitosis from resolved morphology only                                         |
+| Foreground accents  | SVG cell renderer               | One focal mitosis, atypical nucleus, invasive edge, or hypoxic zone; never uniform interest                                     |
 
 Depth is a three-stratum information hierarchy, not perspective. The figure uses overlap and
 restrained value falloff so a crowded field never becomes hundreds of equally loud blobs. No stage
-may rely solely on cell-internal detail; the M17 suppressed-detail contact sheet is the decisive
-test.
+may rely solely on cell-internal detail; the colony-layout suppressed-detail contact sheet is the
+decisive visual evidence.
 
 ## Living tumor world
 
@@ -71,7 +72,7 @@ At the 1280 x 800 (16:10) primary viewport, the first view presents the large co
 authoritative count/rate, active stage and hallmark progression, producer-store quantity controls,
 and save/status together. Wider boards scale this composition; compact layouts retain its order by
 stacking colony action, progression world, then store. The 1280 x 800 capture is a representative
-task walkthrough, not a load-time or frame-time threshold.
+task walkthrough, not a runtime benchmark.
 
 Every visual consequence traces through a named biological and geometric owner:
 
@@ -104,10 +105,10 @@ separate biological palette so actionable mint never becomes a severity code.
 | Vascular or route motif | restrained cool contrasting line               | margin placement and directional connection                    |
 | Interactive UI          | existing mint and gold controls only           | HTML control label, focus, and state; never colony color alone |
 
-M18 measures final text and meaningful icon contrast in its real backgrounds. A biological
-distinction always pairs color with contour, gap, shape, density, pattern, position, or visible
-text. Color is never the sole indicator of hypoxia, necrosis, depth, stage, hallmark, selection,
-or an available player action.
+Visual calibration measures final text and meaningful icon contrast in their real backgrounds. A
+biological distinction always pairs color with contour, gap, shape, density, pattern, position, or
+visible text. Color is never the sole indicator of hypoxia, necrosis, depth, stage, hallmark,
+selection, or an available player action.
 
 ## SVG structure and editing policy
 
@@ -157,20 +158,38 @@ reusable treatments.
   button supplies the reachable keyboard and compact-width target without inventing overlapping
   per-cell focus targets.
 
+## Earned Chicago-scale overlay
+
+The soft-ending overlay retains the living tumor as the primary composition. Once the saved ending
+record is reached, `src/svg/colony_visual_state.ts` projects only the earned L4 tier, stable-site
+count, and accepted colony anchors into `EndingVisualState`. `src/svg/ending_overlay.tsx` then
+draws a fictional, editable Chicago volume analogy behind that existing tissue: a lake edge, a
+river, a legible street grid, stacked tower volumes, and route curves that start at actual colony
+anchors. Tower markers use both a diamond shape and a bright outline, so network connection never
+depends on hue alone. It is a scale reframe rather than a city map or a claim about real-world
+infection, measurement, or pathology.
+
+The overlay retains the shared 1000 by 700 viewBox and has no independent timer or animation.
+Existing global reduced-motion handling therefore presents the same final routes and city volumes
+immediately at desktop and narrow widths. Screen-reader copy names the transformation only after
+the reached semantic state is present; the interactive colony control keeps its existing keyboard
+and direct-cell-click ownership.
+
 ## Performance and motion policy
 
-M16 ships no motion. M18 may add a very slow shared transform or opacity pulse only after contact
-sheet and frame-cost evidence. Motion cannot communicate a biology distinction, gate, or outcome.
-`prefers-reduced-motion: reduce` makes the colony static.
+The morphology resolver and colony layout produce no motion. The SVG cell renderer may add a very
+slow shared transform or opacity pulse after contact-sheet and visual-calibration evidence. Motion
+cannot communicate a biology distinction, gate, or outcome. `prefers-reduced-motion: reduce` makes
+the colony static.
 
-| Budget            | Requirement                                                                                     |
-| ----------------- | ----------------------------------------------------------------------------------------------- |
-| Noise             | Pure seeded field, 1..4 octaves; no `Math.random`, wall time, or mutable global seed            |
-| Contours          | 18..32 samples per cell; one cell-local membrane path, one nucleus path, optional mitosis motif |
-| Reuse             | Shared defs and CSS classes; no filter or gradient per cell                                     |
-| Filters           | At most one bounded subtle shared lighting or texture effect after real inspection              |
-| Prohibited motion | no per-cell timers, `requestAnimationFrame` loop, animated filters, or path `d` interpolation   |
-| Evidence          | M18 records representative node count, SVG bytes, and frame cost after M17 fixes slot count     |
+| Budget            | Requirement                                                                                                                       |
+| ----------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| Noise             | Pure seeded field, 1..4 octaves; no `Math.random`, wall time, or mutable global seed                                              |
+| Contours          | 18..32 samples per cell; one cell-local membrane path, one nucleus path, optional mitosis motif                                   |
+| Reuse             | Shared defs and CSS classes; no filter or gradient per cell                                                                       |
+| Filters           | At most one bounded subtle shared lighting or texture effect after real inspection                                                |
+| Prohibited motion | no per-cell timers, `requestAnimationFrame` loop, animated filters, or path `d` interpolation                                     |
+| Evidence          | Visual calibration records representative node count, SVG bytes, and render observations after the colony layout fixes slot count |
 
 ## Deliberate omissions
 
@@ -194,5 +213,5 @@ sheet and frame-cost evidence. Motion cannot communicate a biology distinction, 
 - Reduced-motion evidence confirms a fully informative static colony and no active animation.
 - Grammar and contact-sheet evidence confirms deterministic seeded variation, stage distinction
   without internals, bounded complexity, and provenance-preserving contributors.
-- The M18 image-evaluator review checks biological abstraction discipline as well as visual quality;
-  M21 owns numerical balance and does not tune art by screenshots alone.
+- Visual calibration reviews biological abstraction discipline as well as visual quality; balance
+  calibration owns numerical tuning and uses screenshots as one qualitative evidence source.

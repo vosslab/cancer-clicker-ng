@@ -17,6 +17,8 @@ import type {
 } from "./late_hallmark_types.js";
 
 export const MICROBIOME_POOL_ID = microbiomePoolId("global-contamination");
+/** One durable simulation interval for a saved microbiome decision. */
+export const MICROBIOME_OFFER_DURATION_MS = 60_000;
 export const MICROBIOME_NICHE_IDS = [
   microbiomeNicheId("surface"),
   microbiomeNicheId("interface"),

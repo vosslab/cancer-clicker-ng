@@ -11,6 +11,10 @@ origin belongs there too. Rules: [REPO_STYLE.md](REPO_STYLE.md).
 
 ## Decision priority
 
+- I like SolidJS and want it used for this client-side game interface.
+- This codebase is pre-production, so strengthen foundational schemas, contracts, abstractions,
+  and ownership boundaries when that creates the better long-term design; fix the design rather
+  than preserving provisional compatibility.
 - I want to target a 1280 x 800 (16:10) display. It shows the large clickable colony with
   count/rate, active stage and hallmark progression, producer store and quantity controls, and
   save/status without scroll-to-discover; larger layouts scale and smaller layouts stack.
@@ -29,7 +33,17 @@ origin belongs there too. Rules: [REPO_STYLE.md](REPO_STYLE.md).
 
 ## Review expectations
 
+- Use `./check_codebase.sh` and `docs/TYPESCRIPT_STYLE.md` as the canonical TypeScript validation
+  route. Treat focused runners as supporting evidence rather than a replacement for that gate.
+- Keep permanent tests grounded in durable semantic behavior. Classify screenshots, calibration,
+  performance observations, and other one-time checks separately; use realistic acceptance gates
+  without byte, pixel, or arbitrary timing equivalence.
+- Use domain names in permanent test files and documentation; milestone numbers belong in planning
+  and dated history rather than current test identities.
+
 ## Working style
 
 - Cancer Clicker NG means Next Gen: make it the superified, exciting evolution of Cancer Clicker
   while keeping current behavior claims evidence-backed and future ambition clearly labeled.
+- Frame delegated work as positive, dispatchable actions with an owner, files, validation, and
+  success criteria so smaller agents have a clear path to the intended result.

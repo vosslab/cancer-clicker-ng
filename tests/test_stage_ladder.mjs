@@ -63,6 +63,7 @@ function oneSecondPurchaseScores(state) {
       type: "purchase-producer",
       producerId: producer.id,
       quantity: 1,
+      execution: "manual",
       atMs: state.activeTimeMs,
     });
     const afterTick = economyTick(purchased, 1_000, "live").resourceSnapshot.cells;

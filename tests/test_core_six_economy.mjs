@@ -121,6 +121,7 @@ function rankActualPurchases(state) {
       type: "purchase-producer",
       producerId: producer.id,
       quantity: 1,
+      execution: "manual",
       atMs: state.activeTimeMs,
     });
     const ticked = economyTick(purchased, 1_000, "live");
@@ -139,11 +140,10 @@ function assertActualOrderChanged(before, after, label = "") {
   );
 }
 
-test("core-six each durable core-six operation changes real quote, debit, and one-second producer ranking", () => {
+test("core-six economy-affecting operations change real quote, debit, and one-second producer ranking", () => {
   const branches = [
     ["proliferative_signaling", "transformed_cell"],
     ["growth_suppressor_evasion", "microcolony"],
-    ["cell_death_resistance", "avascular_lesion"],
     ["replicative_immortality", "hypoxic_lesion"],
     ["angiogenesis", "hypoxic_lesion"],
     ["invasion_metastasis", "invasive_carcinoma"],

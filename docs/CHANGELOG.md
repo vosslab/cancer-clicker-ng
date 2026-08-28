@@ -1,6 +1,96 @@
+## 2026-08-28
+
+### Additions and New Features
+
+- Added a deterministic headless balance laboratory with five visible-state-only profile policies,
+  versioned scenario inputs, current-p8 snapshot validation, parser/reducer action traces, shared
+  offline-economy advancement, explicit scoring/ranks/ties, and honest falsification observations.
+  Generated calibration reports remain under ignored `output_balance/`.
+
+- Strengthened the canonical visible decision surface with explicit catalog, quote, gate, and
+  saved-network eligibility builders. Every emitted action now fails loudly if it cannot cross the
+  parser/reducer funnel, and generated campaign actions remain distinct from authored topology.
+
+- Added the frozen canonical visible decision surface: current player-facing actions, numeric
+  balances, authoritative quotes, catalog/saved ordering, and reducer-accepted event semantics
+  now share one state-owned projection for future UI and balance consumers.
+
+- Added an editable Chicago-scale SVG overlay: semantic reached-state mapping preserves the
+  live colony and its real layout anchors while adding static lake, river, street-grid, tower, and
+  non-color connected-site cues with concise accessible scene copy.
+
+- Added the replayable Chicago soft-ending domain: a catalog-owned 2.5e25-cell scale reference,
+  explicit reducer-recorded transition, strict p8 ending evidence, pure BigNum scale presentation,
+  and p7 migration to an unreached state without fabricating historical proof.
+
+- Added the Chicago scale-report interface: a keyboard-openable, persistence-first Solid leaf with
+  explicit prerequisite progress, full/short scale vocabulary, saved reached revisit, locally
+  dismissible/reopenable presentation, responsive reduced-motion behavior, and continued live
+  cell-click/producers/network play without focus theft after later ticks.
+
+- Corrected L3 culture/reset fixtures to use the canonical 14-hallmark IDs so strict current-save
+  validation and visual acceptance exercise valid domain state.
+
+- Added development-only semantic replay: validated current-state snapshots, deterministic seed and
+  accepted-event recording, bounded hostile-log parsing, typed stale/mismatch outcomes, and pure
+  visible-progression equivalence all re-enter the canonical event parser and reducer.
+
+- Added the controller replay-observation seam: a successful interactive event now parses once,
+  reduces canonically, captures its one persistence timestamp, saves, reconciles, and then emits a
+  cloned durable post-state to an optional development observer. Snapshot/tick/recovery writes and
+  rejected or failed actions remain outside the replay trace.
+
+- Recorded the owner-approved SolidJS, pre-production schema, canonical TypeScript gate,
+  domain-named testing, realistic evidence, and positive delegation guidance in
+  `docs/HUMAN_GUIDANCE.md`.
+
+- Added a closed culture and dissemination domain seam: branded L3/L4 IDs, frozen
+  passage/cryobank and authored topology catalogs, exact empty state factories, and deterministic
+  saved three-mandate frontier generation with renewable topology categories.
+
+- Extended the culture and network contracts with the one-action assay queue, selected-plan
+  campaign state, durable campaign-completion predicates, and one-node containment tradeoff.
+
+- Tightened the pre-release network schema so each active and completed campaign retains its
+  canonical frontier source and selected plan instead of reconstructing historical mandate IDs.
+
+- Added pure culture and network mechanics adapters: saved cryobank translation now composes
+  at the conversion and route-risk boundaries, high-throughput protects post-immortalization late
+  interfaces, protocol ranks shorten only new cooldown deadlines, and local network topology
+  contributes node-scoped tradeoffs plus visual provenance without a global production multiplier.
+
+- Added the authoritative local-node Transmission Pressure quote: frozen tuning derives bounded
+  production, directed-depth, adjacency, and diversity components from one stable node; the
+  reducer records that exact quote credit once and the topology panel shows the same breakdown.
+
+- Documented the p8 current-save contract: p6 first receives exact empty culture and network
+  aggregates; the strict p7 legacy shape validates source-frontier tuples, regenerated planned-edge
+  topology, one-slot assay retarget provenance, and selected containment; then p8 adds an unreached
+  ending without fabricating reached evidence. Development replay compares normalized state,
+  event outcomes, and visible progression rather than serialized bytes.
+
+- Added the prestige domain foundation: branded organ, lineage, and host identities; frozen
+  organ/program/boon/host catalogs; versioned deterministic seed and host-draft generation;
+  terminal quote contracts; and pure lineage, metastasis, and host-transfer empty-state seams.
+
+- Extended the prestige foundation with one explicit selected-run context, discriminated boon
+  provenance, and catalog-owned bounded site, niche-program, and host-trait effect records for
+  the later pure mechanics adapter.
+
+- Aligned the prestige and build contracts around L1-written, L2-preserved, L3-cleared
+  `activeNicheContext`; independently composable niche/host effects; typed host-draft/boon
+  application provenance; realistic permanent semantic tests; dated M21 balance evidence; and
+  explicit base/domain stylesheet assets that the Pages build must preflight, copy, and prove in a
+  browser.
+
 ## 2026-08-27
 
 ### Additions and New Features
+
+- Added M12's pure late-hallmark effect seam: active plasticity, epigenetic programs,
+  microbiome compositions, and retained senescence now make bounded named contributions at the
+  production, route-risk, substrate-to-ATP, inflammation, immune-visibility, and host-tolerance
+  boundaries while their durable maps remain authoritative raw state.
 
 - Refreshed `README.md` as the Cancer Clicker Next Gen landing page: an evidence-backed first
   loop, current pre-production scope, the stage-to-colony proof story, verification commands, and
@@ -65,6 +155,17 @@
   round-trips exactly, and documented recoverable leaves emit typed visible recovery notices.
 
 ### Fixes and Maintenance
+
+- Repaired the reached Chicago overlay's Solid reactivity so a newly accepted scale report mounts
+  its live colony-to-city SVG transformation immediately, instead of retaining the prior
+  unreached scene snapshot until a later remount.
+
+- Preserved a real, filled direct-cell click surface in constrained desktop debug layouts by
+  reserving the colony action's visual track instead of clipping its live SVG below a collapsed
+  native button.
+
+- Corrected the late-hallmark activation comparator to use the canonical stage order, so early
+  stages keep every late branch neutral until its declared activation stage.
 
 - M11 now migrates provisional p1-p3 ATP, visibility, episode, and mutation placeholders to the
   canonical empty state; current malformed M11 relations fail closed rather than being recovered

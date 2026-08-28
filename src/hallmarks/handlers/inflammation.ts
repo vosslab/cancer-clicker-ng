@@ -9,6 +9,8 @@ import {
   projectInflammationTimeline,
 } from "../inflammation_timeline.js";
 import { extendedHallmarkElapsedClock } from "../extended_hallmark_tick.js";
+import { lateHallmarkInflammationDurationMultiplier } from "../late_hallmark_effects.js";
+import { effectiveImmuneVisibility } from "./immune_visibility.js";
 import type {
   ActivateInflammationOperation,
   ExtendedHallmarkHandler,
@@ -38,7 +40,10 @@ function targetRegion(
   if (!region || region.viability <= 0 || region.vesselLinkIds.length === 0) {
     throw new Error("Inflammation target is unavailable.");
   }
-  if (state.maskedRegions.includes(region.id) || state.immuneVisibilityByRegion[region.id] === 0) {
+  if (
+    state.maskedRegions.includes(region.id) ||
+    effectiveImmuneVisibility(state, region.id) === 0
+  ) {
     throw new Error("Inflammation target must be immune-visible.");
   }
   return region;
@@ -116,13 +121,17 @@ export function applyInflammation(
     throw new Error("Inflammation episode is already active.");
   }
   const deadlineClock = extendedHallmarkElapsedClock(state);
-  if (deadlineClock > Number.MAX_SAFE_INTEGER - INFLAMMATION_DURATION_MS) {
+  const durationMs = Math.max(
+    1,
+    Math.round(INFLAMMATION_DURATION_MS * lateHallmarkInflammationDurationMultiplier(state)),
+  );
+  if (!Number.isSafeInteger(durationMs) || deadlineClock > Number.MAX_SAFE_INTEGER - durationMs) {
     throw new Error("Inflammation deadline cannot advance safely.");
   }
   const episode = {
     id: inflammationEpisodeId(state, region.id),
     regionId: region.id,
-    deadlineMs: deadlineClock + INFLAMMATION_DURATION_MS,
+    deadlineMs: deadlineClock + durationMs,
   };
   const next = {
     ...state,

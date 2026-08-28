@@ -89,11 +89,11 @@ test("a storage read failure blocks ordinary writes until an explicit replacemen
   assert.equal(controller.recoveryReason(), undefined);
 });
 
-test("loaded p4 result has the closed current progression contract", () => {
+test("loaded current result has the closed progression contract", () => {
   const raw = serializeGameState(createInitialGameState(), 10);
   const loaded = parseSave(raw);
   assert.equal(loaded.status, "loaded");
   if (loaded.status !== "loaded") throw new Error("Expected current save to load.");
-  assert.equal(loaded.progressionVersion, 4);
+  assert.equal(loaded.progressionVersion, 8);
   assert.equal(loaded.version, 2);
 });

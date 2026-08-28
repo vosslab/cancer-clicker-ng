@@ -1,5 +1,6 @@
 import { eventId } from "../../brands.js";
 import { coreSixHallmarkDefinition, hasReachedCoreSixUnlock } from "../core_six_catalog.js";
+import { prestigeVesselQuote } from "../../prestige/effects.js";
 import type { CoreSixHandler, SetVesselLinkOperation } from "../core_six_types.js";
 import type { GameState, RegionState } from "../../types/state.js";
 
@@ -11,6 +12,50 @@ export const MAX_PERFUSED_REGION_CAPACITY = 8;
 export const PERFUSION_CAPACITY_DELTA = 2;
 export const PERFUSION_OXYGEN_PRESSURE_DELTA = 2;
 export const PERFUSION_MAINTENANCE_ATP = 1;
+
+export type PerfusionVesselQuote = Readonly<{
+  capacityDelta: number;
+  maximumCapacity: number;
+  maintenanceAtpPerLink: number;
+}>;
+
+/**
+ * The selected-run contribution changes the link quote, never the stored regional baseline.
+ * Capacity bonus changes the declared capacity ceiling, while the stored link increment stays
+ * fixed. This keeps unlink and teardown exactly reversible even after a later prestige choice.
+ */
+export function perfusionVesselQuote(state: GameState, region: RegionState): PerfusionVesselQuote {
+  const prestige = prestigeVesselQuote(state, region.id);
+  const capacityDelta = PERFUSION_CAPACITY_DELTA;
+  const maximumCapacity = Math.max(1, MAX_PERFUSED_REGION_CAPACITY + prestige.capacityBonus);
+  const maintenanceAtpPerLink = Math.ceil(
+    PERFUSION_MAINTENANCE_ATP * prestige.maintenanceMultiplier,
+  );
+  if (
+    !Number.isSafeInteger(capacityDelta) ||
+    !Number.isSafeInteger(maximumCapacity) ||
+    !Number.isSafeInteger(maintenanceAtpPerLink) ||
+    maintenanceAtpPerLink < 1 ||
+    capacityDelta > maximumCapacity
+  ) {
+    throw new Error("Perfusion vessel quote is invalid.");
+  }
+  return Object.freeze({ capacityDelta, maximumCapacity, maintenanceAtpPerLink });
+}
+
+/** One exact natural-number effective debit is shared by ATP reservation and elapsed upkeep. */
+export function perfusionMaintenanceAtpDebit(state: GameState, linkedCount: number): number {
+  if (!Number.isSafeInteger(linkedCount) || linkedCount < 0) {
+    throw new Error("Perfusion link count is invalid.");
+  }
+  const region =
+    state.regions.find((candidate) => candidate.vesselLinkIds.length > 0) ?? state.regions[0];
+  if (!region) return 0;
+  const debit = linkedCount * perfusionVesselQuote(state, region).maintenanceAtpPerLink;
+  if (!Number.isSafeInteger(debit) || debit < 0)
+    throw new Error("Perfusion maintenance debit is invalid.");
+  return debit;
+}
 
 function requireCurrentOperationTime(state: GameState, appliedAtMs: number): void {
   if (!Number.isSafeInteger(appliedAtMs) || appliedAtMs < 0 || appliedAtMs !== state.activeTimeMs) {
@@ -61,6 +106,8 @@ function requirePerfusionCounters(state: GameState, activeLinks: number): void {
     !Number.isSafeInteger(state.vesselMaintenanceAtp) ||
     state.vesselMaintenanceAtp < 0 ||
     activeLinks > MAX_ACTIVE_VESSEL_LINKS ||
+    // The durable counter is the raw physical-link count. Prestige changes only the operational
+    // debit, so a later host choice cannot make an existing link fail structural validation.
     state.vesselMaintenanceAtp !== activeLinks * PERFUSION_MAINTENANCE_ATP
   ) {
     throw new Error("Perfusion counters are invalid.");
@@ -91,7 +138,8 @@ function linkRegion(state: GameState, target: RegionState, activeLinks: number):
   if (target.vesselLinkIds.length >= MAX_VESSEL_LINKS_PER_REGION) {
     throw new Error("Perfusion link capacity is exhausted.");
   }
-  if (target.capacity >= MAX_PERFUSED_REGION_CAPACITY) {
+  const quote = perfusionVesselQuote(state, target);
+  if (target.capacity > quote.maximumCapacity - quote.capacityDelta) {
     throw new Error("Perfusion target capacity is exhausted.");
   }
   if (activeLinks >= MAX_ACTIVE_VESSEL_LINKS) {
@@ -101,10 +149,7 @@ function linkRegion(state: GameState, target: RegionState, activeLinks: number):
     throw new Error("Perfusion maintenance would overflow.");
   }
 
-  const capacity = Math.min(
-    MAX_PERFUSED_REGION_CAPACITY,
-    target.capacity + PERFUSION_CAPACITY_DELTA,
-  );
+  const capacity = target.capacity + quote.capacityDelta;
   const oxygenPressure = Math.max(0, state.oxygenPressure - PERFUSION_OXYGEN_PRESSURE_DELTA);
   const vesselMaintenanceAtp = state.vesselMaintenanceAtp + PERFUSION_MAINTENANCE_ATP;
   const linkedRegion: RegionState = {
@@ -123,11 +168,12 @@ function linkRegion(state: GameState, target: RegionState, activeLinks: number):
 function unlinkRegion(state: GameState, target: RegionState): GameState {
   const linkId = canonicalLinkId(target);
   if (!target.vesselLinkIds.includes(linkId)) throw new Error("Perfusion link is unavailable.");
+  const quote = perfusionVesselQuote(state, target);
   if (state.vesselMaintenanceAtp < PERFUSION_MAINTENANCE_ATP) {
     throw new Error("Perfusion maintenance state is invalid.");
   }
 
-  const capacity = Math.max(1, target.capacity - PERFUSION_CAPACITY_DELTA);
+  const capacity = Math.max(1, target.capacity - quote.capacityDelta);
   if (state.oxygenPressure > Number.MAX_SAFE_INTEGER - PERFUSION_OXYGEN_PRESSURE_DELTA) {
     throw new Error("Perfusion oxygen pressure would overflow.");
   }

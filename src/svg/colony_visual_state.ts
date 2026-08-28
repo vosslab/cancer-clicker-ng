@@ -16,8 +16,10 @@ import { createColonySceneRequest } from "./render_types.js";
 import {
   COLONY_VISUAL_CATALOG,
   COLONY_VISUAL_EFFECT_IDS,
+  networkNodeMorphology,
   type ColonyVisualEffectId,
 } from "./colony_visual_catalog.js";
+import { isRetainedSenescentRegion } from "../hallmarks/late_hallmark_effects.js";
 import type { ColonyLayout } from "./colony_layout.js";
 import type { ColonySceneRequest } from "./render_types.js";
 import type {
@@ -60,8 +62,22 @@ export type ColonySystemicInvasion = Readonly<{
   seeded: boolean;
 }>;
 
+/**
+ * A presentation-only map from the earned Chicago-scale record to SVG geometry.
+ * The city is a fictional scale analogy: its routes remain anchored in the
+ * accepted colony layout and its markers derive from real saved L4 network facts.
+ */
+export type EndingVisualState = Readonly<{
+  mode: "colony" | "chicago-scale";
+  networkTier: number;
+  connectedSiteCount: number;
+  routeDensity: number;
+  routeAnchors: readonly Readonly<{ x: number; y: number }>[];
+}>;
+
 export type ColonyVisualState = Readonly<{
   declarations: MorphologyDeclarations;
+  ending: EndingVisualState;
   effects: readonly ColonyVisualEffect[];
   growthState: "quiet" | "cycling" | "energized";
   invasion: ColonySystemicInvasion;
@@ -70,6 +86,7 @@ export type ColonyVisualState = Readonly<{
 
 const VISUAL_STATE_KEYS = [
   "declarations",
+  "ending",
   "effects",
   "growthState",
   "invasion",
@@ -94,6 +111,14 @@ const OVERLAY_KEYS = [
   "phenotype",
 ] as const;
 const SYSTEMIC_INVASION_KEYS = ["routeCommitted", "seeded"] as const;
+const ENDING_VISUAL_KEYS = [
+  "mode",
+  "networkTier",
+  "connectedSiteCount",
+  "routeDensity",
+  "routeAnchors",
+] as const;
+const ENDING_ROUTE_ANCHOR_KEYS = ["x", "y"] as const;
 const DECLARATION_KEYS = ["stage", "hallmark", "prestige", "regional"] as const;
 const REGIONAL_DECLARATION_KEYS = ["siteProgram", "host", "node"] as const;
 const SOURCE_KEYS = ["layer", "contributorId", "label", "referenceRowId"] as const;
@@ -239,6 +264,34 @@ function systemicInvasionFor(game: GameState): ColonySystemicInvasion {
   return freeze({ routeCommitted, seeded });
 }
 
+function endingVisualFor(game: GameState, layout: ColonyLayout): EndingVisualState {
+  if (game.ending.phase !== "reached") {
+    return freeze({
+      mode: "colony",
+      networkTier: 0,
+      connectedSiteCount: 0,
+      routeDensity: 0,
+      routeAnchors: freeze([]),
+    });
+  }
+  const connectedSiteCount = game.network.nodes.filter((node) => node.status === "stable").length;
+  const routeDensity = Math.min(6, Math.max(1, game.network.globalTier));
+  const anchorCount = Math.min(routeDensity, layout.slots.length);
+  const routeAnchors = Array.from({ length: anchorCount }, (_, index) => {
+    const slotIndex = Math.floor((index * layout.slots.length) / anchorCount);
+    const slot = layout.slots[slotIndex];
+    if (!slot) throw new Error("Chicago overlay requires accepted colony layout anchors.");
+    return freeze({ x: slot.centre.x, y: slot.centre.y });
+  });
+  return freeze({
+    mode: "chicago-scale",
+    networkTier: game.network.globalTier,
+    connectedSiteCount,
+    routeDensity,
+    routeAnchors: freeze(routeAnchors),
+  });
+}
+
 function viabilityCondition(region: RegionState): ColonyRegionCondition {
   if (region.viability <= 0) return "necrotic";
   if (region.viability < 1) return "hypoxic";
@@ -258,7 +311,7 @@ function conditionsForRegion(
   ) {
     conditions.push("inflamed");
   }
-  if (game.lateHallmarks.senescence.retainedRegions.some((record) => record.regionId === region.id)) conditions.push("senescent");
+  if (isRetainedSenescentRegion(game, region.id)) conditions.push("senescent");
   return conditions;
 }
 
@@ -306,7 +359,7 @@ function declarationsFor(
   const regional = freeze({
     siteProgram: regionalRouteMorphology(game),
     host: freeze([]),
-    node: freeze([]),
+    node: cloneContributions(networkNodeMorphology(game)),
   });
   return freeze({ stage, hallmark, prestige: freeze([]), regional });
 }
@@ -361,6 +414,7 @@ export function resolveColonyVisualState(game: GameState, layout: ColonyLayout):
   const declarations = declarationsFor(game, effects);
   const visual = {
     declarations,
+    ending: endingVisualFor(game, layout),
     effects,
     growthState: currentGrowthState(game),
     invasion: systemicInvasionFor(game),
@@ -533,6 +587,56 @@ function isSystemicInvasion(value: unknown): value is ColonySystemicInvasion {
   );
 }
 
+function isEndingVisualState(value: unknown): value is EndingVisualState {
+  if (!hasExactFrozenDataKeys(value, ENDING_VISUAL_KEYS)) return false;
+  const networkTier = value.networkTier;
+  const connectedSiteCount = value.connectedSiteCount;
+  const routeDensity = value.routeDensity;
+  const routeAnchors = value.routeAnchors;
+  if (
+    (value.mode !== "colony" && value.mode !== "chicago-scale") ||
+    typeof networkTier !== "number" ||
+    !Number.isSafeInteger(networkTier) ||
+    networkTier < 0 ||
+    typeof connectedSiteCount !== "number" ||
+    !Number.isSafeInteger(connectedSiteCount) ||
+    connectedSiteCount < 0 ||
+    typeof routeDensity !== "number" ||
+    !Number.isSafeInteger(routeDensity) ||
+    routeDensity < 0 ||
+    routeDensity > 6 ||
+    !isFrozenArray(routeAnchors) ||
+    routeAnchors.length > 6
+  ) {
+    return false;
+  }
+  if (value.mode === "colony") {
+    return (
+      networkTier === 0 &&
+      connectedSiteCount === 0 &&
+      routeDensity === 0 &&
+      routeAnchors.length === 0
+    );
+  }
+  return (
+    networkTier >= 1 &&
+    routeDensity >= 1 &&
+    routeAnchors.length === routeDensity &&
+    routeAnchors.every(
+      (anchor) =>
+        hasExactFrozenDataKeys(anchor, ENDING_ROUTE_ANCHOR_KEYS) &&
+        typeof anchor.x === "number" &&
+        Number.isFinite(anchor.x) &&
+        anchor.x > 0 &&
+        anchor.x < 1000 &&
+        typeof anchor.y === "number" &&
+        Number.isFinite(anchor.y) &&
+        anchor.y > 0 &&
+        anchor.y < 700,
+    )
+  );
+}
+
 /** Rejects hostile or mutable semantic payloads before SVG components can project them. */
 export function assertColonyVisualState(
   value: unknown,
@@ -546,6 +650,9 @@ export function assertColonyVisualState(
   }
   if (!isSystemicInvasion(value.invasion)) {
     throw new Error("Colony systemic invasion state must be frozen and exact.");
+  }
+  if (!isEndingVisualState(value.ending)) {
+    throw new Error("Colony ending state must be frozen accepted scene data.");
   }
   if (
     !isFrozenArray(value.effects) ||

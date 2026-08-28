@@ -4,6 +4,7 @@ import { abs, add, compare, divide, isZero, max, subtract } from "../src/bignum/
 import { bigNum, prestigeId, stageId } from "../src/brands.ts";
 import { renderOfflineReport } from "../src/render/offline_report.ts";
 import { economyTick } from "../src/economy/tick.ts";
+import { emptyLateHallmarksState } from "../src/hallmarks/late_hallmark_types.ts";
 import { createInitialGameState } from "../src/state/game_state.ts";
 import {
   MAX_OFFLINE_STEPS,
@@ -634,8 +635,16 @@ test("queue capacity, remainder, cap, frozen fields, and durable order are exact
   const initial = {
     ...createInitialGameState(),
     activeTimeMs: 41,
-    programs: { ...createInitialGameState().programs, cooldownDeadlineMs: 900 },
-    microbiome: { ...createInitialGameState().microbiome, rotationDeadlineMs: 901 },
+    lateHallmarks: {
+      ...emptyLateHallmarksState(),
+      epigenetic: { assignments: [], cooldownDeadlineMs: 900 },
+      microbiome: {
+        activeComposition: null,
+        pendingOffer: null,
+        nextRotationDeadlineMs: null,
+        rotationSequence: 0,
+      },
+    },
   };
   const durations = [];
   let events = 0;
@@ -663,8 +672,7 @@ test("queue capacity, remainder, cap, frozen fields, and durable order are exact
   assert.deepEqual(durations, [60_000, 1000]);
   assert.equal(events, 1);
   assert.equal(result.state.activeTimeMs, initial.activeTimeMs);
-  assert.deepEqual(result.state.programs, initial.programs);
-  assert.deepEqual(result.state.microbiome, initial.microbiome);
+  assert.deepEqual(result.state.lateHallmarks, initial.lateHallmarks);
   assert.deepEqual(result.state.pendingProgression, [
     { kind: "stage", id: "microcolony", firstObservedAtActiveMs: 41 },
     { kind: "prestige", id: "L1", firstObservedAtActiveMs: 41 },

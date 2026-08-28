@@ -135,7 +135,7 @@ test("gameplay lifecycle production dist is playable, persistent, accessible, an
   );
   expect(storage.value).not.toBeNull();
   const envelope = JSON.parse(storage.value);
-  expect(envelope).toMatchObject({ version: 2, progressionVersion: 4 });
+  expect(envelope).toMatchObject({ version: 2, progressionVersion: 8 });
   expect(storage.keys).toEqual([SAVE_KEY]);
   expect(JSON.stringify(envelope)).not.toContain('"password"');
   expect(JSON.stringify(envelope)).not.toContain('"token"');
@@ -254,8 +254,12 @@ test("gameplay lifecycle production dist remains usable at a narrow reduced-moti
 
   const divide = page.getByRole("button", { name: "Divide cell" });
   await expect(divide).toBeVisible();
+  await expect(divide).toBeEnabled();
   await clickVisibleCell(page);
   await expect(page.getByLabel("Cell count")).toContainText("1");
+  const saved = await page.evaluate((key) => localStorage.getItem(key), SAVE_KEY);
+  expect(saved).not.toBeNull();
+  expect(JSON.parse(saved).state.cells).toEqual({ mantissa: 1, exponent: 0 });
   await expect(page.locator(".game-board")).toBeVisible();
   await expect(page.locator("#producer-list")).toBeVisible();
   expect(diagnostics).toEqual([]);

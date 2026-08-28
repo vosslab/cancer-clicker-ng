@@ -3,6 +3,7 @@ import test from "node:test";
 import { bigNum, eventId, hallmarkId, regionId, routeId, stageId } from "../src/brands.ts";
 import { add } from "../src/bignum/bignum.ts";
 import { applyDamageTriage } from "../src/hallmarks/handlers/damage_triage.ts";
+import { emptyLateHallmarksState } from "../src/hallmarks/late_hallmark_types.ts";
 import { createInitialGameState } from "../src/state/game_state.ts";
 
 function triageState(overrides = {}) {
@@ -14,7 +15,6 @@ function triageState(overrides = {}) {
     phenotype: "stress-tolerant",
     vesselLinkIds: [eventId("vessel:damaged")],
     routeIds: [routeId("departing"), routeId("shared")],
-    senescenceEventId: eventId("senescence:damaged"),
   };
   const survivor = {
     id: regionId("survivor"),
@@ -35,14 +35,32 @@ function triageState(overrides = {}) {
     regions: [target, survivor],
     seededSites: [target.id],
     maskedRegions: [target.id],
-    senescentRegions: [target.id],
     telomereReserveByRegion: { damaged: 2 },
     immuneVisibilityByRegion: { damaged: 3 },
     regionalInflammation: { damaged: 4 },
-    phenotypeCooldowns: { damaged: 5 },
-    regionalModifiers: { "region:damaged:stress": 6 },
-    clearanceQueue: [eventId("senescence:damaged")],
-    secretoryEffects: { damaged: 1, "senescence:senescence:damaged": 1 },
+    lateHallmarks: {
+      ...emptyLateHallmarksState(),
+      plasticity: { switchCooldownByRegion: { damaged: 5 } },
+      senescence: {
+        pendingDecisions: [
+          {
+            id: eventId("senescence:damaged"),
+            regionId: target.id,
+            cause: "damage-failure",
+            createdAtMs: 19,
+          },
+        ],
+        retainedRegions: [
+          {
+            decisionId: eventId("senescence:damaged"),
+            regionId: target.id,
+            cause: "damage-failure",
+            createdAtMs: 19,
+            retainedAtMs: 20,
+          },
+        ],
+      },
+    },
     pendingDamageEvents: [
       { id: eventId("damage-a"), regionId: target.id, outcome: "repairable" },
       { id: eventId("damage-b"), regionId: target.id, outcome: "fatal" },
@@ -81,14 +99,12 @@ test("core-six cell-death resistance makes absorb, repair, and regional loss dis
     absorbAfter.pendingDamageEvents.map((event) => event.id),
     [eventId("damage-b")],
   );
-  assert.equal(absorbAfter.regionalModifiers["triage:damage-a"], 2);
 
   const repairBefore = triageState();
   const repairAfter = apply(repairBefore, "repair");
   assert.equal(repairAfter.survivalCapacity, 2);
   assert.equal(repairAfter.damagePressure, 1);
   assert.equal(repairAfter.regions[0]?.viability, 1);
-  assert.equal(repairAfter.regionalModifiers["triage:damage-a"], 1);
 
   const lossBefore = triageState();
   const lossAfter = apply(lossBefore, "lose-region");
@@ -131,14 +147,12 @@ test("core-six cell-death loss uses the single destructive-region projection", (
   const after = apply(triageState(), "lose-region");
   assert.deepEqual(after.seededSites, []);
   assert.deepEqual(after.maskedRegions, []);
-  assert.deepEqual(after.senescentRegions, []);
   assert.deepEqual(after.telomereReserveByRegion, {});
   assert.deepEqual(after.immuneVisibilityByRegion, {});
   assert.deepEqual(after.regionalInflammation, {});
-  assert.deepEqual(after.phenotypeCooldowns, {});
-  assert.deepEqual(after.regionalModifiers, {});
-  assert.deepEqual(after.clearanceQueue, []);
-  assert.deepEqual(after.secretoryEffects, {});
+  assert.deepEqual(after.lateHallmarks.plasticity.switchCooldownByRegion, {});
+  assert.deepEqual(after.lateHallmarks.senescence.pendingDecisions, []);
+  assert.deepEqual(after.lateHallmarks.senescence.retainedRegions, []);
   assert.deepEqual(after.inflammationEpisodes, []);
   assert.deepEqual(after.committedCellCommitments, { shared: 3 });
   assert.deepEqual(after.routeRiskById, { shared: 5 });

@@ -83,8 +83,9 @@ each class once, so a later implementation cannot quietly turn the tree into rat
 
 ## Branch specifications
 
-The `affected state` fields are the minimum semantic state required by M4. Exact numeric values
-are intentionally deferred. A visible consequence belongs in normal play, not only a tooltip.
+The `affected state` fields are the minimum semantic state required by the canonical progression
+schema. Exact numeric values are intentionally deferred. A visible consequence belongs in normal
+play, not only a tooltip.
 
 ### Sustaining proliferative signaling
 
@@ -330,8 +331,8 @@ are intentionally deferred. A visible consequence belongs in normal play, not on
 
 ## Synergy and tension network
 
-Relations below are deliberate dependencies, not generic percentage bonuses. The M21 purchase
-order check must demonstrate that their presence changes which branch or operation is selected.
+Relations below are deliberate dependencies, not generic percentage bonuses. Balance calibration
+evidence must demonstrate that their presence changes which branch or operation is selected.
 
 | Relation                                              | Type                 | Game consequence                                                                                                                               |
 | ----------------------------------------------------- | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -348,9 +349,9 @@ order check must demonstrate that their presence changes which branch or operati
 
 ### Relation observability
 
-Every relation has a stable `relationId`. M9-M12 fixtures must evaluate its predicate from
-saved state and prove an action-order or feasibility difference; a changed tooltip or scalar rate
-alone does not satisfy the relation.
+Every relation has a stable `relationId`. Behavioral validation evaluates its predicate from saved
+state and proves an action-order or feasibility difference; a changed tooltip or scalar rate alone
+does not satisfy the relation.
 
 | `relationId`             | Enabling predicate                                        | Competing actions                                   | Observable state or action-order difference                                                         |
 | ------------------------ | --------------------------------------------------------- | --------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
@@ -379,13 +380,13 @@ These are genuine tensions. Neither side is a globally correct purchase or toggl
 
 ## Canonical stage ladder
 
-Stage IDs and order are fixed for M9. The first nine are game-oriented correspondences to
-biological progression, while the final three deliberately leave clinical staging behind. Host
-collapse, immortalized culture, and global lab contamination are fictional game modes or
-post-transition contexts, not oncology stage labels and not one linear clinical host run. An
-ordinary pre-M13 host run stops at the host-collapse boundary; an L3-enabled transition enters
+Stage IDs and order are fixed by the stage catalog. The first nine are game-oriented
+correspondences to biological progression, while the final three deliberately leave clinical
+staging behind. Host collapse, immortalized culture, and global lab contamination are fictional
+game modes or post-transition contexts, not oncology stage labels and not one linear clinical host
+run. An ordinary host run stops at the host-collapse boundary; an L3-enabled transition enters
 immortalized culture, from which global lab contamination is a later mode. Gates are semantic
-conditions; M21 calibrates their numeric thresholds.
+conditions; balance calibration sets their numeric thresholds.
 
 | ID and stage                                           | Gate concept                                             | New pressure                                                     | New opportunity or resource relationship                                                   | Retired prior assumption                         | UI mode               | Evidence play changes                                                                                    |
 | ------------------------------------------------------ | -------------------------------------------------------- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------ | --------------------- | -------------------------------------------------------------------------------------------------------- |
@@ -404,9 +405,10 @@ conditions; M21 calibrates their numeric thresholds.
 
 ## State and implementation implications
 
-### M4 schema requirements
+### State schema contract
 
-M4 must encode these concepts in `GameState` rather than infer them from DOM state or copy:
+The progression state schema encodes these concepts in `GameState` rather than inferring them from
+DOM state or copy:
 
 - `GameState.currentStage` is the sole canonical state field and contains a branded `StageId`.
   `stageId` may name a catalog property, event payload member, or local function parameter, but
@@ -434,8 +436,8 @@ M4 must encode these concepts in `GameState` rather than infer them from DOM sta
 - Catalog-backed program options: allowed `ProgramOptionId` values per branch, current selection,
   eligibility, and a deterministic simulation-time cooldown deadline.
 - Timed inflammatory episodes, phenotype and program cooldowns, and simulation-time deadlines.
-  M5 defines elapsed-time arithmetic, but every deadline is saved in simulation time rather than
-  wall-clock or UI time.
+  The economy and offline-time model defines elapsed-time arithmetic, while every deadline remains
+  in simulation time rather than wall-clock or UI time.
 - A deterministic event model. State saves the seed and monotonic sequence, or the complete
   event outcome, for mutation offers, microbiome rotations, damage events, and route transit.
   Pending damage/transit events include their `EventId`, source `RegionId` or `RouteId`, and
@@ -451,42 +453,44 @@ callbacks violates the replay and offline requirements.
 
 ### Prestige availability boundary
 
-M4 establishes a declarative `PrestigeAvailability` record keyed by stable `PrestigeId` values.
-It answers only whether a named L1-L4 interface is available to a catalog row, handler, or test;
-it has no currency, reward, reset, or conversion semantics. Before M13, ordinary play uses the
-real all-unavailable or earned-availability record and stops at its appropriate host boundary.
-M9 fast-forward and M12 handler tests may inject a deterministic availability fixture to exercise
-every catalog row, including L3-gated culture behavior, without fabricating a reset or reward.
-M13 remains the sole owner of prestige currencies, rewards, and reset scopes.
+The progression schema establishes a declarative `PrestigeAvailability` record keyed by stable
+`PrestigeId` values. It answers only whether a named L1-L4 interface is available to a catalog
+row, handler, or test; it has no currency, reward, reset, or conversion semantics. Before an L3
+availability is earned, ordinary play uses the real all-unavailable or earned-availability record
+and stops at its appropriate host boundary. Deterministic fast-forward and handler validation may
+inject an availability fixture to exercise every catalog row, including L3-gated culture behavior,
+without fabricating a reset or reward. The prestige domain owns currencies, rewards, and reset
+scopes.
 
-### M9 through M12 constraints
+### Module ownership boundaries
 
-- M9 implements all 12 stage IDs, their gates, UI modes, retired assumptions, and the decision
-  evidence in the stage table. Fast-forward tests supply `PrestigeAvailability` fixtures where
-  needed and must reach every stage.
-- M10 implements the first six branch operations, not rate-multiplier substitutes.
-- M11 makes ATP a stored resource with real sinks and implements visibility, inflammation, and
-  mutation offers as persistent state, not flavor popups.
-- M12 gates plasticity, epigenetic reprogramming, microbiomes, and senescent cells behind the
-  later-stage and later-prestige interfaces specified above. Each writes at least one
-  `MorphologyParams` input: phenotype variance, chromatin texture, surface motifs, or senescent
-  cell shape respectively.
-- M13 owns reset rules and currencies. This document only requires that the progression model
-  expose stable interfaces for later L1 organ tags, L2 host traits, L3 availability, and L4
-  contamination nodes; it does not define their rewards or reset scope.
+- The stage catalog and gates own all 12 `StageId` values, their gates, UI modes, retired
+  assumptions, and the decision evidence in the stage table. Fast-forward validation supplies
+  `PrestigeAvailability` fixtures where needed and reaches every stage.
+- Core-six effects own the first six branch operations as operations, not rate-multiplier
+  substitutes.
+- Extended hallmark effects own ATP as stored resource with real sinks and persist visibility,
+  inflammation, and mutation offers as game state rather than flavor popups.
+- The late-hallmark catalog and handlers gate plasticity, epigenetic reprogramming, microbiomes,
+  and senescent cells behind the later-stage and later-prestige interfaces specified above. Each
+  writes at least one `MorphologyParams` input: phenotype variance, chromatin texture, surface
+  motifs, or senescent cell shape respectively.
+- Prestige projections own reset rules and currencies. The progression model exposes stable
+  interfaces for L1 organ tags, L2 host traits, L3 availability, and L4 contamination nodes; it
+  does not define their rewards or reset scope.
 
-### M9-M12 acceptance matrix
+### Behavioral validation matrix
 
-| Milestone | Fixture or action                                                                                     | Deterministic oracle                                                                                                            |
-| --------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| M9        | Fast-forward event log with explicit availability fixture                                             | All 12 `StageId` values occur in canonical order; every boundary changes a gate, available action set, or feasibility relation. |
-| M10       | One recorded core-six decision and its counterpart from the same baseline                             | Each handler changes its declared state and an operation relation, not only a production scalar.                                |
-| M11       | Save/load and coarse offline replay of ATP, visibility, inflammation, and mutation choices            | Event trace and final state match; a pending mutation `OfferId` persists without redraw.                                        |
-| M12       | Seeded or recorded fixtures for plasticity, program options, microbiome pairs, and senescence failure | Cooldowns, timers, offers, and compatibility replay exactly; each action changes persistent state and a nonvisual operation.    |
+| Owner and behavior                      | Fixture or action                                                                                     | Deterministic oracle                                                                                                            |
+| --------------------------------------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| Stage catalog and gates                 | Fast-forward event log with explicit availability fixture                                             | All 12 `StageId` values occur in canonical order; every boundary changes a gate, available action set, or feasibility relation. |
+| Core-six effects                        | One recorded core-six decision and its counterpart from the same baseline                             | Each handler changes its declared state and an operation relation, not only a production scalar.                                |
+| Extended hallmark state and persistence | Save/load and coarse offline replay of ATP, visibility, inflammation, and mutation choices            | Event trace and final state match; a pending mutation `OfferId` persists without redraw.                                        |
+| Late hallmark mechanics                 | Seeded or recorded fixtures for plasticity, program options, microbiome pairs, and senescence failure | Cooldowns, timers, offers, and compatibility replay exactly; each action changes persistent state and a nonvisual operation.    |
 
 ## Unresolved tuning
 
-The following are parameters for M21 evidence-based calibration. They must remain data, not
+The following are parameters for evidence-based balance calibration. They remain data, not
 implicit constants in branch handlers.
 
 - Stage gate thresholds, target minutes, producer prices, and bulk-buy curve coefficients.
@@ -495,17 +499,17 @@ implicit constants in branch handlers.
 - Route loss probabilities, destination capacities, and phenotype-switch cooldowns.
 - Mutation offer weights, benefit-liability magnitudes, and immune visibility response.
 - Inflammatory duration, microbiome offer rotation, compatibility weights, and senescence upkeep.
-- Exact L3 and L4 availability thresholds. M13 decides prestige identities and reset semantics;
-  M21 verifies that these gates preserve distinct purchasing strategies.
+- Exact L3 and L4 availability thresholds. Prestige projections decide identities and reset
+  semantics; balance calibration verifies that these gates preserve distinct purchasing strategies.
 
 ## Acceptance mapping
 
-| Requirement                 | Contract location                                                                           |
-| --------------------------- | ------------------------------------------------------------------------------------------- |
-| Fourteen canonical branches | [Canonical vocabulary](#canonical-vocabulary)                                               |
-| Distinct mechanic classes   | [Mechanic taxonomy](#mechanic-taxonomy) and [Branch specifications](#branch-specifications) |
-| Player decision change      | Every branch `Decision test`                                                                |
-| Synergies and tensions      | [Synergy and tension network](#synergy-and-tension-network)                                 |
-| Twelve non-reskin stages    | [Canonical stage ladder](#canonical-stage-ladder)                                           |
-| M4 and M9-M12 handoff       | [State and implementation implications](#state-and-implementation-implications)             |
-| Tunable versus settled work | [Unresolved tuning](#unresolved-tuning)                                                     |
+| Requirement                           | Contract location                                                                           |
+| ------------------------------------- | ------------------------------------------------------------------------------------------- |
+| Fourteen canonical branches           | [Canonical vocabulary](#canonical-vocabulary)                                               |
+| Distinct mechanic classes             | [Mechanic taxonomy](#mechanic-taxonomy) and [Branch specifications](#branch-specifications) |
+| Player decision change                | Every branch `Decision test`                                                                |
+| Synergies and tensions                | [Synergy and tension network](#synergy-and-tension-network)                                 |
+| Twelve non-reskin stages              | [Canonical stage ladder](#canonical-stage-ladder)                                           |
+| State, catalog, and effects ownership | [State and implementation implications](#state-and-implementation-implications)             |
+| Tunable versus settled work           | [Unresolved tuning](#unresolved-tuning)                                                     |

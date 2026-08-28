@@ -3,6 +3,13 @@ import test from "node:test";
 
 import { bigNum, eventId, hallmarkId, regionId, routeId, stageId } from "../src/brands.ts";
 import { advanceLiveTick, economyTick } from "../src/economy/tick.ts";
+import { emptyLateHallmarksState } from "../src/hallmarks/late_hallmark_types.ts";
+import {
+  createEmptyHostTransferState,
+  createEmptyLineageLedger,
+  createEmptyMetastasisState,
+} from "../src/prestige/layers.ts";
+import { deriveSeedV1 } from "../src/state/deterministic_random.ts";
 import { recordEvent } from "../src/state/events.ts";
 import { createInitialGameState } from "../src/state/game_state.ts";
 import { parseSave, serializeGameState } from "../src/state/save_load.ts";
@@ -177,7 +184,15 @@ const POPULATED_V2_RECORD = {
 function baseState() {
   const result = parseSave(JSON.stringify(structuredClone(POPULATED_V2_RECORD)));
   assert.equal(result.status, "loaded");
-  return result.state;
+  const { state } = result;
+  return {
+    ...state,
+    lineageLedger: createEmptyLineageLedger(
+      deriveSeedV1("lineage-v1", state.deterministicSeed, state.eventSequence),
+    ),
+    metastasis: createEmptyMetastasisState(),
+    hostTransfer: createEmptyHostTransferState(),
+  };
 }
 
 function clone(value) {
@@ -249,7 +264,7 @@ test("core-six routes every core-six event through one pure projection and one s
       telomeraseCharges: 3,
       reserveFloor: 0,
       telomereReserveByRegion: { r: 0 },
-      senescentRegions: [],
+      lateHallmarks: emptyLateHallmarksState(),
     },
     "replicative_immortality",
   );

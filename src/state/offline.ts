@@ -19,6 +19,10 @@ import {
   projectExtendedHallmarkDurableTickEffects,
   type ExtendedHallmarkDurableTickProjection,
 } from "../hallmarks/extended_hallmark_tick.js";
+import {
+  projectLateHallmarkDurableTickEffects,
+  type LateHallmarkDurableTickProjection,
+} from "../hallmarks/late_hallmark_tick.js";
 
 export const OFFLINE_STEP_MS = 60_000;
 export const MAX_OFFLINE_MS = 604_800_000;
@@ -132,12 +136,24 @@ function projectExtendedHallmarkProjection(
   return expected;
 }
 
+function projectLateHallmarkProjection(
+  raw: unknown,
+  prior: GameState,
+  duration: number,
+): LateHallmarkDurableTickProjection {
+  const expected = projectLateHallmarkDurableTickEffects(prior, duration);
+  if (!exactDataEqual(raw, expected))
+    throw new Error("Offline late-hallmark projection does not match the expected durable effect.");
+  return expected;
+}
+
 type TrustedStepResult = Readonly<{
   resourceSnapshot: unknown;
   stageEligibility: unknown;
   prestigeEligibility: unknown;
   stateProjection?: unknown;
   extendedHallmarkProjection?: unknown;
+  lateHallmarkProjection?: unknown;
 }>;
 
 /** ASVS 15.3.3/15.3.5/15.3.6/16.5.3: reject unsafe adapter records before any field is read. */
@@ -147,7 +163,11 @@ function trustedStepResult(raw: unknown): TrustedStepResult {
     baseKeys,
     [...baseKeys, "stateProjection"],
     [...baseKeys, "extendedHallmarkProjection"],
+    [...baseKeys, "lateHallmarkProjection"],
     [...baseKeys, "stateProjection", "extendedHallmarkProjection"],
+    [...baseKeys, "stateProjection", "lateHallmarkProjection"],
+    [...baseKeys, "extendedHallmarkProjection", "lateHallmarkProjection"],
+    [...baseKeys, "stateProjection", "extendedHallmarkProjection", "lateHallmarkProjection"],
   ];
   let withProjection: Record<string, unknown> | undefined;
   for (const keys of candidates) {
@@ -164,6 +184,7 @@ function trustedStepResult(raw: unknown): TrustedStepResult {
     prestigeEligibility: withProjection.prestigeEligibility,
     stateProjection: withProjection.stateProjection,
     extendedHallmarkProjection: withProjection.extendedHallmarkProjection,
+    lateHallmarkProjection: withProjection.lateHallmarkProjection,
   };
 }
 
@@ -430,11 +451,25 @@ export function replayOffline(
                 duration,
               ),
             };
+      const lateHallmarkProjected =
+        result.lateHallmarkProjection === undefined
+          ? extendedHallmarkProjected
+          : {
+              ...extendedHallmarkProjected,
+              lateHallmarks: {
+                ...extendedHallmarkProjected.lateHallmarks,
+                microbiome: projectLateHallmarkProjection(
+                  result.lateHallmarkProjection,
+                  working,
+                  duration,
+                ).microbiome,
+              },
+            };
       const elapsedSoFar = working.totalOfflineMs + duration;
       if (!natural(elapsedSoFar)) throw new Error("Offline elapsed state is invalid.");
       working = {
         ...working,
-        ...extendedHallmarkProjected,
+        ...lateHallmarkProjected,
         ...resourceSnapshot,
         totalOfflineMs: elapsedSoFar,
       };

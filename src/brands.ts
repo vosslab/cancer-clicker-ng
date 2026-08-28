@@ -9,6 +9,8 @@ import type {
   MicrobiomeOfferId,
   MicrobiomePoolId,
   MutationId,
+  OrganSiteId,
+  OrganTagId,
   OfferId,
   PrestigeId,
   ProducerId,
@@ -16,6 +18,19 @@ import type {
   RegionId,
   RouteId,
   StageId,
+  ColonizationProgramId,
+  LineageBoonId,
+  HostDraftId,
+  HostCardId,
+  HostTraitId,
+  HostRunId,
+  PassageUpgradeId,
+  CryobankProgramId,
+  NetworkNodeId,
+  NetworkEdgeId,
+  NetworkFrontierId,
+  DisseminationMandateId,
+  NetworkCampaignId,
 } from "./types/ids.js";
 
 function requireIdentifier(value: string, label: string): string {
@@ -77,6 +92,51 @@ export function microbiomeNicheId(value: string): MicrobiomeNicheId {
 }
 export function microbiomeOfferId(value: string): MicrobiomeOfferId {
   return requireIdentifier(value, "MicrobiomeOfferId") as MicrobiomeOfferId;
+}
+export function organSiteId(value: string): OrganSiteId {
+  return requireIdentifier(value, "OrganSiteId") as OrganSiteId;
+}
+export function organTagId(value: string): OrganTagId {
+  return requireIdentifier(value, "OrganTagId") as OrganTagId;
+}
+export function colonizationProgramId(value: string): ColonizationProgramId {
+  return requireIdentifier(value, "ColonizationProgramId") as ColonizationProgramId;
+}
+export function lineageBoonId(value: string): LineageBoonId {
+  return requireIdentifier(value, "LineageBoonId") as LineageBoonId;
+}
+export function hostDraftId(value: string): HostDraftId {
+  return requireIdentifier(value, "HostDraftId") as HostDraftId;
+}
+export function hostCardId(value: string): HostCardId {
+  return requireIdentifier(value, "HostCardId") as HostCardId;
+}
+export function hostTraitId(value: string): HostTraitId {
+  return requireIdentifier(value, "HostTraitId") as HostTraitId;
+}
+export function hostRunId(value: string): HostRunId {
+  return requireIdentifier(value, "HostRunId") as HostRunId;
+}
+export function passageUpgradeId(value: string): PassageUpgradeId {
+  return requireIdentifier(value, "PassageUpgradeId") as PassageUpgradeId;
+}
+export function cryobankProgramId(value: string): CryobankProgramId {
+  return requireIdentifier(value, "CryobankProgramId") as CryobankProgramId;
+}
+export function networkNodeId(value: string): NetworkNodeId {
+  return requireIdentifier(value, "NetworkNodeId") as NetworkNodeId;
+}
+export function networkEdgeId(value: string): NetworkEdgeId {
+  return requireIdentifier(value, "NetworkEdgeId") as NetworkEdgeId;
+}
+export function networkFrontierId(value: string): NetworkFrontierId {
+  return requireIdentifier(value, "NetworkFrontierId") as NetworkFrontierId;
+}
+export function disseminationMandateId(value: string): DisseminationMandateId {
+  return requireIdentifier(value, "DisseminationMandateId") as DisseminationMandateId;
+}
+export function networkCampaignId(value: string): NetworkCampaignId {
+  return requireIdentifier(value, "NetworkCampaignId") as NetworkCampaignId;
 }
 
 export function bigNum(mantissa: number, exponent: number): BigNum {

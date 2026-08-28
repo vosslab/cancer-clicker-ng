@@ -2,6 +2,14 @@ import { bigNum, stageId } from "../brands.js";
 import type { GameState } from "../types/state.js";
 import { STAGE_ONE_PRODUCERS } from "../economy/producers.js";
 import { emptyLateHallmarksState } from "../hallmarks/late_hallmark_types.js";
+import {
+  createEmptyHostTransferState,
+  createEmptyLineageLedger,
+  createEmptyMetastasisState,
+} from "../prestige/layers.js";
+import { createEmptyCultureState } from "../prestige/culture.js";
+import { createEmptyNetworkState } from "../prestige/network.js";
+import { deriveSeedV1 } from "./deterministic_random.js";
 
 /** Creates the one canonical state shape; mechanics fill these durable fields in later milestones. */
 export function createInitialGameState(): GameState {
@@ -48,6 +56,11 @@ export function createInitialGameState(): GameState {
     mutationLiabilities: [],
     genomeBurden: 0,
     lateHallmarks: emptyLateHallmarksState(),
+    lineageLedger: createEmptyLineageLedger(deriveSeedV1("lineage-v1", 0, 0)),
+    metastasis: createEmptyMetastasisState(),
+    hostTransfer: createEmptyHostTransferState(),
+    culture: createEmptyCultureState(),
+    network: createEmptyNetworkState(),
     pendingDamageEvents: [],
     pendingTransitEvents: [],
     deterministicSeed: 0,
@@ -55,7 +68,7 @@ export function createInitialGameState(): GameState {
     prestigeAvailability: [],
     totalOfflineMs: 0,
     numberFormat: "short",
-    endingReached: false,
+    ending: { phase: "unreached" },
   };
 }
 

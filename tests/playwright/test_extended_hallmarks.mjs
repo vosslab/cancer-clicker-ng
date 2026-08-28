@@ -1,6 +1,13 @@
 import { expect, test } from "@playwright/test";
 
-import { extendedHallmarkBrowserFixtureSave } from "../extended_hallmark_browser_fixture.mjs";
+import {
+  extendedHallmarkBrowserFixture,
+  extendedHallmarkBrowserFixtureSave,
+} from "../extended_hallmark_browser_fixture.mjs";
+import { stageId } from "../../src/brands.ts";
+import { projectLateHallmarkDurableTickEffects } from "../../src/hallmarks/late_hallmark_tick.ts";
+import { perfusionMaintenanceAtpDebit } from "../../src/hallmarks/handlers/perfusion_layout.ts";
+import { serializeGameState } from "../../src/state/save_load.ts";
 
 const SAVE_KEY = "cancer-clicker-ng.save.v2";
 const EXTENDED_HALLMARK_HEADINGS = [
@@ -8,6 +15,12 @@ const EXTENDED_HALLMARK_HEADINGS = [
   "Avoiding immune destruction",
   "Tumor-promoting inflammation",
   "Genome instability and mutation",
+];
+const LATE_HALLMARK_HEADINGS = [
+  "Unlocking phenotypic plasticity",
+  "Nonmutational epigenetic reprogramming",
+  "Polymorphic microbiomes",
+  "Senescent cells",
 ];
 
 function installDiagnostics(page) {
@@ -28,6 +41,41 @@ async function seedFixture(page) {
       if (window.sessionStorage.getItem("extended-hallmark-fixture-seeded") !== "1") {
         window.localStorage.setItem(key, value);
         window.sessionStorage.setItem("extended-hallmark-fixture-seeded", "1");
+      }
+    },
+    { key: SAVE_KEY, value: raw },
+  );
+}
+
+function lateMicrobiomeFixtureSave() {
+  const fixture = extendedHallmarkBrowserFixture();
+  const activated = {
+    ...fixture,
+    currentStage: stageId("global_lab_contamination"),
+    hallmarkLevels: fixture.hallmarkLevels.map((level) =>
+      level.id === "polymorphic_microbiomes" ? { ...level, level: 1 } : level,
+    ),
+  };
+  const durableTick = projectLateHallmarkDurableTickEffects(activated, 1);
+  const state = {
+    ...activated,
+    lateHallmarks: {
+      ...activated.lateHallmarks,
+      microbiome: durableTick.microbiome,
+    },
+  };
+  return serializeGameState(state, 1_000);
+}
+
+async function seedLateMicrobiomeFixture(page) {
+  const envelope = JSON.parse(lateMicrobiomeFixtureSave());
+  envelope.savedAtMs = Date.now();
+  const raw = JSON.stringify(envelope);
+  await page.addInitScript(
+    ({ key, value }) => {
+      if (window.sessionStorage.getItem("late-microbiome-fixture-seeded") !== "1") {
+        window.localStorage.setItem(key, value);
+        window.sessionStorage.setItem("late-microbiome-fixture-seeded", "1");
       }
     },
     { key: SAVE_KEY, value: raw },
@@ -59,6 +107,17 @@ test("extended-hallmark real Solid controls expose ATP conversion and all four d
   const diagnostics = installDiagnostics(page);
   await seedFixture(page);
   await page.goto("/?debug=1");
+  const tree = page.getByRole("region", { name: "The core six capabilities" });
+  await expect(
+    tree.getByRole("heading", {
+      name: "Plasticity, programs, microbiomes, and senescence",
+    }),
+  ).toBeVisible();
+  for (const heading of LATE_HALLMARK_HEADINGS) {
+    const row = branchRow(page, heading);
+    await expect(row.locator(".hallmark-status")).toHaveText("Locked");
+    await expect(row).toContainText("Unlocks at");
+  }
   await acquireAllExtendedHallmarks(page);
 
   const metabolic = branchRow(page, EXTENDED_HALLMARK_HEADINGS[0]);
@@ -82,15 +141,23 @@ test("extended-hallmark real Solid controls expose ATP conversion and all four d
   await expect(metabolic).toContainText(
     "Vessel maintenance: insufficient reserve for all active links",
   );
-  await expect(metabolic).toContainText(/Reserve 25 units per link; maintenance debits 1 ATP/);
-  await expect(metabolic).toContainText(/Required 50, allocated 0/);
+  const vesselFixture = extendedHallmarkBrowserFixture();
+  const activeLinkCount = vesselFixture.regions.reduce(
+    (count, region) => count + region.vesselLinkIds.length,
+    0,
+  );
+  const vesselDebit = perfusionMaintenanceAtpDebit(vesselFixture, activeLinkCount);
+  const vesselRequired = vesselDebit * 25;
+  await expect(metabolic).toContainText(
+    `Reserve 25 units per ATP of current maintenance. This run debits ${vesselDebit} ATP per second across ${activeLinkCount} links. Required ${vesselRequired}, allocated 0.`,
+  );
   const vesselMaintenance = page.getByLabel("Vessel maintenance ATP allocation");
   await vesselMaintenance.fill("50");
   await vesselMaintenance.press("Tab");
   await expect(metabolic).toContainText("Vessel maintenance: reserved for every active link");
   await expect(metabolic).toContainText(/Producer acceleration: active:/);
-  await expect(metabolic).toContainText(/Required 50, allocated 50/);
-  expect((await savedState(page)).atpBudget["vessel-maintenance"]).toBe(50);
+  await expect(metabolic).toContainText(`Required ${vesselRequired}, allocated ${vesselRequired}.`);
+  expect((await savedState(page)).atpBudget["vessel-maintenance"]).toBe(vesselRequired);
   const mycBefore = await page.locator('[data-producer-id="myc"] .cost-note').textContent();
   await page.getByRole("button", { name: "Fast-forward 60 seconds" }).click();
   const mycAfter = await page.locator('[data-producer-id="myc"] .cost-note').textContent();
@@ -143,6 +210,32 @@ test("extended-hallmark real Solid controls expose ATP conversion and all four d
   const reloaded = await savedState(page);
   expect(reloaded.chosenMutations).toEqual([selectedId]);
   expect(reloaded.mutationLiabilities).toEqual([selectedId]);
+  expect(diagnostics).toEqual([]);
+});
+
+test("late microbiome keyboard choice persists its active composition and consumes its saved offer", async ({
+  page,
+}) => {
+  const diagnostics = installDiagnostics(page);
+  await seedLateMicrobiomeFixture(page);
+  await page.goto("/");
+
+  const microbiome = branchRow(page, "Polymorphic microbiomes");
+  const install = microbiome.getByRole("button", { name: /^Install .+ composition$/ }).first();
+  await expect(install).toBeEnabled();
+  await install.focus();
+  await page.keyboard.press("Enter");
+  await expect(microbiome.getByText(/Active composition:/)).toBeVisible();
+  await expect(microbiome.getByText(/No saved microbiome offer is pending/).first()).toBeVisible();
+  await expect(microbiome.getByRole("button", { name: /^Install .+ composition$/ })).toHaveCount(0);
+
+  const installed = (await savedState(page)).lateHallmarks.microbiome.activeComposition;
+  expect(installed).not.toBeNull();
+  await page.reload();
+  await expect(microbiome.getByText(/Active composition:/)).toBeVisible();
+  await expect(microbiome.getByText(/No saved microbiome offer is pending/).first()).toBeVisible();
+  await expect(microbiome.getByRole("button", { name: /^Install .+ composition$/ })).toHaveCount(0);
+  expect((await savedState(page)).lateHallmarks.microbiome.activeComposition).toEqual(installed);
   expect(diagnostics).toEqual([]);
 });
 

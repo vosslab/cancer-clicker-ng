@@ -151,6 +151,17 @@ function depthSummary(scene: ColonySceneRequest): string {
   return `${summary} depth layers`;
 }
 
+function endingSummary(scene: ColonySceneRequest): string {
+  const ending = scene.visual.ending;
+  if (ending.mode !== "chicago-scale") return "";
+  const siteWord = ending.connectedSiteCount === 1 ? "site marker" : "site markers";
+  return (
+    ` Reached Chicago-scale presentation adds a stylized lake edge, river, street grid, and ` +
+    `${ending.connectedSiteCount} connected ${siteWord}; curved dissemination routes still begin ` +
+    `at accepted colony anchors.`
+  );
+}
+
 /** Returns concise stable text for one validated, immutable colony illustration. */
 export function describeColonyScene(value: ColonySceneRequest): ColonySceneDescription {
   const scene = createColonySceneRequest(value);
@@ -158,10 +169,14 @@ export function describeColonyScene(value: ColonySceneRequest): ColonySceneDescr
   assertAcceptedGeometry(scene);
   const copy = copyForStage(scene.stageId);
   const metrics = scene.layout.metrics;
-  const title = `${copy.label}: stylized colony composition`;
+  const title =
+    scene.visual.ending.mode === "chicago-scale"
+      ? `${copy.label}: Chicago-scale colony composition`
+      : `${copy.label}: stylized colony composition`;
   const description =
     `${copy.label} is a fictional game illustration showing ${copy.focus}. ` +
     `Its accepted layout has ${metrics.componentCount} connected groups, ${metrics.voidCount} ` +
-    `structured voids, and ${depthSummary(scene)}. This is a stylized visual abstraction.`;
+    `structured voids, and ${depthSummary(scene)}. This is a stylized visual abstraction.` +
+    endingSummary(scene);
   return Object.freeze({ title, description, caption: copy.caption });
 }

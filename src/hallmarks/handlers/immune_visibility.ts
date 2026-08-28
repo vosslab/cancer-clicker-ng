@@ -10,9 +10,23 @@ import type {
 } from "../extended_hallmark_types.js";
 import type { GameState, RegionState } from "../../types/state.js";
 import { extendedHallmarkMaskTokenCost } from "../extended_hallmark_effects.js";
+import { effectiveLateHallmarkImmuneVisibility } from "../late_hallmark_effects.js";
+import { prestigeImmuneVisibility } from "../../prestige/effects.js";
 
 export const MAX_CONCEALMENT_TOKENS = 12;
 export const CONCEALMENT_TOKEN_COST = 1;
+
+/** Read-only operational visibility; the handler retains ownership of the saved choice map. */
+export function effectiveImmuneVisibility(
+  state: GameState,
+  regionId: SetRegionMaskOperation["regionId"],
+): number {
+  return prestigeImmuneVisibility(
+    state,
+    regionId,
+    effectiveLateHallmarkImmuneVisibility(state, regionId),
+  );
+}
 
 function natural(value: unknown): value is number {
   return typeof value === "number" && Number.isSafeInteger(value) && value >= 0;

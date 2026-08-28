@@ -1,4 +1,4 @@
-import { hallmarkId, stageId } from "../src/brands.js";
+import { hallmarkId, organSiteId, stageId } from "../src/brands.js";
 import { recordEvent } from "../src/state/events.js";
 import { createInitialGameState } from "../src/state/game_state.js";
 import type { LoadResult } from "../src/state/save_load.js";
@@ -9,7 +9,7 @@ import type {
   AdvanceStageEvent,
   ApplyOfflineAccrualEvent,
   GameEvent,
-  PerformPrestigeResetEvent,
+  PerformMetastasisResetEvent,
   SetNumberFormatEvent,
 } from "../src/types/events.js";
 import type { GameState } from "../src/types/state.js";
@@ -113,7 +113,7 @@ export const LOAD_RESULT_CONTRACT_PROBE = {
   notices: [],
   version: 2,
   savedAtMs: 0,
-  progressionVersion: 5,
+  progressionVersion: 8,
 } satisfies LoadResult;
 const _LEGACY_LOADED_RESULT_PROBE = {
   ...LOAD_RESULT_CONTRACT_PROBE,
@@ -146,8 +146,20 @@ export function describeGameEvent(event: GameEvent): string {
       return `purchase hallmark ${event.hallmarkId}`;
     case "advance-stage":
       return `advance stage ${event.fromStageId} to ${event.toStageId}`;
-    case "perform-prestige-reset":
-      return "prestige availability boundary";
+    case "resolve-transit":
+      return `resolve transit ${event.transitEventId} at ${event.destinationSiteId}`;
+    case "perform-metastasis-reset":
+      return "perform metastasis reset";
+    case "allocate-organ-site":
+      return `allocate organ site ${event.siteId}`;
+    case "select-colonization-program":
+      return `select ${event.programId} at ${event.siteId}`;
+    case "purchase-lineage-boon":
+      return `purchase lineage boon ${event.boonId}`;
+    case "perform-host-transfer":
+      return "perform host transfer";
+    case "select-host-card":
+      return `select host card ${event.cardId}`;
     case "apply-offline-accrual":
       return `offline accrual ${event.elapsedMs}`;
     case "set-number-format":
@@ -184,6 +196,28 @@ export function describeGameEvent(event: GameEvent): string {
       return `install ${event.compositionId} from ${event.offerId}`;
     case "resolve-senescence-decision":
       return `resolve senescence ${event.decisionId} with ${event.action}`;
+    case "perform-immortalization":
+      return `immortalize through ${event.cryobankProgramId}`;
+    case "purchase-passage-upgrade":
+      return `purchase passage upgrade ${event.upgradeId}`;
+    case "select-cryobank-program":
+      return `select cryobank program ${event.cryobankProgramId}`;
+    case "establish-dissemination-node":
+      return `establish dissemination node ${event.nodeId}`;
+    case "commit-dissemination-edge":
+      return `commit dissemination edge ${event.edgeId}`;
+    case "choose-dissemination-mandate":
+      return `choose dissemination mandate ${event.mandateId}`;
+    case "stabilize-network-node":
+      return `stabilize network node ${event.nodeId}`;
+    case "collect-transmission-pressure":
+      return `collect transmission pressure from ${event.nodeId}`;
+    case "queue-assay-producer-action":
+      return `queue assay producer ${event.producerId}`;
+    case "select-containment-node":
+      return `contain node ${event.nodeId}`;
+    case "reach-soft-ending":
+      return "reach soft ending";
     default: {
       const exhaustiveEvent: never = event;
       return exhaustiveEvent;
@@ -217,18 +251,20 @@ function runStageTransitionSlice(): GameState {
 }
 
 function runPrestigeAvailabilityBoundarySlice(): string {
-  const event: PerformPrestigeResetEvent = {
-    type: "perform-prestige-reset",
+  const event: PerformMetastasisResetEvent = {
+    type: "perform-metastasis-reset",
+    siteId: organSiteId("liver"),
+    sourceEventSequence: 0,
     atMs: 3,
   };
   try {
     recordEvent(createInitialGameState(), event);
   } catch (error) {
-    if (error instanceof Error && error.message === "Prestige reset is unavailable before M13.")
-      return "unavailable-before-M13";
+    if (error instanceof Error && error.message === "Metastasis reset is unavailable.")
+      return "unavailable-before-L1";
     throw error;
   }
-  throw new Error("Prestige reset unexpectedly succeeded before M13.");
+  throw new Error("Metastasis reset unexpectedly succeeded before L1.");
 }
 
 function runOfflineAccrualSlice(): GameState {

@@ -12,6 +12,7 @@ import { Cell } from "./cell.js";
 import { createColonySvgDefinitions, localSvgReference } from "./defs.js";
 import type { SvgDefinition, SvgDefinitionNode } from "./defs.js";
 import { describeColonyScene } from "./describe.js";
+import { EndingOverlay } from "./ending_overlay.js";
 import {
   HallmarkOverlays,
   InvasionOverlays,
@@ -149,6 +150,7 @@ export function Colony(props: ColonyProps): JSX.Element {
           d="M 0 562 C 202 508 410 624 622 558 S 838 504 1000 584"
         />
       </g>
+      <EndingOverlay scene={scene()} />
       <g class="colony-figure__silhouette-regions" aria-hidden="true" pointer-events="none">
         <polygon
           class="colony-figure__silhouette"

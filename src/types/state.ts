@@ -1,15 +1,15 @@
 import type { BigNum } from "./bignum.js";
 import type { MutationDraftOffer } from "../hallmarks/extended_hallmark_types.js";
 import type { LateHallmarksState } from "../hallmarks/late_hallmark_types.js";
+import type { HostTransferState, LineageLedger, MetastasisState } from "../prestige/layers.js";
+import type { CultureState } from "../prestige/culture.js";
+import type { NetworkState } from "../prestige/network.js";
 import type {
   EventId,
   HallmarkId,
-  MicrobiomePoolId,
   MutationId,
-  OfferId,
   PrestigeId,
   ProducerId,
-  ProgramOptionId,
   RegionId,
   RouteId,
   StageId,
@@ -20,7 +20,6 @@ export type SignalingAllocation = "burst" | "cycle";
 export type CheckpointId = "contact-inhibition" | "nutrient-arrest" | "damage-arrest";
 export type TriageAction = "absorb" | "repair" | "lose-region";
 export type Phenotype = "proliferative" | "migratory" | "stress-tolerant";
-export type SenescenceAction = "keep" | "clear";
 export type ProducerLevel = Readonly<{ id: ProducerId; level: number }>;
 export type HallmarkLevel = Readonly<{ id: HallmarkId; level: number }>;
 /** Declarative only: M13 owns currencies, rewards, and reset behavior. */
@@ -49,24 +48,17 @@ export type PendingTransitEvent = Readonly<{
   outcome: "arrived" | "lost";
 }>;
 export type InflammationEpisode = Readonly<{ id: EventId; regionId: RegionId; deadlineMs: number }>;
-export type ProgramState = Readonly<{
-  allowedByHallmark: Readonly<Record<string, readonly ProgramOptionId[]>>;
-  selectedByHallmark: Readonly<Record<string, ProgramOptionId>>;
-  eligibleHallmarks: readonly HallmarkId[];
-  cooldownDeadlineMs: number | null;
-}>;
-export type MicrobiomeState = Readonly<{
-  poolId?: MicrobiomePoolId;
-  offerIds: readonly OfferId[];
-  seed: number;
-  sequence: number;
-  rotationCounter: number;
-  rotationDeadlineMs: number | null;
-  pendingCompatibility: "compatible" | "incompatible" | null;
-  selectedNiches: readonly OfferId[];
-  compatibilitySnapshot: readonly OfferId[];
-}>;
-
+/** Durable evidence for the optional Chicago scale presentation mode. */
+export type SoftEndingState =
+  | Readonly<{ phase: "unreached" }>
+  | Readonly<{
+      phase: "reached";
+      reachedAtActiveMs: number;
+      sourceEventSequence: number;
+      reachedCells: BigNum;
+      reachedNetworkTier: number;
+    }>;
+/** Durable evidence for the optional Chicago scale presentation mode. */
 /** The serializable, authoritative game state. All deadlines use simulation time. */
 export type GameState = Readonly<{
   cells: BigNum;
@@ -117,6 +109,16 @@ export type GameState = Readonly<{
   mutationLiabilities: readonly MutationId[];
   genomeBurden: number;
   lateHallmarks: LateHallmarksState;
+  /** Reset-surviving lineage facts; the reducer is its only writer. */
+  lineageLedger: LineageLedger;
+  /** L1 currency and portfolio only. */
+  metastasis: MetastasisState;
+  /** L2 currency and host/draft state only. */
+  hostTransfer: HostTransferState;
+  /** L3 passage currency and chosen culture translation only. */
+  culture: CultureState;
+  /** L4 topology and Pressure only; lineage history remains in LineageLedger. */
+  network: NetworkState;
   pendingDamageEvents: readonly PendingDamageEvent[];
   pendingTransitEvents: readonly PendingTransitEvent[];
   deterministicSeed: number;
@@ -124,7 +126,8 @@ export type GameState = Readonly<{
   prestigeAvailability: readonly PrestigeAvailability[];
   totalOfflineMs: number;
   numberFormat: NumberFormat;
-  endingReached: boolean;
+  /** Presentation-only progression. It never alters economy or prestige balances. */
+  ending: SoftEndingState;
 }>;
 
 export type BigNumKeys<T> = {

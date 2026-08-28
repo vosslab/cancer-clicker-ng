@@ -25,6 +25,11 @@ import {
   type ExtendedHallmarkDurableTickProjection,
 } from "../hallmarks/extended_hallmark_tick.js";
 import { extendedHallmarkRouteDiscoveryGainPerSecond } from "../hallmarks/extended_hallmark_effects.js";
+import {
+  projectLateHallmarkDurableTickEffects,
+  type LateHallmarkDurableTickProjection,
+} from "../hallmarks/late_hallmark_tick.js";
+import { isLateHallmarkOperational } from "../hallmarks/late_hallmark_effects.js";
 
 function natural(value: number): boolean {
   return Number.isSafeInteger(value) && value >= 0;
@@ -41,6 +46,8 @@ export type EconomyStepResult = Readonly<{
   stateProjection?: ElapsedHallmarkDurableProjection;
   /** extended-hallmark is independently verified by offline replay before these three durable fields are merged. */
   extendedHallmarkProjection?: ExtendedHallmarkDurableTickProjection;
+  /** M12 owns only the microbiome offer/deadline/sequence aggregate projection. */
+  lateHallmarkProjection?: LateHallmarkDurableTickProjection;
 }>;
 export type OfflineStepResult = EconomyStepResult;
 export type EconomyTick = (
@@ -78,6 +85,7 @@ export const applyEconomyTick: EconomyTick = function applyEconomyTick(
       prestigeEligibility: [],
     };
   const extendedHallmarkProjection = projectExtendedHallmarkDurableTickEffects(state, elapsedMs);
+  const lateHallmarkProjection = projectLateHallmarkDurableTickEffects(state, elapsedMs);
   const mutationDraftCharge = extendedHallmarkProjectionCreatesOffer(
     state,
     extendedHallmarkProjection,
@@ -157,6 +165,9 @@ export const applyEconomyTick: EconomyTick = function applyEconomyTick(
     extendedHallmarkProjection.routeDiscoveryProgress !== state.routeDiscoveryProgress
       ? { extendedHallmarkProjection }
       : {}),
+    ...(isLateHallmarkOperational(state, "polymorphic_microbiomes")
+      ? { lateHallmarkProjection }
+      : {}),
   };
 };
 export const economyTick = applyEconomyTick;
@@ -190,6 +201,14 @@ export function advanceLiveTick(state: RuntimeState, nowMs: number): RuntimeStat
     ...state.game,
     ...result.stateProjection,
     ...result.extendedHallmarkProjection,
+    ...(result.lateHallmarkProjection === undefined
+      ? {}
+      : {
+          lateHallmarks: {
+            ...(result.stateProjection?.lateHallmarks ?? state.game.lateHallmarks),
+            microbiome: result.lateHallmarkProjection.microbiome,
+          },
+        }),
     ...result.resourceSnapshot,
     activeTimeMs,
     pendingProgression: [...state.game.pendingProgression, ...newStageProgression],

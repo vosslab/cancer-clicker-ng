@@ -27,6 +27,20 @@ import { array, exact, finite, identifier, natural, object, unique } from "./gua
 const LATE_HALLMARK_KEYS = ["plasticity", "epigenetic", "microbiome", "senescence"] as const;
 const MAX_LATE_RECORDS = 256;
 
+function isCanonicalOrder<T>(
+  values: readonly T[],
+  compare: (left: T, right: T) => number,
+): boolean {
+  return values.every((value, index) => index === 0 || compare(values[index - 1]!, value) <= 0);
+}
+
+function byCreatedId(
+  left: Readonly<{ id: string; createdAtMs: number }>,
+  right: Readonly<{ id: string; createdAtMs: number }>,
+): number {
+  return left.createdAtMs - right.createdAtMs || String(left.id).localeCompare(String(right.id));
+}
+
 function exactShape(value: unknown, keys: readonly string[]): value is Record<string, unknown> {
   return object(value) && Object.keys(value).length === keys.length && exact(value, keys);
 }
@@ -46,7 +60,8 @@ function effects(value: unknown): value is MicrobiomeEffects {
 
 /** Rebuild a catalog-owned snapshot only after every displayed field matches it exactly. */
 function composition(value: unknown): MicrobiomeCompositionSnapshot | undefined {
-  if (!exactShape(value, ["id", "niches", "compatibility"]) || !identifier(value.id)) return undefined;
+  if (!exactShape(value, ["id", "niches", "compatibility"]) || !identifier(value.id))
+    return undefined;
   const catalog = findMicrobiomeComposition(microbiomeCompositionId(value.id));
   if (catalog === undefined) return undefined;
   const niches = array(value.niches);
@@ -62,7 +77,8 @@ function composition(value: unknown): MicrobiomeCompositionSnapshot | undefined 
       catalog.compatibility.effects.substrateConversionMultiplier ||
     savedCompatibility.effects.inflammationDurationMultiplier !==
       catalog.compatibility.effects.inflammationDurationMultiplier ||
-    savedCompatibility.effects.immuneVisibilityDelta !== catalog.compatibility.effects.immuneVisibilityDelta
+    savedCompatibility.effects.immuneVisibilityDelta !==
+      catalog.compatibility.effects.immuneVisibilityDelta
   )
     return undefined;
   for (let index = 0; index < 2; index += 1) {
@@ -75,8 +91,10 @@ function composition(value: unknown): MicrobiomeCompositionSnapshot | undefined 
       saved.nicheId !== expected.nicheId ||
       saved.communityId !== expected.communityId ||
       saved.label !== expected.label ||
-      saved.effects.substrateConversionMultiplier !== expected.effects.substrateConversionMultiplier ||
-      saved.effects.inflammationDurationMultiplier !== expected.effects.inflammationDurationMultiplier ||
+      saved.effects.substrateConversionMultiplier !==
+        expected.effects.substrateConversionMultiplier ||
+      saved.effects.inflammationDurationMultiplier !==
+        expected.effects.inflammationDurationMultiplier ||
       saved.effects.immuneVisibilityDelta !== expected.effects.immuneVisibilityDelta
     )
       return undefined;
@@ -110,8 +128,7 @@ function offer(value: unknown, clock: number): MicrobiomeOfferSnapshot | undefin
   const compositions = source.map(composition);
   if (compositions.some((entry): entry is undefined => entry === undefined)) return undefined;
   const parsedCompositions = compositions as readonly MicrobiomeCompositionSnapshot[];
-  if (!unique(parsedCompositions.map((entry) => String(entry.id))))
-    return undefined;
+  if (!unique(parsedCompositions.map((entry) => String(entry.id)))) return undefined;
   const poolId = microbiomePoolId(value.poolId);
   if (!isMicrobiomePool(poolId)) return undefined;
   return {
@@ -149,7 +166,12 @@ function assignments(
       return undefined;
     result.push({ hallmarkId: target, optionId: option.id });
   }
-  return unique(result.map((entry) => String(entry.hallmarkId))) ? result : undefined;
+  return unique(result.map((entry) => String(entry.hallmarkId))) &&
+    isCanonicalOrder(result, (left, right) =>
+      String(left.hallmarkId).localeCompare(String(right.hallmarkId)),
+    )
+    ? result
+    : undefined;
 }
 
 function activeComposition(value: unknown): ActiveMicrobiomeComposition | null | undefined {
@@ -196,7 +218,7 @@ function pendingDecisions(
       createdAtMs: entry.createdAtMs,
     });
   }
-  return result;
+  return isCanonicalOrder(result, byCreatedId) ? result : undefined;
 }
 
 function retainedRecords(
@@ -228,7 +250,14 @@ function retainedRecords(
       retainedAtMs: entry.retainedAtMs,
     });
   }
-  return result;
+  return isCanonicalOrder(result, (left, right) =>
+    byCreatedId(
+      { id: String(left.decisionId), createdAtMs: left.createdAtMs },
+      { id: String(right.decisionId), createdAtMs: right.createdAtMs },
+    ),
+  )
+    ? result
+    : undefined;
 }
 
 /**
@@ -272,15 +301,20 @@ export function parseLateHallmarks(
     !(epigenetic.cooldownDeadlineMs === null || natural(epigenetic.cooldownDeadlineMs))
   )
     return undefined;
-  const pendingOffer = microbiome.pendingOffer === null ? null : offer(microbiome.pendingOffer, clock);
+  const pendingOffer =
+    microbiome.pendingOffer === null ? null : offer(microbiome.pendingOffer, clock);
   const active = activeComposition(microbiome.activeComposition);
   if (
     pendingOffer === undefined ||
     active === undefined ||
+    (active !== null && active.installedAtMs > clock) ||
     !natural(microbiome.rotationSequence) ||
     !(microbiome.nextRotationDeadlineMs === null || natural(microbiome.nextRotationDeadlineMs)) ||
-    (pendingOffer === null) !== (microbiome.nextRotationDeadlineMs === null) ||
-    (pendingOffer !== null && microbiome.nextRotationDeadlineMs !== pendingOffer.expiresAtMs)
+    (pendingOffer !== null && microbiome.nextRotationDeadlineMs !== pendingOffer.expiresAtMs) ||
+    (pendingOffer === null && active === null && microbiome.nextRotationDeadlineMs !== null) ||
+    (pendingOffer === null &&
+      active !== null &&
+      (microbiome.nextRotationDeadlineMs === null || microbiome.nextRotationDeadlineMs <= clock))
   )
     return undefined;
   const pending = pendingDecisions(senescence.pendingDecisions, regionIds, clock);
@@ -295,7 +329,12 @@ export function parseLateHallmarks(
     !unique([
       ...pending.map((entry) => String(entry.regionId)),
       ...retained.map((entry) => String(entry.regionId)),
-    ])
+    ]) ||
+    Object.keys(cooldowns).some(
+      (region) =>
+        pending.some((decision) => decision.regionId === region) ||
+        retained.some((record) => record.regionId === region),
+    )
   )
     return undefined;
   return {

@@ -7,6 +7,7 @@ import {
   extendedHallmarkDefinition,
 } from "./extended_hallmark_catalog.js";
 import type { AtpSinkId } from "./extended_hallmark_types.js";
+import { perfusionMaintenanceAtpDebit } from "./handlers/perfusion_layout.js";
 
 const ACCELERATION_SINK: AtpSinkId = "acceleration";
 const MAXIMUM_ACCELERATION_BUDGET = 100;
@@ -81,13 +82,14 @@ function vesselMaintenanceDebit(state: GameState): number {
   if (!ownsAngiogenesis(state)) return 0;
   const linkedCount = state.regions.filter((region) => region.vesselLinkIds.length > 0).length;
   if (linkedCount === 0) return 0;
+  const maintenanceDebit = perfusionMaintenanceAtpDebit(state, linkedCount);
   if (
     state.atpSinks.includes("vessel-maintenance") &&
-    atpBudgetForSink(state, "vessel-maintenance") < linkedCount * 25
+    atpBudgetForSink(state, "vessel-maintenance") < maintenanceDebit * ATP_BUDGET_UNITS_PER_DEBIT
   ) {
     return Number.MAX_SAFE_INTEGER;
   }
-  return state.vesselMaintenanceAtp;
+  return maintenanceDebit;
 }
 
 /** True only when this interval can pay its vessel upkeep first and its acceleration debit second. */

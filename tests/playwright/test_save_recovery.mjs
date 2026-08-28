@@ -51,14 +51,15 @@ test("save recovery protects rejected raw storage until an accessible explicit r
   const validRaw = await page.evaluate((key) => localStorage.getItem(key), SAVE_KEY);
   expect(validRaw).not.toBeNull();
   expect(validRaw).not.toBe(CORRUPT_RAW);
-  expect(JSON.parse(validRaw)).toMatchObject({ version: 2, progressionVersion: 4 });
+  expect(JSON.parse(validRaw)).toMatchObject({ version: 2, progressionVersion: 8 });
 
-  await divide.click();
+  await divide.focus();
+  await divide.press("Enter");
   const cellsAfterFirstSavedDivide = await cells.textContent();
   expect(cellsAfterFirstSavedDivide).not.toBe(initialCells);
   const savedRaw = await page.evaluate((key) => localStorage.getItem(key), SAVE_KEY);
   expect(savedRaw).not.toBeNull();
-  expect(JSON.parse(savedRaw)).toMatchObject({ version: 2, progressionVersion: 4 });
+  expect(JSON.parse(savedRaw)).toMatchObject({ version: 2, progressionVersion: 8 });
 
   await page.reload();
   await expect(page.locator("#recovery-notice")).toHaveCount(0);
@@ -67,9 +68,10 @@ test("save recovery protects rejected raw storage until an accessible explicit r
   const reloadedRaw = await page.evaluate((key) => localStorage.getItem(key), SAVE_KEY);
   expect(reloadedRaw).not.toBeNull();
   expect(reloadedRaw).not.toBe(CORRUPT_RAW);
-  expect(JSON.parse(reloadedRaw)).toMatchObject({ version: 2, progressionVersion: 4 });
+  expect(JSON.parse(reloadedRaw)).toMatchObject({ version: 2, progressionVersion: 8 });
 
-  await divide.click();
+  await divide.focus();
+  await divide.press("Enter");
   await expect(cells).not.toHaveText(cellsAfterFirstSavedDivide ?? "");
   expect(diagnostics).toEqual([]);
 });
@@ -110,7 +112,8 @@ test("save recovery blocks a browser storage read fault until explicit fresh-sta
   await expect(page.locator("#recovery-notice")).toHaveCount(0);
   await expect(divide).toBeEnabled();
   expect(await page.evaluate(() => globalThis.__saveRecoveryWriteCount)).toBe(1);
-  await divide.click();
+  await divide.focus();
+  await divide.press("Enter");
   expect(await page.evaluate(() => globalThis.__saveRecoveryWriteCount)).toBe(2);
   expect(diagnostics).toEqual([]);
 });

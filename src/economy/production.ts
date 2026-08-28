@@ -9,6 +9,7 @@ import {
   mutationDraftProducerModifier,
 } from "../hallmarks/extended_hallmark_effects.js";
 import { replicativeCapacityExhausted } from "../hallmarks/elapsed_effects.js";
+import { lateHallmarkProductionMultiplier } from "../hallmarks/late_hallmark_effects.js";
 import { stageEconomyModifier } from "../stages/effects.js";
 import {
   assertCanonicalProducerLevels,
@@ -39,7 +40,8 @@ function producerCellProduction(
   const multiplier =
     economyModifier.productionMultiplier *
     atpAccelerationEconomyModifier(state, producer.id).productionMultiplier *
-    extendedHallmarkRate;
+    extendedHallmarkRate *
+    lateHallmarkProductionMultiplier(state);
   return multiplyByNumber(baseRate, multiplier);
 }
 

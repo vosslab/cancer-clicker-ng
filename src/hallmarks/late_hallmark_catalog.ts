@@ -91,10 +91,6 @@ export function hasReachedLateHallmarkActivation(stage: StageId, key: LateHallma
 }
 
 function stageIndex(id: StageId): number {
-  const index = Object.values(LATE_HALLMARK_BY_KEY)
-    .map((definition) => definition.activation.stageId)
-    .indexOf(id);
-  if (index >= 0) return index;
   const canonicalIndex = [
     "transformed_cell",
     "microcolony",

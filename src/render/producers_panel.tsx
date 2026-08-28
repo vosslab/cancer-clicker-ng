@@ -1,4 +1,4 @@
-import { For, createSignal } from "solid-js";
+import { For, Show, createSignal } from "solid-js";
 import type { JSX } from "solid-js";
 
 import { formatBigNum } from "../bignum/format.js";
@@ -6,6 +6,8 @@ import { quoteProducerPurchase } from "../economy/costs.js";
 import { producerCellProductionRate } from "../economy/production.js";
 import { STAGE_ONE_PRODUCERS } from "../economy/producers.js";
 import { stageDefinition, stageDefinitionsInOrder } from "../stages/catalog.js";
+import { passageUpgradeId } from "../brands.js";
+import { hasPassageUpgrade } from "../prestige/culture.js";
 import type { PurchaseQuantity } from "../economy/costs.js";
 import type { ProducerDefinition } from "../economy/producers.js";
 import type { ProducerId } from "../types/ids.js";
@@ -14,6 +16,7 @@ import type { GameState } from "../types/state.js";
 type ProducersPanelProps = Readonly<{
   game: GameState;
   onPurchase: (id: ProducerId, quantity: PurchaseQuantity) => void;
+  onQueueAssay?: (id: ProducerId) => void;
   disabled?: boolean;
   reverse?: boolean;
 }>;
@@ -38,6 +41,12 @@ function quantityLabel(quantity: PurchaseQuantity): string {
   return quantity === "max" ? "Max" : `${quantity}`;
 }
 
+function producerLabel(id: ProducerId): string {
+  const producer = STAGE_ONE_PRODUCERS.find((candidate) => candidate.id === id);
+  if (!producer) throw new Error("Queued assay producer is missing from the catalog.");
+  return producer.displayName;
+}
+
 /** Persistent upgrade rail: the selected buy mode applies to every visible producer. */
 export function ProducersPanel(props: ProducersPanelProps): JSX.Element {
   const [quantity, setQuantity] = createSignal<PurchaseQuantity>(1);
@@ -45,6 +54,10 @@ export function ProducersPanel(props: ProducersPanelProps): JSX.Element {
   function rows(): readonly ProducerDefinition[] {
     return props.reverse ? [...STAGE_ONE_PRODUCERS].reverse() : STAGE_ONE_PRODUCERS;
   }
+  const assayDiscipline = (): boolean =>
+    hasPassageUpgrade(props.game.culture, passageUpgradeId("assay_discipline"));
+  const queuedAssay = (): GameState["culture"]["queuedProducerAction"] =>
+    props.game.culture.queuedProducerAction;
 
   return (
     <section class="panel producers-panel" aria-labelledby="producers-title">
@@ -84,6 +97,19 @@ export function ProducersPanel(props: ProducersPanelProps): JSX.Element {
                 2,
               );
             const unlockStage = (): string => stageDefinition(producer.unlockStage).title;
+            const assayLabel = (): string => {
+              const queued = queuedAssay();
+              if (!queued) return "Queue assay purchase";
+              return queued.producerId === producer.id
+                ? "Queued assay purchase"
+                : `Replace assay target with ${producer.displayName}`;
+            };
+            const assayAriaLabel = (): string => {
+              const queued = queuedAssay();
+              if (!queued) return `Queue ${producer.displayName} as the assay purchase target`;
+              const prior = producerLabel(queued.producerId);
+              return `Replace assay target from ${prior} to ${producer.displayName}`;
+            };
             return (
               <li
                 class="producer-row"
@@ -120,6 +146,21 @@ export function ProducersPanel(props: ProducersPanelProps): JSX.Element {
                   >
                     Buy {quantityLabel(quantity())}
                   </button>
+                  <Show when={assayDiscipline()}>
+                    <button
+                      type="button"
+                      aria-label={assayAriaLabel()}
+                      data-assay-queue-target={producer.id}
+                      disabled={
+                        props.disabled ||
+                        !unlocked() ||
+                        !quoteProducerPurchase(props.game, producer.id, 1).affordable
+                      }
+                      onClick={() => props.onQueueAssay?.(producer.id)}
+                    >
+                      {assayLabel()}
+                    </button>
+                  </Show>
                   <span class="cost-note">
                     Next {quantityLabel(quantity())} cost:{" "}
                     {formatBigNum(selectedQuote().debit, props.game.numberFormat, 2)}

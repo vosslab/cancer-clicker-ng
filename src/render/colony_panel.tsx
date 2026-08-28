@@ -56,14 +56,45 @@ function unavailablePanelState(): JSX.Element {
   );
 }
 
+function pathContainsPointer(path: SVGGeometryElement, event: MouseEvent): boolean {
+  const matrix = path.getScreenCTM();
+  if (matrix === null) return false;
+  const point = new DOMPoint(event.clientX, event.clientY).matrixTransform(matrix.inverse());
+  return path.isPointInFill(point) || path.isPointInStroke(point);
+}
+
+function pointerFallsOnVisibleColonyCell(event: MouseEvent): boolean {
+  const action =
+    event.currentTarget instanceof HTMLButtonElement
+      ? event.currentTarget
+      : event.target instanceof Element
+        ? event.target.closest("button[data-colony-action='divide']")
+        : null;
+  if (!(action instanceof HTMLButtonElement)) return false;
+  // Chromium can retarget a compact reduced-motion SVG click to its root even
+  // when a painted cell lies under the pointer. Recheck only cell membrane and
+  // nucleus geometry, so tissue, voids, and board whitespace stay inert.
+  return [...action.querySelectorAll("[data-colony-cell]")].some((cell) =>
+    [...cell.querySelectorAll(".colony-cell__membrane, .colony-cell__nucleus")].some(
+      (candidate) =>
+        candidate instanceof SVGGeometryElement && pathContainsPointer(candidate, event),
+    ),
+  );
+}
+
 function eventTargetsVisibleColonyCell(event: MouseEvent): boolean {
   const directTarget = event.target;
   if (directTarget instanceof Element && directTarget.closest("[data-colony-cell]") !== null) {
     return true;
   }
-  return event
-    .composedPath()
-    .some((candidate) => candidate instanceof Element && candidate.matches("[data-colony-cell]"));
+  if (
+    event
+      .composedPath()
+      .some((candidate) => candidate instanceof Element && candidate.matches("[data-colony-cell]"))
+  ) {
+    return true;
+  }
+  return pointerFallsOnVisibleColonyCell(event);
 }
 
 /** Shows the visual cell field as one accessible action without per-cell tab stops. */

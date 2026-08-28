@@ -98,13 +98,24 @@ export function numberValue(value: unknown): BigNum | undefined {
 }
 /** Reconstruct output without invoking user-controlled prototypes. */
 export function serial(value: unknown): unknown {
-  if (Array.isArray(value)) return value.map(serial);
+  if (Array.isArray(value)) {
+    const descriptors = Object.getOwnPropertyDescriptors(value);
+    const result: unknown[] = [];
+    for (let index = 0; index < value.length; index += 1) {
+      const descriptor = descriptors[String(index)];
+      if (descriptor === undefined || !("value" in descriptor))
+        throw new Error("State arrays must contain own data properties.");
+      result.push(serial(descriptor.value));
+    }
+    return result;
+  }
   if (object(value)) {
     const result: Record<string, unknown> = {};
     Object.setPrototypeOf(result, null);
-    for (const [key, item] of Object.entries(value)) {
+    for (const [key, descriptor] of Object.entries(Object.getOwnPropertyDescriptors(value))) {
       if (!identifier(key)) throw new Error("Unsafe state key.");
-      result[key] = serial(item);
+      if (!("value" in descriptor)) throw new Error("State must contain own data properties.");
+      result[key] = serial(descriptor.value);
     }
     return result;
   }
@@ -115,9 +126,10 @@ export function serial(value: unknown): unknown {
 export function serialGameState(state: GameState): SerializedGameState {
   const result: Record<string, unknown> = {};
   Object.setPrototypeOf(result, null);
-  for (const [key, item] of Object.entries(state)) {
+  for (const [key, descriptor] of Object.entries(Object.getOwnPropertyDescriptors(state))) {
     if (!identifier(key)) throw new Error("Unsafe state key.");
-    result[key] = serial(item);
+    if (!("value" in descriptor)) throw new Error("State must contain own data properties.");
+    result[key] = serial(descriptor.value);
   }
   return result;
 }

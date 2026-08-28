@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { hallmarkId, regionId, stageId } from "../src/brands.ts";
+import { eventId, hallmarkId, regionId, stageId } from "../src/brands.ts";
 import {
   applyReplicativeBudget,
   effectiveTelomereReserve,
@@ -8,6 +8,7 @@ import {
   REPLICATIVE_BUDGET_EFFECT,
   REPLICATIVE_BUDGET_HANDLER,
 } from "../src/hallmarks/handlers/replicative_budget.ts";
+import { emptyLateHallmarksState } from "../src/hallmarks/late_hallmark_types.ts";
 import { createInitialGameState } from "../src/state/game_state.ts";
 import { parseSave, serializeGameState } from "../src/state/save_load.ts";
 
@@ -126,7 +127,21 @@ test("core-six warnings require a viable region and banking consumes one strateg
   rejectsAtomically(noWarning, bank(), /requires a division-limit warning/);
 
   const senescent = eligibleState();
-  senescent.senescentRegions = [regionId("a")];
+  senescent.lateHallmarks = {
+    ...emptyLateHallmarksState(),
+    senescence: {
+      pendingDecisions: [],
+      retainedRegions: [
+        {
+          decisionId: eventId("senescence:a"),
+          regionId: regionId("a"),
+          cause: "replicative-limit",
+          createdAtMs: 40,
+          retainedAtMs: 40,
+        },
+      ],
+    },
+  };
   rejectsAtomically(senescent, refill(), /unavailable/);
 
   const multiRegion = eligibleState({

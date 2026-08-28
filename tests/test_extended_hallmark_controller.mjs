@@ -1,7 +1,20 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { bigNum, eventId, hallmarkId, regionId, stageId } from "../src/brands.ts";
+import {
+  bigNum,
+  eventId,
+  hallmarkId,
+  lateProgramOptionId,
+  microbiomeCompositionId,
+  microbiomeOfferId,
+  regionId,
+  stageId,
+} from "../src/brands.ts";
+import {
+  MICROBIOME_COMPOSITION_CATALOG,
+  MICROBIOME_POOL_ID,
+} from "../src/hallmarks/microbiome_catalog.ts";
 import { createMutationOffer } from "../src/hallmarks/mutation_offer_generator.ts";
 import { hasFundedAtpAcceleration } from "../src/hallmarks/atp_allocation.ts";
 import { createGameController, plainGameSnapshot } from "../src/render/game_controller.ts";
@@ -208,4 +221,103 @@ test("extended-hallmark controller recovery and persistence failures leave each 
     notices: [],
   });
   assert.deepEqual(plainGameSnapshot(failing.game), beforeFailure);
+});
+
+test("late-hallmark controller commands preserve the persisted event funnel", () => {
+  const lateState = stateFor("phenotypic_plasticity", {
+    currentStage: stageId("global_lab_contamination"),
+    activeTimeMs: 60,
+    atp: bigNum(100, 0),
+    regions: [region("late-region")],
+    hallmarkLevels: [
+      { id: hallmarkId("phenotypic_plasticity"), level: 1 },
+      { id: hallmarkId("epigenetic_reprogramming"), level: 1 },
+      { id: hallmarkId("proliferative_signaling"), level: 1 },
+      { id: hallmarkId("polymorphic_microbiomes"), level: 1 },
+      { id: hallmarkId("senescent_cells"), level: 1 },
+    ],
+    lateHallmarks: {
+      plasticity: { switchCooldownByRegion: {} },
+      epigenetic: { assignments: [], cooldownDeadlineMs: null },
+      microbiome: {
+        activeComposition: null,
+        pendingOffer: {
+          id: microbiomeOfferId("late-offer"),
+          poolId: MICROBIOME_POOL_ID,
+          compositions: [
+            MICROBIOME_COMPOSITION_CATALOG[0],
+            MICROBIOME_COMPOSITION_CATALOG[1],
+            MICROBIOME_COMPOSITION_CATALOG[2],
+          ],
+          sourceSeed: 1,
+          sourceSequence: 0,
+          sourceStage: stageId("global_lab_contamination"),
+          expiresAtMs: 120,
+        },
+        nextRotationDeadlineMs: 120,
+        rotationSequence: 1,
+      },
+      senescence: {
+        pendingDecisions: [],
+        retainedRegions: [],
+      },
+    },
+  });
+  const persisted = [];
+  const controller = controllerFor(lateState, persisted);
+  const actions = [
+    () => controller.assignRegionPhenotype(regionId("late-region"), "migratory"),
+    () =>
+      controller.reconfigureHallmarkProgram(
+        hallmarkId("proliferative_signaling"),
+        lateProgramOptionId("signaling:burst-bias"),
+      ),
+    () =>
+      controller.installMicrobiomeComposition(
+        microbiomeOfferId("late-offer"),
+        microbiomeCompositionId("fermenter-commensal"),
+      ),
+  ];
+  for (const action of actions) assert.deepEqual(action(), { ok: true });
+
+  const after = plainGameSnapshot(controller.game);
+  assert.equal(after.regions[0].phenotype, "migratory");
+  assert.equal(after.lateHallmarks.epigenetic.assignments[0].optionId, "signaling:burst-bias");
+  assert.equal(
+    after.lateHallmarks.microbiome.activeComposition?.composition.id,
+    "fermenter-commensal",
+  );
+  assert.equal(persisted.length, 3);
+  assert.equal(after.eventSequence, lateState.eventSequence + 3);
+  assert.ok(persisted.every((entry) => entry.savedAtMs === 700));
+
+  const senescenceState = {
+    ...lateState,
+    lateHallmarks: {
+      ...lateState.lateHallmarks,
+      senescence: {
+        pendingDecisions: [
+          {
+            id: eventId("late-senescence"),
+            regionId: regionId("late-region"),
+            cause: "damage-failure",
+            createdAtMs: 60,
+          },
+        ],
+        retainedRegions: [],
+      },
+    },
+  };
+  const senescenceWrites = [];
+  const senescenceController = controllerFor(senescenceState, senescenceWrites);
+  assert.deepEqual(
+    senescenceController.resolveSenescenceDecision(eventId("late-senescence"), "keep"),
+    { ok: true },
+  );
+  assert.equal(
+    plainGameSnapshot(senescenceController.game).lateHallmarks.senescence.retainedRegions[0]
+      .regionId,
+    "late-region",
+  );
+  assert.equal(senescenceWrites.length, 1);
 });

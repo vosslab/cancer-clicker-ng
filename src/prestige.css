@@ -1,0 +1,378 @@
+/* M14 terminal decisions: scoped separately so the foundational board stylesheet stays compact. */
+.prestige-panel,
+.transit-panel {
+  display: grid;
+  gap: 0.7rem;
+  min-inline-size: 0;
+  border-color: rgb(255 214 122 / 60%);
+  background: linear-gradient(145deg, rgb(74 50 31 / 52%), rgb(12 29 27 / 96%) 62%), var(--surface);
+}
+
+.prestige-panel .section-heading {
+  align-items: end;
+}
+
+.prestige-panel .section-note {
+  margin: 0;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid rgb(255 214 122 / 42%);
+  border-radius: 999px;
+  color: #fff0bd;
+  background: rgb(72 52 20 / 42%);
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.prestige-panel .hallmark-fieldset {
+  display: grid;
+  gap: 0.55rem;
+  padding: 0.65rem;
+  border-color: rgb(255 214 122 / 42%);
+  background: rgb(7 23 20 / 45%);
+}
+
+.prestige-panel .hallmark-fieldset > p,
+.prestige-card > p,
+.prestige-draft > p,
+.transit-panel .prestige-card > p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.prestige-summary {
+  border-inline-start: 3px solid var(--atp) !important;
+  background: linear-gradient(90deg, rgb(117 79 23 / 34%), rgb(7 23 20 / 45%)) !important;
+}
+
+.prestige-summary > p:first-of-type {
+  color: #fff0bd;
+  font-weight: 800;
+}
+
+.prestige-summary ul,
+.prestige-card ul {
+  display: grid;
+  gap: 0.25rem;
+  margin: 0;
+  padding-inline-start: 1.15rem;
+  color: #e8dec0;
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.prestige-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 13.5rem), 1fr));
+  gap: 0.5rem;
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.prestige-card-grid > li {
+  min-inline-size: 0;
+}
+
+.prestige-card {
+  display: grid;
+  gap: 0.5rem;
+  min-inline-size: 0;
+  min-block-size: 100%;
+  padding: 0.65rem;
+  border: 1px solid rgb(198 176 116 / 45%);
+  border-radius: 0.65rem;
+  background: linear-gradient(145deg, rgb(58 46 30 / 48%), rgb(8 25 22 / 72%));
+  box-shadow: inset 2px 0 rgb(255 214 122 / 18%);
+  transition:
+    border-color 140ms ease,
+    background 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.prestige-card:hover,
+.prestige-card:focus-within {
+  border-color: rgb(255 225 150 / 82%);
+  background: linear-gradient(145deg, rgb(84 64 35 / 62%), rgb(10 32 27 / 82%));
+  box-shadow:
+    inset 3px 0 var(--atp),
+    0 0.5rem 1.1rem rgb(0 0 0 / 18%);
+}
+
+.prestige-card h3,
+.prestige-card h4,
+.prestige-draft h3 {
+  margin: 0;
+  color: #fff0bd;
+  font-size: 0.93rem;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+.prestige-card > .prestige-card-grid {
+  grid-template-columns: 1fr;
+  padding-top: 0.1rem;
+}
+
+.prestige-card button,
+.transit-panel button {
+  inline-size: 100%;
+  min-inline-size: 0;
+  min-block-size: 2.75rem;
+  padding: 0.5rem 0.65rem;
+  overflow-wrap: anywhere;
+  text-align: start;
+}
+
+.prestige-card button:disabled,
+.transit-panel button:disabled {
+  border-color: #59665d;
+  color: #aeb9ae;
+  background: rgb(39 55 46 / 88%);
+  box-shadow: none;
+}
+
+.prestige-card[aria-current="true"],
+.prestige-card.is-selected {
+  border-color: var(--growth);
+  box-shadow: inset 3px 0 var(--growth);
+}
+
+.prestige-tradeoff {
+  padding-inline-start: 0.55rem;
+  border-inline-start: 2px solid rgb(232 97 113 / 76%);
+  color: #ffd4c9 !important;
+}
+
+.prestige-panel .hallmark-disabled-note {
+  padding: 0.42rem 0.5rem;
+  border-radius: 0.45rem;
+  background: rgb(76 50 44 / 36%);
+}
+
+.prestige-draft {
+  display: grid;
+  gap: 0.55rem;
+  padding: 0.65rem;
+  border: 1px solid rgb(184 239 153 / 45%);
+  border-radius: 0.6rem;
+  background: linear-gradient(145deg, rgb(32 70 43 / 55%), rgb(8 27 22 / 70%));
+}
+
+.transit-panel {
+  border-color: rgb(143 191 220 / 58%);
+  background: linear-gradient(145deg, rgb(28 54 66 / 88%), rgb(10 26 28 / 96%));
+}
+
+.transit-panel .prestige-card {
+  border-color: rgb(143 191 220 / 45%);
+  box-shadow: inset 2px 0 rgb(143 191 220 / 24%);
+}
+
+.transit-panel .prestige-card h3 {
+  color: #d1efff;
+}
+
+.prestige-dialog {
+  inline-size: min(calc(100% - 1rem), 34rem);
+  max-block-size: min(80dvh, 38rem);
+  overflow: auto;
+  padding: 1rem;
+  border: 1px solid rgb(255 224 151 / 84%);
+  border-radius: 0.8rem;
+  color: var(--copy);
+  background: linear-gradient(145deg, #40311f, #102620 74%);
+  box-shadow: 0 1.2rem 4rem rgb(0 0 0 / 62%);
+}
+
+.prestige-dialog::backdrop {
+  background: rgb(2 10 9 / 76%);
+  backdrop-filter: blur(2px);
+}
+
+.prestige-dialog h2 {
+  color: #fff0bd;
+}
+
+.prestige-dialog p {
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.prestige-dialog [role="alert"] {
+  padding: 0.55rem;
+  border: 1px solid rgb(232 97 113 / 70%);
+  border-radius: 0.55rem;
+  color: #ffe0d7;
+  background: rgb(91 40 39 / 55%);
+}
+
+.prestige-dialog form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin-top: 0.85rem;
+}
+
+.prestige-dialog form button {
+  min-inline-size: 0;
+  min-block-size: 2.75rem;
+}
+
+.prestige-dialog form button:last-child {
+  border-color: #e08a76;
+  color: #32130f;
+  background: linear-gradient(145deg, #ffcab8, var(--blood));
+}
+
+@media (max-width: 48rem) {
+  .prestige-panel .section-heading {
+    align-items: start;
+  }
+
+  .prestige-panel .section-note {
+    white-space: normal;
+  }
+
+  .prestige-card-grid,
+  .prestige-dialog form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* M15 culture and dissemination choices stay legible inside the established progression rail. */
+.m15-panel {
+  gap: 0.7rem;
+  border-color: rgb(120 211 186 / 55%);
+  background:
+    linear-gradient(150deg, rgb(25 81 65 / 62%), rgb(8 28 24 / 94%) 64%),
+    var(--surface);
+}
+
+.network-panel {
+  border-color: rgb(122 185 229 / 60%);
+  background:
+    linear-gradient(150deg, rgb(24 60 82 / 67%), rgb(8 25 30 / 95%) 64%),
+    var(--surface);
+}
+
+.m15-fieldset {
+  display: grid;
+  gap: 0.55rem;
+  min-inline-size: 0;
+  padding: 0.65rem;
+  border-color: rgb(163 229 202 / 42%);
+  background: rgb(5 27 22 / 44%);
+}
+
+.network-panel .m15-fieldset {
+  border-color: rgb(149 207 239 / 42%);
+  background: rgb(7 25 33 / 48%);
+}
+
+.m15-fieldset > p,
+.m15-card > p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.m15-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 12.5rem), 1fr));
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.m15-card {
+  display: grid;
+  align-content: start;
+  gap: 0.45rem;
+  min-block-size: 100%;
+  padding: 0.65rem;
+  border: 1px solid rgb(149 228 199 / 42%);
+  border-radius: 0.65rem;
+  background: linear-gradient(145deg, rgb(32 82 63 / 48%), rgb(6 29 24 / 78%));
+}
+
+.network-panel .m15-card {
+  border-color: rgb(146 207 239 / 44%);
+  background: linear-gradient(145deg, rgb(31 68 88 / 52%), rgb(7 27 34 / 82%));
+}
+
+.m15-card h3 {
+  margin: 0;
+  color: #d8fff0;
+  font-size: 0.92rem;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.m15-card button,
+.m15-choices button,
+.m15-link-list button {
+  min-block-size: 2.75rem;
+  padding: 0.48rem 0.6rem;
+  text-align: start;
+}
+
+.m15-readout {
+  padding: 0.5rem 0.6rem;
+  border-inline-start: 3px solid #8ee7c3;
+  border-radius: 0.35rem;
+  color: #d8fff0 !important;
+  background: rgb(42 126 93 / 22%);
+}
+
+.m15-choices {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
+  gap: 0.45rem;
+}
+
+.m15-choices > p {
+  grid-column: 1 / -1;
+}
+
+.m15-link-list {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.m15-link-list li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.45rem 0.55rem;
+  border: 1px solid rgb(149 207 239 / 28%);
+  border-radius: 0.45rem;
+  color: #d5edf9;
+  font-size: 0.76rem;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 48rem) {
+  .m15-card-grid,
+  .m15-choices {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .m15-link-list li {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .m15-link-list button {
+    inline-size: 100%;
+  }
+}

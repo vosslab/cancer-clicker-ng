@@ -1,14 +1,26 @@
 import {
   bigNum,
+  colonizationProgramId,
+  cryobankProgramId,
+  disseminationMandateId,
   eventId,
   hallmarkId,
   lateProgramOptionId,
   microbiomeCompositionId,
   microbiomeOfferId,
   mutationId,
+  networkEdgeId,
+  networkFrontierId,
+  networkNodeId,
+  hostCardId,
+  hostDraftId,
+  hostTraitId,
+  lineageBoonId,
+  organSiteId,
   offerId,
   prestigeId,
   producerId,
+  passageUpgradeId,
   regionId,
   routeId,
   stageId,
@@ -24,6 +36,9 @@ import { PLASTICITY_PHENOTYPES } from "../hallmarks/plasticity_catalog.js";
 import { findLateProgramOption } from "../hallmarks/program_catalog.js";
 import { findMicrobiomeComposition } from "../hallmarks/microbiome_catalog.js";
 import { isSenescenceAction } from "../hallmarks/senescence_catalog.js";
+import { findColonizationProgram, findOrganSite } from "../prestige/seeding.js";
+import { HOST_TRAIT_CATALOG, LINEAGE_BOON_CATALOG } from "../prestige/hosts.js";
+import { findCryobankProgram, findPassageUpgrade } from "../prestige/culture.js";
 
 const RESERVED = new Set(["__proto__", "prototype", "constructor"]);
 const CHECKPOINTS = new Set(["contact-inhibition", "nutrient-arrest", "damage-arrest"]);
@@ -116,7 +131,6 @@ function requireIdentifier(value: unknown, label: string): string {
   return value;
 }
 
-
 function purchaseQuantity(value: unknown): PurchaseQuantity {
   if (value === "max" || value === 1 || value === 10 || value === 100) return value;
   throw new Error("Producer quantity is invalid.");
@@ -184,11 +198,34 @@ export function parseRuntimeEvent(raw: unknown): GameEvent {
       return { type, atMs: values.atMs as number };
     }
     case "purchase-producer": {
-      const values = valuesFor(raw, ["type", "producerId", "quantity", "atMs"]);
+      const execution = ownDataValue(raw, "execution");
+      if (execution === "manual") {
+        const values = valuesFor(raw, ["type", "producerId", "quantity", "execution", "atMs"]);
+        return {
+          type,
+          producerId: producerId(requireIdentifier(values.producerId, "Producer identifier")),
+          quantity: purchaseQuantity(values.quantity),
+          execution,
+          atMs: values.atMs as number,
+        };
+      }
+      if (execution !== "assay") throw new Error("Producer execution is invalid.");
+      const values = valuesFor(raw, [
+        "type",
+        "producerId",
+        "quantity",
+        "execution",
+        "queuedAtEventSequence",
+        "atMs",
+      ]);
+      if (values.quantity !== 1 || !natural(values.queuedAtEventSequence))
+        throw new Error("Assay producer execution is invalid.");
       return {
         type,
         producerId: producerId(requireIdentifier(values.producerId, "Producer identifier")),
-        quantity: purchaseQuantity(values.quantity),
+        quantity: 1,
+        execution,
+        queuedAtEventSequence: values.queuedAtEventSequence,
         atMs: values.atMs as number,
       };
     }
@@ -213,9 +250,243 @@ export function parseRuntimeEvent(raw: unknown): GameEvent {
         atMs: values.atMs as number,
       };
     }
-    case "perform-prestige-reset": {
-      const values = valuesFor(raw, ["type", "atMs"]);
-      return { type, atMs: values.atMs as number };
+    // ASVS 2.2.1/15.3.3: every prestige intent is an exact, allowlisted command.
+    case "resolve-transit": {
+      const values = valuesFor(raw, ["type", "transitEventId", "destinationSiteId", "atMs"]);
+      const destinationSiteId = organSiteId(
+        requireIdentifier(values.destinationSiteId, "Destination site identifier"),
+      );
+      if (findOrganSite(destinationSiteId) === undefined)
+        throw new Error("Destination site is invalid.");
+      return {
+        type,
+        transitEventId: eventId(
+          requireIdentifier(values.transitEventId, "Transit event identifier"),
+        ),
+        destinationSiteId,
+        atMs: values.atMs as number,
+      };
+    }
+    case "perform-metastasis-reset": {
+      const values = valuesFor(raw, ["type", "siteId", "sourceEventSequence", "atMs"]);
+      const siteId = organSiteId(requireIdentifier(values.siteId, "Reset site identifier"));
+      if (!natural(values.sourceEventSequence))
+        throw new Error("Prestige quote revision is invalid.");
+      if (findOrganSite(siteId) === undefined) throw new Error("Reset site is invalid.");
+      return {
+        type,
+        siteId,
+        sourceEventSequence: values.sourceEventSequence,
+        atMs: values.atMs as number,
+      };
+    }
+    case "allocate-organ-site": {
+      const values = valuesFor(raw, ["type", "siteId", "sourceEventSequence", "atMs"]);
+      const siteId = organSiteId(requireIdentifier(values.siteId, "Organ site identifier"));
+      if (findOrganSite(siteId) === undefined || !natural(values.sourceEventSequence))
+        throw new Error("Organ allocation is invalid.");
+      return {
+        type,
+        siteId,
+        sourceEventSequence: values.sourceEventSequence,
+        atMs: values.atMs as number,
+      };
+    }
+    case "select-colonization-program": {
+      const values = valuesFor(raw, ["type", "siteId", "programId", "sourceEventSequence", "atMs"]);
+      const siteId = organSiteId(requireIdentifier(values.siteId, "Organ site identifier"));
+      const programId = colonizationProgramId(
+        requireIdentifier(values.programId, "Program identifier"),
+      );
+      if (
+        findOrganSite(siteId) === undefined ||
+        findColonizationProgram(programId) === undefined ||
+        !natural(values.sourceEventSequence)
+      )
+        throw new Error("Colonization program is invalid.");
+      return {
+        type,
+        siteId,
+        programId,
+        sourceEventSequence: values.sourceEventSequence,
+        atMs: values.atMs as number,
+      };
+    }
+    case "purchase-lineage-boon": {
+      const rawBoonId = ownDataValue(raw, "boonId");
+      if (rawBoonId === "reduced_trait_liability") {
+        const values = valuesFor(raw, [
+          "type",
+          "boonId",
+          "targetTraitId",
+          "sourceEventSequence",
+          "atMs",
+        ]);
+        if (!natural(values.sourceEventSequence)) throw new Error("Lineage boon is invalid.");
+        const targetTraitId = hostTraitId(
+          requireIdentifier(values.targetTraitId, "Host trait identifier"),
+        );
+        if (!HOST_TRAIT_CATALOG.some((trait) => trait.id === targetTraitId))
+          throw new Error("Host trait is invalid.");
+        return {
+          type,
+          boonId: rawBoonId,
+          targetTraitId,
+          sourceEventSequence: values.sourceEventSequence,
+          atMs: values.atMs as number,
+        };
+      }
+      const values = valuesFor(raw, ["type", "boonId", "sourceEventSequence", "atMs"]);
+      const boonId = lineageBoonId(requireIdentifier(values.boonId, "Lineage boon identifier"));
+      if (
+        !LINEAGE_BOON_CATALOG.some((boon) => boon.id === boonId) ||
+        (boonId !== "extra_card_reveal" && boonId !== "protected_route_affinity") ||
+        !natural(values.sourceEventSequence)
+      )
+        throw new Error("Lineage boon is invalid.");
+      return {
+        type,
+        boonId: boonId as "extra_card_reveal" | "protected_route_affinity",
+        sourceEventSequence: values.sourceEventSequence,
+        atMs: values.atMs as number,
+      };
+    }
+    case "perform-host-transfer": {
+      const values = valuesFor(raw, ["type", "sourceEventSequence", "atMs"]);
+      if (!natural(values.sourceEventSequence))
+        throw new Error("Host-transfer quote revision is invalid.");
+      return { type, sourceEventSequence: values.sourceEventSequence, atMs: values.atMs as number };
+    }
+    case "select-host-card": {
+      const values = valuesFor(raw, ["type", "draftId", "cardId", "sourceEventSequence", "atMs"]);
+      if (!natural(values.sourceEventSequence))
+        throw new Error("Host-card quote revision is invalid.");
+      return {
+        type,
+        draftId: hostDraftId(requireIdentifier(values.draftId, "Host draft identifier")),
+        cardId: hostCardId(requireIdentifier(values.cardId, "Host card identifier")),
+        sourceEventSequence: values.sourceEventSequence,
+        atMs: values.atMs as number,
+      };
+    }
+    case "perform-immortalization": {
+      const values = valuesFor(raw, ["type", "cryobankProgramId", "sourceEventSequence", "atMs"]);
+      const cryobank = cryobankProgramId(
+        requireIdentifier(values.cryobankProgramId, "Cryobank program identifier"),
+      );
+      if (!findCryobankProgram(cryobank) || !natural(values.sourceEventSequence))
+        throw new Error("Immortalization is invalid.");
+      return {
+        type,
+        cryobankProgramId: cryobank,
+        sourceEventSequence: values.sourceEventSequence,
+        atMs: values.atMs as number,
+      };
+    }
+    case "purchase-passage-upgrade": {
+      const values = valuesFor(raw, ["type", "upgradeId", "sourceEventSequence", "atMs"]);
+      const upgradeId = passageUpgradeId(
+        requireIdentifier(values.upgradeId, "Passage upgrade identifier"),
+      );
+      if (!findPassageUpgrade(upgradeId) || !natural(values.sourceEventSequence))
+        throw new Error("Passage upgrade is invalid.");
+      return {
+        type,
+        upgradeId,
+        sourceEventSequence: values.sourceEventSequence,
+        atMs: values.atMs as number,
+      };
+    }
+    case "select-cryobank-program": {
+      const values = valuesFor(raw, ["type", "cryobankProgramId", "sourceEventSequence", "atMs"]);
+      const cryobank = cryobankProgramId(
+        requireIdentifier(values.cryobankProgramId, "Cryobank program identifier"),
+      );
+      if (!findCryobankProgram(cryobank) || !natural(values.sourceEventSequence))
+        throw new Error("Cryobank program is invalid.");
+      return {
+        type,
+        cryobankProgramId: cryobank,
+        sourceEventSequence: values.sourceEventSequence,
+        atMs: values.atMs as number,
+      };
+    }
+    case "establish-dissemination-node": {
+      const values = valuesFor(raw, ["type", "nodeId", "sourceEventSequence", "atMs"]);
+      const nodeId = networkNodeId(requireIdentifier(values.nodeId, "Network node identifier"));
+      if (!natural(values.sourceEventSequence)) throw new Error("Network node is invalid.");
+      return {
+        type,
+        nodeId,
+        sourceEventSequence: values.sourceEventSequence,
+        atMs: values.atMs as number,
+      };
+    }
+    case "commit-dissemination-edge": {
+      const values = valuesFor(raw, ["type", "edgeId", "sourceEventSequence", "atMs"]);
+      const edgeId = networkEdgeId(requireIdentifier(values.edgeId, "Network edge identifier"));
+      if (!natural(values.sourceEventSequence)) throw new Error("Network edge is invalid.");
+      return {
+        type,
+        edgeId,
+        sourceEventSequence: values.sourceEventSequence,
+        atMs: values.atMs as number,
+      };
+    }
+    case "choose-dissemination-mandate": {
+      const values = valuesFor(raw, [
+        "type",
+        "frontierId",
+        "mandateId",
+        "sourceEventSequence",
+        "atMs",
+      ]);
+      if (!natural(values.sourceEventSequence))
+        throw new Error("Dissemination mandate is invalid.");
+      return {
+        type,
+        frontierId: networkFrontierId(
+          requireIdentifier(values.frontierId, "Network frontier identifier"),
+        ),
+        mandateId: disseminationMandateId(
+          requireIdentifier(values.mandateId, "Dissemination mandate identifier"),
+        ),
+        sourceEventSequence: values.sourceEventSequence,
+        atMs: values.atMs as number,
+      };
+    }
+    case "stabilize-network-node":
+    case "collect-transmission-pressure": {
+      const values = valuesFor(raw, ["type", "nodeId", "sourceEventSequence", "atMs"]);
+      if (!natural(values.sourceEventSequence))
+        throw new Error("Network node operation is invalid.");
+      return {
+        type,
+        nodeId: networkNodeId(requireIdentifier(values.nodeId, "Network node identifier")),
+        sourceEventSequence: values.sourceEventSequence,
+        atMs: values.atMs as number,
+      };
+    }
+    case "queue-assay-producer-action": {
+      const values = valuesFor(raw, ["type", "producerId", "sourceEventSequence", "atMs"]);
+      if (!natural(values.sourceEventSequence)) throw new Error("Assay queue is invalid.");
+      return {
+        type,
+        producerId: producerId(requireIdentifier(values.producerId, "Producer identifier")),
+        sourceEventSequence: values.sourceEventSequence,
+        atMs: values.atMs as number,
+      };
+    }
+    case "select-containment-node": {
+      const values = valuesFor(raw, ["type", "nodeId", "sourceEventSequence", "atMs"]);
+      if (!natural(values.sourceEventSequence))
+        throw new Error("Containment selection is invalid.");
+      return {
+        type,
+        nodeId: networkNodeId(requireIdentifier(values.nodeId, "Network node identifier")),
+        sourceEventSequence: values.sourceEventSequence,
+        atMs: values.atMs as number,
+      };
     }
     case "apply-offline-accrual": {
       const values = valuesFor(raw, [
@@ -235,6 +506,15 @@ export function parseRuntimeEvent(raw: unknown): GameEvent {
         atMs,
         resourceSnapshot,
         newlyObservedProgression,
+      };
+    }
+    case "reach-soft-ending": {
+      const values = valuesFor(raw, ["type", "sourceEventSequence", "atMs"]);
+      if (!natural(values.sourceEventSequence)) throw new Error("Soft-ending revision is invalid.");
+      return {
+        type,
+        sourceEventSequence: values.sourceEventSequence,
+        atMs: values.atMs as number,
       };
     }
     case "set-number-format": {
@@ -363,19 +643,25 @@ export function parseRuntimeEvent(raw: unknown): GameEvent {
     }
     case "assign-region-phenotype": {
       const values = valuesFor(raw, ["type", "regionId", "phenotype", "atMs"]);
-      if (typeof values.phenotype !== "string" || !PLASTICITY_PHENOTYPES.includes(values.phenotype as typeof PLASTICITY_PHENOTYPES[number]))
+      if (
+        typeof values.phenotype !== "string" ||
+        !PLASTICITY_PHENOTYPES.includes(values.phenotype as (typeof PLASTICITY_PHENOTYPES)[number])
+      )
         throw new Error("Phenotype is invalid.");
       return {
         type,
         regionId: regionId(requireIdentifier(values.regionId, "Region identifier")),
-        phenotype: values.phenotype as typeof PLASTICITY_PHENOTYPES[number],
+        phenotype: values.phenotype as (typeof PLASTICITY_PHENOTYPES)[number],
         atMs: values.atMs as number,
       };
     }
     case "reconfigure-hallmark-program": {
       const values = valuesFor(raw, ["type", "hallmarkId", "optionId", "atMs"]);
-      const optionId = lateProgramOptionId(requireIdentifier(values.optionId, "Program option identifier"));
-      if (findLateProgramOption(optionId) === undefined) throw new Error("Program option is invalid.");
+      const optionId = lateProgramOptionId(
+        requireIdentifier(values.optionId, "Program option identifier"),
+      );
+      if (findLateProgramOption(optionId) === undefined)
+        throw new Error("Program option is invalid.");
       return {
         type,
         hallmarkId: hallmarkId(requireIdentifier(values.hallmarkId, "Hallmark identifier")),
@@ -385,11 +671,16 @@ export function parseRuntimeEvent(raw: unknown): GameEvent {
     }
     case "install-microbiome-composition": {
       const values = valuesFor(raw, ["type", "offerId", "compositionId", "atMs"]);
-      const compositionId = microbiomeCompositionId(requireIdentifier(values.compositionId, "Composition identifier"));
-      if (findMicrobiomeComposition(compositionId) === undefined) throw new Error("Microbiome composition is invalid.");
+      const compositionId = microbiomeCompositionId(
+        requireIdentifier(values.compositionId, "Composition identifier"),
+      );
+      if (findMicrobiomeComposition(compositionId) === undefined)
+        throw new Error("Microbiome composition is invalid.");
       return {
         type,
-        offerId: microbiomeOfferId(requireIdentifier(values.offerId, "Microbiome offer identifier")),
+        offerId: microbiomeOfferId(
+          requireIdentifier(values.offerId, "Microbiome offer identifier"),
+        ),
         compositionId,
         atMs: values.atMs as number,
       };

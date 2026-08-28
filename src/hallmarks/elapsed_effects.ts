@@ -2,6 +2,9 @@ import { compare, fromSafeInteger, subtract } from "../bignum/bignum.js";
 import { coreSixHallmarkDefinition } from "./core_six_catalog.js";
 import type { GameState, RegionState } from "../types/state.js";
 import { atpBudgetForSink } from "./atp_allocation.js";
+import { perfusionMaintenanceAtpDebit } from "./handlers/perfusion_layout.js";
+import { effectiveReplicativeReserveFloor } from "./handlers/replicative_budget.js";
+import { projectSenescenceDecisions } from "./handlers/senescence_factory.js";
 
 export const ELAPSED_HALLMARK_BOUNDARY_MS = 1_000;
 const PERFUSION_OXYGEN_LOSS_PER_LINK = 2;
@@ -41,12 +44,12 @@ function viableRegions(state: GameState): readonly RegionState[] {
 /** A positive banked floor is protected capacity; only unprotected zero reserve is exhausted. */
 export function replicativeCapacityExhausted(state: GameState): boolean {
   if (!owns(state, "replicative_immortality")) return false;
-  if (!natural(state.reserveFloor)) throw new Error("Telomere reserve floor is invalid.");
+  const reserveFloor = effectiveReplicativeReserveFloor(state);
   const viable = viableRegions(state);
   return (
-    state.reserveFloor === 0 &&
+    reserveFloor === 0 &&
     viable.length > 0 &&
-    viable.every((region) => reserveFor(state, region) === 0)
+    viable.every((region) => reserveFor(state, region) <= reserveFloor)
   );
 }
 
@@ -59,18 +62,21 @@ export function manualDivisionAllowed(state: GameState): boolean {
 export function hasElapsedHallmarkEffect(state: GameState): boolean {
   const changingReserve =
     owns(state, "replicative_immortality") &&
-    viableRegions(state).some((region) => reserveFor(state, region) > state.reserveFloor);
+    viableRegions(state).some(
+      (region) => reserveFor(state, region) > effectiveReplicativeReserveFloor(state),
+    );
   const maintainedPerfusion = owns(state, "angiogenesis") && linkedRegions(state).length > 0;
   return changingReserve || maintainedPerfusion;
 }
 
 function consumeReplicativeReserve(state: GameState): GameState {
   if (!owns(state, "replicative_immortality")) return state;
-  if (!natural(state.reserveFloor)) throw new Error("Telomere reserve floor is invalid.");
+  const reserveFloor = effectiveReplicativeReserveFloor(state);
   const reserves = { ...state.telomereReserveByRegion };
   for (const region of viableRegions(state)) {
     const reserve = reserveFor(state, region);
-    reserves[region.id] = Math.max(state.reserveFloor, reserve - 1);
+    // An active host can protect capacity without minting stored telomerase reserve.
+    reserves[region.id] = reserve <= reserveFloor ? reserve : Math.max(reserveFloor, reserve - 1);
   }
   return { ...state, telomereReserveByRegion: reserves };
 }
@@ -122,14 +128,15 @@ function debitPerfusionMaintenance(state: GameState): GameState {
   if (!natural(state.vesselMaintenanceAtp) || state.vesselMaintenanceAtp !== linked.length) {
     throw new Error("Perfusion maintenance state is invalid.");
   }
+  const maintenanceDebit = perfusionMaintenanceAtpDebit(state, linked.length);
   // ASVS 2.2.3/2.3.3: a declared extended-hallmark reservation must cover every active physical link.
   if (
     state.atpSinks.includes("vessel-maintenance") &&
-    atpBudgetForSink(state, "vessel-maintenance") < linked.length * 25
+    atpBudgetForSink(state, "vessel-maintenance") < maintenanceDebit * 25
   ) {
     return unlinkForUnpaidMaintenance(state);
   }
-  const debit = fromSafeInteger(state.vesselMaintenanceAtp);
+  const debit = fromSafeInteger(maintenanceDebit);
   if (compare(state.atp, debit) < 0) return unlinkForUnpaidMaintenance(state);
   return { ...state, atp: subtract(state.atp, debit) };
 }
@@ -161,14 +168,29 @@ export function elapsedHallmarkBoundaryCrossings(state: GameState, elapsedMs: nu
 export function projectElapsedHallmarkEffects(state: GameState, elapsedMs: number): GameState {
   const crossings = elapsedHallmarkBoundaryCrossings(state, elapsedMs);
   let projected = state;
+  const start = elapsedHallmarkClockMs(state);
   for (let index = 0; index < crossings; index += 1) {
-    projected = applyElapsedHallmarkBoundary(projected);
+    const beforeBoundary = projected;
+    const afterBoundary = applyElapsedHallmarkBoundary(beforeBoundary);
+    projected = projectSenescenceDecisions(beforeBoundary, afterBoundary, {
+      atMs:
+        (Math.floor(start / ELAPSED_HALLMARK_BOUNDARY_MS) + index + 1) *
+        ELAPSED_HALLMARK_BOUNDARY_MS,
+      originSequence: state.eventSequence,
+    });
   }
   return projected;
 }
 
 export type ElapsedHallmarkDurableProjection = Readonly<
-  Pick<GameState, "telomereReserveByRegion" | "regions" | "oxygenPressure" | "vesselMaintenanceAtp">
+  Pick<
+    GameState,
+    | "telomereReserveByRegion"
+    | "regions"
+    | "oxygenPressure"
+    | "vesselMaintenanceAtp"
+    | "lateHallmarks"
+  >
 >;
 
 /**
@@ -185,5 +207,6 @@ export function projectElapsedHallmarkDurableEffects(
     regions: projection.regions,
     oxygenPressure: projection.oxygenPressure,
     vesselMaintenanceAtp: projection.vesselMaintenanceAtp,
+    lateHallmarks: projection.lateHallmarks,
   };
 }

@@ -97,27 +97,29 @@ export function Cell(props: CellProps): JSX.Element {
       data-colony-cell={props.cell.key}
       transform={structure.transform}
     >
-      <path
-        class={structure.membrane.className}
-        d={structure.membrane.d}
-        fill={structure.membrane.fill}
-        stroke={structure.membrane.stroke}
-        pointer-events="all"
-      />
-      <path
-        class={structure.nucleus.className}
-        d={structure.nucleus.d}
-        fill={structure.nucleus.fill}
-        pointer-events="all"
-      />
-      {structure.mitosis === undefined ? undefined : (
+      <g class="colony-cell__visual">
         <path
-          class={structure.mitosis.className}
-          d={structure.mitosis.d}
-          fill={structure.mitosis.fill}
-          transform={structure.mitosis.transform}
+          class={structure.membrane.className}
+          d={structure.membrane.d}
+          fill={structure.membrane.fill}
+          stroke={structure.membrane.stroke}
+          pointer-events="all"
         />
-      )}
+        <path
+          class={structure.nucleus.className}
+          d={structure.nucleus.d}
+          fill={structure.nucleus.fill}
+          pointer-events="all"
+        />
+        {structure.mitosis === undefined ? undefined : (
+          <path
+            class={structure.mitosis.className}
+            d={structure.mitosis.d}
+            fill={structure.mitosis.fill}
+            transform={structure.mitosis.transform}
+          />
+        )}
+      </g>
     </g>
   );
 }

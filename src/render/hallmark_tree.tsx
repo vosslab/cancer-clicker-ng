@@ -14,8 +14,13 @@ import {
   EXTENDED_HALLMARK_CATALOG,
   hasReachedExtendedHallmarkUnlock,
 } from "../hallmarks/extended_hallmark_catalog.js";
+import {
+  LATE_HALLMARK_CATALOG,
+  hasReachedLateHallmarkActivation,
+} from "../hallmarks/late_hallmark_catalog.js";
 import { MAX_TOTAL_ATP_BUDGET } from "../hallmarks/extended_hallmark_catalog.js";
 import { atpBudgetForSink, hasFundedAtpAcceleration } from "../hallmarks/atp_allocation.js";
+import { perfusionMaintenanceAtpDebit } from "../hallmarks/handlers/perfusion_layout.js";
 import { regionalVisibilityEfficiency } from "../hallmarks/inflammation_timeline.js";
 import {
   effectiveExtendedHallmarkPressures,
@@ -30,7 +35,12 @@ import type {
   CanonicalBigNumDto,
   ExtendedHallmarkDefinition,
 } from "../hallmarks/extended_hallmark_types.js";
+import type { LateHallmarkDefinition } from "../hallmarks/late_hallmark_types.js";
 import type { GameController } from "./game_controller.js";
+import { LateMicrobiomePanel } from "./late_microbiome_panel.js";
+import { LatePlasticityPanel } from "./late_plasticity_panel.js";
+import { LateProgramPanel } from "./late_program_panel.js";
+import { LateSenescencePanel } from "./late_senescence_panel.js";
 import type { CheckpointId, GameState, InflammationEpisode, TriageAction } from "../types/state.js";
 import type { HallmarkId, MutationId, OfferId, RouteId } from "../types/ids.js";
 
@@ -93,6 +103,16 @@ function extendedHallmarkBranchStatus(
     : "locked";
 }
 
+function lateHallmarkBranchStatus(
+  game: GameState,
+  definition: LateHallmarkDefinition,
+): BranchStatus {
+  if (ownsHallmark(game, definition.id)) return "acquired";
+  return hasReachedLateHallmarkActivation(game.currentStage, definition.key)
+    ? "available"
+    : "locked";
+}
+
 function unlockExplanation(definition: CoreSixHallmarkDefinition): string {
   const stage = stageDefinition(definition.unlock.stageId);
   const capability = readableIdentifier(definition.unlock.capability);
@@ -103,6 +123,39 @@ function extendedHallmarkUnlockExplanation(definition: ExtendedHallmarkDefinitio
   const stage = stageDefinition(definition.unlock.stageId);
   const capability = readableIdentifier(definition.unlock.capability);
   return `Unlocks at ${stage.title}: ${capability}.`;
+}
+
+function lateHallmarkUnlockExplanation(definition: LateHallmarkDefinition): string {
+  return `Unlocks at ${stageDefinition(definition.activation.stageId).title}: ${readableIdentifier(definition.activation.capability)}.`;
+}
+
+function lateMechanicSummary(definition: LateHallmarkDefinition): string {
+  switch (definition.mechanicClass) {
+    case "phenotype-switching":
+      return "Assign an eligible region a durable phenotype with production, route-risk, and pressure tradeoffs.";
+    case "program-editing":
+      return "Spend ATP to assign a cooldown-limited program to an owned hallmark target.";
+    case "community-composition":
+      return "Install one exact saved two-niche composition from a rotating three-card offer.";
+    case "senescence-management":
+      return "Keep a nondividing secretory region or clear its complete local projection.";
+  }
+}
+
+function LateHallmarkAcquiredControls(
+  props: HallmarkTreeProps,
+  definition: LateHallmarkDefinition,
+): JSX.Element {
+  switch (definition.mechanicClass) {
+    case "phenotype-switching":
+      return <LatePlasticityPanel {...props} />;
+    case "program-editing":
+      return <LateProgramPanel {...props} />;
+    case "community-composition":
+      return <LateMicrobiomePanel {...props} />;
+    case "senescence-management":
+      return <LateSenescencePanel {...props} />;
+  }
 }
 
 function interactionDisabled(props: HallmarkTreeProps): boolean {
@@ -497,7 +550,9 @@ function AtpBudgetControls(props: HallmarkTreeProps): JSX.Element {
             const maximum = (): number => Math.min(sink.maximumBudget, remainingForSink());
             const activeLinkCount = (): number =>
               props.game.regions.filter((region) => region.vesselLinkIds.length > 0).length;
-            const vesselRequired = (): number => activeLinkCount() * 25;
+            const vesselDebit = (): number =>
+              perfusionMaintenanceAtpDebit(props.game, activeLinkCount());
+            const vesselRequired = (): number => vesselDebit() * 25;
             const vesselReservationSatisfied = (): boolean =>
               activeLinkCount() === 0 ||
               atpBudgetForSink(props.game, "vessel-maintenance") >= vesselRequired();
@@ -536,7 +591,7 @@ function AtpBudgetControls(props: HallmarkTreeProps): JSX.Element {
             };
             const rule = (): string => {
               if (sink.id === "vessel-maintenance")
-                return `Reserve 25 units per link; maintenance debits 1 ATP per link per second. Required ${vesselRequired()}, allocated ${allocation()}.`;
+                return `Reserve 25 units per ATP of current maintenance. This run debits ${vesselDebit()} ATP per second across ${activeLinkCount()} link${activeLinkCount() === 1 ? "" : "s"}. Required ${vesselRequired()}, allocated ${allocation()}.`;
               if (sink.id === "mutation-drafting")
                 return "Reserve 25 units; choosing a saved card costs 1 ATP.";
               return "Any positive reservation may accelerate producers only when ATP can cover vessel maintenance first and the acceleration debit second.";
@@ -833,6 +888,51 @@ export function HallmarkTree(props: HallmarkTreeProps): JSX.Element {
                   </Show>
                   <Show when={status() === "acquired"}>
                     {ExtendedHallmarkAcquiredControls(props, definition)}
+                  </Show>
+                  <Show when={explanation()}>
+                    {(message) => <p class="hallmark-disabled-note">{message()}</p>}
+                  </Show>
+                </div>
+              </li>
+            );
+          }}
+        </For>
+      </ol>
+      <div class="section-heading extended-hallmarks-heading late-hallmarks-heading">
+        <div>
+          <p class="eyebrow">2022 expansion</p>
+          <h2>Plasticity, programs, microbiomes, and senescence</h2>
+        </div>
+        <p class="section-note">
+          Late decisions persist as regional choices, saved offers, and explicit consequences.
+        </p>
+      </div>
+      <ol class="hallmark-list" start="11">
+        <For each={LATE_HALLMARK_CATALOG}>
+          {(definition, index) => {
+            const status = (): BranchStatus => lateHallmarkBranchStatus(props.game, definition);
+            const explanation = (): string | undefined => controlExplanation(props, status());
+            return (
+              <li class="hallmark-row late-hallmark-row">
+                <div class="hallmark-copy">
+                  <p class="hallmark-index">Branch {index() + 11}</p>
+                  <h3>{definition.displayName}</h3>
+                  <p>{lateMechanicSummary(definition)}</p>
+                  <p class="hallmark-unlock">{lateHallmarkUnlockExplanation(definition)}</p>
+                </div>
+                <div class="hallmark-action">
+                  <p class={`hallmark-status is-${status()}`}>{readableIdentifier(status())}</p>
+                  <Show when={status() === "available"}>
+                    <button
+                      type="button"
+                      disabled={interactionDisabled(props)}
+                      onClick={() => props.controller.purchaseHallmark(definition.id)}
+                    >
+                      Acquire capability
+                    </button>
+                  </Show>
+                  <Show when={status() === "acquired"}>
+                    {LateHallmarkAcquiredControls(props, definition)}
                   </Show>
                   <Show when={explanation()}>
                     {(message) => <p class="hallmark-disabled-note">{message()}</p>}

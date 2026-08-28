@@ -1,6 +1,9 @@
 import { hallmarkId } from "../../brands.js";
 import { compare, fromSafeInteger, subtract } from "../../bignum/bignum.js";
 import { coreSixHallmarkDefinition, hasReachedCoreSixUnlock } from "../core_six_catalog.js";
+import { effectiveLateHallmarkRouteRisk } from "../late_hallmark_effects.js";
+import { prestigeRouteRisk } from "../../prestige/effects.js";
+import { cultureRouteRisk } from "../../prestige/culture_effects.js";
 import type { CommitRouteOperation, CoreSixHandler } from "../core_six_types.js";
 import type { HallmarkEffect, HallmarkEffectContext } from "../../types/effects.js";
 import type { RouteId } from "../../types/ids.js";
@@ -26,7 +29,7 @@ function isKnownRevealedRoute(state: GameState, route: RouteId): boolean {
   return state.regions.some((region) => region.routeIds.includes(route));
 }
 
-function routeRisk(state: GameState, route: RouteId): number {
+export function effectiveRouteCommitmentRisk(state: GameState, route: RouteId): number {
   if (!Object.prototype.hasOwnProperty.call(state.routeRiskById, route)) {
     throw new Error("Route commitment requires a revealed route risk.");
   }
@@ -34,7 +37,10 @@ function routeRisk(state: GameState, route: RouteId): number {
   if (typeof risk !== "number" || !Number.isFinite(risk) || risk < 0 || risk > 1) {
     throw new Error("Route commitment has an invalid route risk.");
   }
-  return risk;
+  return cultureRouteRisk(
+    state,
+    prestigeRouteRisk(state, route, effectiveLateHallmarkRouteRisk(state, route, risk)),
+  );
 }
 
 function assertRouteCommitment(context: HallmarkEffectContext<CommitRouteOperation>): void {
@@ -53,7 +59,7 @@ function assertRouteCommitment(context: HallmarkEffectContext<CommitRouteOperati
   if (typeof route !== "string" || !isKnownRevealedRoute(state, route)) {
     throw new Error("Route commitment requires a known revealed route.");
   }
-  routeRisk(state, route);
+  effectiveRouteCommitmentRisk(state, route);
   if (Object.prototype.hasOwnProperty.call(state.committedCellCommitments, route)) {
     throw new Error("Route commitment is already committed.");
   }

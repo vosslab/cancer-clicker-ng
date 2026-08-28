@@ -1,0 +1,18 @@
+{
+  "formatVersion": 1,
+  "semanticRevision": "p8-visible-surface-v1",
+  "curveRevision": "catalog-2026-08-28",
+  "seeds": [0],
+  "actionBudget": 12,
+  "elapsedScheduleMs": [1000, 5000, 10000],
+  "allowedKinds": ["divide", "producer", "hallmark", "stage", "prestige", "network", "allocation"],
+  "id": "l2_portfolio_tradeoffs_v1",
+  "initial": {
+    "kind": "new-game"
+  },
+  "decisionWitness": {
+    "system": "L2",
+    "question": "Which visible portfolio action beats a fixed cheapest choice?",
+    "alternatives": ["card fit", "fixed card"]
+  }
+}

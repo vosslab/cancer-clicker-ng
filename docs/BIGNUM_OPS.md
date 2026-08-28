@@ -2,10 +2,10 @@
 
 ## Scope and boundary
 
-This is the M3 contract for costs, bulk purchases, tick and offline accrual, prestige
-calculations, canonical save fields, replay, and magnitude display. `BigNum` is normalized base-10
-scientific notation, not a general arbitrary-precision package. M3 adds no runtime dependency and
-does not select game balance values, prestige constants, or UI copy.
+This is the BigNum arithmetic contract for costs, bulk purchases, tick and offline accrual,
+prestige calculations, canonical save fields, replay, and magnitude display. `BigNum` is
+normalized base-10 scientific notation, not a general arbitrary-precision package. It adds no
+runtime dependency and does not select game balance values, prestige constants, or UI copy.
 
 `src/brands.ts` is the only branded-value constructor and normalization authority:
 
@@ -21,9 +21,10 @@ resulting exponent is unsafe throw `Error` at this boundary. Inputs with either 
 mantissa canonicalize to the one zero representation `{ mantissa: 0, exponent: 0 }`, regardless
 of the supplied safe exponent. No alternate zero representation can survive construction.
 
-M3 serialization testing is deliberately narrow: extract canonical `{ mantissa, exponent }`
-fields from a trusted BigNum, reconstruct with `bigNum`, and require field equality. Unknown-input
-parse, migration, rejection, and visible recovery belong to M4's `save_load.ts` tests.
+BigNum serialization testing is deliberately narrow: extract canonical `{ mantissa, exponent }`
+fields from a trusted BigNum, reconstruct with `bigNum`, and require field equality. The
+save-parser contract owns unknown-input parsing, migration, rejection, and visible recovery in
+`src/state/save_load.ts` and its semantic tests.
 
 ## Public operations
 
@@ -352,17 +353,17 @@ render/* -> src/bignum/format.ts
 
 `src/bignum/*` imports no state instance, event, economy, prestige, renderer, DOM, browser
 storage, clock, random source, or test helper. `format.ts` may import `NumberFormat` from
-`src/types/state.ts` only with `import type`; it creates no runtime state dependency. Save/load is
-M4-owned and imports `bigNum` only at the trusted rehydration boundary. M3 owns only trusted
-canonical field reconstruction tests; M4 exclusively owns untrusted serialization, migration,
-rejection, and recovery tests.
+`src/types/state.ts` only with `import type`; it creates no runtime state dependency. The
+save-parser owns untrusted serialization, migration, rejection, and recovery and imports `bigNum`
+only at the trusted rehydration boundary. BigNum arithmetic owns trusted canonical-field
+reconstruction tests.
 
-Three implementation lanes own source only: arithmetic owns `src/bignum/bignum.ts`; solver owns
-`src/bignum/solve.ts`; naming/format owns `src/bignum/illion.ts` and `src/bignum/format.ts`.
-After all source lands, one fresh test integrator exclusively owns `tests/test_bignum.mjs` and
-`tests/test_bignum_solve.mjs`. No implementation lane edits either shared test file.
+BigNum arithmetic owns `src/bignum/bignum.ts`, `src/bignum/solve.ts`,
+`src/bignum/illion.ts`, and `src/bignum/format.ts`. The BigNum semantic-test suite owns
+`tests/test_bignum.mjs` and `tests/test_bignum_solve.mjs`, keeping arithmetic behavior and its
+tests independently readable.
 
-## Required M3 tests
+## Required semantic tests
 
 Tests use `node --import tsx --test`, no DOM, no random input, and no sleeps. They prove
 game-facing properties, not a generic mathematics package.
@@ -376,15 +377,17 @@ game-facing properties, not a generic mathematics package.
 | Names and format     | CGW provenance and product-override tests; low ordinals 1..9; authentic vectors 23, 36, 86, 17, 19, 29, 303, 806, 807, 123, 333, 999, 1000; proof that authentic ordinal 27 is `septemvigintillion` before exported `septenvigintillion`; five pinned product checkpoints; ordinary groups, suffix/name fallback, triad rounding carry, digits and trailing zeroes, negatives, singular/plural |
 | Geometric costs      | q 0, 1, 10, 100, ratio one, near one finite route, near-one non-finite fallback, exact ordered-sum equality inside the recurrence bound, closed-form tolerance only where both routes run, invalid inputs                                                                                                                                                                                      |
 | Solver               | every returned q meets the debit-cost boundary; next q fails; zero limit; owned/quantity/probe overflow; zero-cost bounded and unbounded; huge budgets; monotonic budget fixtures                                                                                                                                                                                                              |
-| Serialization        | field extraction plus reconstruct-and-equal canonical fields only; unknown-input tests are deferred to M4                                                                                                                                                                                                                                                                                      |
-| Prestige fixture     | a representative monotonic public-operation fixture only; it is not evidence for M13's eventual formula                                                                                                                                                                                                                                                                                        |
+| Serialization        | field extraction plus reconstruct-and-equal canonical fields only; the save-parser suite owns unknown-input behavior                                                                                                                                                                                                                                                                           |
+| Prestige quote       | a representative monotonic public-operation fixture only; it does not select prestige formulas                                                                                                                                                                                                                                                                                                 |
 
 Exact assertions cover canonical representation, order, solver acceptance/rejection, and ordered
 cost sums in the recurrence range. Relative tolerance `1e-12` covers fractional power and the
 bounded recurrence-versus-closed-form comparison. Mathematically zero expected results are exact.
 The final solver boundary is never tolerance-based.
 
-## Deferred tuning
+## Balance calibration evidence
 
-M21 owns producer prices, ratios, soft caps, prestige exponents, panel precision, and UI purchase
-limits. These stable operations need no additional numeric primitive before M4-M20.
+The balance-calibration owner selects producer prices, ratios, soft caps, prestige exponents,
+panel precision, and UI purchase limits. Its dated simulator reports are one-time development
+evidence, not permanent BigNum tests or a numeric-primitive contract. The arithmetic, save-parser,
+prestige-quote, and replay owners continue to rely on the stable operations documented here.

@@ -1,0 +1,18 @@
+{
+  "formatVersion": 1,
+  "semanticRevision": "p8-visible-surface-v1",
+  "curveRevision": "catalog-2026-08-28",
+  "seeds": [0],
+  "actionBudget": 12,
+  "elapsedScheduleMs": [1000, 5000, 10000],
+  "allowedKinds": ["divide", "producer", "hallmark", "stage", "prestige", "network", "allocation"],
+  "id": "l1_route_tradeoffs_v1",
+  "initial": {
+    "kind": "new-game"
+  },
+  "decisionWitness": {
+    "system": "L1",
+    "question": "Which visible route posture produces the better local outcome?",
+    "alternatives": ["local growth", "stealth seeding"]
+  }
+}

@@ -186,6 +186,7 @@ test("event-funnel purchases debit exactly once and reject invalid inventory or 
     type: "purchase-producer",
     producerId: producer.id,
     quantity: 10,
+    execution: "manual",
     atMs: 0,
   });
   assert.deepEqual(after.cells, subtract(before.cells, quote.debit));
@@ -198,6 +199,7 @@ test("event-funnel purchases debit exactly once and reject invalid inventory or 
     type: "purchase-producer",
     producerId: producer.id,
     quantity: "max",
+    execution: "manual",
     atMs: 0,
   });
   const literalFirstCost = bigNum(1, 0);
@@ -255,6 +257,7 @@ test("event-funnel purchases debit exactly once and reject invalid inventory or 
         type: "purchase-producer",
         producerId: producer.id,
         quantity: 1,
+        execution: "manual",
         atMs: 0,
       }),
     );
@@ -266,6 +269,7 @@ test("event-funnel purchases debit exactly once and reject invalid inventory or 
       type: "purchase-producer",
       producerId: producer.id,
       quantity: "max",
+      execution: "manual",
       atMs: 0,
     }),
   );
@@ -277,6 +281,7 @@ test("event-funnel purchases debit exactly once and reject invalid inventory or 
         type: "purchase-producer",
         producerId: producer.id,
         quantity,
+        execution: "manual",
         atMs: 0,
       }),
     );
@@ -296,6 +301,7 @@ test("authoritative growing debit defeats flat and rounded display substitutions
     type: "purchase-producer",
     producerId: producer.id,
     quantity: 10,
+    execution: "manual",
     atMs: 0,
   });
   assert.deepEqual(after.cells, subtract(before.cells, quote.debit));

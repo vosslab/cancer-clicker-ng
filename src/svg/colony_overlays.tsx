@@ -70,6 +70,26 @@ function seededOverlays(
   });
 }
 
+function effectRegions(
+  layout: ColonyLayout,
+  visual: ColonyVisualState,
+  effectId: ColonyVisualEffect["id"],
+): readonly RegionalOverlay[] {
+  const effect = visual.effects.find((candidate) => candidate.id === effectId);
+  if (effect === undefined) return [];
+  const seen = new Set<string>();
+  return effect.regionIds.flatMap((sourceRegionId) => {
+    if (seen.has(sourceRegionId)) return [];
+    seen.add(sourceRegionId);
+    const overlay = visual.overlays.find(
+      (candidate) => candidate.sourceRegionId === sourceRegionId,
+    );
+    if (overlay === undefined) return [];
+    const region = regionFor(layout, overlay.layoutRegionKey);
+    return region === undefined ? [] : [Object.freeze({ region, sourceRegionId })];
+  });
+}
+
 function systemicInvasiveFront(layout: ColonyLayout): string {
   const edge = layout.silhouette.vertices.reduce((rightmost, point) =>
     point.x > rightmost.x ? point : rightmost,
@@ -152,6 +172,10 @@ export function HallmarkOverlays(props: OverlayProps): JSX.Element {
   const inflamed = overlaysFor(props.layout, props.visual, "inflamed");
   const hasMetabolicCue = hasEffect(props.visual, "metabolic-state");
   const hasCheckpointCue = hasEffect(props.visual, "checkpoint-disorganization");
+  const phenotypeVariance = effectRegions(props.layout, props.visual, "phenotype-variance");
+  const senescent = overlaysFor(props.layout, props.visual, "senescent");
+  const hasChromatinProgram = hasEffect(props.visual, "chromatin-program");
+  const hasMicrobiomeSurface = hasEffect(props.visual, "microbiome-surface");
   return (
     <g class="colony-figure__hallmark-accents" aria-hidden="true" pointer-events="none">
       <For each={masked}>
@@ -187,6 +211,71 @@ export function HallmarkOverlays(props: OverlayProps): JSX.Element {
       {hasCheckpointCue ? (
         <path class="colony-figure__checkpoint-cue" d="M 132 84 l 20 26 -20 26" fill="none" />
       ) : undefined}
+      <g class="colony-figure__late-hallmark-accents" aria-hidden="true">
+        <For each={phenotypeVariance}>
+          {(overlay) => (
+            <g data-effect="phenotype-variance" data-region={overlay.sourceRegionId}>
+              <ellipse
+                class="colony-figure__phenotype-variance"
+                cx={overlay.region.centre.x}
+                cy={overlay.region.centre.y}
+                rx={overlay.region.rx * 0.88}
+                ry={overlay.region.ry * 0.88}
+                fill="none"
+                stroke="#d39c54"
+                stroke-width="2.25"
+                stroke-dasharray="3 6"
+              />
+              <path
+                class="colony-figure__phenotype-variance-mark"
+                d={`M ${overlay.region.centre.x - overlay.region.rx * 0.34} ${overlay.region.centre.y} q ${overlay.region.rx * 0.22} ${-overlay.region.ry * 0.24} ${overlay.region.rx * 0.44} 0`}
+                fill="none"
+                stroke="#f1d49a"
+                stroke-width="2"
+              />
+            </g>
+          )}
+        </For>
+        {hasChromatinProgram ? (
+          <g class="colony-figure__chromatin-program" data-effect="chromatin-program">
+            <path d="M 76 142 q 13 -18 27 0 t 27 0" fill="none" stroke="#cf9cc4" stroke-width="3" />
+            <circle cx="91" cy="142" r="3.5" fill="#f0cde8" />
+            <circle cx="119" cy="142" r="3.5" fill="#f0cde8" />
+          </g>
+        ) : undefined}
+        {hasMicrobiomeSurface ? (
+          <g class="colony-figure__microbiome-surface" data-effect="microbiome-surface">
+            <path d="M 74 186 q 18 -14 36 0 t 36 0" fill="none" stroke="#a5d0aa" stroke-width="3" />
+            <circle cx="86" cy="181" r="3" fill="#d6ecd3" />
+            <circle cx="110" cy="190" r="3" fill="#d6ecd3" />
+            <circle cx="136" cy="181" r="3" fill="#d6ecd3" />
+          </g>
+        ) : undefined}
+        <For each={senescent}>
+          {(overlay) => (
+            <g data-effect="senescent-region" data-region={overlay.sourceRegionId}>
+              <ellipse
+                class="colony-figure__senescent-retained"
+                cx={overlay.region.centre.x}
+                cy={overlay.region.centre.y}
+                rx={overlay.region.rx * 1.13}
+                ry={overlay.region.ry * 1.13}
+                fill="none"
+                stroke="#d8bd73"
+                stroke-width="3"
+                stroke-dasharray="7 5"
+              />
+              <path
+                class="colony-figure__senescent-nondivision"
+                d={`M ${overlay.region.centre.x - 4} ${overlay.region.centre.y - 7} v 14 M ${overlay.region.centre.x + 4} ${overlay.region.centre.y - 7} v 14`}
+                fill="none"
+                stroke="#f2d99a"
+                stroke-width="2.5"
+              />
+            </g>
+          )}
+        </For>
+      </g>
     </g>
   );
 }

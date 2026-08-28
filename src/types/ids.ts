@@ -21,3 +21,20 @@ export type MicrobiomeCompositionId = string &
   Readonly<{ readonly __brand: "MicrobiomeCompositionId" }>;
 export type MicrobiomeNicheId = string & Readonly<{ readonly __brand: "MicrobiomeNicheId" }>;
 export type MicrobiomeOfferId = string & Readonly<{ readonly __brand: "MicrobiomeOfferId" }>;
+export type OrganSiteId = string & Readonly<{ readonly __brand: "OrganSiteId" }>;
+export type OrganTagId = string & Readonly<{ readonly __brand: "OrganTagId" }>;
+export type ColonizationProgramId = string &
+  Readonly<{ readonly __brand: "ColonizationProgramId" }>;
+export type LineageBoonId = string & Readonly<{ readonly __brand: "LineageBoonId" }>;
+export type HostDraftId = string & Readonly<{ readonly __brand: "HostDraftId" }>;
+export type HostCardId = string & Readonly<{ readonly __brand: "HostCardId" }>;
+export type HostTraitId = string & Readonly<{ readonly __brand: "HostTraitId" }>;
+export type HostRunId = string & Readonly<{ readonly __brand: "HostRunId" }>;
+export type PassageUpgradeId = string & Readonly<{ readonly __brand: "PassageUpgradeId" }>;
+export type CryobankProgramId = string & Readonly<{ readonly __brand: "CryobankProgramId" }>;
+export type NetworkNodeId = string & Readonly<{ readonly __brand: "NetworkNodeId" }>;
+export type NetworkEdgeId = string & Readonly<{ readonly __brand: "NetworkEdgeId" }>;
+export type NetworkFrontierId = string & Readonly<{ readonly __brand: "NetworkFrontierId" }>;
+export type DisseminationMandateId = string &
+  Readonly<{ readonly __brand: "DisseminationMandateId" }>;
+export type NetworkCampaignId = string & Readonly<{ readonly __brand: "NetworkCampaignId" }>;

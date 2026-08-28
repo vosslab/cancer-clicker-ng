@@ -9,6 +9,11 @@ import { ProducersPanel } from "./producers_panel.js";
 import { HallmarkTree } from "./hallmark_tree.js";
 import { ColonyPanel } from "./colony_panel.js";
 import { StagePanel } from "./stage_panel.js";
+import { TransitPanel } from "./transit_panel.js";
+import { PrestigePanel } from "./prestige_panel.js";
+import { CulturePanel } from "./culture_panel.js";
+import { NetworkPanel } from "./network_panel.js";
+import { EndingView } from "./ending_view.js";
 import { GameShell } from "./shell.js";
 import { createGameController, persistWithStorage } from "./game_controller.js";
 import type {
@@ -108,6 +113,9 @@ export function App(props: AppProps): JSX.Element {
   const [showLifecycleProbe, setShowLifecycleProbe] = createSignal(true);
   const [cleanupCount, setCleanupCount] = createSignal(0);
   const [debugOutcome, setDebugOutcome] = createSignal("No debug event run.");
+  const [endingFocusSourceEventSequence, setEndingFocusSourceEventSequence] = createSignal<
+    number | undefined
+  >(undefined);
   const saveStatus = createMemo(() =>
     controller.saveError() ? "Unsaved changes" : "Progress saved locally",
   );
@@ -140,8 +148,19 @@ export function App(props: AppProps): JSX.Element {
     controller.purchase(id, quantity);
   }
 
+  function queueAssayPurchase(id: Parameters<typeof controller.queueAssayProducerAction>[0]): void {
+    controller.queueAssayProducerAction(id);
+  }
+
   function advanceStage(): void {
     controller.advanceStage();
+  }
+
+  function reachSoftEnding(): ReturnType<typeof controller.reachSoftEnding> {
+    const result = controller.reachSoftEnding();
+    if (result.ok && controller.game.ending.phase === "reached")
+      setEndingFocusSourceEventSequence(controller.game.ending.sourceEventSequence);
+    return result;
   }
 
   function advance(): void {
@@ -236,6 +255,13 @@ export function App(props: AppProps): JSX.Element {
           </button>
         </div>
       </header>
+      <EndingView
+        game={controller.game}
+        disabled={controller.recoveryBlocked()}
+        acceptedSourceEventSequence={endingFocusSourceEventSequence()}
+        onAcceptedFocusHandled={() => setEndingFocusSourceEventSequence(undefined)}
+        onReach={reachSoftEnding}
+      />
       <section class="game-board" aria-label="Tumor growth board">
         <ColonyPanel
           game={controller.game}
@@ -248,12 +274,17 @@ export function App(props: AppProps): JSX.Element {
             disabled={controller.recoveryBlocked()}
             onAdvance={advanceStage}
           />
+          <TransitPanel game={controller.game} controller={controller} />
           <HallmarkTree game={controller.game} controller={controller} />
+          <PrestigePanel game={controller.game} controller={controller} />
+          <CulturePanel game={controller.game} controller={controller} />
+          <NetworkPanel game={controller.game} controller={controller} />
         </section>
         <aside class="store-rail" aria-label="Division apparatus store">
           <ProducersPanel
             game={controller.game}
             onPurchase={handlePurchase}
+            onQueueAssay={queueAssayPurchase}
             reverse={showReversedProducers()}
             disabled={controller.recoveryBlocked()}
           />

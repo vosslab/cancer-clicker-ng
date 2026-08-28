@@ -5,23 +5,81 @@ import {
   bigNum,
   eventId,
   hallmarkId,
+  lateProgramOptionId,
+  microbiomeCompositionId,
+  microbiomeOfferId,
   mutationId,
   regionId,
   routeId,
   stageId,
 } from "../src/brands.ts";
+import { findMicrobiomeComposition } from "../src/hallmarks/microbiome_catalog.ts";
 import { createInitialGameState } from "../src/state/game_state.ts";
 import { createColonySceneRequest } from "../src/svg/render_types.ts";
 import { createGameColonyScene } from "../src/svg/colony_visual_state.ts";
 
-function region(name, viability = 1) {
+function region(name, viability = 1, phenotype = "migratory") {
   return {
     id: regionId(name),
     capacity: 8,
     viability,
-    phenotype: "migratory",
+    phenotype,
     vesselLinkIds: [eventId(`vessel:${name}`)],
     routeIds: [routeId(`route:${name}`)],
+  };
+}
+
+function lateHallmarkTumorState() {
+  const composition = findMicrobiomeComposition(microbiomeCompositionId("fermenter-commensal"));
+  assert.ok(composition);
+  const retained = region("retained", 1, "migratory");
+  const proliferative = region("proliferative", 1, "proliferative");
+  const stressTolerant = region("stress-tolerant", 1, "stress-tolerant");
+  const initial = createInitialGameState();
+  return {
+    ...initial,
+    currentStage: stageId("global_lab_contamination"),
+    deterministicSeed: 321,
+    regions: [retained, proliferative, stressTolerant],
+    hallmarkLevels: [
+      "proliferative_signaling",
+      "phenotypic_plasticity",
+      "epigenetic_reprogramming",
+      "polymorphic_microbiomes",
+      "senescent_cells",
+    ].map((id) => ({ id: hallmarkId(id), level: 1 })),
+    lateHallmarks: {
+      ...initial.lateHallmarks,
+      epigenetic: {
+        assignments: [
+          {
+            hallmarkId: hallmarkId("proliferative_signaling"),
+            optionId: lateProgramOptionId("signaling:cycle-bias"),
+          },
+        ],
+        cooldownDeadlineMs: null,
+      },
+      microbiome: {
+        ...initial.lateHallmarks.microbiome,
+        activeComposition: {
+          offerId: microbiomeOfferId("installed-fermenter-commensal"),
+          composition,
+          installedAtMs: 0,
+        },
+      },
+      senescence: {
+        pendingDecisions: [],
+        retainedRegions: [
+          {
+            decisionId: eventId("senescence:retained"),
+            regionId: retained.id,
+            cause: "damage-failure",
+            createdAtMs: 0,
+            retainedAtMs: 1,
+          },
+        ],
+      },
+    },
   };
 }
 
@@ -107,6 +165,99 @@ test("systemic invasion separates durable route commitment from seeded-site evid
 
   assert.deepEqual(routeOnly.visual.invasion, { routeCommitted: true, seeded: false });
   assert.deepEqual(seededOnly.visual.invasion, { routeCommitted: false, seeded: true });
+});
+
+test("operational late hallmarks create frozen provenance-backed visual effects", () => {
+  const scene = createGameColonyScene(lateHallmarkTumorState());
+  const effects = new Map(scene.visual.effects.map((effect) => [effect.id, effect]));
+
+  for (const [id, sourceId, referenceRowId, contributorId] of [
+    [
+      "phenotype-variance",
+      "phenotypic_plasticity",
+      "morphology:phenotype_variance",
+      "hallmark:phenotypic_plasticity",
+    ],
+    [
+      "chromatin-program",
+      "epigenetic_reprogramming",
+      "morphology:chromatin_texture",
+      "hallmark:epigenetic_reprogramming",
+    ],
+    [
+      "microbiome-surface",
+      "polymorphic_microbiomes",
+      "morphology:surface_motif",
+      "hallmark:polymorphic_microbiomes",
+    ],
+    [
+      "senescent-region",
+      "senescent_cells",
+      "morphology:senescent_shape",
+      "hallmark:senescent_cells",
+    ],
+  ]) {
+    const effect = effects.get(id);
+    assert.ok(effect);
+    assert.equal(effect.sourceId, sourceId);
+    assert.equal(effect.referenceRowIds.includes(referenceRowId), true);
+    assert.equal(
+      effect.morphology.some((entry) => entry.source.contributorId === contributorId),
+      true,
+    );
+    assert.equal(Object.isFrozen(effect), true);
+  }
+
+  assert.deepEqual(effects.get("phenotype-variance")?.regionIds, [
+    regionId("proliferative"),
+    regionId("stress-tolerant"),
+  ]);
+  assert.deepEqual(effects.get("senescent-region")?.regionIds, [regionId("retained")]);
+  assert.deepEqual(effects.get("chromatin-program")?.regionIds, []);
+  assert.deepEqual(effects.get("microbiome-surface")?.regionIds, []);
+});
+
+test("pending or cleared senescence has no retained visual evidence", () => {
+  const game = lateHallmarkTumorState();
+  const retained = regionId("retained");
+  const pendingOnly = {
+    ...game,
+    lateHallmarks: {
+      ...game.lateHallmarks,
+      senescence: {
+        pendingDecisions: [
+          {
+            id: eventId("senescence:pending"),
+            regionId: retained,
+            cause: "damage-failure",
+            createdAtMs: 2,
+          },
+        ],
+        retainedRegions: [],
+      },
+    },
+  };
+  const cleared = {
+    ...pendingOnly,
+    lateHallmarks: {
+      ...pendingOnly.lateHallmarks,
+      senescence: { pendingDecisions: [], retainedRegions: [] },
+    },
+  };
+
+  for (const candidate of [pendingOnly, cleared]) {
+    const visual = createGameColonyScene(candidate).visual;
+    assert.equal(
+      visual.effects.some((effect) => effect.id === "senescent-region"),
+      false,
+    );
+    assert.equal(
+      visual.overlays.some(
+        (overlay) => overlay.sourceRegionId === retained && overlay.condition === "senescent",
+      ),
+      false,
+    );
+  }
 });
 
 test("render boundary rejects forged visual records before SVG projection", () => {
