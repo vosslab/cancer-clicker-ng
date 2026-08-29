@@ -134,18 +134,17 @@ test("extended-hallmark real Solid controls expose ATP conversion and all four d
   const tree = hallmarkPanel(page);
   await expect(tree.getByRole("list", { name: "Hallmark mutation programs" })).toBeVisible();
   for (const heading of LATE_HALLMARK_HEADINGS) {
-    await expect(tree.getByRole("button", { name: `${heading}, locked` })).toBeVisible();
+    await expect(tree.getByRole("button", { name: `${heading}, locked` })).toHaveCount(0);
   }
   await acquireAllExtendedHallmarks(page);
 
   const metabolic = await selectBranch(page, EXTENDED_HALLMARK_HEADINGS[0], "acquired");
-  await expect(metabolic.getByLabel("ATP meter")).toHaveText(/9\.00 ATP units/);
-  await metabolic.getByLabel("Mantissa (1-9)").fill("2");
-  await metabolic.getByRole("button", { name: "Convert substrate to ATP" }).click();
+  await expect(metabolic.getByLabel("ATP meter")).toHaveText(/9\.0 ATP units/);
+  await metabolic.getByRole("button", { name: "Convert 1 substrate" }).click();
   const converted = await savedState(page);
-  expect(converted.substrate).toEqual({ mantissa: 7, exponent: 0 });
-  expect(converted.atp).toEqual({ mantissa: 1.1, exponent: 1 });
-  await expect(metabolic.getByLabel("ATP meter")).toHaveText(/11\.00 ATP units/);
+  expect(converted.substrate).toEqual({ mantissa: 8, exponent: 0 });
+  expect(converted.atp).toEqual({ mantissa: 1, exponent: 1 });
+  await expect(metabolic.getByLabel("ATP meter")).toHaveText(/10\.0 ATP units/);
 
   const acceleration = page.getByLabel("Producer acceleration ATP allocation");
   await acceleration.fill("100");
@@ -185,8 +184,7 @@ test("extended-hallmark real Solid controls expose ATP conversion and all four d
   const drafting = page.getByLabel("Mutation drafting ATP allocation");
   await drafting.fill("25");
   await drafting.press("Tab");
-  await metabolicForDraft.getByLabel("Mantissa (1-9)").fill("5");
-  await metabolicForDraft.getByRole("button", { name: "Convert substrate to ATP" }).click();
+  await metabolicForDraft.getByRole("button", { name: "Convert 5 substrate" }).click();
   await page.getByRole("button", { name: "Fast-forward 60 seconds" }).click();
   const mutation = await selectBranch(page, EXTENDED_HALLMARK_HEADINGS[3], "acquired");
   const cards = mutation.locator(".mutation-offer-card");
@@ -196,13 +194,13 @@ test("extended-hallmark real Solid controls expose ATP conversion and all four d
   const selected = names[0];
   expect(selected).toBeTruthy();
   const selectedId = selected.toLowerCase().replaceAll(" ", "_");
-  expect((await savedState(page)).atp).toEqual({ mantissa: 8, exponent: 0 });
+  expect((await savedState(page)).atp).toEqual({ mantissa: 7, exponent: 0 });
   await mutation.getByRole("button", { name: `Select ${selected}` }).focus();
   await expect(mutation.getByRole("button", { name: `Select ${selected}` })).toBeEnabled();
   await page.keyboard.press("Enter");
   await expect(page.locator("#mutation-offer-title")).toBeFocused();
   const selectedState = await savedState(page);
-  expect(selectedState.atp).toEqual({ mantissa: 7, exponent: 0 });
+  expect(selectedState.atp).toEqual({ mantissa: 6, exponent: 0 });
   expect(selectedState.chosenMutations).toEqual([selectedId]);
   expect(selectedState.mutationLiabilities).toEqual([selectedId]);
   await page.reload();

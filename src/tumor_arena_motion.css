@@ -1,0 +1,330 @@
+/* Motion, reduced-motion fallbacks, and arena-specific responsive rules. */
+
+@keyframes tumor-division-ripple {
+  0% {
+    opacity: 0.9;
+    transform: scale(0.22);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(3.8);
+  }
+}
+
+@keyframes tumor-division-constrict {
+  0% {
+    opacity: 0;
+    transform: scaleX(1.25) scaleY(0.72);
+  }
+  42% {
+    opacity: 1;
+    transform: scaleX(0.58) scaleY(1.06);
+  }
+  100% {
+    opacity: 0;
+    transform: scaleX(0.3) scaleY(1.14);
+  }
+}
+
+@keyframes tumor-division-cleavage {
+  0% {
+    opacity: 0;
+    stroke-dasharray: 1 28;
+  }
+  48% {
+    opacity: 1;
+    stroke-dasharray: 20 6;
+  }
+  100% {
+    opacity: 0;
+    stroke-dasharray: 28 3;
+  }
+}
+
+@keyframes tumor-division-daughters {
+  0% {
+    opacity: 0;
+    transform: translateX(0) scale(0.38);
+  }
+  62% {
+    opacity: 1;
+    transform: translateX(var(--daughter-drift, 16px)) scale(1.12);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(var(--daughter-drift, 20px)) scale(1.22);
+  }
+}
+
+@keyframes tumor-division-mote {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(22px, -18px) scale(0.2);
+  }
+}
+
+@keyframes reward-float {
+  0% {
+    opacity: 0;
+    transform: translateY(0.3rem) scale(0.85);
+  }
+  26% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-1.1rem) scale(1.05);
+  }
+}
+
+@keyframes hallmark-acquisition-ring {
+  0% {
+    opacity: 0;
+    transform: scale(0.48);
+  }
+  28% {
+    opacity: 0.92;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(2.2);
+  }
+}
+
+@keyframes hallmark-acquisition-trail {
+  0% {
+    opacity: 0;
+    stroke-dashoffset: 54;
+  }
+  28% {
+    opacity: 0.95;
+  }
+  100% {
+    opacity: 0;
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes hallmark-acquisition-core {
+  0% {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  30% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.78);
+  }
+}
+
+@keyframes colony-tissue-breathe {
+  0%,
+  100% {
+    opacity: 0.96;
+    transform: scale(1);
+  }
+  52% {
+    opacity: 1;
+    transform: scale(1.065);
+  }
+}
+
+@keyframes colony-cycle-wave {
+  to {
+    stroke-dashoffset: -68;
+  }
+}
+
+@keyframes colony-perfusion-flow {
+  to {
+    stroke-dashoffset: -54;
+  }
+}
+
+@keyframes colony-invasive-front {
+  to {
+    stroke-dashoffset: -62;
+  }
+}
+
+@keyframes stage-arrival {
+  0% {
+    opacity: 0;
+    transform: scale(0.88);
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1);
+  }
+}
+
+@keyframes stage-arrival-ring {
+  0% {
+    opacity: 0;
+    transform: scale(0.55);
+  }
+  55% {
+    opacity: 0.85;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.12);
+  }
+}
+
+@keyframes stage-arrival-front {
+  0% {
+    opacity: 0;
+    stroke-dashoffset: 48;
+  }
+  42% {
+    opacity: 0.95;
+  }
+  100% {
+    opacity: 0;
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes stage-arrival-beacons {
+  0% {
+    opacity: 0;
+    transform: scale(0.25);
+  }
+  48% {
+    opacity: 1;
+    transform: scale(1.35);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1);
+  }
+}
+
+@media (min-width: 72.0625rem) {
+  .tumor-arena {
+    min-height: 31rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tumor-arena__action::after {
+    border-color: rgb(255 198 185 / 48%);
+  }
+  .colony-cell__visual {
+    transition: none;
+  }
+  .tumor-feedback__division .tumor-feedback__ripple {
+    opacity: 0.88;
+    stroke: #ff9bd6;
+    transform: scale(1.55);
+  }
+  .tumor-feedback__division .tumor-feedback__constriction {
+    opacity: 0.92;
+    transform: scaleX(0.62) scaleY(1.05);
+  }
+  .tumor-feedback__division .tumor-feedback__cleavage {
+    opacity: 1;
+    stroke-dasharray: none;
+  }
+  .tumor-feedback__division .tumor-feedback__daughter {
+    opacity: 1;
+    animation: none;
+  }
+  .tumor-feedback__division .tumor-feedback__daughter--left {
+    transform: translateX(-16px);
+  }
+  .tumor-feedback__division .tumor-feedback__daughter--right {
+    transform: translateX(16px);
+  }
+  .tumor-feedback__division .tumor-feedback__mote {
+    opacity: 0;
+  }
+  .hallmark-feedback__ring,
+  .hallmark-feedback__trail,
+  .hallmark-feedback__core,
+  .hallmark-feedback__helix {
+    animation: none;
+    opacity: 0.9;
+  }
+  .hallmark-feedback__ring--far {
+    transform: scale(1.4);
+  }
+  .tumor-feedback__reward {
+    opacity: 1;
+    transform: none;
+  }
+  .colony-figure--cycling .colony-figure__cells,
+  .colony-figure--energized .colony-figure__cells {
+    animation: none;
+    filter: none;
+  }
+  .colony-figure__cycle-wave {
+    stroke-dasharray: none;
+    opacity: 0.9;
+  }
+  .colony-figure__activity-aura {
+    stroke: rgb(248 181 190 / 38%);
+    stroke-dasharray: none;
+  }
+  .colony-figure--cycling .colony-figure__cycle-wave,
+  .colony-figure--energized .colony-figure__cycle-wave,
+  .colony-figure--stage-angiogenic_primary .colony-figure__vessel-trunk,
+  .colony-figure--stage-invasive_carcinoma .colony-figure__vessel-trunk,
+  .colony-figure--stage-intravasation .colony-figure__vessel-trunk,
+  .colony-figure--stage-micrometastatic_seeding .colony-figure__vessel-trunk,
+  .colony-figure--stage-metastatic_burden .colony-figure__vessel-trunk,
+  .colony-figure--stage-invasive_carcinoma .colony-figure__invasive-front,
+  .colony-figure--stage-intravasation .colony-figure__invasive-front,
+  .colony-figure--stage-micrometastatic_seeding .colony-figure__invasive-front,
+  .colony-figure--stage-metastatic_burden .colony-figure__invasive-front,
+  .stage-transition-emphasis__arrival,
+  .stage-transition-emphasis__ring,
+  .stage-transition-emphasis__front,
+  .stage-transition-emphasis__beacons {
+    animation: none;
+  }
+  .colony-figure--stage-angiogenic_primary .colony-figure__vessel-trunk,
+  .colony-figure--stage-invasive_carcinoma .colony-figure__vessel-trunk,
+  .colony-figure--stage-intravasation .colony-figure__vessel-trunk,
+  .colony-figure--stage-micrometastatic_seeding .colony-figure__vessel-trunk,
+  .colony-figure--stage-metastatic_burden .colony-figure__vessel-trunk {
+    stroke-dasharray: none;
+  }
+  .colony-figure--stage-invasive_carcinoma .colony-figure__invasive-front,
+  .colony-figure--stage-intravasation .colony-figure__invasive-front,
+  .colony-figure--stage-micrometastatic_seeding .colony-figure__invasive-front,
+  .colony-figure--stage-metastatic_burden .colony-figure__invasive-front {
+    stroke-dasharray: 2 7;
+    opacity: 0.95;
+  }
+  .stage-transition-emphasis__arrival {
+    opacity: 1;
+  }
+  .stage-transition-emphasis__ring,
+  .stage-transition-emphasis__front {
+    opacity: 0;
+  }
+  .stage-transition-emphasis__beacons {
+    opacity: 0.62;
+  }
+}
+
+@media (max-width: 48rem) {
+  .colony-panel {
+    min-height: 25rem;
+  }
+  .tumor-arena__hud {
+    right: 0.42rem;
+    bottom: 0.42rem;
+  }
+}

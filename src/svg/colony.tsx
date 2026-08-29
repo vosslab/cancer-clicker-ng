@@ -49,8 +49,8 @@ export type ColonySvgModel = Readonly<{
 }>;
 
 function countCellNodes(cell: CellRenderModel): number {
-  // Outer cell group, visual group, membrane, nucleus, and optional mitosis path.
-  return cell.mitosis === undefined ? 4 : 5;
+  // Outer cell group, visual group, hit envelope, membrane, nucleus, and optional mitosis path.
+  return cell.mitosis === undefined ? 5 : 6;
 }
 
 function estimateNodeCount(

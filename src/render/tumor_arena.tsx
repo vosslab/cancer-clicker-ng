@@ -7,21 +7,20 @@ import type { Accessor, JSX } from "solid-js";
 
 import { Colony } from "../svg/colony.js";
 import { StageTransitionEmphasis } from "../svg/stage_transition_emphasis.js";
-import { TumorFeedback } from "../svg/tumor_feedback.js";
+import { HallmarkAcquisitionFeedback, TumorFeedback } from "../svg/tumor_feedback.js";
 import type { ColonySceneRequest } from "../svg/render_types.js";
 import { HelpTooltip } from "./action_tooltip.js";
-import { RewardFeedback } from "./reward_feedback.js";
 
 export type TumorArenaProps = Readonly<{
   disabled: boolean;
   scene: ColonySceneRequest;
   cellsLabel: string;
-  growthProgress: number | undefined;
   magnitudeName: string | undefined;
   productionLabel: string;
   description: string;
   feedbackTarget: Accessor<Readonly<{ x: number; y: number }>>;
   feedbackSequence: Accessor<number>;
+  hallmarkFeedbackSequence: Accessor<number>;
   onDivisionFeedback: (target: Readonly<{ x: number; y: number }>) => void;
   /** Acknowledges that the canonical click event was accepted and persisted. */
   onDivide: () => boolean;
@@ -44,20 +43,25 @@ function divideActionForEvent(event: MouseEvent): HTMLButtonElement | undefined 
   return action instanceof HTMLButtonElement ? action : undefined;
 }
 
-function pointerFallsOnVisibleColonyCell(event: MouseEvent): boolean {
+function pointerFallsWithinColonyHitRegion(event: MouseEvent): boolean {
   const action = divideActionForEvent(event);
   if (action === undefined) return false;
-  // Chromium can retarget a compact SVG click to its root. Recheck actual
-  // membrane/nucleus geometry so tissue, voids, and board whitespace stay inert.
+  // Chromium can retarget a compact SVG click to its root. Recheck the visible
+  // membrane/nucleus and its transparent nearby-pointer envelope so tissue,
+  // voids, and board whitespace stay inert.
   return [...action.querySelectorAll("[data-colony-cell]")].some((cell) =>
-    [...cell.querySelectorAll(".colony-cell__membrane, .colony-cell__nucleus")].some(
+    [
+      ...cell.querySelectorAll(
+        ".colony-cell__membrane, .colony-cell__nucleus, .colony-cell__hit-target",
+      ),
+    ].some(
       (candidate) =>
         candidate instanceof SVGGeometryElement && pathContainsPointer(candidate, event),
     ),
   );
 }
 
-/** Exposed semantic seam: only a rendered membrane or nucleus receives a pointer division. */
+/** Exposed semantic seam: a visible cell and its nearby pointer envelope receive division. */
 export function eventTargetsVisibleColonyCell(event: MouseEvent): boolean {
   const directTarget = event.target;
   if (directTarget instanceof Element && directTarget.closest("[data-colony-cell]") !== null) {
@@ -70,7 +74,7 @@ export function eventTargetsVisibleColonyCell(event: MouseEvent): boolean {
   ) {
     return true;
   }
-  return pointerFallsOnVisibleColonyCell(event);
+  return pointerFallsWithinColonyHitRegion(event);
 }
 
 /** Maps an accepted pointer position into the existing colony SVG coordinate system. */
@@ -111,7 +115,7 @@ export function TumorArena(props: TumorArenaProps): JSX.Element {
   });
   function divideFromArena(event: MouseEvent): void {
     // Keyboard and assistive activation has detail 0. Pointer/touch intent must
-    // originate from a rendered cell rather than the surrounding specimen well.
+    // land on a rendered cell or its forgiving nearby envelope, never on tissue.
     if (event.detail !== 0 && !eventTargetsVisibleColonyCell(event)) return;
     // Prefer a real in-bounds pointer location even when a platform reports a
     // zero click-detail. Virtual keyboard/assistive activation has no such
@@ -125,15 +129,11 @@ export function TumorArena(props: TumorArenaProps): JSX.Element {
     <div class="tumor-arena">
       <div class="tumor-arena__hud">
         <Show when={props.magnitudeName}>
-          {(name) => (
-            <span class="tumor-arena__magnitude" aria-label={`Named magnitude ${name()}`}>
-              {name()}
-            </span>
-          )}
+          {(name) => <span class="tumor-arena__magnitude">{name()}</span>}
         </Show>
         <output
           class="tumor-arena__metric tumor-arena__metric--cells"
-          aria-label="Tumor biomass"
+          aria-label="Cell count"
           aria-live="polite"
         >
           {props.cellsLabel}
@@ -141,20 +141,8 @@ export function TumorArena(props: TumorArenaProps): JSX.Element {
         <output class="tumor-arena__metric tumor-arena__metric--rate" aria-label="Arena output">
           {props.productionLabel}
         </output>
-        <Show when={props.growthProgress !== undefined}>
-          <span class="tumor-arena__growth-progress">
-            <span>Next cell</span>
-            <progress
-              max="100"
-              value={props.growthProgress ?? 0}
-              aria-label={`Next cell ${Math.round(props.growthProgress ?? 0)} percent complete`}
-            />
-            <strong>{Math.round(props.growthProgress ?? 0)}%</strong>
-          </span>
-        </Show>
-        <RewardFeedback sequence={props.feedbackSequence} />
       </div>
-      <HelpTooltip tooltip="Divide a visible cell">
+      <HelpTooltip tooltip="Divide a cell">
         {(tooltipBindings) => (
           <button
             {...tooltipBindings}
@@ -175,8 +163,12 @@ export function TumorArena(props: TumorArenaProps): JSX.Element {
       </HelpTooltip>
       <StageTransitionEmphasis stageId={props.scene.stageId} />
       <TumorFeedback feedbackTarget={props.feedbackTarget} sequence={props.feedbackSequence} />
+      <HallmarkAcquisitionFeedback
+        feedbackTarget={focalPoint}
+        sequence={props.hallmarkFeedbackSequence}
+      />
       <p id="colony-a11y-description" class="tumor-arena__a11y-description">
-        {props.description} Click a visible cell to divide. Enter or Space also divides.
+        {props.description} Click a cell or just beside it to divide. Enter or Space also divides.
       </p>
     </div>
   );

@@ -53,6 +53,8 @@ The checked-in toolchain declares Playwright
 source source_me.sh && python3 devel/verify_candidate.py
 source source_me.sh && python3 devel/verify_pages_workflow.py
 node --import tsx tools/capture_readme_screenshots.mjs
+node tools/capture_visual_review.mjs
+node tools/capture_visual_review.mjs --sync-readme
 node --import tsx tools/colony_contact_sheet.mjs
 node --import tsx tools/balance_sim.mjs --suite \
   --output output_balance/balance_report.json

@@ -22,10 +22,10 @@ acceptance remains with the human owner.
 
 | Task                        | Expected visible route                                                                        | Result         |
 | --------------------------- | --------------------------------------------------------------------------------------------- | -------------- |
-| Orient to the current state | Shallow HUD shows cells, rate, stage, save state, and utilities                               | PASS           |
+| Orient to the current state | Shallow HUD shows automatic growth, stage, save state, and utilities; arena owns cell total   | PASS           |
 | Perform the primary action  | The living tumor is the dominant center object and one native divide control                  | PASS           |
-| Read the outcome            | HUD and arena count update; brief reward/status feedback confirms acceptance                  | PASS           |
-| Find the next decision      | Evolution sits left, tumor center, and Upgrade Rack right at desktop                          | PASS           |
+| Read the outcome            | Arena count and header growth update; brief reward/status feedback confirms acceptance        | PASS           |
+| Find the next decision      | Growth names the next goal, needed amount, and destination action in the left rail            | PASS           |
 | Judge an upgrade            | Owned, Output, Buy, Cost, Adds, enabled treatment, and disabled state remain visible          | PASS           |
 | Request concise help        | Hover, focus, and pointer-down open an in-flow-neutral tooltip                                | PASS           |
 | Leave help                  | Escape dismisses the tooltip without stealing trigger focus                                   | PASS after fix |
@@ -38,34 +38,37 @@ The intended learner is a first-time biology student who may recognize cancer te
 knowing incremental-game notation. The review therefore uses a cognitive walkthrough of the first
 session and a heuristic evaluation of repeat play. It does not substitute for observed student use.
 
-| Learner goal | Observable question at the decision point | Guideline applied | Acceptance evidence |
-| --- | --- | --- | --- |
-| Start the loop | "What do I do first?" | Visibility of system status; action and result must be co-located | The central tumor is the dominant target, Divide has a native label, and HUD/arena feedback update together |
-| Understand count | "Can I have a fraction of a cell?" | Match the biological model; do not expose implementation precision as object count | Inventory uses whole cells, partial accrual is Next Cell progress, and sub-one rates say time per cell |
-| Decide on a producer | "What costs what, and what will I gain?" | Recognition over recall; a tooltip supplements rather than carries a primary decision | Each discovered row exposes Owned, Output, Buy, Cost, and Adds; the focused price tooltip is captured and measured |
-| Avoid spoilers | "What can I work toward next?" | Progressive disclosure while preserving a near-term goal | The rack shows only discovered rows and at most two anonymous targets; screenshot fixtures exercise both states |
-| Ask for help | "Can I read this without losing my place?" | In-place, dismissible contextual help | Tooltip portal placement is clamped to the viewport, avoids rack content, and Escape returns to the unchanged trigger |
-| Change modes | "Where did the tumor controls go?" | Stable spatial landmarks and explicit mode selection | Desktop keeps Evolution, Living Tumor Clicker, Upgrade Rack; narrow layouts retain tumor, evolution, rack task order |
-| Recover from failure | "Did my game save, and what can I do now?" | Explain status and recovery without hiding the primary action | Error, corrupt-save recovery, and offline-return states appear in the corpus with ARIA snapshots |
+| Learner goal         | Observable question at the decision point  | Guideline applied                                                                     | Acceptance evidence                                                                                                                  |
+| -------------------- | ------------------------------------------ | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Start the loop       | "What do I do first?"                      | Visibility of system status; action and result must be co-located                     | The central tumor is the dominant target, Divide has a native label, and HUD/arena feedback update together                          |
+| Advance the tumor    | "What should I do next?"                   | Recognition over recall; make one goal and its completion evidence visible together   | Growth and Mutations are labeled tabs; Growth names the objective, instruction, whole-number requirement, and destination action     |
+| Understand count     | "Can I have a fraction of a cell?"         | Match the biological model; do not expose implementation precision as object count    | Inventory uses whole cells, no next-cell meter, and sub-one rates say time per cell                                                  |
+| Decide on a producer | "What costs what, and what will I gain?"   | Recognition over recall; a tooltip supplements rather than carries a primary decision | Each discovered row exposes Owned, Output, Buy, Cost, and Adds; the full earned rack captures all eight 64px-or-shorter rows         |
+| Avoid spoilers       | "What can I work toward next?"             | Progressive disclosure without presenting dead controls                               | The rack and evolution dock render only achieved choices; the opening playthrough proves new rows and tabs arrive from real progress |
+| Ask for help         | "Can I read this without losing my place?" | In-place, dismissible contextual help                                                 | Tooltip portal placement is clamped to the viewport, avoids rack content, and Escape returns to the unchanged trigger                |
+| Change modes         | "Where did the tumor controls go?"         | Stable spatial landmarks and explicit mode selection                                  | Desktop keeps Evolution, Living Tumor Clicker, Upgrade Rack; narrow layouts retain tumor, evolution, rack task order                 |
+| Recover from failure | "Did my game save, and what can I do now?" | Explain status and recovery without hiding the primary action                         | Error, corrupt-save recovery, and offline-return states appear in the corpus with ARIA snapshots                                     |
 
-The related guideline ledger records 51 responsive and interaction frames, 33 rendered-tooltip
-measurements, 11 automated Axe states, a served-palette scan, and manual original-resolution
+The related guideline ledger records 29 responsive and interaction frames, 11 rendered-tooltip
+measurements, 9 automated Axe states, a served-palette scan, and manual original-resolution
 inspection. The automated checks cover containment and semantic contracts; they do not demonstrate
 that a student understands every cancer term, icon, or long-session progression choice.
 
 ## Automated visual-review tool
 
-`tools/capture_visual_review.mjs` has two closed modes:
+`tools/capture_visual_review.mjs` has three closed modes:
 
 ```bash
 node tools/capture_visual_review.mjs
+node tools/capture_visual_review.mjs --sync-readme
 node tools/capture_visual_review.mjs --verify-existing
 ```
 
 Capture mode serves only the rebuilt local `dist/`, creates an ignored contact sheet, and records
 screenshots plus diagnostics in `output_visual/game_visual_review/`. Verification mode reads the
 existing manifest and confirms screenshot byte counts and hashes without launching Chromium or
-writing files. Callers cannot supply a server root or output path.
+writing files. Sync mode copies two named reviewed playthrough frames into `docs/screenshots/` and
+rewrites only README's managed screenshot block. Callers cannot supply a server root or output path.
 
 The manifest covers:
 
@@ -76,9 +79,9 @@ The manifest covers:
 - Wide desktop 1920 x 1080, viewport
 - Focused tooltip, open inspector, successful feedback, persistence error, corrupt-save recovery,
   offline return, and forced-colors states
-- One board screenshot for each of the six evolution views and one screenshot for every rendered
-  tooltip in the seeded Stage, Culture, and Network surfaces; the fully labeled Hallmarks, Routes,
-  and Resets surfaces currently expose no tooltip trigger
+- A paced, non-debug opening playthrough that buys the first machine and reveals the second through
+  real divisions; six guided earned-system surfaces and 11 exercised tooltip states
+- The full eight-machine Upgrade Rack at 1280 x 800, with a 64px row ceiling and no internal scroll
 - Panel rectangles and desktop top/bottom alignment
 - Desktop and mobile task order, including a bounded stacked-panel dead-space check
 - Horizontal overflow and visible native-button target sizes
@@ -86,7 +89,7 @@ The manifest covers:
   and Escape dismissal
 - Console/page errors
 - Green-hue and named-green tokens in served CSS and JavaScript
-- WCAG 2 A/AA, 2.1 A/AA, and 2.2 AA Axe results for 11 meaningful states
+- WCAG 2 A/AA, 2.1 A/AA, and 2.2 AA Axe results for 8 meaningful states
 - ARIA-tree snapshots for the primary controls, state, recovery action, reward log, and offline report
 
 Loading and permission states are not applicable: this is a static client shell with no
@@ -110,24 +113,25 @@ rack third.
 
 ## Findings and changes
 
-| Finding                                                                                    | Severity | Resolution                                                                                                                                  |
-| ------------------------------------------------------------------------------------------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| Culture, prestige, affordable rows, and legacy surfaces used a generic blue/green identity | High     | Reassigned the board to marrow, burgundy, rose, coral, plum, cream, and amber body-tissue roles across served CSS and SVG source            |
-| Opening cell read as an eye inside concentric scanner geometry                             | High     | Removed the transformed-stage macro ellipse and activity ring; enlarged an irregular granular cell with an eccentric nucleus                |
-| Upgrade prices and gains depended on cryptic icon-number pairs                             | High     | Added explicit Owned, Output, Buy, Cost, and Adds labels to every discovered purchase surface                                               |
-| Rack disclosed the entire future producer catalog                                          | Medium   | Limited normal play to discovered targets plus at most the next two anonymous targets; owned and primed rows remain established discoveries |
-| Continuous accrual displayed impossible fractional objects such as `0.01 cells`            | High     | Kept the balance continuous while presenting whole-cell inventory, next-cell progress, and sub-one output as time per cell                  |
-| Hallmark descriptions and hover help overlapped a seven-column grid                        | High     | Changed to a three-column readable name grid and a selected-detail region; hallmark cards no longer depend on overlapping tooltip prose     |
-| Live values stepped only once per second                                                   | High     | Moved the live timer to four updates per second without weakening persist-before-reconcile                                                  |
-| Tooltips had no explicit keyboard dismissal                                                | Medium   | Added Escape handling for enabled and disabled focus routes; focus stays on the trigger                                                     |
-| Producer assay control was about 38 px square                                              | Medium   | Raised the permanent target to 44 x 44 px                                                                                                   |
-| Producer buy surface did not fill its available row width at intermediate sizes            | Medium   | Made the single buy surface span the full row track                                                                                         |
-| Inspector width obscured more of the target desktop than its content required              | Low      | Reduced the maximum width from 24rem to 21rem while retaining readable wrapping                                                             |
-| Base disabled text missed the 5.5:1 house target                                           | Medium   | Raised it from `#8e9ca2` to `#aab8be`, producing 6.30:1 on `#25343c`                                                                        |
-| Stacked evolution panels stretched to the rack height and left a large blank block         | Medium   | Let the stacked evolution row fit content and added a maximum 8px dead-space assertion; current evidence is 0px at 320, 480, and 768        |
-| Two labeled plain `div` elements used prohibited ARIA attributes                           | High     | Assigned image semantics to the NG mark and chronological log semantics to recent rewards; permanent browser assertions protect both roles  |
-| Forced-colors mode made the stage sigil faint                                              | Medium   | Mapped its track, progress, core, and outline to system colors                                                                              |
-| Whole-game review depended on separate screenshots and informal inspection                 | Medium   | Added one 51-frame responsive, six-view, all-rendered-tooltip, interaction, accessibility, diagnostics, and served-palette harness          |
+| Finding                                                                                    | Severity | Resolution                                                                                                                                    |
+| ------------------------------------------------------------------------------------------ | -------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| Culture, prestige, affordable rows, and legacy surfaces used a generic blue/green identity | High     | Reassigned the board to marrow, burgundy, rose, coral, plum, cream, and amber body-tissue roles across served CSS and SVG source              |
+| Opening cell read as an eye inside concentric scanner geometry                             | High     | Removed the transformed-stage macro ellipse and activity ring; enlarged an irregular granular cell with an eccentric nucleus                  |
+| Upgrade prices and gains depended on cryptic icon-number pairs                             | High     | Added explicit Owned, Output, Buy, Cost, and Adds labels to every discovered purchase surface                                                 |
+| Rack disclosed the entire future producer catalog                                          | Medium   | Normal play renders only achieved targets; no anonymous or locked placeholder occupies the rack                                               |
+| Continuous accrual displayed impossible fractional objects such as `0.01 cells`            | High     | Kept the balance continuous while presenting whole-cell inventory, no next-cell meter, and sub-one output as time per cell                    |
+| Hallmark descriptions and hover help overlapped a seven-column grid                        | High     | Changed to a three-column readable name grid and a selected-detail region; hallmark cards no longer depend on overlapping tooltip prose       |
+| Live values stepped only once per second                                                   | High     | Moved the live timer to four updates per second without weakening persist-before-reconcile                                                    |
+| Tooltips had no explicit keyboard dismissal                                                | Medium   | Added Escape handling for enabled and disabled focus routes; focus stays on the trigger                                                       |
+| Producer assay control was about 38 px square                                              | Medium   | Raised the permanent target to 44 x 44 px                                                                                                     |
+| Producer buy surface did not fill its available row width at intermediate sizes            | Medium   | Made the single buy surface span the full row track                                                                                           |
+| Inspector width obscured more of the target desktop than its content required              | Low      | Reduced the maximum width from 24rem to 21rem while retaining readable wrapping                                                               |
+| Base disabled text missed the 5.5:1 house target                                           | Medium   | Raised it from `#8e9ca2` to `#aab8be`, producing 6.30:1 on `#25343c`                                                                          |
+| Stacked evolution panels stretched to the rack height and left a large blank block         | Medium   | Let the stacked evolution row fit content and added a maximum 8px dead-space assertion; current evidence is 0px at 320, 480, and 768          |
+| Two labeled plain `div` elements used prohibited ARIA attributes                           | High     | Assigned image semantics to the NG mark and chronological log semantics to recent rewards; permanent browser assertions protect both roles    |
+| Forced-colors mode made the stage sigil faint                                              | Medium   | Mapped its track, progress, core, and outline to system colors                                                                                |
+| Whole-game review depended on separate screenshots and informal inspection                 | Medium   | Added one 28-frame responsive, paced-playthrough, earned-system, tooltip, interaction, accessibility, diagnostics, and served-palette harness |
+| Left rail exposed mode/Charge jargon, icon-only tabs, and a generic next-stage action      | High     | Replaced it with visible Growth/Mutations labels and one catalog-owned next-goal card with its destination-named action                       |
 
 ## Palette and contrast
 
@@ -148,7 +152,7 @@ audited foreground tokens pass 5.5:1 on the tissue background: primary copy 17.5
 Scores use Nielsen's 0-4 severity scale, where 0 means no usability problem and 4 means a usability
 catastrophe. The baseline is a retrospective expert score grounded in the rejected rendered
 captures and source; it is not a participant measurement. The after score uses the current
-51-frame corpus and interaction evidence. A score of 1 remains where participant comprehension or
+28-frame corpus and interaction evidence. A score of 1 remains where participant comprehension or
 long-session comfort has not been tested.
 
 | Heuristic                       | Before | After | Evidence                                                                                                               |
@@ -158,11 +162,11 @@ long-session comfort has not been tested.
 | User control and freedom        |      2 |     0 | Escape closes tooltip and drawer; drawer restores invoker focus                                                        |
 | Consistency and standards       |      1 |     0 | Native buttons, 44px targets, shared focus rings, shared tooltip behavior, and stable panel roles                      |
 | Error prevention                |      0 |     0 | Unaffordable/locked actions remain disabled and persistence failure remains atomic                                     |
-| Recognition over recall         |      3 |     1 | Explicit economic labels and full hallmark names remove icon-only decoding; classroom comprehension remains unmeasured |
+| Recognition over recall         |      3 |     1 | Growth names one next goal, its requirement, and its destination; classroom comprehension remains unmeasured           |
 | Flexibility and efficiency      |      1 |     0 | Direct tumor action, quantity controls, number format, keyboard routes, and responsive ordering                        |
 | Aesthetic and minimalist design |      4 |     1 | The tumor dominates, overlap is removed, and progressive disclosure limits the rack; owner acceptance remains pending  |
 | Error recovery                  |      1 |     0 | Save failure and protected replacement are visible without bypassing the controller                                    |
-| Help and documentation          |      3 |     1 | All rendered tooltips, the README decision frame, drawer, usage guide, and contact sheet provide inspectable evidence  |
+| Help and documentation          |      3 |     1 | Exercised tooltips, two README playthrough frames, drawer, usage guide, and contact sheet provide inspectable evidence |
 
 ## Automated accessibility and assistive-technology evidence
 
@@ -218,16 +222,16 @@ long during sustained play.
 
 ## Final verification
 
-| Gate                                                       | Result                                                                                                                                                                    |
-| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `./check_codebase.sh`                                      | PASS: typecheck, typecheck-lint, ESLint, Prettier, 371 Node tests                                                                                                         |
-| `./build_github_pages.sh`                                  | PASS: production `dist/` rebuilt                                                                                                                                          |
-| `./run_playwright_tests.sh --build`                        | PASS: 49 production-browser tests                                                                                                                                         |
-| `source source_me.sh && python3 devel/verify_candidate.py` | PASS: 1,555 Python tests against the complete nonignored projection; disposable Git storage preserved the real index                                                      |
-| `node tools/capture_visual_review.mjs`                     | PASS: 51 screenshots, 33 rendered tooltips, all six views, 11 zero-violation Axe audits, no diagnostics, no overflow or undersized controls, zero served green candidates |
-| `node tools/capture_visual_review.mjs --verify-existing`   | PASS: 51 screenshot identities and contact sheet verified read-only                                                                                                       |
-| `node --import tsx tools/capture_readme_screenshots.mjs`   | PASS: eight documentation frames including explicit upgrade economics and tooltip geometry, narrow containment, reduced/normal motion, no diagnostics                     |
-| Original-resolution visual inspection                      | PASS: five widths, six evolution views, representative tooltip frames, all seven interaction/edge states, and eight documentation frames                                  |
+| Gate                                                       | Result                                                                                                                                                                                    |
+| ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `./check_codebase.sh`                                      | PASS: typecheck, typecheck-lint, ESLint, Prettier, 375 Node tests                                                                                                                         |
+| `./build_github_pages.sh`                                  | PASS: production `dist/` rebuilt                                                                                                                                                          |
+| `./run_playwright_tests.sh --build`                        | PASS: 50 production-browser tests                                                                                                                                                         |
+| `source source_me.sh && python3 devel/verify_candidate.py` | PASS: 1,572 Python tests against the complete nonignored projection; disposable Git storage preserved the real index                                                                      |
+| `node tools/capture_visual_review.mjs`                     | PASS: 28 screenshots, 11 rendered tooltips, six guided earned-system views, 8 zero-violation Axe audits, no diagnostics, no overflow or undersized controls, zero served green candidates |
+| `node tools/capture_visual_review.mjs --sync-readme`       | PASS: two reviewed 1280 x 800 playthrough frames copied into the managed README block                                                                                                     |
+| `node tools/capture_visual_review.mjs --verify-existing`   | PASS: 28 screenshot identities and contact sheet verified read-only                                                                                                                       |
+| Original-resolution visual inspection                      | PASS: five widths, paced opening playthrough, six earned-system views, representative tooltip frames, and interaction/edge states                                                         |
 
 The screenshot captures and performance measurements remain dated review artifacts. The Node and
 browser suites own permanent semantic behavior.

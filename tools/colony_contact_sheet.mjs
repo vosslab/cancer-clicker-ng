@@ -271,7 +271,7 @@ async function enterStage(page, stageId, seed, port) {
   const title = STAGE_TITLES[stageId];
   if (title === undefined) throw new Error(`No stage title for ${stageId}`);
   if (stageId !== "transformed_cell") {
-    await page.getByRole("button", { name: "Advance" }).click();
+    await page.getByRole("button", { name: /^Advance to / }).click();
   }
   await page.getByRole("heading", { name: title }).waitFor({ state: "visible" });
   const arena = page.getByRole("region", { name: "Living tumor arena" });

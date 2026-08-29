@@ -55,12 +55,19 @@ origin belongs there too. Rules: [REPO_STYLE.md](REPO_STYLE.md).
 - Give the interface a stronger medical and biological color identity.
 - Remove the blue/green theme; cancer is not green. Use a warm body-tissue medical palette.
 - The center must read as a cancer cell, not an eye or a cosmic object.
-- Do not present fractional objects such as `0.01 cells`; show whole-cell inventory and express
-  partial automatic growth as progress toward the next cell.
+- Do not present fractional objects such as `0.01 cells`; show whole-cell inventory and remove
+  next-cell progress completely.
 - Make the live numbers update faster, and assess whether a WASM backend is actually necessary.
 - Present the game from the cancer cells' perspective. Remove crosshairs and lab-observer
   equipment such as microscopes from the play surface.
 - Make the number-naming content in `src/bignum/` more prominent in the interface.
+- I like Cookie Clicker-style producer detail: show owned count, one-unit output, combined output,
+  its share of total automatic growth, active modifier logic, and lifetime output when it is tracked.
+- The right-side producer rows should be shorter so the rack can show more rows at once.
+- Acquiring a hallmark must visibly confirm that it worked and show what new biological decision it
+  enables.
+- The entire left panel is not intuitive at all. It needs to make the next player goal obvious.
+- Put the `+cell` bonus next to the pointer, and make any click close to a rendered cell work.
 
 ## Review expectations
 

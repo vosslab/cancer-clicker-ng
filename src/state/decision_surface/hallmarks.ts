@@ -1,20 +1,13 @@
-import {
-  CORE_SIX_HALLMARK_CATALOG,
-  hasReachedCoreSixUnlock,
-} from "../../hallmarks/core_six_catalog.js";
+import { CORE_SIX_HALLMARK_CATALOG } from "../../hallmarks/core_six_catalog.js";
 import {
   ATP_SINK_CATALOG,
   EXTENDED_HALLMARK_CATALOG,
-  hasReachedExtendedHallmarkUnlock,
 } from "../../hallmarks/extended_hallmark_catalog.js";
 import { checkpointRoutingDecisionOrder } from "../../hallmarks/handlers/checkpoint_routing.js";
-import {
-  hasReachedLateHallmarkActivation,
-  LATE_HALLMARK_CATALOG,
-} from "../../hallmarks/late_hallmark_catalog.js";
+import { LATE_HALLMARK_CATALOG } from "../../hallmarks/late_hallmark_catalog.js";
 import { programEligibilityQuote } from "../../hallmarks/late_hallmark_effects.js";
 import { MICROBIOME_COMPOSITION_CATALOG } from "../../hallmarks/microbiome_catalog.js";
-import { cultureLateProgramInterfacesAvailable } from "../../prestige/culture_effects.js";
+import { hallmarkPurchaseEligibility } from "../../hallmarks/purchase_eligibility.js";
 import type { GameState } from "../../types/state.js";
 import type { VisibleAction } from "./contracts.js";
 import { dto, envelope, ownsHallmark, visibleAction } from "./builders.js";
@@ -28,19 +21,7 @@ export function buildHallmarkPurchaseCandidates(state: GameState): readonly Visi
       ...EXTENDED_HALLMARK_CATALOG,
       ...LATE_HALLMARK_CATALOG,
     ].flatMap((hallmark) => {
-      const level = state.hallmarkLevels.find((candidate) => candidate.id === hallmark.id);
-      const core = CORE_SIX_HALLMARK_CATALOG.find((candidate) => candidate.id === hallmark.id);
-      const extended = EXTENDED_HALLMARK_CATALOG.find((candidate) => candidate.id === hallmark.id);
-      const late = LATE_HALLMARK_CATALOG.find((candidate) => candidate.id === hallmark.id);
-      const unlocked =
-        (core !== undefined && hasReachedCoreSixUnlock(state.currentStage, core.key)) ||
-        (extended !== undefined &&
-          hasReachedExtendedHallmarkUnlock(state.currentStage, extended.key)) ||
-        (late !== undefined &&
-          hasReachedLateHallmarkActivation(state.currentStage, late.key) &&
-          cultureLateProgramInterfacesAvailable(state));
-      if (!unlocked || level === undefined || level.level >= hallmark.purchase.maximumLevel)
-        return [];
+      if (!hallmarkPurchaseEligibility(state, hallmark.id).available) return [];
       return [
         visibleAction(
           "hallmark",

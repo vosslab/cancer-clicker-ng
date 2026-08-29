@@ -2,7 +2,7 @@
 /** Capture the production board states embedded in README's managed screenshot block. */
 import { spawn } from "node:child_process";
 import { createHash } from "node:crypto";
-import { access, mkdir, readFile, stat, writeFile } from "node:fs/promises";
+import { access, mkdir, readFile, stat } from "node:fs/promises";
 import net from "node:net";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -29,31 +29,10 @@ import { parseSave, serializeGameState } from "../src/state/save_load.ts";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const DIST_DIRECTORY = path.join(ROOT, "dist");
-const README_PATH = path.join(ROOT, "README.md");
 const SCREENSHOT_DIRECTORY = path.join(ROOT, "docs", "screenshots");
 const SAVE_KEY = "cancer-clicker-ng.save.v2";
 const VIEWPORT = Object.freeze({ width: 1280, height: 800 });
 const FIXED_CAPTURE_CLOCK_MS = 1_750_000_000_000;
-const README_BLOCK = Object.freeze({
-  begin: "<!-- screenshots:begin (managed by screenshot-docs) -->",
-  end: "<!-- screenshots:end -->",
-  lines: Object.freeze([
-    "![Cancer Clicker NG game board after a visible tumor-cell click, with the living tumor, compact scoreboard, icon tabs, and upgrade rack](docs/screenshots/cancer_clicker_ng_board.png)",
-    "![Cancer Clicker NG upgrade decision with explicit Owned, Output, Buy, Cost, and Adds labels plus a viewport-contained tooltip](docs/screenshots/cancer_clicker_ng_upgrade_decision.png)",
-    "",
-    "<details>",
-    "<summary>Central tumor progression: hypoxic core, perfusion, and invasive route</summary>",
-    "",
-    "![Cancer Clicker NG dense hypoxic lesion with an oxygen-starved rim and necrotic core](docs/screenshots/cancer_clicker_ng_hypoxic_necrotic.png)",
-    "![Cancer Clicker NG perfused angiogenic tumor, with visible vessel branches and the Stage evolution tab](docs/screenshots/cancer_clicker_ng_perfused_tumor.png)",
-    "![Cancer Clicker NG invasive route state with a seeded site and visible invasive front](docs/screenshots/cancer_clicker_ng_invasive_route.png)",
-    "</details>",
-    "",
-    "![Cancer Clicker NG Culture tab, showing the illustrated dish, cryobank program, and compact laboratory controls](docs/screenshots/cancer_clicker_ng_culture_lab.png)",
-    "![Cancer Clicker NG Network tab, showing the illustrated two-by-two site map and renewable campaign frontier](docs/screenshots/cancer_clicker_ng_network_map.png)",
-    "![Cancer Clicker NG earned Chicago scale report over the continuing living tumor board](docs/screenshots/cancer_clicker_ng_chicago_scale.png)",
-  ]),
-});
 
 function hash(value) {
   return createHash("sha256").update(value).digest("hex");
@@ -664,16 +643,6 @@ async function verifyNarrowChicago(browser, url) {
   }
 }
 
-async function rewriteReadmeBlock() {
-  const source = await readFile(README_PATH, "utf8");
-  const start = source.indexOf(README_BLOCK.begin);
-  const end = source.indexOf(README_BLOCK.end, start);
-  if (start < 0 || end < 0) throw new Error("README managed screenshot block is missing.");
-  const replacement = `${README_BLOCK.begin}\n\n${README_BLOCK.lines.join("\n")}\n${README_BLOCK.end}`;
-  const updated = `${source.slice(0, start)}${replacement}${source.slice(end + README_BLOCK.end.length)}`;
-  if (updated !== source) await writeFile(README_PATH, updated, "utf8");
-}
-
 async function screenshotInfo(filePath) {
   const file = await stat(filePath);
   return {
@@ -684,11 +653,8 @@ async function screenshotInfo(filePath) {
 }
 
 async function main() {
-  if (process.argv.slice(2).includes("--sync-readme")) {
-    await rewriteReadmeBlock();
-    console.log("Synchronized README managed screenshot block without recapturing images.");
-    return;
-  }
+  if (process.argv.length > 2)
+    throw new Error("Usage: node --import tsx tools/capture_readme_screenshots.mjs");
   await access(path.join(DIST_DIRECTORY, "index.html"));
   await access(path.join(DIST_DIRECTORY, "main.js"));
   await mkdir(SCREENSHOT_DIRECTORY, { recursive: true });
@@ -776,7 +742,6 @@ async function main() {
     await chicagoScalePage.close();
     const narrowChicago = await verifyNarrowChicago(context, url);
     const normalMotion = await verifyNormalMotion(context, url);
-    await rewriteReadmeBlock();
     const files = await Promise.all([
       screenshotInfo(boardPath),
       screenshotInfo(upgradeDecisionPath),

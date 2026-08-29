@@ -266,6 +266,23 @@ test("core-six acquisition is catalog-gated and atomic", () => {
   );
 });
 
+test("core-six acquisition creates a first ownership record from a sparse new game", () => {
+  const state = createInitialGameState();
+  assert.deepEqual(state.hallmarkLevels, []);
+  assertAccepted(
+    state,
+    {
+      type: "purchase-hallmark",
+      hallmarkId: hallmarkId("proliferative_signaling"),
+      atMs: state.activeTimeMs,
+    },
+    (after) =>
+      assert.deepEqual(after.hallmarkLevels, [
+        { id: hallmarkId("proliferative_signaling"), level: 1 },
+      ]),
+  );
+});
+
 test("checkpoint routing resets only through an accepted stage transition", () => {
   const transitionSource = stageGateFixture("avascular_lesion");
   assert.equal(transitionSource.currentStage, stageId("microcolony"));

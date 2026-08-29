@@ -3,6 +3,7 @@ import type { JSX } from "solid-js";
 import type { GameState } from "../types/state.js";
 import type { GameController } from "./game_controller.js";
 import { HallmarkTree } from "./hallmark_tree.js";
+import type { HallmarkAcquisition } from "./hallmark_tree.js";
 import { StagePanel } from "./stage_panel.js";
 
 export type EvolutionDockProps = Readonly<{
@@ -10,6 +11,7 @@ export type EvolutionDockProps = Readonly<{
   controller: GameController;
   disabled?: boolean;
   onAdvance: () => void;
+  onHallmarkAcquired: (hallmark: HallmarkAcquisition) => void;
   activeView: "stage" | "hallmarks";
 }>;
 
@@ -20,7 +22,11 @@ export function EvolutionDock(props: EvolutionDockProps): JSX.Element {
       {props.activeView === "stage" ? (
         <StagePanel game={props.game} disabled={props.disabled} onAdvance={props.onAdvance} />
       ) : (
-        <HallmarkTree game={props.game} controller={props.controller} />
+        <HallmarkTree
+          game={props.game}
+          controller={props.controller}
+          onHallmarkAcquired={props.onHallmarkAcquired}
+        />
       )}
     </section>
   );

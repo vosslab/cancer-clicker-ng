@@ -35,6 +35,13 @@ export type StageGate = Readonly<{
   threshold: number;
 }>;
 
+/** Player-facing instruction for earning entry into a stage. Keeps progression copy catalog-owned. */
+export type StagePlayerGoal = Readonly<{
+  title: string;
+  instruction: string;
+  progressLabel: string;
+}>;
+
 /** A durable capability name that later mechanic owners consume instead of comparing stage IDs. */
 export type StageActionId =
   | "manual-burst"
@@ -67,6 +74,7 @@ export type StageDefinition = Readonly<{
   id: StageId;
   title: string;
   gate: StageGate;
+  playerGoal: StagePlayerGoal;
   uiMode: StageUiMode;
   retires: string;
   gameplayIdentity: string;

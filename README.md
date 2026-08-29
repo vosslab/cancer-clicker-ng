@@ -25,14 +25,13 @@ The primary 1280 x 800 (16:10) view is a visual game canvas:
 - **Living tumor arena:** the tumor is the largest object and the direct action. Click rendered
   cells, see the division pulse at the cell you touched, and watch vessels, hypoxia, necrosis,
   invasion, and new sites change the same tissue world.
-- **Scoreboard HUD:** cell count, production rate, stage, save state, and compact utilities stay in
-  one shallow instrument strip.
-- **Evolution dock:** six small icon tabs expose one active decision family at a time. The stage
-  gate, 14 hallmark sigils, routes, resets, culture, and network remain discoverable without
-  stacking explanatory panels.
-- **Upgrade rack:** molecular targets reveal progressively instead of spoiling the full catalog.
-  Each known row names **Owned**, **Output**, **Buy**, **Cost**, and **Adds** in place; only the next
-  two unknown targets remain visible as discovery cues.
+- **Scoreboard HUD:** automatic growth, stage, save state, and compact utilities stay in one
+  shallow instrument strip. The live cell total appears once, anchored to the tumor arena.
+- **Evolution dock:** play begins with only Stage and Hallmarks. Routes, resets, culture, and
+  network enter only after their durable prerequisites make them relevant.
+- **Upgrade rack:** molecular targets reveal only after their achieved discovery condition. Each
+  known row names **Owned**, **Output**, **Buy**, **Cost**, and **Adds** in place; there are no
+  inaccessible placeholder rows to decode.
 
 Core economics never depend on a tooltip. Extended biology help remains available to pointer and
 keyboard users through viewport-aware tooltips, optional specimen notes, and a focus-restoring
@@ -42,21 +41,8 @@ The board takes inspiration from the satisfying always-upgradable structure of C
 uses an original, editable SVG tumor vocabulary and a scientific, nonclinical art direction.
 
 <!-- screenshots:begin (managed by screenshot-docs) -->
-
-![Cancer Clicker NG game board after a visible tumor-cell click, with the living tumor, compact scoreboard, icon tabs, and upgrade rack](docs/screenshots/cancer_clicker_ng_board.png)
-![Cancer Clicker NG upgrade decision with explicit Owned, Output, Buy, Cost, and Adds labels plus a viewport-contained tooltip](docs/screenshots/cancer_clicker_ng_upgrade_decision.png)
-
-<details>
-<summary>Central tumor progression: hypoxic core, perfusion, and invasive route</summary>
-
-![Cancer Clicker NG dense hypoxic lesion with an oxygen-starved rim and necrotic core](docs/screenshots/cancer_clicker_ng_hypoxic_necrotic.png)
-![Cancer Clicker NG perfused angiogenic tumor, with visible vessel branches and the Stage evolution tab](docs/screenshots/cancer_clicker_ng_perfused_tumor.png)
-![Cancer Clicker NG invasive route state with a seeded site and visible invasive front](docs/screenshots/cancer_clicker_ng_invasive_route.png)
-</details>
-
-![Cancer Clicker NG Culture tab, showing the illustrated dish, cryobank program, and compact laboratory controls](docs/screenshots/cancer_clicker_ng_culture_lab.png)
-![Cancer Clicker NG Network tab, showing the illustrated two-by-two site map and renewable campaign frontier](docs/screenshots/cancer_clicker_ng_network_map.png)
-![Cancer Clicker NG earned Chicago scale report over the continuing living tumor board](docs/screenshots/cancer_clicker_ng_chicago_scale.png)
+![Opening playthrough with a revealed second molecular machine and explicit purchase facts](docs/screenshots/opening_playthrough.png)
+![Hallmark acquisition feedback leading from the tumor to its newly enabled decision](docs/screenshots/hallmark_acquisition.png)
 <!-- screenshots:end -->
 
 ## What you can explore
@@ -88,10 +74,10 @@ npm run serve
 ```
 
 Open the local URL printed by the server. Click a visible cancer cell in the tumor arena, then buy
-an illustrated machine from the upgrade rack. The scoreboard rate increases and the evolution dock
-shows the next biological opportunity. Reload after a little play to confirm local persistence.
-When time away produces a bounded gain, the **Offline progress** report explains it. Stop the
-foreground server with `Ctrl-C`.
+the first revealed illustrated machine from the upgrade rack. The header shows automatic growth,
+the arena shows the one live cell total, and the next machine appears only when it has been earned.
+Reload after a little play to confirm local persistence. When time away produces a bounded gain,
+the **Offline progress** report explains it. Stop the foreground server with `Ctrl-C`.
 
 Build the GitHub Pages-shaped artifact without serving it:
 
@@ -117,18 +103,14 @@ The browser and visual lanes prove controls, storage, responsive layout, accessi
 biology. They complement the fast deterministic Node/tsx suite; neither test count nor a pixel or
 timing threshold is a release criterion.
 
-Capture the complete rendered review, including every currently rendered tooltip across all six
-evolution views-and verify its manifest-backed screenshot identities:
+Capture the complete rendered review: a real opening playthrough, five responsive boards, six
+guided earned-system surfaces, 11 tooltip states, feedback, recovery, offline, and high-contrast
+states. Then copy the two reviewed playthrough frames into this README and verify the corpus:
 
 ```bash
 node tools/capture_visual_review.mjs
+node tools/capture_visual_review.mjs --sync-readme
 node tools/capture_visual_review.mjs --verify-existing
-```
-
-Regenerate the fixed-clock README story, including the explicit upgrade-price and tooltip frame:
-
-```bash
-node --import tsx tools/capture_readme_screenshots.mjs
 ```
 
 ## Status and boundaries

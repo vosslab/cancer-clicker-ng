@@ -1,7 +1,7 @@
 /** Capture and verify the responsive whole-game visual-review corpus. */
 import { spawn } from "node:child_process";
 import { createHash } from "node:crypto";
-import { access, mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
+import { access, copyFile, mkdir, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import net from "node:net";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -15,6 +15,24 @@ const DIST_DIRECTORY = path.join(ROOT, "dist");
 const OUTPUT_DIRECTORY = path.join(ROOT, "output_visual", "game_visual_review");
 const MANIFEST_PATH = path.join(OUTPUT_DIRECTORY, "manifest.json");
 const INDEX_PATH = path.join(OUTPUT_DIRECTORY, "index.html");
+const README_PATH = path.join(ROOT, "README.md");
+const DOCUMENTATION_SCREENSHOT_DIRECTORY = path.join(ROOT, "docs", "screenshots");
+const README_SCREENSHOTS = Object.freeze([
+  Object.freeze({
+    source: "playthrough_next_machine_revealed.png",
+    target: "opening_playthrough.png",
+    alt: "Opening playthrough with a revealed second molecular machine and explicit purchase facts",
+  }),
+  Object.freeze({
+    source: "desktop_hallmark_acquisition.png",
+    target: "hallmark_acquisition.png",
+    alt: "Hallmark acquisition feedback leading from the tumor to its newly enabled decision",
+  }),
+]);
+const README_SCREENSHOT_BLOCK = Object.freeze({
+  begin: "<!-- screenshots:begin (managed by screenshot-docs) -->",
+  end: "<!-- screenshots:end -->",
+});
 const SAVE_KEY = "cancer-clicker-ng.save.v2";
 const VIEWPORTS = Object.freeze([
   Object.freeze({ name: "narrow_phone", width: 320, height: 900, fullPage: true }),
@@ -29,6 +47,21 @@ const LEGACY_CAPTURE_NAMES = Object.freeze([
   "wide_board.png",
 ]);
 
+async function clearPreviousReviewArtifacts() {
+  await mkdir(OUTPUT_DIRECTORY, { recursive: true });
+  const entries = await readdir(OUTPUT_DIRECTORY, { withFileTypes: true });
+  for (const entry of entries) {
+    if (!entry.isFile()) continue;
+    if (
+      entry.name.endsWith(".png") ||
+      entry.name === "index.html" ||
+      entry.name === "manifest.json"
+    ) {
+      await rm(path.join(OUTPUT_DIRECTORY, entry.name));
+    }
+  }
+}
+
 function sha256(value) {
   return createHash("sha256").update(value).digest("hex");
 }
@@ -41,6 +74,31 @@ async function fileEvidence(filePath) {
     bytes: info.size,
     sha256: sha256(data),
   };
+}
+
+/** Copies only the reviewed README proof frames and rewrites its managed embed block. */
+async function synchronizeReadmeScreenshots() {
+  await mkdir(DOCUMENTATION_SCREENSHOT_DIRECTORY, { recursive: true });
+  for (const screenshot of README_SCREENSHOTS) {
+    await copyFile(
+      path.join(OUTPUT_DIRECTORY, screenshot.source),
+      path.join(DOCUMENTATION_SCREENSHOT_DIRECTORY, screenshot.target),
+    );
+  }
+
+  const source = await readFile(README_PATH, "utf8");
+  const start = source.indexOf(README_SCREENSHOT_BLOCK.begin);
+  const end = source.indexOf(README_SCREENSHOT_BLOCK.end, start);
+  if (start < 0 || end < 0) throw new Error("README managed screenshot block is missing.");
+  const embeds = README_SCREENSHOTS.map(
+    (screenshot) => `![${screenshot.alt}](docs/screenshots/${screenshot.target})`,
+  ).join("\n");
+  const replacement = `${README_SCREENSHOT_BLOCK.begin}\n${embeds}\n${README_SCREENSHOT_BLOCK.end}`;
+  const updated = `${source.slice(0, start)}${replacement}${source.slice(
+    end + README_SCREENSHOT_BLOCK.end.length,
+  )}`;
+  if (updated !== source) await writeFile(README_PATH, updated, "utf8");
+  console.log("Synchronized two reviewed playthrough frames into README.md.");
 }
 
 async function availablePort() {
@@ -289,6 +347,16 @@ async function screenshotEvidence(page, name, fullPage = false) {
   return fileEvidence(filePath);
 }
 
+/** Lets a portal's measured layout and its text paint before a review image is recorded. */
+async function waitForPaint(page) {
+  await page.evaluate(
+    () =>
+      new Promise((resolve) =>
+        globalThis.requestAnimationFrame(() => globalThis.requestAnimationFrame(resolve)),
+      ),
+  );
+}
+
 async function captureViewport(browser, url, viewport) {
   const context = await browser.newContext({
     viewport: { width: viewport.width, height: viewport.height },
@@ -380,14 +448,135 @@ async function capturePrimaryInteractions(browser, url) {
         { name: "recent rewards", locator: page.getByLabel("Recent rewards") },
       ]),
     );
+
+    await page.getByRole("button", { name: "Hallmarks evolution system" }).click();
+    const hallmarkPanel = page.locator(".hallmark-tree");
+    await hallmarkPanel.getByRole("button", { name: "Acquire" }).click();
+    const acquisitionNotice = hallmarkPanel.locator(".evolution-hallmarks__acquisition-notice");
+    await acquisitionNotice.waitFor({ state: "visible" });
+    await page.locator(".hallmark-feedback__signal").waitFor({ state: "visible" });
+    if (!(await acquisitionNotice.textContent())?.includes("Growth trait acquired."))
+      throw new Error("Hallmark acquisition did not produce its local success confirmation.");
+    const hallmarkFile = await screenshotEvidence(page, "desktop_hallmark_acquisition");
+    accessibility.push(await accessibilityAudit(page, "hallmark acquisition"));
+    screenReader.push(
+      await ariaEvidence("hallmark acquisition", [
+        { name: "acquisition confirmation", locator: acquisitionNotice },
+        { name: "recent rewards", locator: page.getByLabel("Recent rewards") },
+      ]),
+    );
+    const guidedPlaythrough = await captureGuidedOpeningPlaythrough(browser, url);
     return {
       tooltip,
       drawerBox,
       accessibility,
       screenReader,
       diagnostics,
-      files: [await fileEvidence(tooltipPath), await fileEvidence(drawerPath), successFile],
+      files: [
+        await fileEvidence(tooltipPath),
+        await fileEvidence(drawerPath),
+        successFile,
+        hallmarkFile,
+        ...guidedPlaythrough.files,
+      ],
+      guidedPlaythrough,
     };
+  } finally {
+    await context.close();
+  }
+}
+
+/** Plays the opening as a new player: divide, buy, then reveal the next useful machine. */
+async function captureGuidedOpeningPlaythrough(browser, url) {
+  const context = await browser.newContext({
+    viewport: { width: 1280, height: 800 },
+    reducedMotion: "reduce",
+  });
+  const page = await context.newPage();
+  const diagnostics = collectDiagnostics(page);
+  try {
+    await page.goto(url, { waitUntil: "networkidle" });
+    const openingTabs = await page
+      .getByRole("navigation", { name: "Evolution systems" })
+      .getByRole("button")
+      .evaluateAll((buttons) => buttons.map((button) => button.getAttribute("aria-label")));
+    if (openingTabs.join("|") !== "Stage evolution system|Hallmarks evolution system") {
+      throw new Error(`Opening navigation is not paced: ${openingTabs.join("|")}`);
+    }
+    const divide = page.getByRole("button", { name: "Divide cell" });
+    for (let count = 0; count < 11; count += 1) await divide.press("Enter");
+    const cyclin = page.locator('[data-producer-id="producer"]');
+    await cyclin.getByRole("button", { name: /^Buy 1 Cyclin D machine/ }).click();
+    await page.locator('[data-producer-id="cdk4"]').waitFor({ state: "hidden" });
+    const firstMachine = await screenshotEvidence(page, "playthrough_first_machine");
+    for (let count = 0; count < 2; count += 1) await divide.press("Enter");
+    const cdk4 = page.locator('[data-producer-id="cdk4"]');
+    await cdk4.waitFor({ state: "visible" });
+    const nextMachine = await screenshotEvidence(page, "playthrough_next_machine_revealed");
+    const nextCellText = await page.getByText(/Next cell/i).count();
+    if (nextCellText !== 0)
+      throw new Error("Opening playthrough still shows a next-cell progress meter.");
+    return {
+      state: "guided opening playthrough",
+      openingTabs,
+      diagnostics,
+      files: [firstMachine, nextMachine],
+    };
+  } finally {
+    await context.close();
+  }
+}
+
+/** Seeds every earned molecular machine through storage, then captures the dense desktop rail. */
+async function captureFullProducerRack(browser, url) {
+  const context = await browser.newContext({
+    viewport: { width: 1280, height: 800 },
+    reducedMotion: "reduce",
+  });
+  const page = await context.newPage();
+  const diagnostics = collectDiagnostics(page);
+  try {
+    await page.goto(url, { waitUntil: "networkidle" });
+    const seeded = await page.evaluate((key) => {
+      const raw = localStorage.getItem(key);
+      if (raw === null) return false;
+      const envelope = JSON.parse(raw);
+      envelope.state.cells = { mantissa: 1, exponent: 7 };
+      envelope.state.producerLevels = envelope.state.producerLevels.map((level) => ({
+        ...level,
+        level: 1,
+      }));
+      localStorage.setItem(key, JSON.stringify(envelope));
+      return true;
+    }, SAVE_KEY);
+    if (!seeded) throw new Error("The opening save was not available for the full-rack capture.");
+    await page.reload({ waitUntil: "networkidle" });
+    const layout = await page.locator(".producers-panel").evaluate((panel) => {
+      const panelBounds = panel.getBoundingClientRect();
+      const rows = [...panel.querySelectorAll("#producer-list > .producer-row")];
+      const bounds = rows.map((row) => row.getBoundingClientRect());
+      return {
+        rowCount: rows.length,
+        maxRowHeight: Math.max(...bounds.map((row) => row.height)),
+        visibleRowCount: bounds.filter(
+          (row) => row.top >= panelBounds.top && row.bottom <= panelBounds.bottom,
+        ).length,
+        scrollable: panel.scrollHeight > panel.clientHeight,
+      };
+    });
+    if (
+      layout.rowCount !== 8 ||
+      layout.maxRowHeight > 64 ||
+      layout.visibleRowCount !== 8 ||
+      layout.scrollable
+    )
+      throw new Error(`Full-rack density regression: ${JSON.stringify(layout)}`);
+    const file = await screenshotEvidence(page, "desktop_full_upgrade_rack");
+    const accessibility = await accessibilityAudit(page, "full upgrade rack");
+    const screenReader = await ariaEvidence("full upgrade rack", [
+      { name: "upgrade rack", locator: page.getByRole("region", { name: "Upgrade rack" }) },
+    ]);
+    return { state: "full upgrade rack", layout, diagnostics, file, accessibility, screenReader };
   } finally {
     await context.close();
   }
@@ -434,7 +623,9 @@ async function captureTooltipCorpus(browser, url) {
     await page.locator(".colony-cell__membrane").first().click();
     for (const view of views) {
       if (view !== "Stage") {
-        await page.getByRole("button", { name: `${view} evolution system` }).click();
+        const tab = page.getByRole("button", { name: `${view} evolution system` });
+        if ((await tab.count()) === 0) continue;
+        await tab.click();
         await page.mouse.move(2, 2);
       }
       viewFiles.push(await screenshotEvidence(page, `desktop_${fileSlug(view)}_evolution`));
@@ -473,6 +664,7 @@ async function captureTooltipCorpus(browser, url) {
           throw new Error(`${view} tooltip '${label}' overlaps its trigger.`);
         if (!evidence.outsideRack)
           throw new Error(`${view} tooltip '${label}' obscures the upgrade rack.`);
+        await waitForPaint(page);
         sequence += 1;
         const name = `tooltip_${String(sequence).padStart(2, "0")}_${fileSlug(view)}_${fileSlug(label)}`;
         const file = await screenshotEvidence(page, name);
@@ -484,7 +676,7 @@ async function captureTooltipCorpus(browser, url) {
         );
       }
     }
-    if (entries.length < 12)
+    if (entries.length < 4)
       throw new Error(`Tooltip corpus is unexpectedly small: ${entries.length} captures.`);
     return {
       state: "tooltip corpus",
@@ -617,6 +809,7 @@ async function captureInteractionStates(browser, url) {
   const primary = await capturePrimaryInteractions(browser, url);
   const tooltipCorpus = await captureTooltipCorpus(browser, url);
   const states = [
+    await captureFullProducerRack(browser, url),
     await captureHighContrast(browser, url),
     await capturePersistenceError(browser, url),
     await captureRecovery(browser, url),
@@ -706,7 +899,7 @@ function contactSheetHtml(captures, interactions) {
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Cancer Clicker NG visual review</title><style>
 body{margin:0;padding:1rem;color:#fff4ed;background:#180d12;font:16px/1.45 system-ui,sans-serif}main{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,24rem),1fr));gap:1rem}figure{margin:0;padding:.65rem;border:1px solid #925b64;border-radius:.8rem;background:#2b161d}img{display:block;width:100%;height:auto;border-radius:.45rem}figcaption{padding-top:.45rem;color:#d2b5ad;font-weight:700}</style></head>
-<body><h1>Cancer Clicker NG visual review</h1><p>Responsive boards plus a complete rendered-tooltip corpus, drawer, success, error, recovery, offline, and forced-colors states. See <code>manifest.json</code> for geometry, clipping, ARIA-tree, Axe, and interaction evidence.</p><main>${cards}</main></body></html>\n`;
+<body><h1>Cancer Clicker NG visual review</h1><p>Responsive boards plus the paced opening playthrough, every currently reachable tooltip, drawer, division and hallmark success, error, recovery, offline, and forced-colors states. See <code>manifest.json</code> for geometry, clipping, ARIA-tree, Axe, and interaction evidence.</p><main>${cards}</main></body></html>\n`;
 }
 
 async function verifyExisting() {
@@ -727,8 +920,9 @@ async function verifyExisting() {
 async function capture() {
   await access(path.join(DIST_DIRECTORY, "index.html"));
   await access(path.join(DIST_DIRECTORY, "main.js"));
-  await mkdir(OUTPUT_DIRECTORY, { recursive: true });
-  // ASVS 5.3.2: remove only obsolete filenames owned by this fixed output directory.
+  // ASVS 5.3.2: remove only generated review artifacts in this fixed ignored directory.
+  await clearPreviousReviewArtifacts();
+  // Retain this narrow legacy cleanup if an old output directory is restored between runs.
   for (const name of LEGACY_CAPTURE_NAMES)
     await rm(path.join(OUTPUT_DIRECTORY, name), { force: true });
   const port = await availablePort();
@@ -764,9 +958,10 @@ async function capture() {
         visualStates: [
           "opening",
           "tooltip",
-          "tooltip corpus across all six evolution surfaces",
+          "tooltip corpus across every currently reachable evolution surface",
           "inspector",
           "success feedback",
+          "hallmark acquisition",
           "persistence error",
           "save recovery",
           "offline return",
@@ -795,8 +990,10 @@ async function capture() {
   }
 }
 
-// ASVS 2.2.1: accept only the two closed tool modes; paths are never supplied by callers.
+// ASVS 2.2.1: accept only closed tool modes; paths are never supplied by callers.
 const args = process.argv.slice(2);
 if (args.length === 0) await capture();
 else if (args.length === 1 && args[0] === "--verify-existing") await verifyExisting();
-else throw new Error("Usage: node tools/capture_visual_review.mjs [--verify-existing]");
+else if (args.length === 1 && args[0] === "--sync-readme") await synchronizeReadmeScreenshots();
+else
+  throw new Error("Usage: node tools/capture_visual_review.mjs [--verify-existing|--sync-readme]");

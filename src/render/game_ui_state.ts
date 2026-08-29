@@ -1,5 +1,6 @@
 import { createSignal } from "solid-js";
 import type { Accessor } from "solid-js";
+import type { GameState } from "../types/state.js";
 
 /** The six evolution tabs are UI navigation, never saved progression. */
 export const EVOLUTION_TABS = [
@@ -12,6 +13,34 @@ export const EVOLUTION_TABS = [
 ] as const;
 
 export type EvolutionTab = (typeof EVOLUTION_TABS)[number];
+
+function hasEarnedPrestige(game: GameState, id: "L1" | "L2" | "L3" | "L4"): boolean {
+  return game.prestigeAvailability.some((entry) => entry.id === id && entry.status === "earned");
+}
+
+function ownsHallmark(game: GameState, id: string): boolean {
+  return game.hallmarkLevels.some((level) => level.id === id && level.level > 0);
+}
+
+/** Shows a system only when the saved game contains a route into it; the opening stays teachable. */
+export function visibleEvolutionTabs(game: GameState): readonly EvolutionTab[] {
+  const tabs: EvolutionTab[] = ["stage", "hallmarks"];
+  if (
+    ownsHallmark(game, "invasion_metastasis") ||
+    game.regions.some((region) => region.routeIds.length > 0) ||
+    game.pendingTransitEvents.length > 0
+  ) {
+    tabs.push("routes");
+  }
+  if (game.prestigeAvailability.length > 0) tabs.push("prestige");
+  if (hasEarnedPrestige(game, "L3") || game.culture.purchasedPassageUpgrades.length > 0) {
+    tabs.push("culture");
+  }
+  if (hasEarnedPrestige(game, "L4") || game.lineageLedger.networkSeed !== null) {
+    tabs.push("network");
+  }
+  return tabs;
+}
 
 /** A compact named fact displayed by the optional specimen inspector. */
 export type InspectorDetail = Readonly<{

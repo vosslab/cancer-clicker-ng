@@ -11,10 +11,10 @@ the accepted event, then Solid reconciles the resulting durable state.
 ## Board composition
 
 The default 1280 x 800 (16:10) composition is a living game board rather than a page of controls.
-A shallow `GameHud` keeps cells, production rate, stage, local-save state, number formatting, and
-specimen inspection available without competing with play. The central count adds the formatter's
-full million-and-above magnitude title while keeping the compact numeric value dominant. `GameBoard`
-then arranges four stable areas:
+A shallow `GameHud` keeps automatic growth, stage, local-save state, number formatting, and
+specimen inspection available without competing with play. The tumor arena owns the one live cell
+total and adds the formatter's full million-and-above magnitude title while keeping the compact
+numeric value dominant. `GameBoard` then arranges four stable areas:
 
 | Area                  | Solid owner                                       | Player purpose                                                                                               |
 | --------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
@@ -62,8 +62,8 @@ focus to its invoker. These are presentation routes; no tooltip or drawer state 
 `App` owns one 250ms timer and disposes it with the component. Each callback advances elapsed
 simulation time through `controller.tick()`. The controller retains the established atomic
 boundary: it computes the next snapshot, persists it, and reconciles the Solid store only after the
-write succeeds. Components continue to read one canonical store; no interpolated display value,
-worker mirror, or WebAssembly state duplicates the durable numbers.
+write succeeds. Components continue to read one canonical store; no next-cell meter, interpolated
+display value, worker mirror, or WebAssembly state duplicates the durable numbers.
 
 The cadence is deliberately slower than animation frames and faster than the former one-second
 step. CSS owns continuous decorative motion. TypeScript owns economy arithmetic and canonical

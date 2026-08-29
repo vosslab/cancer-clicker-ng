@@ -97,12 +97,12 @@ function TooltipSurface(props: {
   kind: "action" | "help";
   visible: boolean;
   position: TooltipPosition | undefined;
-  tooltip: string;
-  ref: (element: HTMLSpanElement) => void;
+  tooltip: JSX.Element;
+  ref: (element: HTMLDivElement) => void;
 }): JSX.Element {
   return (
     <Portal>
-      <span
+      <div
         ref={props.ref}
         id={props.id}
         class={`${props.kind}-tooltip-content tooltip-surface`}
@@ -116,14 +116,87 @@ function TooltipSurface(props: {
         hidden={!props.visible}
       >
         {props.tooltip}
-      </span>
+      </div>
     </Portal>
   );
 }
 
+/**
+ * Owns the positioning and lifetime of one tooltip.  ActionTooltip and
+ * HelpTooltip intentionally differ in markup, but they must never drift in
+ * keyboard escape, viewport repositioning, or portal behavior.
+ */
+function createTooltipController(
+  placement: () => TooltipPlacement,
+  canShow: () => boolean = () => true,
+): Readonly<{
+  tooltipId: string;
+  visible: () => boolean;
+  position: () => TooltipPosition | undefined;
+  setAnchor: (element: HTMLSpanElement) => void;
+  setTooltip: (element: HTMLDivElement) => void;
+  show: () => void;
+  hide: () => void;
+  onKeyDown: (event: KeyboardEvent) => void;
+}> {
+  const tooltipId = createUniqueId();
+  const [visible, setVisible] = createSignal(false);
+  const [position, setPosition] = createSignal<TooltipPosition>();
+  let anchorElement: HTMLSpanElement | undefined;
+  let tooltipElement: HTMLDivElement | undefined;
+
+  function updatePosition(): void {
+    if (!visible() || anchorElement === undefined || tooltipElement === undefined) return;
+    setPosition(resolveTooltipPosition(anchorElement, tooltipElement, placement()));
+  }
+
+  createEffect(() => {
+    if (!visible()) return;
+    const animationFrame = requestAnimationFrame(updatePosition);
+    window.addEventListener("resize", updatePosition);
+    window.addEventListener("scroll", updatePosition, true);
+    onCleanup(() => {
+      cancelAnimationFrame(animationFrame);
+      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", updatePosition, true);
+    });
+  });
+
+  function show(): void {
+    if (!canShow()) return;
+    setPosition(undefined);
+    setVisible(true);
+  }
+
+  function hide(): void {
+    setVisible(false);
+  }
+
+  function onKeyDown(event: KeyboardEvent): void {
+    if (event.key !== "Escape") return;
+    event.preventDefault();
+    hide();
+  }
+
+  return {
+    tooltipId,
+    visible,
+    position,
+    setAnchor: (element): void => {
+      anchorElement = element;
+    },
+    setTooltip: (element): void => {
+      tooltipElement = element;
+    },
+    show,
+    hide,
+    onKeyDown,
+  };
+}
+
 export type ActionTooltipProps = Readonly<{
   label: string;
-  tooltip: string;
+  tooltip: JSX.Element;
   children: JSX.Element;
   class?: string;
   disabled?: boolean;
@@ -142,7 +215,7 @@ export type TooltipTriggerBindings = Readonly<{
 }>;
 
 export type HelpTooltipProps = Readonly<{
-  tooltip: string;
+  tooltip: JSX.Element;
   children: (bindings: TooltipTriggerBindings) => JSX.Element;
   disabled?: boolean;
   disabledLabel?: string;
@@ -151,79 +224,38 @@ export type HelpTooltipProps = Readonly<{
 
 /** An icon-first action button whose concise help is available to pointer and keyboard users. */
 export function ActionTooltip(props: ActionTooltipProps): JSX.Element {
-  const tooltipId = createUniqueId();
-  const [visible, setVisible] = createSignal(false);
-  const [position, setPosition] = createSignal<TooltipPosition>();
   const placement = (): TooltipPlacement => props.placement ?? "above";
-  let anchorElement: HTMLSpanElement | undefined;
-  let tooltipElement: HTMLSpanElement | undefined;
-
-  function updatePosition(): void {
-    if (!visible() || anchorElement === undefined || tooltipElement === undefined) return;
-    setPosition(resolveTooltipPosition(anchorElement, tooltipElement, placement()));
-  }
-
-  createEffect(() => {
-    if (!visible()) return;
-    const animationFrame = requestAnimationFrame(updatePosition);
-    window.addEventListener("resize", updatePosition);
-    window.addEventListener("scroll", updatePosition, true);
-    onCleanup(() => {
-      cancelAnimationFrame(animationFrame);
-      window.removeEventListener("resize", updatePosition);
-      window.removeEventListener("scroll", updatePosition, true);
-    });
-  });
-
-  function showTooltip(): void {
-    if (props.disabled) return;
-    setPosition(undefined);
-    setVisible(true);
-  }
-
-  function hideTooltip(): void {
-    setVisible(false);
-  }
-
-  function handleKeyDown(event: KeyboardEvent): void {
-    if (event.key !== "Escape") return;
-    event.preventDefault();
-    hideTooltip();
-  }
+  const tooltip = createTooltipController(placement, () => props.disabled !== true);
 
   return (
     <span
-      ref={(element) => {
-        anchorElement = element;
-      }}
+      ref={tooltip.setAnchor}
       class={`action-tooltip${props.class ? ` ${props.class}` : ""}`}
       data-placement={placement()}
-      onPointerEnter={showTooltip}
-      onPointerLeave={hideTooltip}
+      onPointerEnter={tooltip.show}
+      onPointerLeave={tooltip.hide}
     >
       <button
         class="action-tooltip-trigger"
         type="button"
         aria-label={props.label}
-        aria-describedby={tooltipId}
+        aria-describedby={tooltip.tooltipId}
         disabled={props.disabled}
         onClick={props.onClick}
-        onFocus={showTooltip}
-        onBlur={hideTooltip}
-        onKeyDown={handleKeyDown}
-        onPointerDown={showTooltip}
+        onFocus={tooltip.show}
+        onBlur={tooltip.hide}
+        onKeyDown={tooltip.onKeyDown}
+        onPointerDown={tooltip.show}
       >
         {props.children}
       </button>
       <TooltipSurface
-        id={tooltipId}
+        id={tooltip.tooltipId}
         kind="action"
-        visible={visible()}
-        position={position()}
+        visible={tooltip.visible()}
+        position={tooltip.position()}
         tooltip={props.tooltip}
-        ref={(element) => {
-          tooltipElement = element;
-        }}
+        ref={tooltip.setTooltip}
       />
     </span>
   );
@@ -234,84 +266,44 @@ export function ActionTooltip(props: ActionTooltipProps): JSX.Element {
  * Spread the supplied bindings onto the button that already owns the gameplay mutation.
  */
 export function HelpTooltip(props: HelpTooltipProps): JSX.Element {
-  const tooltipId = createUniqueId();
-  const [visible, setVisible] = createSignal(false);
-  const [position, setPosition] = createSignal<TooltipPosition>();
   const placement = (): TooltipPlacement => props.placement ?? "above";
-  let anchorElement: HTMLSpanElement | undefined;
-  let tooltipElement: HTMLSpanElement | undefined;
-
-  function updatePosition(): void {
-    if (!visible() || anchorElement === undefined || tooltipElement === undefined) return;
-    setPosition(resolveTooltipPosition(anchorElement, tooltipElement, placement()));
-  }
-
-  createEffect(() => {
-    if (!visible()) return;
-    const animationFrame = requestAnimationFrame(updatePosition);
-    window.addEventListener("resize", updatePosition);
-    window.addEventListener("scroll", updatePosition, true);
-    onCleanup(() => {
-      cancelAnimationFrame(animationFrame);
-      window.removeEventListener("resize", updatePosition);
-      window.removeEventListener("scroll", updatePosition, true);
-    });
-  });
-
-  function showTooltip(): void {
-    setPosition(undefined);
-    setVisible(true);
-  }
-
-  function hideTooltip(): void {
-    setVisible(false);
-  }
-
-  function handleKeyDown(event: KeyboardEvent): void {
-    if (event.key !== "Escape") return;
-    event.preventDefault();
-    hideTooltip();
-  }
+  const tooltip = createTooltipController(placement);
 
   const bindings: TooltipTriggerBindings = {
-    "aria-describedby": tooltipId,
-    onFocus: showTooltip,
-    onBlur: hideTooltip,
-    onKeyDown: handleKeyDown,
-    onPointerEnter: showTooltip,
-    onPointerLeave: hideTooltip,
-    onPointerDown: showTooltip,
+    "aria-describedby": tooltip.tooltipId,
+    onFocus: tooltip.show,
+    onBlur: tooltip.hide,
+    onKeyDown: tooltip.onKeyDown,
+    onPointerEnter: tooltip.show,
+    onPointerLeave: tooltip.hide,
+    onPointerDown: tooltip.show,
   };
 
   return (
     <span
-      ref={(element) => {
-        anchorElement = element;
-      }}
+      ref={tooltip.setAnchor}
       class="help-tooltip"
       data-placement={placement()}
       role={props.disabled ? "group" : undefined}
       tabIndex={props.disabled ? 0 : undefined}
-      aria-label={props.disabled ? (props.disabledLabel ?? props.tooltip) : undefined}
-      aria-describedby={props.disabled ? tooltipId : undefined}
+      aria-label={props.disabled ? (props.disabledLabel ?? "Unavailable action") : undefined}
+      aria-describedby={props.disabled ? tooltip.tooltipId : undefined}
       aria-disabled={props.disabled ? "true" : undefined}
-      onPointerEnter={showTooltip}
-      onPointerLeave={hideTooltip}
-      onFocus={showTooltip}
-      onBlur={hideTooltip}
-      onKeyDown={handleKeyDown}
-      onPointerDown={showTooltip}
+      onPointerEnter={tooltip.show}
+      onPointerLeave={tooltip.hide}
+      onFocus={tooltip.show}
+      onBlur={tooltip.hide}
+      onKeyDown={tooltip.onKeyDown}
+      onPointerDown={tooltip.show}
     >
       {props.children(bindings)}
       <TooltipSurface
-        id={tooltipId}
+        id={tooltip.tooltipId}
         kind="help"
-        visible={visible()}
-        position={position()}
+        visible={tooltip.visible()}
+        position={tooltip.position()}
         tooltip={props.tooltip}
-        ref={(element) => {
-          tooltipElement = element;
-        }}
+        ref={tooltip.setTooltip}
       />
     </span>
   );

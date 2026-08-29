@@ -40,6 +40,7 @@ STATIC_STYLES=(
 	"style.css"
 	"game_ui.css"
 	"tumor_arena.css"
+	"tumor_arena_motion.css"
 	"tumor_arena_neutral_light.css"
 	"evolution_dock.css"
 	"upgrade_rack.css"

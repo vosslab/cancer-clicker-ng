@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-// Selector contract: disabled advancement help, reward status, and the specimen drawer
+// Selector contract: disabled target-named advancement help, reward status, and the specimen drawer
 // (src/render/stage_panel.tsx:177; src/render/reward_feedback.tsx:12; src/render/app.tsx:313).
 test("reduced-motion reward feedback appears and a non-modal inspector closes from outside focus", async ({
   browser,
@@ -21,9 +21,9 @@ test("reduced-motion reward feedback appears and a non-modal inspector closes fr
     await expect(page.locator(`#${lockedTooltipId}`)).toBeHidden();
     await lockedAdvanceHelp.focus();
     await expect(lockedAdvanceHelp).toBeFocused();
-    await expect(page.getByRole("button", { name: "Advance" })).toBeDisabled();
+    await expect(page.getByRole("button", { name: "Advance to Microcolony" })).toBeDisabled();
     const lockedTooltip = page.locator(`#${lockedTooltipId}`);
-    await expect(lockedTooltip).toContainText(/Local cluster cells|Advance unavailable/);
+    await expect(lockedTooltip).toContainText(/Divide the tumor|Advance unavailable/);
     await page.keyboard.press("Escape");
     await expect(lockedTooltip).toBeHidden();
     await lockedAdvanceHelp.focus();

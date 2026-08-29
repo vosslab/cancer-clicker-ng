@@ -109,6 +109,18 @@ test("visible actions are parser-valid reducer transitions from their projected 
   }
 });
 
+test("a sparse new game projects its available first hallmark through the event funnel", () => {
+  const state = createInitialGameState();
+  const hallmarks = projectVisibleDecisionSurface(state).actions.filter(
+    (candidate) => candidate.kind === "hallmark",
+  );
+  assert.deepEqual(
+    hallmarks.map((candidate) => candidate.event.hallmarkId),
+    [hallmarkId("proliferative_signaling")],
+  );
+  assert.doesNotThrow(() => recordEvent(state, parseRuntimeEvent(hallmarks[0]?.event)));
+});
+
 test("surface keeps replay progression compact and exposes canonical numeric balances", () => {
   const state = fundedState();
   const surface = projectVisibleDecisionSurface(state);

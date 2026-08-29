@@ -25,7 +25,6 @@
 }
 
 .evolution-stage__current,
-.evolution-stage__goal,
 .evolution-hallmarks__heading,
 .evolution-hallmarks__active-heading {
   display: flex;
@@ -86,61 +85,70 @@
 .evolution-stage h2 {
   font-size: clamp(1.05rem, 1.7vw, 1.35rem);
 }
-.evolution-stage__mode {
+.evolution-stage__position {
   margin: 0.2rem 0 0;
   color: #d3b7af;
   font-size: 0.76rem;
 }
 
-.evolution-stage__numbers {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
-}
-
-.evolution-stage__numbers output {
-  border: 1px solid rgb(230 169 164 / 24%);
-  border-radius: 999px;
-  padding: 0.28rem 0.52rem;
-  color: #ead2cb;
-  background: rgb(47 23 31 / 58%);
-  font-size: 0.73rem;
-  font-weight: 750;
-}
-
 .evolution-stage__goal {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(3.75rem, 0.55fr) 7.8rem;
+  gap: 0.7rem;
   border: 1px solid rgb(255 154 179 / 52%);
   border-radius: 0.82rem;
-  padding: 0.55rem;
+  padding: 0.75rem;
   background: linear-gradient(120deg, rgb(103 30 52 / 62%), rgb(65 34 41 / 76%));
 }
 
 .evolution-stage__goal-copy {
   display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 0.08rem 0.4rem;
+  gap: 0.28rem;
 }
-.evolution-stage__goal-copy p {
-  grid-column: 1 / -1;
+
+.evolution-stage__goal-kicker {
+  margin: 0;
+  color: #f5b0bb;
+  font-size: 0.64rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.evolution-stage__goal h3 {
   margin: 0;
   color: #fff4ce;
-  font-weight: 850;
+  font-size: 1.04rem;
+  line-height: 1.1;
 }
-.evolution-stage__goal-copy label,
-.evolution-stage__goal-copy output,
-.evolution-stage__goal-copy span {
+
+.evolution-stage__goal-instruction {
+  margin: 0;
+  color: #ead2cb;
+  font-size: 0.79rem;
+  line-height: 1.32;
+}
+
+.evolution-stage__goal-progress {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.6rem;
+  border-top: 1px solid rgb(255 227 211 / 16%);
+  padding-top: 0.48rem;
   color: #dbcfa5;
-  font-size: 0.7rem;
+  font-size: 0.72rem;
+  font-weight: 750;
 }
-.evolution-stage__goal-copy output {
-  text-align: end;
-  font-weight: 850;
+
+.evolution-stage__goal-progress output {
+  color: #fff4ce;
+  font-weight: 950;
 }
+
 .evolution-stage__gate-state {
-  grid-column: 1 / -1;
+  margin: 0;
   font-weight: 900;
+  font-size: 0.72rem;
   letter-spacing: 0.07em;
   text-transform: uppercase;
 }
@@ -149,25 +157,6 @@
 }
 .evolution-stage__gate-state[data-state="locked"] {
   color: #99a8ae;
-}
-
-.evolution-stage progress {
-  width: 100%;
-  height: 0.6rem;
-  overflow: hidden;
-  border: 1px solid rgb(255 241 192 / 30%);
-  border-radius: 999px;
-  background: rgb(24 28 15 / 72%);
-}
-
-.evolution-stage progress::-webkit-progress-bar {
-  background: rgb(24 28 15 / 72%);
-}
-.evolution-stage progress::-webkit-progress-value {
-  background: linear-gradient(90deg, #f8b84c, #fff0a5);
-}
-.evolution-stage progress::-moz-progress-bar {
-  background: linear-gradient(90deg, #f8b84c, #fff0a5);
 }
 
 .evolution-stage__advance,
@@ -331,6 +320,15 @@
 .evolution-hallmarks__constellation li[data-state="acquired"] .evolution-hallmarks__state {
   color: #f4b0b5;
 }
+.evolution-hallmarks__sigil-button.is-just-acquired {
+  border-color: #ffd6ac;
+  background: rgb(132 49 72 / 74%);
+  box-shadow:
+    0 0 0 2px rgb(255 220 177 / 42%),
+    0 0 1.1rem rgb(255 142 119 / 48%),
+    inset 0 0 1rem rgb(255 211 168 / 18%);
+  animation: hallmark-acquired-flash 1.15s ease-out both;
+}
 
 .evolution-hallmarks__active {
   display: grid;
@@ -358,6 +356,22 @@
   height: 1.35rem;
 }
 
+.evolution-hallmarks__acquisition-notice {
+  margin: 0;
+  border: 1px solid rgb(255 213 168 / 70%);
+  border-radius: 0.6rem;
+  padding: 0.5rem 0.58rem;
+  color: #fff0dd;
+  background: rgb(109 42 53 / 74%);
+  font-size: 0.74rem;
+  line-height: 1.35;
+}
+
+.evolution-hallmarks__active.is-just-acquired {
+  border-color: #ffd2a1;
+  box-shadow: 0 0 1.35rem rgb(255 138 121 / 27%);
+}
+
 .evolution-hallmarks__active .hallmark-fieldset,
 .evolution-hallmarks__active .hallmark-control-stack,
 .evolution-hallmarks__active .regional-hallmark-control {
@@ -380,12 +394,27 @@
   }
 }
 
+@keyframes hallmark-acquired-flash {
+  0% {
+    transform: scale(0.94);
+  }
+  45% {
+    transform: scale(1.04);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
 .evolution-hallmarks__constellation li[data-state="available"] .evolution-sigil {
   animation: evolution-available-sigil 1.7s ease-in-out infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .evolution-hallmarks__constellation li[data-state="available"] .evolution-sigil {
+    animation: none;
+  }
+  .evolution-hallmarks__sigil-button.is-just-acquired {
     animation: none;
   }
   .evolution-hallmarks__constellation
@@ -414,15 +443,6 @@
 }
 
 @media (max-width: 760px) {
-  .evolution-stage__goal {
-    grid-template-columns: 1fr auto;
-  }
-  .evolution-stage__goal progress {
-    grid-column: 1 / -1;
-  }
-  .evolution-stage__goal > .help-tooltip {
-    grid-column: 1 / -1;
-  }
   .evolution-hallmarks__constellation {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }

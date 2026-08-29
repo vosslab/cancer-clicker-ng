@@ -36,7 +36,8 @@ test("save recovery protects rejected raw storage until an accessible explicit r
   await expect(divide).toBeDisabled();
   await expect(page.locator("#format-button")).toBeDisabled();
   await expect(page.getByRole("button", { name: /^Buy 1 Cyclin D machine/ })).toHaveCount(0);
-  await expect(page.locator('[data-producer-id="producer"]')).toContainText("Undiscovered target");
+  await expect(page.locator('[data-producer-id="producer"]')).toHaveCount(0);
+  await expect(page.locator(".producer-list__empty")).toContainText("Grow 1 cell");
 
   await divide.click({ force: true });
   await expect(cells).toHaveText(initialCells ?? "");

@@ -17,7 +17,9 @@ async function inspectColonyFigure(page) {
   await expect(svg).toHaveAttribute("aria-hidden", "true");
   await expect(svg.locator("title")).toHaveCount(0);
   await expect(svg.locator("desc")).toHaveCount(0);
-  await expect(page.locator("#colony-a11y-description")).toContainText("Click a visible cell");
+  await expect(page.locator("#colony-a11y-description")).toContainText(
+    "Click a cell or just beside it",
+  );
   return svg.evaluate((element) => {
     const allNodes = [element, ...element.querySelectorAll("*")];
     const ids = new Set([...element.querySelectorAll("[id]")].map((node) => node.id));

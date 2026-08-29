@@ -449,10 +449,18 @@ polygon.colony-figure__outline {
 
 .colony-cell__membrane {
   stroke: rgb(226 247 255 / 78%);
-  /* This is the visible edge of the direct-action object, not a separate hit plane. */
   stroke-width: 2.35;
   paint-order: stroke fill;
   vector-effect: non-scaling-stroke;
+}
+
+.colony-cell__hit-target {
+  fill: none;
+  stroke: transparent;
+  stroke-width: 2.5rem;
+  vector-effect: non-scaling-stroke;
+  pointer-events: stroke;
+  forced-color-adjust: none;
 }
 
 .colony-cell__nucleus {

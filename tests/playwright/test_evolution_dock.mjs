@@ -1,20 +1,21 @@
 import { expect, test } from "@playwright/test";
 
-// Selector contract: accessible evolution controls and the hallmark program heading
+// Selector contract: explicit progression goal and accessible mutation controls
 // (src/render/evolution_dock.tsx:19; src/render/hallmark_tree.tsx:887).
-test("evolution dock presents full hallmark names without overlapping tooltip prose", async ({
-  page,
-}) => {
+test("evolution dock presents an explicit next goal and full hallmark names", async ({ page }) => {
   await page.goto("/");
 
   await expect(page.getByRole("heading", { name: "Transformed cell" })).toBeVisible();
-  await expect(page.getByRole("progressbar", { name: "Local cluster cells" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Advance" })).toBeDisabled();
-  await expect(page.getByRole("heading", { name: "Hallmark programs" })).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Build a microcolony" })).toBeVisible();
+  await expect(page.locator("#stage-gate-label")).toContainText("Cells grown");
+  await expect(page.getByRole("progressbar")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Advance to Microcolony" })).toBeDisabled();
+  await expect(page.getByRole("heading", { name: "Choose a growth trait" })).toHaveCount(0);
 
   await page.getByRole("button", { name: "Hallmarks evolution system" }).click();
-  await expect(page.getByRole("heading", { name: "Hallmark programs" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Choose a growth trait" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Transformed cell" })).toHaveCount(0);
+  await expect(page.locator(".evolution-hallmarks__active-heading")).toContainText("Available now");
 
   const availableSigil = page.getByRole("button", {
     name: "Sustaining proliferative signaling, available",

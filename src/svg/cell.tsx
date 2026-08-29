@@ -25,9 +25,15 @@ export type CellSvgPath = Readonly<{
   transform?: string;
 }>;
 
+export type CellSvgHitTarget = Readonly<{
+  className: string;
+  d: string;
+}>;
+
 export type CellSvgStructure = Readonly<{
   className: string;
   transform: string;
+  hitTarget: CellSvgHitTarget;
   membrane: CellSvgPath;
   nucleus: CellSvgPath;
   mitosis: CellSvgPath | undefined;
@@ -59,6 +65,10 @@ function groupClass(cell: CellRenderModel, growthState: ColonyVisualState["growt
  * Definition IDs are generated once by the scene owner and remain inline-scene local.
  */
 export function describeCellSvg(props: CellProps): CellSvgStructure {
+  const hitTarget: CellSvgHitTarget = Object.freeze({
+    className: "colony-cell__hit-target",
+    d: props.cell.membranePath,
+  });
   const membrane: CellSvgPath = Object.freeze({
     className: "colony-cell__membrane",
     d: props.cell.membranePath,
@@ -82,13 +92,14 @@ export function describeCellSvg(props: CellProps): CellSvgStructure {
   return Object.freeze({
     className: groupClass(props.cell, props.growthState),
     transform: props.cell.transform,
+    hitTarget,
     membrane,
     nucleus,
     mitosis,
   });
 }
 
-/** Renders one noninteractive cell from immutable paths, depth, region, and mitosis state. */
+/** Renders one cell and its invisible nearby-pointer envelope inside the parent native action. */
 export function Cell(props: CellProps): JSX.Element {
   const structure = describeCellSvg(props);
   return (
@@ -98,6 +109,7 @@ export function Cell(props: CellProps): JSX.Element {
       transform={structure.transform}
     >
       <g class="colony-cell__visual">
+        <path class={structure.hitTarget.className} d={structure.hitTarget.d} aria-hidden="true" />
         <path
           class={structure.membrane.className}
           d={structure.membrane.d}

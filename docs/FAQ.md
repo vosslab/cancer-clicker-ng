@@ -9,9 +9,9 @@ reference role.
 
 ## Where do I click?
 
-Click a visible cell membrane or nucleus in the living tumor arena. The surrounding tissue and
-open space do not divide cells. Keyboard players focus **Divide cell** and press Enter or Space;
-this uses the same game action.
+Click a visible cell membrane or nucleus, or just beside its edge, in the living tumor arena. The
+surrounding tissue and open space do not divide cells. Keyboard players focus **Divide cell** and
+press Enter or Space; this uses the same game action.
 
 ## What do the small icons mean?
 
@@ -68,6 +68,6 @@ actions while removing motion. [SOLID_MODEL.md](SOLID_MODEL.md) defines the inte
 
 ## Why did nothing happen after I clicked?
 
-A pointer click must land on a visible cell. Try a membrane or nucleus, or use the focused
-**Divide cell** control with Enter or Space. A disabled control can indicate that the protected
-save-recovery screen needs an explicit choice.
+A pointer click must land on a visible cell or its nearby edge. Try a membrane or nucleus, or use
+the focused **Divide cell** control with Enter or Space. A disabled control can indicate that the
+protected save-recovery screen needs an explicit choice.

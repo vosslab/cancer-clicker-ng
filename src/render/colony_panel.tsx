@@ -13,11 +13,12 @@ import { createGameColonyScene } from "../svg/colony_visual_state.js";
 import { describeColonyScene } from "../svg/describe.js";
 import type { ColonySceneRequest } from "../svg/render_types.js";
 import { TumorArena } from "./tumor_arena.js";
-import { formatCellInventory, formatCellRate, nextCellProgress } from "./cell_metrics.js";
+import { formatCellInventory, formatCellRate } from "./cell_metrics.js";
 
 type ColonyPanelProps = Readonly<{
   game: GameState;
   disabled?: boolean;
+  hallmarkFeedbackSequence?: number;
   /** True only after the canonical click event becomes durable player progress. */
   onDivide: () => boolean;
 }>;
@@ -91,12 +92,12 @@ export function ColonyPanel(props: ColonyPanelProps): JSX.Element {
               disabled={props.disabled === true}
               scene={ready().scene}
               cellsLabel={formatCellInventory(props.game.cells, props.game.numberFormat)}
-              growthProgress={nextCellProgress(props.game.cells)}
               magnitudeName={formatMagnitudeName(props.game.cells, 2)}
               productionLabel={formatCellRate(productionRate(), props.game.numberFormat)}
               description={`${ready().caption} Stylized game abstraction.`}
               feedbackTarget={feedbackTarget}
               feedbackSequence={feedbackSequence}
+              hallmarkFeedbackSequence={() => props.hallmarkFeedbackSequence ?? 0}
               onDivisionFeedback={(target) => {
                 setFeedbackTarget(target);
                 setFeedbackSequence((sequence) => sequence + 1);

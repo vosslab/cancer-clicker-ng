@@ -25,6 +25,24 @@ authoritative code or contract document, rather than a person.
 
 ## Software design
 
+### Sparse hallmark acquisition feedback
+
+**Decision.** An absent hallmark-level record means unowned level zero. The canonical purchase
+event creates its first record when the catalog stage gate allows it. A successful acquisition
+changes the active deck state, presents the program's next biological decision, and adds a short
+reward-log confirmation.
+
+**Why.** Fresh games intentionally begin with no owned hallmark records; requiring a synthetic
+zero row made the first available program look clickable while silently rejecting its event.
+Players need a visible confirmation and a clear next action when a durable program is installed.
+
+**Consequence.** Reducer and visible-decision projections use the same sparse-level rule. The
+Solid deck owns short-lived highlight and keyboard focus continuity; `GameState` remains the only
+durable ownership source. The visual-review corpus captures the accepted feedback state.
+
+**Owner.** `src/state/events.ts`, `src/state/decision_surface/hallmarks.ts`,
+`src/render/hallmark_tree.tsx`, and `tools/capture_visual_review.mjs`
+
 ### Deterministic balance evidence
 
 **Decision.** The balance laboratory consumes the canonical visible decision surface, current-save
@@ -580,6 +598,27 @@ test-only fixture files.
 
 **Owner.** [REPO_STYLE.md](REPO_STYLE.md)
 
+### Goal-first evolution rail
+
+**Decision.** The left rail uses visible, named Growth and Mutations tabs. The Growth view shows
+only the current tumor stage and one next goal: a plain-language objective, a short instruction,
+the relevant whole-number requirement, and a destination-named Advance action. `StageDefinition`
+owns the entry-goal copy, while `stageGateResult()` remains the source of live eligibility and
+progress.
+
+**Why.** Icon-only navigation, generic mode readouts, Charge, and an unlabeled next-stage card
+exposed implementation concepts instead of answering the player's immediate question: what do I do
+next? A player should recognize the goal and its completion evidence without translating internal
+game terms or opening help.
+
+**Consequence.** The panel does not show generic mode chips or a next-cell-style progress bar.
+The advance control names the stage it will enter, and tests cover the initial goal, its disabled
+state, target naming, and the absence of a progress meter. Later stage goals add catalog-owned copy
+instead of branching rendering logic.
+
+**Owner.** `src/stages/stage_types.ts`, `src/stages/catalog.ts`,
+`src/render/stage_panel.tsx`, `src/render/app.tsx`, and `src/evolution_dock.css`
+
 ### Body-tissue visual system, discrete cells, and four-hertz live cadence
 
 **Decision.** The game uses one warm body-tissue visual system built from marrow, burgundy,
@@ -588,11 +627,11 @@ board or gameplay theme. The opening transformed cell uses an irregular membrane
 cytoplasm, and an eccentric nucleus without a surrounding eye-like macro silhouette.
 
 Player-facing inventory remains discrete: values below 1,000 display as whole cells, while the
-continuous `BigNum` balance remains authoritative for costs and simulation. Partial accrual is a
-separate percentage toward the next cell, and sub-one production is written as time per whole cell,
-for example `1 cell / 10 s`. The live controller advances at four visible updates per second through
-the existing persist-before-reconcile tick; TypeScript and canonical `BigNum` remain the computation
-backend.
+continuous `BigNum` balance remains authoritative for costs and simulation. There is no next-cell
+meter: the live arena total is the only cell-count display. Sub-one production is written as time
+per whole cell, for example `1 cell / 10 s`. The live controller advances at four visible updates
+per second through the existing persist-before-reconcile tick; TypeScript and canonical `BigNum`
+remain the computation backend.
 
 **Why.** Green laboratory panels, cyan field lines, and blue-black surfaces implied a generic
 biology dashboard or science-fiction display rather than body tissue. A decimal cell count also
@@ -607,16 +646,34 @@ color is never the sole cue. Locked producer identities stay hidden until owners
 or an already-primed assay action establishes discovery. A known row labels Owned, Output, Buy,
 Cost, and Adds directly; tooltips provide redundant context rather than owning core economics.
 
+Producer tooltips are current-state evidence reports: owned level, one-system output, combined
+output, share of automatic growth, current effective rate relative to catalog base, and the exact
+selected purchase. Each value comes from the same production and quote functions that advance the
+economy. A lifetime-production line is intentionally absent until a separately persisted ledger
+exists; the spendable cell balance cannot truthfully stand in for historical production.
+
+The rack reserves compact rows for achieved molecular-machine targets. Known rows retain 44px
+interactive targets while grouping art, owned/output, and purchase facts tightly. At 1280 by 800,
+the full eight-machine earned rack uses rows no taller than 64px and remains in view without an
+internal scroll. `Cost` and `Adds` remain visible; the rows abbreviate only the repeated `cells`
+unit because the HUD has already named the common currency. No anonymous placeholder occupies the
+right rail: a row enters only when ownership, affordability, or an active assay establishes
+discovery.
+
 Tooltips render through a document-level portal, choose a viewport-fitting side, remain outside
 layout flow, and hide until their measured position is ready. `tools/capture_visual_review.mjs`
-captures five widths, all six evolution views, and every tooltip rendered by the seeded corpus. It
-checks viewport margin, text overflow, trigger overlap, rack overlap, responsive content fit,
-overflow, touch targets, console diagnostics, served palette, Axe, and ARIA-tree evidence. The
-ignored manifest has a read-only verification mode. `@axe-core/playwright` remains development-only
-and outside the static artifact. Reconsider WASM only after supported-device profiling identifies
-a sustained engine bottleneck that cannot be removed inside the TypeScript domain.
+captures five widths, a paced non-debug opening playthrough, a complete earned-rack density state,
+six guided earned-system surfaces, and their exercised tooltip states. It checks viewport margin,
+text overflow, trigger overlap, rack overlap, responsive content fit, overflow, touch targets,
+console diagnostics, served palette, Axe, and ARIA-tree evidence. `--sync-readme` promotes only two
+reviewed playthrough frames into the managed README block; the ignored manifest has a read-only
+verification mode.
+`@axe-core/playwright` remains development-only and outside the static artifact. Reconsider WASM
+only after supported-device profiling identifies a sustained engine bottleneck that cannot be
+removed inside the TypeScript domain.
 
 **Owner.** `src/style.css`, `src/game_ui.css`, `src/tumor_arena.css`,
+`src/tumor_arena_motion.css`,
 `src/evolution_dock.css`, `src/upgrade_rack.css`, `src/culture_network_ui.css`,
 `src/render/app.tsx`, `src/render/action_tooltip.tsx`, `src/render/game_hud.tsx`,
 `src/render/game_reward_dock.tsx`, `src/render/cell_metrics.ts`, and
@@ -641,8 +698,9 @@ The direct click must confirm a real accepted division rather than rewarding ine
 **Consequence.** `src/svg/colony_visual_state.ts` owns the four magnitude tiers and
 `src/svg/colony_layout.ts` owns their bounded composition response. `src/svg/morphology.ts` and
 the visual catalog remain the authority for stage and hallmark grammar. `TumorArena` derives a
-pointer location only from rendered membrane or nucleus geometry, then emits division feedback only
-after the controller accepts the event. Persistent reticles and observer equipment are absent;
+pointer location from a rendered membrane or nucleus and its transparent nearby pointer envelope,
+then emits pointer-local division feedback only after the controller accepts the event. Persistent
+reticles and observer equipment are absent;
 cell hover/focus and accepted cleavage-and-daughter feedback express the cancer-cell viewpoint.
 The late producer-queue action retains its domain contract while presenting a parent-to-daughters
 cell-priming glyph and action copy instead of laboratory glassware.

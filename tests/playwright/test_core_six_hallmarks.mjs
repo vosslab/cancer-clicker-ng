@@ -128,7 +128,7 @@ test("core-six icon deck selects one active hallmark and exposes its compact nat
   await openHallmarks(page);
   const tree = hallmarkPanel(page);
   await expect(tree.getByRole("list", { name: "Hallmark mutation programs" })).toBeVisible();
-  await expect(tree.locator(".evolution-hallmarks__sigil-button")).toHaveCount(14);
+  await expect(tree.locator(".evolution-hallmarks__sigil-button")).toHaveCount(1);
   const proliferative = await selectBranch(page, "Sustaining proliferative signaling", "available");
   await proliferative.getByRole("button", { name: "Acquire" }).click();
   const fieldset = proliferative.getByRole("group", { name: /Division allocation/ });
@@ -137,6 +137,33 @@ test("core-six icon deck selects one active hallmark and exposes its compact nat
   await cycle.focus();
   await page.keyboard.press("Enter");
   expect((await savedGameState(page)).signalingAllocation).toBe("cycle");
+  expect(diagnostics).toEqual([]);
+});
+
+test("a fresh game acquires its first hallmark with persistent visible confirmation", async ({
+  page,
+}) => {
+  await installFixedClock(page);
+  const diagnostics = installDiagnostics(page);
+  await page.goto("/");
+  await openHallmarks(page);
+  const proliferative = await selectBranch(page, "Sustaining proliferative signaling", "available");
+  await proliferative.getByRole("button", { name: "Acquire" }).press("Enter");
+  await expect(
+    hallmarkPanel(page).getByRole("button", {
+      name: "Sustaining proliferative signaling, acquired",
+    }),
+  ).toBeVisible();
+  await expect(proliferative.locator(".evolution-hallmarks__acquisition-notice")).toContainText(
+    "Growth trait acquired.",
+  );
+  await expect(page.getByRole("log", { name: "Recent rewards" })).toContainText(
+    "Hallmark acquired: Sustaining proliferative signaling",
+  );
+  await expect(proliferative.getByRole("group", { name: /Division allocation/ })).toBeVisible();
+  expect(await savedGameState(page)).toMatchObject({
+    hallmarkLevels: [{ id: "proliferative_signaling", level: 1 }],
+  });
   expect(diagnostics).toEqual([]);
 });
 

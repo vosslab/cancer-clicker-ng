@@ -22,9 +22,7 @@
 
 .game-hud {
   display: grid;
-  grid-template-columns:
-    2.8rem minmax(4.8rem, 0.8fr) minmax(4.8rem, 0.8fr) minmax(8rem, 1.5fr)
-    auto auto auto;
+  grid-template-columns: 2.8rem minmax(6rem, 1fr) minmax(8rem, 1.5fr) auto auto auto;
   gap: 0.32rem;
   align-items: center;
   min-width: 0;
@@ -192,6 +190,16 @@
   visibility: hidden;
 }
 
+.producer-tooltip {
+  display: grid;
+  gap: 0.18rem;
+}
+
+.producer-tooltip__title,
+.producer-tooltip__availability {
+  color: var(--growth-bright);
+}
+
 .inspector-drawer {
   position: fixed;
   z-index: 20;
@@ -355,27 +363,37 @@
 
 .evolution-tabs {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(7.2rem, 1fr));
   gap: 0.18rem;
   padding: 0.36rem;
   border-bottom: 1px solid rgb(211 147 185 / 27%);
 }
 
-.evolution-tabs > .help-tooltip,
-.evolution-tabs__button {
-  display: grid;
-  place-items: center;
+.evolution-tabs > .help-tooltip {
+  display: block;
   min-width: 0;
-  min-height: 2.75rem;
 }
 
 .evolution-tabs__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
   width: 100%;
-  padding: 0.35rem;
+  min-height: 2.75rem;
+  padding: 0.35rem 0.48rem;
   border-color: transparent;
   border-radius: 0.55rem;
   color: #efd4e4;
   background: rgb(127 71 111 / 20%);
+  font-size: 0.72rem;
+  font-weight: 850;
+}
+
+.evolution-tabs__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .evolution-tabs__button:hover,

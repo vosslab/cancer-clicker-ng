@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 import { stageGateFixtureSave } from "../stage_fixture.mjs";
 
-// Selector contract: stage navigation uses its accessible Advance control and durable game storage
+// Selector contract: stage navigation names its target and uses durable game storage
 // (src/render/stage_panel.tsx:177; src/state/save_load.ts:152).
 const SAVE_KEY = "cancer-clicker-ng.save.v2";
 const FIXED_CLOCK_MS = 1_750_000_000_000;
@@ -39,9 +39,10 @@ function currentSaveForFixture(targetStageId, options) {
   return JSON.stringify(envelope);
 }
 
-async function rewardSequence(page) {
-  const feedback = page.locator(".tumor-arena .reward-feedback");
-  const value = await feedback.getAttribute("data-reward-sequence");
+async function divisionFeedbackSequence(page) {
+  const feedback = page.locator(".tumor-arena .tumor-feedback__division");
+  if ((await feedback.count()) === 0) return 0;
+  const value = await feedback.getAttribute("data-feedback-sequence");
   if (value === null) throw new Error("Division feedback sequence is unavailable.");
   return Number(value);
 }
@@ -63,8 +64,9 @@ test("stage progression stage panel turns the early gate into an accessible pers
 
   const stage = page.locator(".evolution-stage");
   await expect(stage.getByRole("heading", { name: "Transformed cell" })).toBeVisible();
-  await expect(stage.getByRole("progressbar")).toBeVisible();
-  const advance = stage.getByRole("button", { name: "Advance" });
+  await expect(stage.getByRole("heading", { name: "Build a microcolony" })).toBeVisible();
+  await expect(stage.getByRole("progressbar")).toHaveCount(0);
+  const advance = stage.getByRole("button", { name: "Advance to Microcolony" });
   await expect(advance).toBeDisabled();
   const divide = page.getByRole("button", { name: "Divide cell" });
   await divide.focus();
@@ -79,10 +81,10 @@ test("stage progression stage panel turns the early gate into an accessible pers
   await expect(
     page.locator(".stage-transition-emphasis [data-stage-transition='microcolony']"),
   ).toHaveCount(1);
-  const rewardFeedback = page.locator(".tumor-arena .reward-feedback");
-  await expect(rewardFeedback).toHaveAttribute("data-reward-sequence", "10");
+  const divisionFeedback = page.locator(".tumor-arena .tumor-feedback__division");
+  await expect(divisionFeedback).toHaveAttribute("data-feedback-sequence", "10");
   await page.locator(".colony-cell__membrane").first().click();
-  await expect(rewardFeedback).toHaveAttribute("data-reward-sequence", "11");
+  await expect(divisionFeedback).toHaveAttribute("data-feedback-sequence", "11");
   await page.reload();
   await expect(page.getByRole("heading", { name: "Microcolony" })).toBeVisible();
   expect(diagnostics).toEqual([]);
@@ -99,7 +101,9 @@ test("stage progression production stage control reaches every seeded gate throu
       const diagnostics = installDiagnostics(page);
       await seedStageGate(page, stageId);
       await page.goto("/?debug=1");
-      const advance = page.locator(".evolution-stage").getByRole("button", { name: "Advance" });
+      const advance = page
+        .locator(".evolution-stage")
+        .getByRole("button", { name: /^Advance to / });
       await expect(advance).toBeEnabled();
       await advance.click();
       await expect(page.getByRole("heading", { name: title })).toBeVisible();
@@ -108,9 +112,11 @@ test("stage progression production stage control reaches every seeded gate throu
         .locator("[data-colony-cell]")
         .first();
       await expect(livingCell).toBeVisible();
-      const sequenceBeforeDivision = await rewardSequence(page);
+      const sequenceBeforeDivision = await divisionFeedbackSequence(page);
       await livingCell.locator(".colony-cell__membrane").click();
-      await expect.poll(() => rewardSequence(page)).toBeGreaterThan(sequenceBeforeDivision);
+      await expect
+        .poll(() => divisionFeedbackSequence(page))
+        .toBeGreaterThan(sequenceBeforeDivision);
       await expect(page.locator(".tumor-feedback__division")).toBeVisible();
       expect(diagnostics, `${title}: browser diagnostics`).toEqual([]);
     } finally {
@@ -130,7 +136,7 @@ test("stage progression requires earned L3 before host collapse can enter immort
     await seedStageGate(unavailablePage, "immortalized_culture", { earnedL3: false });
     await unavailablePage.goto("/");
     await expect(
-      unavailablePage.locator(".evolution-stage").getByRole("button", { name: "Advance" }),
+      unavailablePage.locator(".evolution-stage").getByRole("button", { name: /^Advance to / }),
     ).toBeDisabled();
 
     const page = await earned.newPage();
@@ -138,7 +144,7 @@ test("stage progression requires earned L3 before host collapse can enter immort
     const diagnostics = installDiagnostics(page);
     await seedStageGate(page, "immortalized_culture", { earnedL3: true });
     await page.goto("/");
-    const advance = page.locator(".evolution-stage").getByRole("button", { name: "Advance" });
+    const advance = page.locator(".evolution-stage").getByRole("button", { name: /^Advance to / });
     await expect(advance).toBeEnabled();
     const box = await advance.boundingBox();
     expect(box?.width).toBeGreaterThanOrEqual(44);

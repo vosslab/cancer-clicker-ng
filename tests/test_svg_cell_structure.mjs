@@ -27,6 +27,8 @@ test("Cell projects immutable paths and exposes each real cell as a pointer targ
 
   assert.deepEqual(first, second);
   assert.equal(Object.isFrozen(first), true);
+  assert.equal(first.hitTarget.d, input.cell.membranePath);
+  assert.equal(first.hitTarget.className, "colony-cell__hit-target");
   assert.equal(first.membrane.d, input.cell.membranePath);
   assert.equal(first.nucleus.d, input.cell.nucleusPath);
   assert.equal(first.membrane.fill, `url(#${input.definitionIds.cytoplasmPattern})`);

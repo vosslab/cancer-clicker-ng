@@ -10,19 +10,14 @@ function requireNonnegative(value: BigNum, label: string): void {
 /** Keeps the discrete inventory biological while allowing aggregate suffixes at large scale. */
 export function formatCellInventory(value: BigNum, format: NumberFormat): string {
   requireNonnegative(value, "Cell inventory");
-  if (value.exponent >= 3) return formatQuantity(value, format, 2, "cell", "cells");
+  if (value.exponent >= 3) return formatQuantity(value, format, 1, "cell", "cells");
   const wholeCells = Math.floor(toNumber(value));
   return `${wholeCells.toFixed(0)} ${wholeCells === 1 ? "cell" : "cells"}`;
 }
 
-/** Returns the visible completion percentage for the next whole cell at small magnitudes. */
-export function nextCellProgress(value: BigNum): number | undefined {
-  requireNonnegative(value, "Cell inventory");
-  if (value.exponent >= 3) return undefined;
-  const numericValue = toNumber(value);
-  const fraction = numericValue - Math.floor(numericValue);
-  const percentage = Math.round(fraction * 100_000_000) / 1_000_000;
-  return Math.max(0, Math.min(100, percentage));
+/** Shortens a visible rack price after its neighboring Cost label establishes the resource. */
+export function formatCompactCellInventory(value: BigNum, format: NumberFormat): string {
+  return formatCellInventory(value, format).replace(/ cells?$/, "");
 }
 
 function intervalDigits(secondsPerCell: number): number {
@@ -42,5 +37,12 @@ export function formatCellRate(value: BigNum, format: NumberFormat): string {
       return `1 cell / ${secondsPerCell.toFixed(intervalDigits(secondsPerCell))} s`;
     }
   }
-  return `${formatBigNum(value, format, 2)} cells/s`;
+  return `${formatBigNum(value, format, 1)} cells/s`;
+}
+
+/** Keeps compact rack metrics readable without repeating the established cells unit. */
+export function formatCompactCellRate(value: BigNum, format: NumberFormat): string {
+  return formatCellRate(value, format)
+    .replace(/^1 cell \/ /, "1/")
+    .replace(/ cells\/s$/, "/s");
 }

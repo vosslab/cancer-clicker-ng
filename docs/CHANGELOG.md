@@ -2,10 +2,11 @@
 
 ### Additions and New Features
 
-- Rebuilt the complete tooltip screenshot lane. The visual-review harness now visits all six
-  evolution views, captures every tooltip rendered by its seeded Stage, Culture, and Network
-  corpus, and rejects viewport escape, clipped text, trigger overlap, or purchase-help intrusion
-  into rack content. The README capture now includes a dedicated explicit-price decision frame.
+- Rebuilt the complete screenshot lane around a paced non-debug opening playthrough. The
+  visual-review harness proves first purchase and second-machine reveal with real divisions, then
+  visits six guided earned-system surfaces and captures 11 exercised tooltip states. It rejects
+  viewport escape, clipped text, trigger overlap, or purchase-help intrusion into rack content;
+  `--sync-readme` promotes two reviewed playthrough frames into the managed README block.
 
 - Replaced the blue/green laboratory presentation with a warm body-tissue system spanning the
   board, tumor SVG, rack, Culture, Network, prestige, transit, and ending surfaces. Shared text
@@ -15,25 +16,46 @@
   eccentric nucleus rather than an eye inside scanner rings. The hallmark deck now uses readable
   full names and selected detail without overlapping tooltip prose.
 
-- Added whole-cell presentation helpers: inventory below 1,000 is discrete, partial automatic
-  accrual is next-cell progress, and sub-one rates use time per cell. The controller now updates at
-  four hertz; profiling did not justify adding a WebAssembly backend.
+- Added whole-cell presentation helpers: inventory below 1,000 is discrete, there is no
+  next-cell meter, and sub-one rates use time per cell. The controller now updates at four hertz;
+  profiling did not justify adding a WebAssembly backend.
 
-- Made the upgrade rack a progressively disclosed decision surface. Normal play shows discovered
-  rows and at most the next two anonymous targets; already primed assay targets remain discovered.
-  Known rows explicitly label Owned, Output, Buy, Cost, and Adds so the tooltip is supporting help,
-  not the sole price explanation.
+- Made the upgrade rack an earned-only decision surface. Normal play shows no anonymous or locked
+  targets; ownership, affordability, or a primed assay establishes discovery. Known rows explicitly
+  label Owned, Output, Buy, Cost, and Adds so the tooltip is supporting help, not the sole price
+  explanation.
 
-- Corrective verification passed with 371 deterministic Node tests, 49 production-browser tests,
-  1,555 Python checks against the complete nonignored candidate projection, and a verified 51-frame
-  visual corpus containing 33 rendered tooltips, all six evolution views, 11 zero-violation Axe
-  audits, zero tooltip diagnostics, and zero served green candidates.
+- Expanded producer tooltips into biological economy reports: owned systems, per-system output,
+  current fleet output, share of automatic growth, live tumor-context multiplier, and the selected
+  exact purchase. The report explicitly does not fabricate a lifetime-production count from the
+  spendable balance.
+
+- Condensed the right-side Upgrade Rack so its 44px purchase targets, explicit Cost and Adds facts,
+  and all eight earned molecular machines fit in the 1280 by 800 desktop rail. The visual-review
+  corpus now captures that real full-rack state and rejects oversized rows or a hidden row.
+
+- Removed an invalid ARIA label from the visible named-magnitude text, resolving the serious Axe
+  finding exposed by the full-rack visual capture.
+
+- Current rack correction verification passed with 376 deterministic Node tests, 51
+  production-browser tests, and a verified 29-frame visual corpus containing 11 exercised
+  tooltips, nine zero-violation Axe states, zero diagnostics, no served green candidates, and a
+  full 1280 by 800 rack with eight visible non-scrolling rows. The earlier 1,572-check Python
+  candidate projection remains dated evidence; this TypeScript and visual correction did not rerun
+  that separate candidate lane.
 
 - Added a whole-game visual-review harness with 320, 480, 768, 1280, and 1920 px screenshots;
-  focused-tooltip, specimen-drawer, success, persistence-error, corrupt-save recovery,
-  offline-return, and forced-colors states; panel geometry, stacked-panel content fit, overflow,
-  target-size, console, served-palette, Axe, and ARIA-tree evidence; an ignored contact sheet and
-  manifest; and read-only existing-corpus verification.
+  paced opening playthrough, focused-tooltip, specimen-drawer, success, hallmark acquisition,
+  persistence-error, corrupt-save recovery, offline-return, and forced-colors states; panel
+  geometry, stacked-panel content fit, overflow, target-size, console, served-palette, Axe, and
+  ARIA-tree evidence; an ignored contact sheet and manifest; read-only existing-corpus
+  verification; and managed README synchronization.
+
+- Split `src/tumor_arena.css` into 717 lines of arena presentation and a 306-line
+  `src/tumor_arena_motion.css` module for keyframes, reduced-motion fallbacks, and responsive
+  rules. The static build now explicitly copies both stylesheets. Tooltip positioning, Escape
+  handling, and viewport listeners now share one controller instead of separate ActionTooltip and
+  HelpTooltip implementations.
 
 - Added the complete HCI/UI review and measured palette-contrast audit, with explicit separation
   between expert rendered inspection, reproducible browser evidence, permanent behavior tests,
@@ -190,6 +212,15 @@
 
 ### Behavior or Interface Changes
 
+- Made direct cell division forgiving without making the whole specimen clickable: each membrane
+  now supplies a transparent nearby-pointer envelope, and accepted `+1 cell` feedback appears at
+  the actual pointer inside the biological division burst rather than beside the HUD total.
+
+- Rebuilt the left evolution rail around the player's immediate next goal. Growth and Mutations
+  tabs now have visible text labels; Growth replaces mode/Charge chips and a generic `Next` card
+  with a catalog-owned objective, plain instruction, whole-number requirement, and a button named
+  for its destination stage.
+
 - Removed the generic green/mint theme from active and legacy visual sources. Culture now uses a
   violet/rose identity, Network remains oxygenated blue, and affordable machinery uses cyan while
   tumor, vascular, hypoxia, and ATP roles remain rose, coral, violet, and amber.
@@ -231,6 +262,12 @@
   history and remote distribution add evidence without changing candidate status.
 
 ### Fixes and Maintenance
+
+- Fixed fresh-game hallmark acquisition: sparse hallmark ownership now begins at implicit level
+  zero, so the canonical purchase event creates its first record instead of rejecting the visible
+  first hallmark. An acquired program now visibly installs in the deck, explains its next
+  biological decision, announces to keyboard users, and records a short reward-log confirmation.
+  The browser and visual-review lanes cover this accepted state.
 
 - Raised base disabled-control copy to the 5.5:1 house contrast target and verified meaningful
   shared, tooltip, culture, selected, locked, and unaffordable text/backplate pairs.

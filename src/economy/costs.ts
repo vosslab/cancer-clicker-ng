@@ -26,6 +26,7 @@ function natural(value: number): boolean {
 function purchaseRequest(value: unknown): value is PurchaseQuantity {
   return value === "max" || value === 1 || value === 10 || value === 100;
 }
+
 function inventory(state: GameState): ReadonlyMap<ProducerId, number> {
   assertCanonicalProducerLevels(state.producerLevels);
   const result = new Map<ProducerId, number>();

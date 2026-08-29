@@ -3,7 +3,7 @@
 ## Inspect a first board
 
 1. Run `npm run serve` from the repository root and open the printed URL.
-2. Click a visible cell and confirm the arena count changes.
+2. Click a visible cell or just beside its edge and confirm the arena count changes.
 3. Choose a buy quantity in the upgrade rack and purchase an affordable illustrated machine.
 4. Open an evolution tab, focus a compact icon to read its tooltip, and open specimen details from
    the HUD or an available detail control.
@@ -22,20 +22,22 @@ interpretation.
 
 ## Reproduce the README visual evidence
 
-Use this after a visual, interaction, or documentation-image change. The checked-in seven-frame
-set is generated from parser-validated game states at a fixed 1280 x 800 viewport; it is stronger
-evidence than an ad-hoc browser screenshot.
+Use this after a visual, interaction, or documentation-image change. The canonical review builds
+a paced opening playthrough plus responsive and earned-system fixtures; it is stronger evidence
+than an ad-hoc browser screenshot.
 
 ```bash
 ./build_github_pages.sh
-node --import tsx tools/capture_readme_screenshots.mjs
+node tools/capture_visual_review.mjs
+node tools/capture_visual_review.mjs --sync-readme
 ```
 
-The capture tool updates the owned files in `docs/screenshots/` and verifies direct-cell targeting,
-scene overlays, reduced motion, and layout geometry while it runs. Review the regenerated images
-at their original size to confirm that cell geometry, rather than whitespace, remains the primary
-pointer target; labels and small icons remain legible; and no clipping hides the action or upgrade
-rack. The captures are one-time visual evidence; permanent tests remain focused on deterministic,
+The review tool updates ignored evidence, and its sync mode updates the two owned README frames in
+`docs/screenshots/`. It verifies direct-cell targeting, scene overlays, reduced motion, and layout
+geometry while it runs. Review the regenerated images at their original size to confirm that cell
+geometry, rather than whitespace, remains the primary pointer target; labels and small icons remain
+legible; and no clipping hides the action or upgrade rack. The captures are one-time visual
+evidence; permanent tests remain focused on deterministic,
 behavioral contracts.
 
 ## Inspect a staged biological state

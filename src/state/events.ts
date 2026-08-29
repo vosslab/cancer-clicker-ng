@@ -6,13 +6,7 @@ import type { GameState } from "../types/state.js";
 import { MAX_PENDING_PROGRESSION } from "../types/state.js";
 import { parseRuntimeEvent } from "./event_parse.js";
 import { assertStageTransition } from "../stages/transitions.js";
-import { findCoreSixHallmark, hasReachedCoreSixUnlock } from "../hallmarks/core_six_catalog.js";
-import {
-  findAtpSink,
-  findExtendedHallmark,
-  hasReachedExtendedHallmarkUnlock,
-  MAX_TOTAL_ATP_BUDGET,
-} from "../hallmarks/extended_hallmark_catalog.js";
+import { findAtpSink, MAX_TOTAL_ATP_BUDGET } from "../hallmarks/extended_hallmark_catalog.js";
 import {
   projectElapsedHallmarkDurableEffects,
   projectManualDivisionHallmarkEffects,
@@ -20,10 +14,6 @@ import {
 import { projectSenescenceDecisions } from "../hallmarks/handlers/senescence_factory.js";
 import { projectLateHallmarkDurableTickEffects } from "../hallmarks/late_hallmark_tick.js";
 import { projectExtendedHallmarkDurableTickEffects } from "../hallmarks/extended_hallmark_tick.js";
-import {
-  findLateHallmark,
-  hasReachedLateHallmarkActivation,
-} from "../hallmarks/late_hallmark_catalog.js";
 import {
   findColonizationProgram,
   findOrganSite,
@@ -53,7 +43,7 @@ import {
   type NetworkNodeState,
 } from "../prestige/network.js";
 import { deriveSeedV1 } from "./deterministic_random.js";
-import { cultureLateProgramInterfacesAvailable } from "../prestige/culture_effects.js";
+import { hallmarkPurchaseEligibility } from "../hallmarks/purchase_eligibility.js";
 import { networkNodeCreditQuote } from "../prestige/network_effects.js";
 import { softEndingEligibility } from "../ending/trigger.js";
 
@@ -122,38 +112,28 @@ export function reduceGameEvent(state: GameState, event: GameEvent): GameState {
     case "purchase-hallmark": {
       const id = hallmarkId(event.hallmarkId);
       const hallmark = state.hallmarkLevels.find((level) => level.id === id);
-      if (!hallmark || !natural(hallmark.level) || hallmark.level === Number.MAX_SAFE_INTEGER)
-        throw new Error("Hallmark purchase is invalid.");
-      const coreSixDefinition = findCoreSixHallmark(id);
-      if (coreSixDefinition !== undefined) {
-        if (!hasReachedCoreSixUnlock(state.currentStage, coreSixDefinition.key)) {
-          throw new Error("Core-six hallmark is locked.");
+      const eligibility = hallmarkPurchaseEligibility(state, id);
+      if (!eligibility.available) {
+        switch (eligibility.reason) {
+          case "unknown":
+            throw new Error("Hallmark purchase is unknown.");
+          case "invalid-level":
+            throw new Error("Hallmark purchase has an invalid level.");
+          case "stage":
+            throw new Error("Hallmark purchase is locked.");
+          case "culture-interface":
+            throw new Error("Late hallmark requires the high-throughput culture interface.");
+          case "already-owned":
+            throw new Error("Hallmark is already owned.");
         }
-        if (hallmark.level >= coreSixDefinition.purchase.maximumLevel) {
-          throw new Error("Core-six hallmark is already owned.");
-        }
-      }
-      const extendedHallmarkDefinition = findExtendedHallmark(id);
-      if (extendedHallmarkDefinition !== undefined) {
-        if (!hasReachedExtendedHallmarkUnlock(state.currentStage, extendedHallmarkDefinition.key)) {
-          throw new Error("extended-hallmark hallmark is locked.");
-        }
-        if (hallmark.level >= extendedHallmarkDefinition.purchase.maximumLevel) {
-          throw new Error("extended-hallmark hallmark is already owned.");
-        }
-      }
-      const lateHallmarkDefinition = findLateHallmark(id);
-      if (lateHallmarkDefinition !== undefined) {
-        if (
-          !hasReachedLateHallmarkActivation(state.currentStage, lateHallmarkDefinition.key) ||
-          !cultureLateProgramInterfacesAvailable(state)
-        )
-          throw new Error("Late hallmark is locked.");
       }
       return next(state, {
-        hallmarkLevels: state.hallmarkLevels.map((level) =>
-          level.id === id ? { ...level, level: level.level + 1 } : level,
-        ),
+        hallmarkLevels:
+          hallmark === undefined
+            ? [...state.hallmarkLevels, { id, level: eligibility.definition.purchase.initialLevel }]
+            : state.hallmarkLevels.map((level) =>
+                level.id === id ? { ...level, level: level.level + 1 } : level,
+              ),
         lineageLedger: updateLedger(state.lineageLedger, { chosenHallmarkId: id }),
       });
     }

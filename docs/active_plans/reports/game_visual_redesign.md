@@ -239,12 +239,12 @@ pixel acceptance.
 | V1 Arena hierarchy           | Implemented and inspected | 1280 x 800 and five-width corpus; direct-cell production-browser behavior                               |
 | V2 Body-tissue palette       | Implemented and inspected | Served-asset green scan, measured contrast, and rendered tumor/Culture/Network inspection               |
 | V3 Click response            | Implemented and inspected | Success-feedback frame plus keyboard, pointer, and reduced-motion browser behavior                      |
-| V4 Progressive machine rack  | Implemented and inspected | Anonymous future rows, explicit economics, tooltip geometry, 44px targets, and accessible control names |
+| V4 Progressive machine rack  | Implemented and inspected | Earned-only rows, explicit economics, tooltip geometry, 44px targets, and accessible control names |
 | V5 Hallmark seals            | Implemented and inspected | Three-column full-name grid with selected detail and no overlapping prose                               |
 | V6 Progression spectacle     | Implemented and inspected | Reached-state and reduced-motion captures with concise persistent stage copy                            |
 | V7 Culture and network props | Implemented and inspected | Refreshed L3/L4 Culture, Network, transit, and Chicago frames                                           |
-| V8 Tooltip system            | Implemented and inspected | Portal placement, focus/Escape behavior, 33-tooltip corpus, optional inspector evidence                 |
-| V9 Screenshot story          | Implemented and inspected | Eight documentation frames plus the 51-frame whole-game review corpus                                   |
+| V8 Tooltip system            | Implemented and inspected | Portal placement, focus/Escape behavior, 11-tooltip corpus, optional inspector evidence                 |
+| V9 Screenshot story          | Implemented and inspected | Two managed README playthrough frames plus the 28-frame whole-game review corpus                         |
 
 ## Validation
 

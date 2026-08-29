@@ -72,14 +72,19 @@ function controllerIntentCases() {
     regions: [oneRegion("primary", { routeIds: [routeId("local-front")] })],
     routeRiskById: { "local-front": 0 },
   });
-  const purchase = hallmarkState("transformed_cell", "purchaseable");
+  const purchase = {
+    ...createInitialGameState(),
+    currentStage: stageId("transformed_cell"),
+    activeTimeMs: 60,
+    hallmarkLevels: [{ id: hallmarkId("proliferative_signaling"), level: 0 }],
+  };
 
   return [
     {
       name: "purchase-hallmark",
       state: purchase,
-      invoke: (controller) => controller.purchaseHallmark(hallmarkId("purchaseable")),
-      verify: (after) => assert.equal(after.hallmarkLevels[0]?.level, 2),
+      invoke: (controller) => controller.purchaseHallmark(hallmarkId("proliferative_signaling")),
+      verify: (after) => assert.equal(after.hallmarkLevels[0]?.level, 1),
     },
     {
       name: "set-signaling-allocation",

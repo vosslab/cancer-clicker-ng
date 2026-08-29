@@ -17,10 +17,11 @@ import { NetworkPanel } from "./network_panel.js";
 import { EndingView } from "./ending_view.js";
 import { GameShell } from "./shell.js";
 import { EvolutionDock } from "./evolution_dock.js";
+import type { HallmarkAcquisition } from "./hallmark_tree.js";
 import { GameBoard } from "./game_board.js";
 import { GameHud } from "./game_hud.js";
 import { GameRewardDock } from "./game_reward_dock.js";
-import { EVOLUTION_TABS, createGameUiState } from "./game_ui_state.js";
+import { createGameUiState, visibleEvolutionTabs } from "./game_ui_state.js";
 import type { EvolutionTab } from "./game_ui_state.js";
 import { InspectorDrawer } from "./inspector_drawer.js";
 import { HelpTooltip } from "./action_tooltip.js";
@@ -55,15 +56,19 @@ type LoadedGame = Readonly<{
   recoveryReason?: RecoveryBlockReason;
 }>;
 
-type EvolutionTabVisual = Readonly<{ label: string; icon: SvgIconName }>;
+type EvolutionTabVisual = Readonly<{
+  label: string;
+  tabLabel: string;
+  icon: SvgIconName;
+}>;
 
 const EVOLUTION_TAB_VISUALS: Readonly<Record<EvolutionTab, EvolutionTabVisual>> = {
-  stage: { label: "Stage", icon: "stage_advance" },
-  hallmarks: { label: "Hallmarks", icon: "proliferative_signaling" },
-  routes: { label: "Routes", icon: "transit" },
-  prestige: { label: "Resets", icon: "lineage_reset" },
-  culture: { label: "Culture", icon: "culture" },
-  network: { label: "Network", icon: "network_node" },
+  stage: { label: "Stage", tabLabel: "Growth", icon: "stage_advance" },
+  hallmarks: { label: "Hallmarks", tabLabel: "Mutations", icon: "proliferative_signaling" },
+  routes: { label: "Routes", tabLabel: "Spread", icon: "transit" },
+  prestige: { label: "Resets", tabLabel: "Lineage", icon: "lineage_reset" },
+  culture: { label: "Culture", tabLabel: "Culture", icon: "culture" },
+  network: { label: "Network", tabLabel: "Network", icon: "network_node" },
 };
 
 function loadGame(storage: StorageLike | undefined): LoadedGame {
@@ -139,6 +144,7 @@ export function App(props: AppProps): JSX.Element {
   const [endingFocusSourceEventSequence, setEndingFocusSourceEventSequence] = createSignal<
     number | undefined
   >(undefined);
+  const [hallmarkFeedbackSequence, setHallmarkFeedbackSequence] = createSignal(0);
   const gameUi = createGameUiState();
   let runtime: RuntimeState = {
     game: controller.game,
@@ -147,6 +153,8 @@ export function App(props: AppProps): JSX.Element {
     saveStatus: "idle",
   };
   let timer: ReturnType<typeof setInterval> | undefined;
+  let hallmarkFeedbackTimer: ReturnType<typeof setTimeout> | undefined;
+  let nextHallmarkFeedbackSequence = 1;
 
   /** The arena receives this acknowledgement only after the controller persists the event. */
   function divide(): boolean {
@@ -180,6 +188,18 @@ export function App(props: AppProps): JSX.Element {
   function advanceStage(): void {
     const result = controller.advanceStage();
     if (result.ok) gameUi.pushTransientFeedback({ message: "Stage advanced", tone: "success" });
+  }
+
+  function handleHallmarkAcquired(hallmark: HallmarkAcquisition): void {
+    gameUi.pushTransientFeedback({
+      message: `Hallmark acquired: ${hallmark.displayName}`,
+      tone: "success",
+      durationMs: 6_000,
+    });
+    setHallmarkFeedbackSequence(nextHallmarkFeedbackSequence);
+    nextHallmarkFeedbackSequence += 1;
+    if (hallmarkFeedbackTimer !== undefined) clearTimeout(hallmarkFeedbackTimer);
+    hallmarkFeedbackTimer = setTimeout(() => setHallmarkFeedbackSequence(0), 2_400);
   }
 
   function openSpecimenInspector(invoker: HTMLElement): void {
@@ -283,6 +303,7 @@ export function App(props: AppProps): JSX.Element {
             controller={controller}
             disabled={controller.recoveryBlocked()}
             onAdvance={advanceStage}
+            onHallmarkAcquired={handleHallmarkAcquired}
             activeView={activeTab}
           />
         );
@@ -303,6 +324,7 @@ export function App(props: AppProps): JSX.Element {
     if (props.debug) window.addEventListener("keydown", handleDebugKeydown);
     onCleanup(() => {
       if (timer !== undefined) clearInterval(timer);
+      if (hallmarkFeedbackTimer !== undefined) clearTimeout(hallmarkFeedbackTimer);
       if (props.debug) window.removeEventListener("keydown", handleDebugKeydown);
     });
   });
@@ -321,12 +343,13 @@ export function App(props: AppProps): JSX.Element {
           <ColonyPanel
             game={controller.game}
             disabled={controller.recoveryBlocked()}
+            hallmarkFeedbackSequence={hallmarkFeedbackSequence()}
             onDivide={divide}
           />
         }
         tabs={
           <nav class="evolution-tabs" aria-label="Evolution systems">
-            <For each={EVOLUTION_TABS}>
+            <For each={visibleEvolutionTabs(controller.game)}>
               {(tab) => {
                 const visual = EVOLUTION_TAB_VISUALS[tab];
                 return (
@@ -341,6 +364,7 @@ export function App(props: AppProps): JSX.Element {
                         onClick={() => gameUi.setActiveEvolutionTab(tab)}
                       >
                         <ActionIcon name={visual.icon} />
+                        <span class="evolution-tabs__label">{visual.tabLabel}</span>
                       </button>
                     )}
                   </HelpTooltip>

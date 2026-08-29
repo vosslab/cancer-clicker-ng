@@ -107,8 +107,11 @@ graphify-out/                 Generated repository-navigation map
   and execution.
 - [tools/build_solid.mjs](../tools/build_solid.mjs) performs the Solid-aware browser bundle used
   by the canonical build.
-- [tools/capture_readme_screenshots.mjs](../tools/capture_readme_screenshots.mjs) captures named
-  documentation views through the production artifact.
+- [tools/capture_visual_review.mjs](../tools/capture_visual_review.mjs) captures and verifies the
+  responsive, earned-system, tooltip, and interaction corpus; `--sync-readme` owns the two current
+  README frames in `docs/screenshots/`.
+- [tools/capture_readme_screenshots.mjs](../tools/capture_readme_screenshots.mjs) captures
+  supplementary named production-artifact views without changing the managed README block.
 - [tools/balance_sim.mjs](../tools/balance_sim.mjs) runs deterministic policy comparisons using
   the real visible-decision surface. Scenario inputs belong in
   [tools/balance_scenarios/](../tools/balance_scenarios/).

@@ -80,3 +80,16 @@ export function stageGateFixture(toStageId, { earnedL3 = true } = {}) {
 export function stageGateFixtureSave(toStageId, options = {}) {
   return serializeGameState(stageGateFixture(toStageId, options), 1_000);
 }
+
+/** Provides the complete earned producer ladder for bounded desktop-rack render checks. */
+export function fullProducerRackFixtureSave(savedAtMs = 1_000) {
+  const state = createInitialGameState();
+  return serializeGameState(
+    {
+      ...state,
+      cells: bigNum(1, 7),
+      producerLevels: state.producerLevels.map((level) => ({ ...level, level: 1 })),
+    },
+    savedAtMs,
+  );
+}

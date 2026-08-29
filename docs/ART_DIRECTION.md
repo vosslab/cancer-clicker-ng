@@ -25,12 +25,12 @@ renderer does not invent biological state. The visual reading order is:
 3. Focal cellular morphology, including a bounded mitosis or atypical nucleus.
 4. Brief non-diagnostic explanation and direct action instruction.
 
-Pointer interaction is deliberately exact: only a membrane or nucleus accepts a pointer division.
-The surrounding tissue niche is visually meaningful but inert. One native `Divide cell` button
-provides keyboard parity through Enter, Space, and assistive activation, avoiding a cluttered grid
-of cell tab stops. Pointer cursor, membrane response, count, rate, focus, and a local daughter-cell
-burst complete the interaction feedback. A persistent crosshair would imply an outside observer,
-so the tumor surface carries its own affordance.
+Pointer interaction uses a forgiving, membrane-shaped envelope: a rendered membrane or nucleus and
+the nearby edge accept a pointer division, while broad tissue and voids remain inert. One native
+`Divide cell` button provides keyboard parity through Enter, Space, and assistive activation,
+avoiding a cluttered grid of cell tab stops. Pointer cursor, membrane response, count, rate, focus,
+and pointer-local `+1 cell` daughter-cell feedback complete the interaction. A persistent crosshair
+would imply an outside observer, so the tumor surface carries its own affordance.
 
 Late-game automation uses a cell-priming glyph: one parent cell, two daughter cells, and a forward
 cue. This keeps the saved producer-queue mechanic recognizable as an action while avoiding flask,
@@ -66,10 +66,10 @@ diagnosis, or patient-specific growth model.
 Stage grammar adds the biological read without overriding biomass: hypoxia and necrosis create a
 quiet deep void against a viable rim; vascular maturation adds restrained margin vessels; invasion
 breaks one directional boundary and creates satellites or route-bound departures. An accepted
-division produces a local cleavage-and-daughter response at the clicked cell. Rejected, inert, and
-background pointer input produces no division feedback. A newly accepted stage can add one transient
-arrival emphasis around the already-rendered scene; it never replaces the scene or becomes durable
-biology.
+division produces a local cleavage-and-daughter response plus the `+1 cell` reward at the accepted
+pointer coordinate. Rejected, inert, and background pointer input produces no division feedback. A
+newly accepted stage can add one transient arrival emphasis around the already-rendered scene; it
+never replaces the scene or becomes durable biology.
 
 ## Icon and control language
 

@@ -1,10 +1,7 @@
-import { For, Show, createMemo, createSignal } from "solid-js";
+import { For, Show, createMemo, createSignal, onCleanup } from "solid-js";
 import type { JSX } from "solid-js";
 
-import {
-  CORE_SIX_HALLMARK_CATALOG,
-  hasReachedCoreSixUnlock,
-} from "../hallmarks/core_six_catalog.js";
+import { CORE_SIX_HALLMARK_CATALOG } from "../hallmarks/core_six_catalog.js";
 import {
   effectiveTelomereReserve,
   hasDivisionLimitWarning,
@@ -12,12 +9,8 @@ import {
 import {
   ATP_SINK_CATALOG,
   EXTENDED_HALLMARK_CATALOG,
-  hasReachedExtendedHallmarkUnlock,
 } from "../hallmarks/extended_hallmark_catalog.js";
-import {
-  LATE_HALLMARK_CATALOG,
-  hasReachedLateHallmarkActivation,
-} from "../hallmarks/late_hallmark_catalog.js";
+import { LATE_HALLMARK_CATALOG } from "../hallmarks/late_hallmark_catalog.js";
 import { MAX_TOTAL_ATP_BUDGET } from "../hallmarks/extended_hallmark_catalog.js";
 import { atpBudgetForSink, hasFundedAtpAcceleration } from "../hallmarks/atp_allocation.js";
 import { perfusionMaintenanceAtpDebit } from "../hallmarks/handlers/perfusion_layout.js";
@@ -30,10 +23,7 @@ import {
 import { compare, fromSafeInteger } from "../bignum/bignum.js";
 import { formatQuantity } from "../bignum/format.js";
 import type { CoreSixHallmarkDefinition } from "../hallmarks/core_six_types.js";
-import type {
-  CanonicalBigNumDto,
-  ExtendedHallmarkDefinition,
-} from "../hallmarks/extended_hallmark_types.js";
+import type { ExtendedHallmarkDefinition } from "../hallmarks/extended_hallmark_types.js";
 import type { LateHallmarkDefinition } from "../hallmarks/late_hallmark_types.js";
 import type { GameController } from "./game_controller.js";
 import { LateMicrobiomePanel } from "./late_microbiome_panel.js";
@@ -43,13 +33,20 @@ import { LateSenescencePanel } from "./late_senescence_panel.js";
 import type { CheckpointId, GameState, InflammationEpisode, TriageAction } from "../types/state.js";
 import type { HallmarkId, MutationId, OfferId, RouteId } from "../types/ids.js";
 import { HallmarkSigil } from "../svg/evolution_sigils.js";
+import { hallmarkPurchaseEligibility } from "../hallmarks/purchase_eligibility.js";
 
 type HallmarkTreeProps = Readonly<{
   game: GameState;
   controller: GameController;
+  onHallmarkAcquired?: (hallmark: HallmarkAcquisition) => void;
 }>;
 
 type BranchStatus = "locked" | "available" | "acquired";
+
+export type HallmarkAcquisition = Readonly<{
+  id: HallmarkId;
+  displayName: string;
+}>;
 
 type HallmarkBranch =
   | Readonly<{
@@ -91,29 +88,12 @@ function ownsHallmark(game: GameState, hallmarkId: HallmarkId): boolean {
   return game.hallmarkLevels.some((level) => level.id === hallmarkId && level.level >= 1);
 }
 
-function branchStatus(game: GameState, definition: CoreSixHallmarkDefinition): BranchStatus {
-  if (ownsHallmark(game, definition.id)) return "acquired";
-  return hasReachedCoreSixUnlock(game.currentStage, definition.key) ? "available" : "locked";
-}
-
-function extendedHallmarkBranchStatus(
+function branchStatus(
   game: GameState,
-  definition: ExtendedHallmarkDefinition,
+  definition: CoreSixHallmarkDefinition | ExtendedHallmarkDefinition | LateHallmarkDefinition,
 ): BranchStatus {
   if (ownsHallmark(game, definition.id)) return "acquired";
-  return hasReachedExtendedHallmarkUnlock(game.currentStage, definition.key)
-    ? "available"
-    : "locked";
-}
-
-function lateHallmarkBranchStatus(
-  game: GameState,
-  definition: LateHallmarkDefinition,
-): BranchStatus {
-  if (ownsHallmark(game, definition.id)) return "acquired";
-  return hasReachedLateHallmarkActivation(game.currentStage, definition.key)
-    ? "available"
-    : "locked";
+  return hallmarkPurchaseEligibility(game, definition.id).available ? "available" : "locked";
 }
 
 function LateHallmarkAcquiredControls(
@@ -136,13 +116,18 @@ function interactionDisabled(props: HallmarkTreeProps): boolean {
   return props.controller.recoveryBlocked();
 }
 
-function controlExplanation(props: HallmarkTreeProps, status: BranchStatus): string | undefined {
+function controlExplanation(props: HallmarkTreeProps, branch: HallmarkBranch): string | undefined {
   if (props.controller.recoveryBlocked()) {
     return "Saved-progress recovery protection must be resolved before this control can change play.";
   }
-  if (status === "locked") return "Reach this branch's catalog stage unlock before acquiring it.";
-  if (status === "available")
-    return "Acquire this hallmark before its player decision becomes available.";
+  if (branch.status === "locked") {
+    const eligibility = hallmarkPurchaseEligibility(props.game, branch.definition.id);
+    if (!eligibility.available && eligibility.reason === "culture-interface") {
+      return "Purchase high-throughput culture before acquiring this hallmark.";
+    }
+    return "Reach this branch's catalog stage unlock before acquiring it.";
+  }
+  if (branch.status === "available") return "Acquire this growth trait to unlock its decision.";
   return undefined;
 }
 
@@ -451,57 +436,34 @@ function controlledNatural(value: string, maximum: number, fallback: number): nu
 }
 
 function MetabolismControls(props: HallmarkTreeProps): JSX.Element {
-  const [mantissa, setMantissa] = createSignal(1);
-  const [exponent, setExponent] = createSignal(0);
-  const amount = (): CanonicalBigNumDto => ({ mantissa: mantissa(), exponent: exponent() });
+  const conversionChoices = [1, 5, 25] as const;
+  const canConvert = (amount: number): boolean =>
+    !interactionDisabled(props) && compare(props.game.substrate, fromSafeInteger(amount)) >= 0;
   return (
     <fieldset class="hallmark-fieldset metabolism-controls">
-      <legend>Substrate to ATP conversion</legend>
+      <legend>Fuel ATP</legend>
       <p class="hallmark-readout">
-        ATP is a separate metabolic reserve. Conversion trades the exact substrate amount for the
-        same ATP amount; it never creates cells.
+        Convert spare substrate into ATP for later programs. It never creates cells.
       </p>
       <p class="hallmark-atp-meter">
-        <span>ATP meter</span>
+        <span>ATP</span>
         <output aria-label="ATP meter">
-          {formatQuantity(props.game.atp, props.game.numberFormat, 2, "ATP unit", "ATP units")}
+          {formatQuantity(props.game.atp, props.game.numberFormat, 1, "ATP unit", "ATP units")}
         </output>
       </p>
-      <div class="hallmark-input-grid">
-        <label class="hallmark-input-label">
-          Mantissa (1-9)
-          <input
-            type="number"
-            min="1"
-            max="9"
-            step="1"
-            value={mantissa()}
-            disabled={interactionDisabled(props)}
-            onInput={(event) =>
-              setMantissa(controlledNatural(event.currentTarget.value, 9, 1) || 1)
-            }
-          />
-        </label>
-        <label class="hallmark-input-label">
-          Exponent (0-300)
-          <input
-            type="number"
-            min="0"
-            max="300"
-            step="1"
-            value={exponent()}
-            disabled={interactionDisabled(props)}
-            onInput={(event) => setExponent(controlledNatural(event.currentTarget.value, 300, 0))}
-          />
-        </label>
+      <div class="hallmark-choice-grid metabolism-controls__choices" aria-label="ATP conversion">
+        <For each={conversionChoices}>
+          {(amount) => (
+            <button
+              type="button"
+              disabled={!canConvert(amount)}
+              onClick={() => props.controller.convertSubstrate({ mantissa: amount, exponent: 0 })}
+            >
+              Convert {amount} substrate
+            </button>
+          )}
+        </For>
       </div>
-      <button
-        type="button"
-        disabled={interactionDisabled(props)}
-        onClick={() => props.controller.convertSubstrate(amount())}
-      >
-        Convert substrate to ATP
-      </button>
     </fieldset>
   );
 }
@@ -511,10 +473,9 @@ function AtpBudgetControls(props: HallmarkTreeProps): JSX.Element {
     ATP_SINK_CATALOG.reduce((sum, sink) => sum + (props.game.atpBudget[sink.id] ?? 0), 0);
   return (
     <fieldset class="hallmark-fieldset atp-allocation-controls">
-      <legend>ATP sink allocation</legend>
+      <legend>Reserve ATP</legend>
       <p class="hallmark-readout">
-        Allocated {total()} / {MAX_TOTAL_ATP_BUDGET}. A reservation enables only the named sink when
-        its own rule and ATP balance are satisfied.
+        {total()} / {MAX_TOTAL_ATP_BUDGET} reserved. Reserve only for the program you are using.
       </p>
       <div class="atp-sink-grid">
         <For each={ATP_SINK_CATALOG}>
@@ -546,29 +507,23 @@ function AtpBudgetControls(props: HallmarkTreeProps): JSX.Element {
             };
             const status = (): string => {
               if (sink.id === "acceleration")
-                if (allocation() === 0) return "inactive: no acceleration reservation";
-                else if (!vesselReservationSatisfied())
-                  return "inactive: vessel maintenance must be reserved first";
-                else
-                  return isFunded()
-                    ? "active: ATP can pay this second's acceleration after maintenance"
-                    : "inactive: requires a nonzero reservation and enough ATP after maintenance";
+                if (allocation() === 0) return "inactive";
+                else if (!vesselReservationSatisfied()) return "reserve vessels first";
+                else return isFunded() ? "active" : "needs ATP";
               if (sink.id === "vessel-maintenance")
                 return activeLinkCount() === 0
-                  ? "no active vessel links require a reserve"
+                  ? "no vessels need this"
                   : isFunded()
-                    ? "reserved for every active link"
-                    : "insufficient reserve for all active links";
-              return isFunded()
-                ? "ready: a saved card can be selected"
-                : "inactive: requires 25 reserved units and at least 1 ATP";
+                    ? "active"
+                    : "reserve more";
+              return isFunded() ? "ready" : "reserve 25 + 1 ATP";
             };
             const rule = (): string => {
               if (sink.id === "vessel-maintenance")
                 return `Reserve 25 units per ATP of current maintenance. This run debits ${vesselDebit()} ATP per second across ${activeLinkCount()} link${activeLinkCount() === 1 ? "" : "s"}. Required ${vesselRequired()}, allocated ${allocation()}.`;
               if (sink.id === "mutation-drafting")
                 return "Reserve 25 units; choosing a saved card costs 1 ATP.";
-              return "Any positive reservation may accelerate producers only when ATP can cover vessel maintenance first and the acceleration debit second.";
+              return "Boosts producers while ATP can cover each second.";
             };
             return (
               <label class="hallmark-input-label atp-sink-row">
@@ -788,15 +743,16 @@ function branchCatalog(game: GameState): readonly HallmarkBranch[] {
     family: "extended" as const,
     number: index + 7,
     definition,
-    status: extendedHallmarkBranchStatus(game, definition),
+    status: branchStatus(game, definition),
   }));
   const late = LATE_HALLMARK_CATALOG.map((definition, index) => ({
     family: "late" as const,
     number: index + 11,
     definition,
-    status: lateHallmarkBranchStatus(game, definition),
+    status: branchStatus(game, definition),
   }));
-  return [...core, ...extended, ...late];
+  // The mutation deck grows with actual capability; future catalog rows never impersonate choices.
+  return [...core, ...extended, ...late].filter((branch) => branch.status !== "locked");
 }
 
 function BranchControls(props: HallmarkTreeProps, branch: HallmarkBranch): JSX.Element {
@@ -810,9 +766,52 @@ function BranchControls(props: HallmarkTreeProps, branch: HallmarkBranch): JSX.E
   }
 }
 
-/** Catalog-driven mutation tray: only the player-selected active branch opens a decision panel. */
+function acquisitionPrompt(branch: HallmarkBranch): string {
+  switch (branch.definition.mechanicClass) {
+    case "division-allocation":
+      return "Choose a division allocation to express this signaling program.";
+    case "checkpoint-routing":
+      return "Choose a checkpoint response when one becomes relevant.";
+    case "damage-triage":
+      return "Damage events can now be triaged instead of passively resolved.";
+    case "replicative-budget":
+      return "Use telomerase charges when a region reaches its division limit.";
+    case "perfusion-layout":
+      return "Link a viable region to a vessel to establish its blood supply.";
+    case "route-commitment":
+      return "Commit cells to a discovered route when you are ready to disseminate.";
+    case "energy-budgeting":
+      return "Use the metabolism and ATP controls below to direct this new program.";
+    case "visibility-management":
+      return "Conceal eligible regions when immune pressure makes it worthwhile.";
+    case "event-cultivation":
+      return "Activate an inflammatory episode in an eligible vascularized region.";
+    case "mutation-drafting":
+      return "Fund mutation drafting to reveal a saved biological tradeoff.";
+    case "phenotype-switching":
+      return "Assign an eligible region's phenotype to express this plasticity program.";
+    case "program-editing":
+      return "Choose a culture program to direct this epigenetic state.";
+    case "community-composition":
+      return "Choose from the saved microbiome composition offer when it is available.";
+    case "senescence-management":
+      return "Use the senescence controls to retain or clear qualifying regions.";
+  }
+}
+
+const ACQUISITION_NOTICE_DURATION_MS = 5_000;
+
+/** Catalog-driven mutation deck keeps a selected branch, or the nearest actionable one, open. */
 export function HallmarkTree(props: HallmarkTreeProps): JSX.Element {
   const [selectedId, setSelectedId] = createSignal<HallmarkId | undefined>(undefined);
+  const [recentlyAcquiredId, setRecentlyAcquiredId] = createSignal<HallmarkId | undefined>(
+    undefined,
+  );
+  let acquisitionNotice: HTMLParagraphElement | undefined;
+  let acquisitionNoticeTimer: ReturnType<typeof setTimeout> | undefined;
+  onCleanup(() => {
+    if (acquisitionNoticeTimer !== undefined) clearTimeout(acquisitionNoticeTimer);
+  });
   const branches = createMemo(() => branchCatalog(props.game));
   const activeBranch = createMemo(() => {
     const selected = selectedId();
@@ -824,13 +823,30 @@ export function HallmarkTree(props: HallmarkTreeProps): JSX.Element {
       branches()[0]
     );
   });
+  function acquire(branch: HallmarkBranch, event: MouseEvent): void {
+    const result = props.controller.purchaseHallmark(branch.definition.id);
+    if (!result.ok) return;
+    setSelectedId(branch.definition.id);
+    setRecentlyAcquiredId(branch.definition.id);
+    if (acquisitionNoticeTimer !== undefined) clearTimeout(acquisitionNoticeTimer);
+    acquisitionNoticeTimer = setTimeout(
+      () => setRecentlyAcquiredId(undefined),
+      ACQUISITION_NOTICE_DURATION_MS,
+    );
+    props.onHallmarkAcquired?.({
+      id: branch.definition.id,
+      displayName: branch.definition.displayName,
+    });
+    // Pointer users retain spatial context; keyboard activation moves to the new status notice.
+    if (event.detail === 0) queueMicrotask(() => acquisitionNotice?.focus());
+  }
 
   return (
     <section class="hallmark-tree evolution-hallmarks" aria-labelledby="hallmark-tree-title">
       <header class="evolution-hallmarks__heading">
         <div>
-          <p class="evolution-hallmarks__kicker">Mutation deck</p>
-          <h2 id="hallmark-tree-title">Hallmark programs</h2>
+          <p class="evolution-hallmarks__kicker">Tumor mutations</p>
+          <h2 id="hallmark-tree-title">Choose a growth trait</h2>
         </div>
       </header>
       <ol class="evolution-hallmarks__constellation" aria-label="Hallmark mutation programs">
@@ -841,7 +857,10 @@ export function HallmarkTree(props: HallmarkTreeProps): JSX.Element {
               <li data-state={branch.status}>
                 <button
                   class="evolution-hallmarks__sigil-button"
-                  classList={{ "is-active": isActive() }}
+                  classList={{
+                    "is-active": isActive(),
+                    "is-just-acquired": recentlyAcquiredId() === branch.definition.id,
+                  }}
                   type="button"
                   aria-pressed={isActive()}
                   aria-label={`${branch.definition.displayName}, ${branch.status}`}
@@ -863,6 +882,7 @@ export function HallmarkTree(props: HallmarkTreeProps): JSX.Element {
           return (
             <section
               class="evolution-hallmarks__active"
+              classList={{ "is-just-acquired": recentlyAcquiredId() === branch().definition.id }}
               data-state={branch().status}
               aria-live="polite"
             >
@@ -870,7 +890,7 @@ export function HallmarkTree(props: HallmarkTreeProps): JSX.Element {
                 <HallmarkSigil name={branch().definition.id} state={branch().status} />
                 <div>
                   <p>
-                    Branch {branch().number} · {readableIdentifier(branch().status)}
+                    {branch().status === "available" ? "Available now" : "Growth trait acquired"}
                   </p>
                   <h3>{branch().definition.displayName}</h3>
                 </div>
@@ -880,14 +900,30 @@ export function HallmarkTree(props: HallmarkTreeProps): JSX.Element {
                   class="evolution-hallmarks__acquire"
                   type="button"
                   disabled={interactionDisabled(props)}
-                  onClick={() => props.controller.purchaseHallmark(branch().definition.id)}
+                  onClick={(event) => acquire(branch(), event)}
                 >
                   <HallmarkSigil name={branch().definition.id} state="available" />
                   <span>Acquire</span>
                 </button>
               </Show>
+              <Show
+                when={
+                  branch().status === "acquired" && recentlyAcquiredId() === branch().definition.id
+                }
+              >
+                <p
+                  ref={(element) => {
+                    acquisitionNotice = element;
+                  }}
+                  class="evolution-hallmarks__acquisition-notice"
+                  role="status"
+                  tabindex="-1"
+                >
+                  <strong>Growth trait acquired.</strong> {acquisitionPrompt(branch())}
+                </p>
+              </Show>
               <Show when={branch().status === "acquired"}>{BranchControls(props, branch())}</Show>
-              <Show when={controlExplanation(props, branch().status)}>
+              <Show when={controlExplanation(props, branch())}>
                 {(message) => <p class="hallmark-empty">{message()}</p>}
               </Show>
             </section>

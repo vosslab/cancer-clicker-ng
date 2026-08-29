@@ -18,7 +18,7 @@ diagnosis, prognosis, outbreak, or clinical simulation.
 | Surface                   | Decision promise                                                                                                                 |
 | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
 | Shallow scoreboard HUD    | Always shows cell count, cells/s, stage, save condition, number format, and an optional specimen route.                          |
-| Living tumor arena        | A pointer action must land on visible cell geometry; Enter and Space activate the same `Divide cell` control.                    |
+| Living tumor arena        | A pointer action may land on visible cell geometry or its nearby edge; Enter and Space activate the same `Divide cell` control. |
 | Evolution dock            | Shows six compact icon tabs while one family is active, keeping upgrades legible rather than stacking every system at once.      |
 | Illustrated upgrade rack  | Highlights affordable purchases, grays unavailable ones, and reveals richer economics and biology in row tooltips.               |
 | Tooltip and drawer routes | Explain unfamiliar icons, biological tradeoffs, and specimen facts when requested without turning the first board into a manual. |
