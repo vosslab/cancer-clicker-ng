@@ -27,6 +27,8 @@ origin belongs there too. Rules: [REPO_STYLE.md](REPO_STYLE.md).
   biological provenance.
 - I love Cookie Clicker's stats and always upgradability. Keep count, production rate, producer
   levels, costs, and quantity controls visible.
+- Hide upgrade identities until the player has achieved their reveal condition; show an unknown
+  target instead of spoiling the future catalog.
 - Keep future upgrades discoverable; use hover or focus for richer stats and unlock biology.
 - I want the local Cookie Clicker source reviewed for lessons in source layout, increment systems,
   and visual layout that Cancer Clicker NG can use.
@@ -44,9 +46,18 @@ origin belongs there too. Rules: [REPO_STYLE.md](REPO_STYLE.md).
   than I currently have.
 - Replace the highlighter-tip detail buttons with Cookie Clicker-style tooltip popups. Hidden
   details should take no space in the layout.
+- Make prices and benefits visually explicit on the upgrade itself. A player should not have to
+  decode an unlabeled icon-and-number pair or open a tooltip to judge a purchase.
+- Build a comprehensive automated screenshot system for tooltips and use its reviewed images to
+  improve the README; screenshot automation supports, but does not replace, visual inspection.
 - Clicking the rendered cancer cells must create more cells; that direct action is the point of
   the clicker loop.
 - Give the interface a stronger medical and biological color identity.
+- Remove the blue/green theme; cancer is not green. Use a warm body-tissue medical palette.
+- The center must read as a cancer cell, not an eye or a cosmic object.
+- Do not present fractional objects such as `0.01 cells`; show whole-cell inventory and express
+  partial automatic growth as progress toward the next cell.
+- Make the live numbers update faster, and assess whether a WASM backend is actually necessary.
 - Present the game from the cancer cells' perspective. Remove crosshairs and lab-observer
   equipment such as microscopes from the play surface.
 - Make the number-naming content in `src/bignum/` more prominent in the interface.

@@ -36,6 +36,7 @@ fi
 
 # Verify required static assets before any destructive step.
 STATIC_STYLES=(
+	"tissue_text_palette.css"
 	"style.css"
 	"game_ui.css"
 	"tumor_arena.css"

@@ -392,10 +392,10 @@ export function HallmarkOverlays(props: OverlayProps): JSX.Element {
         ) : undefined}
         {hasMicrobiomeSurface ? (
           <g class="colony-figure__microbiome-surface" data-effect="microbiome-surface">
-            <path d="M 74 186 q 18 -14 36 0 t 36 0" fill="none" stroke="#a5d0aa" stroke-width="3" />
-            <circle cx="86" cy="181" r="3" fill="#d6ecd3" />
-            <circle cx="110" cy="190" r="3" fill="#d6ecd3" />
-            <circle cx="136" cy="181" r="3" fill="#d6ecd3" />
+            <path d="M 74 186 q 18 -14 36 0 t 36 0" fill="none" stroke="#85bed0" stroke-width="3" />
+            <circle cx="86" cy="181" r="3" fill="#cfe8f3" />
+            <circle cx="110" cy="190" r="3" fill="#cfe8f3" />
+            <circle cx="136" cy="181" r="3" fill="#cfe8f3" />
           </g>
         ) : undefined}
         <For each={senescent}>

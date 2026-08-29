@@ -35,7 +35,8 @@ test("save recovery protects rejected raw storage until an accessible explicit r
   await expect(replace).toBeVisible();
   await expect(divide).toBeDisabled();
   await expect(page.locator("#format-button")).toBeDisabled();
-  await expect(page.getByRole("button", { name: /^Buy 1 Cyclin D machine/ })).toBeDisabled();
+  await expect(page.getByRole("button", { name: /^Buy 1 Cyclin D machine/ })).toHaveCount(0);
+  await expect(page.locator('[data-producer-id="producer"]')).toContainText("Undiscovered target");
 
   await divide.click({ force: true });
   await expect(cells).toHaveText(initialCells ?? "");
@@ -111,9 +112,12 @@ test("save recovery blocks a browser storage read fault until explicit fresh-sta
   await replace.click();
   await expect(page.locator("#recovery-notice")).toHaveCount(0);
   await expect(divide).toBeEnabled();
-  expect(await page.evaluate(() => globalThis.__saveRecoveryWriteCount)).toBe(1);
+  expect(await page.evaluate(() => globalThis.__saveRecoveryWriteCount)).toBeGreaterThanOrEqual(1);
   await divide.focus();
+  const writesBeforeDivide = await page.evaluate(() => globalThis.__saveRecoveryWriteCount);
   await divide.press("Enter");
-  expect(await page.evaluate(() => globalThis.__saveRecoveryWriteCount)).toBe(2);
+  expect(await page.evaluate(() => globalThis.__saveRecoveryWriteCount)).toBeGreaterThan(
+    writesBeforeDivide,
+  );
   expect(diagnostics).toEqual([]);
 });

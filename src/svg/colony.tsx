@@ -171,7 +171,15 @@ export function Colony(props: ColonyProps): JSX.Element {
         <For each={definitions().definitions}>{renderDefinition}</For>
       </defs>
       <g class="colony-figure__tissue" aria-hidden="true" pointer-events="none">
-        <rect class="colony-figure__plate" x="0" y="0" width="1000" height="700" rx="32" />
+        <rect
+          class="colony-figure__plate"
+          x="0"
+          y="0"
+          width="1000"
+          height="700"
+          rx="32"
+          fill={localSvgReference(definitions().ids.matrixPattern)}
+        />
         <path
           class="colony-figure__tissue-fascia"
           d="M 0 118 C 220 72 354 176 540 112 S 814 90 1000 154"

@@ -18,6 +18,7 @@ import type { GameState } from "../types/state.js";
 import { ProducerMachine } from "../svg/producer_machines.js";
 import { ActionIcon } from "./action_icon.js";
 import { HelpTooltip } from "./action_tooltip.js";
+import { formatCellRate } from "./cell_metrics.js";
 
 type ProducersPanelProps = Readonly<{
   game: GameState;
@@ -57,8 +58,18 @@ function producerLabel(id: ProducerId): string {
 export function ProducersPanel(props: ProducersPanelProps): JSX.Element {
   const [quantity, setQuantity] = createSignal<PurchaseQuantity>(1);
 
+  const producerDiscovered = (producer: ProducerDefinition): boolean =>
+    isProducerUnlocked(props.game, producer) &&
+    (levelFor(props.game, producer.id) > 0 ||
+      quoteProducerPurchase(props.game, producer.id, 1).affordable ||
+      props.game.culture.queuedProducerAction?.producerId === producer.id);
   function rows(): readonly ProducerDefinition[] {
-    return props.reverse ? [...STAGE_ONE_PRODUCERS].reverse() : STAGE_ONE_PRODUCERS;
+    if (props.reverse) return [...STAGE_ONE_PRODUCERS].reverse();
+    let lastDiscovered = -1;
+    STAGE_ONE_PRODUCERS.forEach((producer, index) => {
+      if (producerDiscovered(producer)) lastDiscovered = index;
+    });
+    return STAGE_ONE_PRODUCERS.slice(0, Math.min(STAGE_ONE_PRODUCERS.length, lastDiscovered + 3));
   }
   const assayDiscipline = (): boolean =>
     hasPassageUpgrade(props.game.culture, passageUpgradeId("assay_discipline"));
@@ -66,7 +77,7 @@ export function ProducersPanel(props: ProducersPanelProps): JSX.Element {
     props.game.culture.queuedProducerAction;
 
   return (
-    <section class="panel producers-panel" aria-labelledby="producers-title">
+    <section class="panel producers-panel" aria-labelledby="producers-title" tabIndex={0}>
       <div class="section-heading">
         <div>
           <p class="eyebrow">Autonomous machinery</p>
@@ -105,25 +116,24 @@ export function ProducersPanel(props: ProducersPanelProps): JSX.Element {
             const selectedQuote = (): ReturnType<typeof quoteProducerPurchase> =>
               quoteProducerPurchase(props.game, producer.id, quantity());
             const contribution = (): string =>
-              formatBigNum(
+              formatCellRate(
                 producerCellProductionRate(props.game, producer.id),
                 props.game.numberFormat,
-                2,
               );
             const marginalBenefit = (): string => {
               const quote = selectedQuote();
-              return formatBigNum(
+              return formatCellRate(
                 producerPurchaseCellProductionBenefit(props.game, producer.id, quote.quantity),
                 props.game.numberFormat,
-                2,
               );
             };
             const unlockStage = (): string => stageDefinition(producer.unlockStage).title;
             const available = (): boolean => unlocked() && selectedQuote().affordable;
+            const discovered = (): boolean => producerDiscovered(producer);
             const purchaseTooltip = (): string => {
               const quote = selectedQuote();
               const owned = levelFor(props.game, producer.id);
-              const economics = `${producer.displayName}. Owned ${owned}. Produces ${contribution()} cells/s. Buy ${quantityLabel(quantity())} for ${formatBigNum(quote.debit, props.game.numberFormat, 2)} cells; adds ${marginalBenefit()} cells/s.`;
+              const economics = `${producer.displayName}. Owned ${owned}. Produces ${contribution()}. Buy ${quantityLabel(quantity())} for ${formatBigNum(quote.debit, props.game.numberFormat, 2)} cells; adds ${marginalBenefit()}.`;
               if (!unlocked()) return `${economics} Unlock at ${unlockStage()}.`;
               return `${economics} ${quote.affordable ? "Affordable now." : "More cells required."}`;
             };
@@ -151,65 +161,102 @@ export function ProducersPanel(props: ProducersPanelProps): JSX.Element {
                 data-producer-id={producer.id}
                 data-affordable={available() ? "true" : "false"}
               >
-                <HelpTooltip
-                  tooltip={purchaseTooltip()}
-                  disabled={!available() || props.disabled === true}
-                  disabledLabel={purchaseTooltip()}
+                <Show
+                  when={discovered()}
+                  fallback={
+                    <div class="producer-row__undiscovered">
+                      <span class="producer-row__unknown-art" aria-hidden="true">
+                        ?
+                      </span>
+                      <span>
+                        <strong>Undiscovered target</strong>
+                        <small>Accumulate cells to identify</small>
+                      </span>
+                    </div>
+                  }
                 >
-                  {(tooltipBindings) => (
-                    <button
-                      {...tooltipBindings}
-                      class="producer-row__buy"
-                      type="button"
-                      data-buy-quantity={quantity()}
-                      disabled={props.disabled || !unlocked() || !selectedQuote().affordable}
-                      onClick={() => props.onPurchase(producer.id, quantity())}
-                      aria-label={`Buy ${quantityLabel(quantity())} ${producer.displayName} machine${quantity() === 1 ? "" : "s"} for ${formatBigNum(selectedQuote().debit, props.game.numberFormat, 2)}`}
-                    >
-                      <span class="producer-row__art" aria-hidden="true">
-                        <ProducerMachine
-                          id={producer.id}
-                          level={levelFor(props.game, producer.id)}
-                        />
-                      </span>
-                      <span class="producer-row__summary">
-                        <span class="producer-row__name">
-                          <ActionIcon name="producer" /> {producer.displayName}
-                        </span>
-                        <span class="producer-row__identity">
-                          <span
-                            class="producer-row__rank"
-                            aria-label={`Owned level ${levelFor(props.game, producer.id)}`}
-                          >
-                            <span class="sr-only">Owned level </span>
-                            {levelFor(props.game, producer.id)}
-                          </span>
-                          <span class="producer-row__rate">{contribution()} cells/s</span>
-                        </span>
-                      </span>
-                      <span
-                        class="producer-row__cost cost-note"
-                        classList={{
-                          "is-unavailable": !selectedQuote().affordable || !unlocked(),
-                        }}
+                  <HelpTooltip
+                    tooltip={purchaseTooltip()}
+                    disabled={!available() || props.disabled === true}
+                    disabledLabel={purchaseTooltip()}
+                    placement="left"
+                  >
+                    {(tooltipBindings) => (
+                      <button
+                        {...tooltipBindings}
+                        class="producer-row__buy"
+                        type="button"
+                        data-buy-quantity={quantity()}
+                        disabled={props.disabled || !unlocked() || !selectedQuote().affordable}
+                        onClick={() => props.onPurchase(producer.id, quantity())}
+                        aria-label={`Buy ${quantityLabel(quantity())} ${producer.displayName} machine${quantity() === 1 ? "" : "s"} for ${formatBigNum(selectedQuote().debit, props.game.numberFormat, 2)} cells`}
                       >
-                        <span class="sr-only">Next {quantityLabel(quantity())} cost: </span>
-                        <ActionIcon name="buy" />
-                        <strong>
-                          {formatBigNum(selectedQuote().debit, props.game.numberFormat, 2)}
-                        </strong>
-                        <span aria-hidden="true"> / </span>
-                        <span class="sr-only">; marginal benefit </span>+{marginalBenefit()} cells/s
-                        <span class="sr-only">
-                          {selectedQuote().affordable && unlocked()
-                            ? "; affordable"
-                            : "; unavailable"}
+                        <span class="producer-row__art" aria-hidden="true">
+                          <ProducerMachine
+                            id={producer.id}
+                            level={levelFor(props.game, producer.id)}
+                          />
                         </span>
-                      </span>
-                    </button>
-                  )}
-                </HelpTooltip>
-                <Show when={assayDiscipline()}>
+                        <span class="producer-row__summary">
+                          <span class="producer-row__name">{producer.displayName}</span>
+                          <span class="producer-row__identity">
+                            <span
+                              class="producer-row__rank"
+                              aria-label={`Owned level ${levelFor(props.game, producer.id)}`}
+                            >
+                              <span aria-hidden="true">Owned </span>
+                              <strong>{levelFor(props.game, producer.id)}</strong>
+                              <span class="sr-only">
+                                Owned level {levelFor(props.game, producer.id)}
+                              </span>
+                            </span>
+                            <span class="producer-row__rate">
+                              <span>Output </span>
+                              <strong>
+                                {formatCellRate(
+                                  producerCellProductionRate(props.game, producer.id),
+                                  props.game.numberFormat,
+                                )}
+                              </strong>
+                            </span>
+                          </span>
+                        </span>
+                        <span
+                          class="producer-row__cost cost-note"
+                          classList={{ "is-unavailable": !selectedQuote().affordable }}
+                        >
+                          <span class="producer-row__buy-label">
+                            Buy {quantityLabel(quantity())}
+                          </span>
+                          <span class="producer-row__cost-value">
+                            <span>Cost </span>
+                            <strong>
+                              {formatBigNum(selectedQuote().debit, props.game.numberFormat, 2)}{" "}
+                              cells
+                            </strong>
+                          </span>
+                          <span class="producer-row__benefit">
+                            <span>Adds </span>
+                            <strong>
+                              {formatCellRate(
+                                producerPurchaseCellProductionBenefit(
+                                  props.game,
+                                  producer.id,
+                                  selectedQuote().quantity,
+                                ),
+                                props.game.numberFormat,
+                              )}
+                            </strong>
+                          </span>
+                          <span class="sr-only">
+                            {selectedQuote().affordable ? "; affordable" : "; unavailable"}
+                          </span>
+                        </span>
+                      </button>
+                    )}
+                  </HelpTooltip>
+                </Show>
+                <Show when={discovered() && assayDiscipline()}>
                   <HelpTooltip tooltip={assayLabel()}>
                     {(tooltipBindings) => (
                       <button

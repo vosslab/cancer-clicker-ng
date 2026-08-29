@@ -6,7 +6,7 @@
   border-color: rgb(255 205 106 / 75%);
   background:
     radial-gradient(circle at 16% 12%, rgb(245 112 107 / 17%), transparent 23rem),
-    linear-gradient(145deg, rgb(61 38 35 / 94%), rgb(9 28 26 / 98%) 64%);
+    linear-gradient(145deg, rgb(61 38 35 / 94%), rgb(45 23 27 / 98%) 64%);
 }
 
 .prestige-route-header,
@@ -78,7 +78,7 @@
   overflow: visible;
   border: 1px solid rgb(255 207 121 / 46%);
   border-radius: 0.8rem;
-  background: linear-gradient(90deg, rgb(251 105 106 / 10%), transparent 50%), rgb(8 24 22 / 72%);
+  background: linear-gradient(90deg, rgb(251 105 106 / 10%), transparent 50%), rgb(48 24 28 / 76%);
 }
 
 .prestige-route-board .hallmark-fieldset legend {
@@ -147,7 +147,7 @@
   border-color: rgb(255 215 126 / 42%);
   background:
     radial-gradient(circle at 78% 18%, rgb(255 206 116 / 14%), transparent 6rem),
-    linear-gradient(145deg, rgb(66 48 37 / 84%), rgb(8 26 23 / 96%));
+    linear-gradient(145deg, rgb(66 48 37 / 84%), rgb(48 25 28 / 96%));
 }
 
 .prestige-route-board .prestige-card-prop {
@@ -201,17 +201,17 @@
 }
 
 .prestige-route-board .prestige-layer-l2 {
-  border-color: rgb(151 219 255 / 52%);
-  background: linear-gradient(90deg, rgb(82 154 213 / 13%), transparent 55%), rgb(8 24 27 / 78%);
+  border-color: rgb(214 151 176 / 52%);
+  background: linear-gradient(90deg, rgb(188 99 138 / 15%), transparent 55%), rgb(47 23 32 / 82%);
   isolation: isolate;
 }
 
 .prestige-route-board .prestige-layer-l2 > button {
   position: relative;
   z-index: 2;
-  border-color: #93d7ff;
-  color: #10222e;
-  background: linear-gradient(145deg, #d1f1ff, #75bde6);
+  border-color: #f0bad0;
+  color: #2d1520;
+  background: linear-gradient(145deg, #f6dbe5, #d989a8);
 }
 
 .prestige-route-board .prestige-layer-l2 > .prestige-card-grid {
@@ -223,8 +223,8 @@
   position: relative;
   grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
-  border-color: rgb(153 220 255 / 52%);
-  background: linear-gradient(145deg, rgb(31 71 88 / 82%), rgb(8 25 29 / 92%));
+  border-color: rgb(214 151 176 / 52%);
+  background: linear-gradient(145deg, rgb(78 40 61 / 84%), rgb(42 21 31 / 94%));
 }
 
 .prestige-route-board .prestige-draft > .prestige-layer-prop {
@@ -252,10 +252,10 @@
 }
 
 .transit-route-board {
-  border-color: rgb(123 210 246 / 72%);
+  border-color: rgb(222 139 159 / 72%);
   background:
-    radial-gradient(circle at 75% 15%, rgb(99 207 242 / 16%), transparent 20rem),
-    linear-gradient(145deg, rgb(16 58 72 / 96%), rgb(7 23 28 / 99%));
+    radial-gradient(circle at 75% 15%, rgb(223 116 145 / 17%), transparent 20rem),
+    linear-gradient(145deg, rgb(76 35 49 / 96%), rgb(39 19 27 / 99%));
 }
 
 .transit-route-header {
@@ -268,10 +268,10 @@
   min-block-size: 2.1rem;
   place-items: center;
   margin-inline-start: auto;
-  border: 2px solid #b8edff;
+  border: 2px solid #ffd4d3;
   border-radius: 999px;
-  color: #e4f8ff;
-  background: rgb(29 120 151 / 58%);
+  color: #fff0e9;
+  background: rgb(143 59 78 / 62%);
   font-weight: 900;
   font-variant-numeric: tabular-nums;
 }
@@ -287,9 +287,9 @@
   gap: 0.55rem;
   align-items: center;
   padding: 0.45rem 0.55rem;
-  border: 1px solid rgb(141 218 248 / 48%);
+  border: 1px solid rgb(218 145 168 / 50%);
   border-radius: 0.8rem;
-  background: linear-gradient(90deg, rgb(85 182 223 / 15%), rgb(6 28 35 / 62%));
+  background: linear-gradient(90deg, rgb(205 101 139 / 16%), rgb(45 22 31 / 68%));
 }
 
 .transit-route-event > .prestige-route-prop {
@@ -298,7 +298,7 @@
 }
 
 .transit-route-status {
-  color: #d4f5ff;
+  color: #f4dce4;
   font-size: 0.75rem;
   font-weight: 900;
   letter-spacing: 0.05em;
@@ -323,9 +323,9 @@
   align-items: center;
   min-block-size: 2.75rem;
   padding: 0.25rem 0.4rem;
-  border-color: rgb(137 222 253 / 65%);
-  color: #def8ff;
-  background: rgb(24 95 121 / 70%);
+  border-color: rgb(222 145 172 / 68%);
+  color: #fff0e9;
+  background: rgb(118 49 71 / 74%);
   font-size: 0.72rem;
 }
 
@@ -387,16 +387,16 @@
   stroke-linejoin: round;
 }
 .route-prop-host {
-  color: #a6e7ff;
+  color: #e8b8ce;
 }
 .route-prop-host-shell {
-  fill: rgb(63 142 177 / 38%);
+  fill: rgb(155 77 111 / 40%);
   stroke: currentColor;
   stroke-width: 3;
 }
 .route-prop-host-cell {
-  fill: #98d7ec;
-  stroke: #e4fbff;
+  fill: #d99bb8;
+  stroke: #fae1ea;
   stroke-width: 2;
 }
 .route-prop-transfer-arrow {
@@ -408,29 +408,29 @@
   opacity: 0.75;
 }
 .route-prop-cryobank {
-  color: #9eeaff;
+  color: #dec4ea;
 }
 .route-prop-vial-cap {
-  fill: #d5f9ff;
-  stroke: #6ad3f1;
+  fill: #f0e2f4;
+  stroke: #b78acb;
   stroke-width: 2;
 }
 .route-prop-vial {
-  fill: rgb(64 191 238 / 25%);
+  fill: rgb(166 112 186 / 28%);
   stroke: currentColor;
   stroke-width: 3;
 }
 .route-prop-frost {
-  stroke: #d7fbff;
+  stroke: #f1def5;
   stroke-width: 2;
 }
 .route-prop-cryocell {
-  fill: #80d8f6;
-  stroke: #e3fcff;
+  fill: #c899d8;
+  stroke: #f3e2f7;
   stroke-width: 2;
 }
 .route-prop-snow {
-  stroke: #efffff;
+  stroke: #fff0f8;
   stroke-width: 2;
 }
 .route-prop-network {
@@ -455,7 +455,7 @@
   stroke-width: 2;
 }
 .route-prop-transit {
-  color: #89ddff;
+  color: #ef9eae;
 }
 .route-prop-vessel {
   stroke: #cf5f71;
@@ -471,8 +471,8 @@
   stroke-width: 2;
 }
 .route-prop-flow-arrow {
-  fill: #d7f8ff;
-  stroke: #d7f8ff;
+  fill: #ffe5c7;
+  stroke: #ffe5c7;
   stroke-width: 2;
   stroke-linejoin: round;
 }

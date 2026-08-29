@@ -6,13 +6,14 @@
 import { ErrorBoundary, Show, createMemo, createSignal } from "solid-js";
 import type { JSX } from "solid-js";
 
-import { formatBigNum, formatMagnitudeName, formatQuantity } from "../bignum/format.js";
+import { formatMagnitudeName } from "../bignum/format.js";
 import { cellProductionRate } from "../economy/production.js";
 import type { GameState } from "../types/state.js";
 import { createGameColonyScene } from "../svg/colony_visual_state.js";
 import { describeColonyScene } from "../svg/describe.js";
 import type { ColonySceneRequest } from "../svg/render_types.js";
 import { TumorArena } from "./tumor_arena.js";
+import { formatCellInventory, formatCellRate, nextCellProgress } from "./cell_metrics.js";
 
 type ColonyPanelProps = Readonly<{
   game: GameState;
@@ -89,15 +90,10 @@ export function ColonyPanel(props: ColonyPanelProps): JSX.Element {
             <TumorArena
               disabled={props.disabled === true}
               scene={ready().scene}
-              cellsLabel={formatQuantity(
-                props.game.cells,
-                props.game.numberFormat,
-                2,
-                "cell",
-                "cells",
-              )}
+              cellsLabel={formatCellInventory(props.game.cells, props.game.numberFormat)}
+              growthProgress={nextCellProgress(props.game.cells)}
               magnitudeName={formatMagnitudeName(props.game.cells, 2)}
-              productionLabel={`${formatBigNum(productionRate(), props.game.numberFormat, 2)} cells/s`}
+              productionLabel={formatCellRate(productionRate(), props.game.numberFormat)}
               description={`${ready().caption} Stylized game abstraction.`}
               feedbackTarget={feedbackTarget}
               feedbackSequence={feedbackSequence}

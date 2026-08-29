@@ -6,20 +6,13 @@
     ui-sans-serif,
     system-ui,
     sans-serif;
-  background: #06121d;
-  color: #f5f8fb;
-  --ink: #06121d;
-  --surface: rgb(9 28 40 / 95%);
-  --line: #397b8c;
-  --copy: #f5f8fb;
-  --muted: #a8c2ce;
-  --growth: #ff789a;
-  --growth-bright: #ffd7e0;
-  --blood: #ff5f6d;
-  --hypoxia: #a978e2;
-  --atp: #ffd16f;
-  --danger: #ff9b83;
-  --focus: #8ff5ee;
+  background: #180d12;
+  color: #fff4ed;
+  --ink: #180d12;
+  --surface: rgb(43 22 29 / 96%);
+  --line: #925b64;
+  --blood: #d94e62;
+  --hypoxia: #b27ac5;
 }
 
 * {
@@ -32,9 +25,10 @@ body {
   margin: 0;
   overflow-x: hidden;
   background:
-    radial-gradient(circle at 14% 12%, rgb(40 143 164 / 16%), transparent 34%),
-    radial-gradient(circle at 84% 78%, rgb(180 43 79 / 12%), transparent 38%),
-    linear-gradient(142deg, #0b2a38 0%, var(--ink) 52%, #160d1b 100%);
+    radial-gradient(circle at 14% 12%, rgb(191 89 103 / 17%), transparent 34%),
+    radial-gradient(circle at 84% 78%, rgb(110 55 84 / 20%), transparent 38%),
+    repeating-linear-gradient(118deg, rgb(255 206 190 / 2%) 0 1px, transparent 1px 18px),
+    linear-gradient(142deg, #341a22 0%, var(--ink) 52%, #24101c 100%);
 }
 
 button,
@@ -46,7 +40,7 @@ select {
 button {
   min-width: 2.75rem;
   min-height: 2.75rem;
-  border: 1px solid #77ced5;
+  border: 1px solid #d69a96;
   border-radius: 0.62rem;
   padding: 0.55rem 0.75rem;
   color: #201018;
@@ -56,9 +50,9 @@ button {
 }
 
 button:disabled {
-  border-color: #4a5d66;
-  color: #8e9ca2;
-  background: #25343c;
+  border-color: #6f5357;
+  color: #bca7a2;
+  background: #473238;
   cursor: not-allowed;
 }
 
@@ -150,14 +144,14 @@ select:focus-visible {
   .progression-rail {
     overflow-y: auto;
     overscroll-behavior: contain;
-    scrollbar-color: #93bd9d #173126;
+    scrollbar-color: #d58d95 #30171e;
   }
 
   .store-rail {
     position: static;
     overflow: hidden;
     overscroll-behavior: contain;
-    scrollbar-color: #ba9b63 #1d2a25;
+    scrollbar-color: #d0a26b #35201e;
   }
 
   .producers-panel {
@@ -176,7 +170,7 @@ select:focus-visible {
   .producers-panel > .section-heading {
     top: -0.85rem;
     padding: 0.85rem 0 0.45rem;
-    background: #2d2a20;
+    background: #3a2723;
   }
 
   .producer-quantity {
@@ -217,8 +211,8 @@ h2 {
   padding: 0.7rem 1rem;
   overflow: hidden;
   background:
-    linear-gradient(90deg, rgb(74 120 79 / 18%), transparent 45%),
-    linear-gradient(145deg, rgb(26 61 47 / 98%), rgb(8 26 24 / 98%));
+    linear-gradient(90deg, rgb(239 138 155 / 17%), transparent 45%),
+    linear-gradient(145deg, rgb(73 36 45 / 98%), rgb(37 17 25 / 98%));
 }
 
 .masthead::before {
@@ -284,8 +278,8 @@ h2 {
 }
 
 .text-button {
-  color: #e6f1e6;
-  background: rgb(5 20 18 / 42%);
+  color: #fff2eb;
+  background: rgb(50 25 32 / 72%);
 }
 
 .colony-panel,
@@ -295,17 +289,17 @@ h2 {
 }
 
 .colony-panel {
-  --colony-surface: #d0f7ad;
-  --colony-middle: #8ead83;
-  --colony-deep: #4d6e5b;
+  --colony-surface: #ffd4dd;
+  --colony-middle: #ef789f;
+  --colony-deep: #6e427f;
   display: grid;
   /* The native direct-click surface keeps a visible cell field when desktop debug/status rows grow. */
   grid-template-rows: auto auto minmax(13rem, 1fr) auto auto;
   gap: 0.55rem;
-  border-color: #7bb98b;
+  border-color: #c77d86;
   background:
     radial-gradient(circle at 80% 6%, rgb(239 101 110 / 15%), transparent 32%),
-    linear-gradient(145deg, rgb(25 62 39 / 98%), rgb(7 23 21 / 98%) 74%);
+    linear-gradient(145deg, rgb(72 36 44 / 98%), rgb(31 16 23 / 98%) 74%);
 }
 
 .colony-panel__heading {
@@ -353,19 +347,19 @@ h2 {
   min-height: 0;
   padding: 0.28rem;
   overflow: hidden;
-  border-color: rgb(182 243 169 / 74%);
+  border-color: rgb(231 163 158 / 74%);
   border-radius: 0.8rem;
   color: inherit;
-  background: radial-gradient(circle at 50% 48%, rgb(193 246 174 / 18%), transparent 44%), #0c211a;
+  background: radial-gradient(circle at 50% 48%, rgb(255 120 154 / 18%), transparent 44%), #2b161d;
   box-shadow:
-    inset 0 0 0 1px rgb(8 23 16 / 64%),
+    inset 0 0 0 1px rgb(48 20 29 / 64%),
     0 0.75rem 1.7rem rgb(0 0 0 / 30%);
 }
 
 .colony-panel__action::after {
   position: absolute;
   inset: 0.35rem;
-  border: 1px solid rgb(204 255 182 / 0%);
+  border: 1px solid rgb(255 199 184 / 0%);
   border-radius: 0.62rem;
   content: "";
   pointer-events: none;
@@ -376,21 +370,21 @@ h2 {
 
 .colony-panel__action:hover:not(:disabled)::after,
 .colony-panel__action:focus-visible::after {
-  border-color: rgb(204 255 182 / 72%);
-  box-shadow: inset 0 0 2rem rgb(169 255 156 / 14%);
+  border-color: rgb(255 199 184 / 72%);
+  box-shadow: inset 0 0 2rem rgb(232 116 139 / 14%);
 }
 
 .colony-panel__action:active:not(:disabled) {
   box-shadow:
-    inset 0 0 0 2px rgb(190 255 169 / 46%),
-    inset 0 0 2rem rgb(137 215 124 / 16%);
+    inset 0 0 0 2px rgb(255 199 184 / 46%),
+    inset 0 0 2rem rgb(255 120 154 / 16%);
 }
 
 .colony-panel__instruction,
 .colony-panel__caption,
 .colony-panel__unavailable {
   margin: 0;
-  color: #d7e9d7;
+  color: #e7cbc3;
   font-size: 0.8rem;
   line-height: 1.4;
 }
@@ -406,17 +400,17 @@ h2 {
   height: auto;
   aspect-ratio: 10 / 7;
   border-radius: 0.56rem;
-  background: #10291e;
+  background: #2d171f;
   isolation: isolate;
 }
 
 .colony-figure__plate {
-  fill: #10291e;
+  fill: #2d171f;
 }
 
 .colony-figure__tissue-fascia {
   fill: none;
-  stroke: rgb(165 213 144 / 18%);
+  stroke: rgb(231 163 158 / 18%);
   stroke-width: 22;
 }
 
@@ -425,15 +419,15 @@ h2 {
 }
 
 .colony-figure__silhouette {
-  fill: #28543b;
-  stroke: #a5d793;
+  fill: #253b55;
+  stroke: #8edee8;
   stroke-width: 3;
   paint-order: stroke fill;
 }
 
 .colony-figure__region {
-  fill: rgb(116 166 106 / 42%);
-  stroke: rgb(201 247 173 / 42%);
+  fill: rgb(96 126 166 / 42%);
+  stroke: rgb(156 238 232 / 42%);
   stroke-width: 1.4;
 }
 
@@ -447,14 +441,14 @@ h2 {
 .colony-figure__outline polygon,
 polygon.colony-figure__outline {
   fill: none;
-  stroke: #d8f5bd;
+  stroke: #d8f6ff;
   stroke-width: 3;
   stroke-linejoin: round;
   vector-effect: non-scaling-stroke;
 }
 
 .colony-cell__membrane {
-  stroke: rgb(227 255 205 / 78%);
+  stroke: rgb(226 247 255 / 78%);
   /* This is the visible edge of the direct-action object, not a separate hit plane. */
   stroke-width: 2.35;
   paint-order: stroke fill;
@@ -468,7 +462,7 @@ polygon.colony-figure__outline {
 .colony-cell--depth-surface .colony-cell__membrane {
   stroke: var(--colony-surface);
   stroke-width: 2.8;
-  filter: drop-shadow(1px 1px 1px rgb(0 0 0 / 42%)) drop-shadow(0 0 0.18rem rgb(191 255 172 / 24%));
+  filter: drop-shadow(1px 1px 1px rgb(0 0 0 / 42%)) drop-shadow(0 0 0.18rem rgb(98 216 239 / 24%));
 }
 
 .colony-cell--depth-middle {
@@ -548,7 +542,7 @@ polygon.colony-figure__outline {
 
 .colony-panel__action:hover:not(:disabled) .colony-cell__membrane,
 .colony-panel__action:focus-visible .colony-cell__membrane {
-  stroke: #e8ffd7;
+  stroke: #e5faff;
 }
 
 .colony-panel__action:hover:not(:disabled) .colony-cell--depth-surface .colony-cell__visual {
@@ -570,7 +564,7 @@ polygon.colony-figure__outline {
 
 @keyframes cell-growth-pulse {
   50% {
-    filter: brightness(1.18) drop-shadow(0 0 0.26rem rgb(194 255 171 / 72%));
+    filter: brightness(1.18) drop-shadow(0 0 0.26rem rgb(98 216 239 / 72%));
     transform: scale(1.035);
   }
 }
@@ -589,8 +583,8 @@ polygon.colony-figure__outline {
 .stage-panel {
   display: grid;
   gap: 0.7rem;
-  border-color: #799a80;
-  background: linear-gradient(145deg, rgb(35 66 42 / 98%), rgb(12 31 26 / 97%));
+  border-color: #627d92;
+  background: linear-gradient(145deg, rgb(31 49 70 / 98%), rgb(10 24 38 / 97%));
 }
 
 /* prettier-ignore */
@@ -603,7 +597,7 @@ polygon.colony-figure__outline {
 /* prettier-ignore */
 .stage-contract-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.45rem; }
 /* prettier-ignore */
-.stage-contract-grid section, .stage-mode-readout { min-width: 0; border: 1px solid rgb(144 191 145 / 40%); border-radius: 0.62rem; padding: 0.55rem; background: rgb(5 25 18 / 45%); }
+.stage-contract-grid section, .stage-mode-readout { min-width: 0; border: 1px solid rgb(103 205 226 / 40%); border-radius: 0.62rem; padding: 0.55rem; background: rgb(5 18 29 / 45%); }
 /* prettier-ignore */
 .stage-contract-grid h3, .stage-mode-readout h3 { color: var(--growth-bright); font-size: 0.8rem; }
 /* prettier-ignore */
@@ -704,23 +698,23 @@ polygon.colony-figure__outline {
 .extended-hallmarks-heading { margin-top: 0.25rem; border-top: 1px solid rgb(196 180 230 / 38%); padding-top: 0.75rem; }
 
 /* prettier-ignore */
-.late-hallmarks-heading { border-color: rgb(115 192 174 / 48%); }
+.late-hallmarks-heading { border-color: rgb(169 120 226 / 48%); }
 /* prettier-ignore */
-.late-hallmark-row { border-color: rgb(115 192 174 / 42%); background: rgb(10 38 34 / 42%); }
+.late-hallmark-row { border-color: rgb(169 120 226 / 42%); background: rgb(31 20 49 / 42%); }
 /* prettier-ignore */
-.late-hallmark-panel { display: grid; gap: 0.5rem; border-color: rgb(126 207 187 / 52%); }
+.late-hallmark-panel { display: grid; gap: 0.5rem; border-color: rgb(202 140 255 / 52%); }
 /* prettier-ignore */
 .late-effect-list { display: grid; gap: 0.25rem; margin: 0; padding-inline-start: 1.15rem; color: var(--muted); font-size: 0.76rem; line-height: 1.35; }
 /* prettier-ignore */
-.late-program-target { display: grid; gap: 0.4rem; border-top: 1px solid rgb(126 207 187 / 30%); padding-top: 0.55rem; }
+.late-program-target { display: grid; gap: 0.4rem; border-top: 1px solid rgb(202 140 255 / 30%); padding-top: 0.55rem; }
 /* prettier-ignore */
-.late-program-target h4, .late-option-card h4, .late-option-card h5 { margin: 0; color: #b9f0da; font-size: 0.82rem; }
+.late-program-target h4, .late-option-card h4, .late-option-card h5 { margin: 0; color: #e3c5ff; font-size: 0.82rem; }
 /* prettier-ignore */
 .late-option-list, .late-microbiome-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.45rem; }
 /* prettier-ignore */
 .late-microbiome-cards { grid-template-columns: minmax(0, 1fr); }
 /* prettier-ignore */
-.late-option-card { display: grid; gap: 0.42rem; min-width: 0; border: 1px solid rgb(126 207 187 / 38%); border-radius: 0.52rem; padding: 0.52rem; background: rgb(5 30 26 / 48%); }
+.late-option-card { display: grid; gap: 0.42rem; min-width: 0; border: 1px solid rgb(202 140 255 / 38%); border-radius: 0.52rem; padding: 0.52rem; background: rgb(25 16 42 / 48%); }
 /* prettier-ignore */
 .late-option-card p { margin: 0; color: var(--muted); font-size: 0.76rem; line-height: 1.35; }
 
@@ -731,9 +725,9 @@ polygon.colony-figure__outline {
 /* prettier-ignore */
 .late-microbiome-card__niches { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.42rem; margin: 0; }
 /* prettier-ignore */
-.late-microbiome-card__niches div { min-width: 0; border-inline-start: 2px solid rgb(126 207 187 / 68%); padding-inline-start: 0.45rem; }
+.late-microbiome-card__niches div { min-width: 0; border-inline-start: 2px solid rgb(202 140 255 / 68%); padding-inline-start: 0.45rem; }
 /* prettier-ignore */
-.late-microbiome-card__niches dt { color: #b9f0da; font-size: 0.7rem; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; }
+.late-microbiome-card__niches dt { color: #e3c5ff; font-size: 0.7rem; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; }
 /* prettier-ignore */
 .late-microbiome-card__niches dd { display: grid; gap: 0.2rem; margin: 0.2rem 0 0; color: var(--muted); font-size: 0.78rem; line-height: 1.35; }
 /* prettier-ignore */
@@ -759,8 +753,8 @@ polygon.colony-figure__outline {
   border-color: #a48555;
   background:
     linear-gradient(180deg, rgb(103 61 35 / 22%), transparent 28%),
-    linear-gradient(145deg, rgb(46 39 29 / 98%), rgb(17 28 25 / 98%));
-  scrollbar-color: #ba9b63 #1d2a25;
+    linear-gradient(145deg, rgb(46 39 29 / 98%), rgb(17 25 36 / 98%));
+  scrollbar-color: #ba9b63 #1b2330;
 }
 
 .producers-panel .section-note {
@@ -949,7 +943,7 @@ polygon.colony-figure__outline {
     animation: none !important;
   }
   .colony-panel__action::after {
-    border-color: rgb(204 255 182 / 36%);
+    border-color: rgb(156 238 232 / 36%);
   }
   .colony-panel__action:hover .colony-cell--depth-surface .colony-cell__visual,
   .colony-figure--cycling .colony-cell--depth-surface .colony-cell__visual,

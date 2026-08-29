@@ -4,9 +4,9 @@
    its biology legible in a bright environment instead of merely inverting the
    default arena. */
 .colony-panel.is-neutral-light {
-  --colony-surface: #0f6f73;
-  --colony-middle: #286f8d;
-  --colony-deep: #4f4b88;
+  --colony-surface: #9e4e5c;
+  --colony-middle: #8b4868;
+  --colony-deep: #58405f;
   border-color: rgb(112 78 59 / 72%);
   background:
     radial-gradient(circle at 13% 10%, rgb(255 255 241 / 94%) 0 2%, transparent 19%),

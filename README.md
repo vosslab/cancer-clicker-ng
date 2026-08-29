@@ -30,12 +30,13 @@ The primary 1280 x 800 (16:10) view is a visual game canvas:
 - **Evolution dock:** six small icon tabs expose one active decision family at a time. The stage
   gate, 14 hallmark sigils, routes, resets, culture, and network remain discoverable without
   stacking explanatory panels.
-- **Upgrade rack:** eight illustrated molecular machines are always available at the right. Each
-  whole row shows its owned level, cost, and marginal production; quantity, assay, and detail
-  controls use small icons.
+- **Upgrade rack:** molecular targets reveal progressively instead of spoiling the full catalog.
+  Each known row names **Owned**, **Output**, **Buy**, **Cost**, and **Adds** in place; only the next
+  two unknown targets remain visible as discovery cues.
 
-Biology prose lives in focusable tooltips, optional specimen notes, and a focus-restoring specimen
-drawer. The permanent canvas stays focused on art, numbers, state, and the next action.
+Core economics never depend on a tooltip. Extended biology help remains available to pointer and
+keyboard users through viewport-aware tooltips, optional specimen notes, and a focus-restoring
+specimen drawer. The permanent canvas stays focused on art, numbers, state, and the next action.
 
 The board takes inspiration from the satisfying always-upgradable structure of Cookie Clicker, but
 uses an original, editable SVG tumor vocabulary and a scientific, nonclinical art direction.
@@ -43,6 +44,7 @@ uses an original, editable SVG tumor vocabulary and a scientific, nonclinical ar
 <!-- screenshots:begin (managed by screenshot-docs) -->
 
 ![Cancer Clicker NG game board after a visible tumor-cell click, with the living tumor, compact scoreboard, icon tabs, and upgrade rack](docs/screenshots/cancer_clicker_ng_board.png)
+![Cancer Clicker NG upgrade decision with explicit Owned, Output, Buy, Cost, and Adds labels plus a viewport-contained tooltip](docs/screenshots/cancer_clicker_ng_upgrade_decision.png)
 
 <details>
 <summary>Central tumor progression: hypoxic core, perfusion, and invasive route</summary>
@@ -114,6 +116,20 @@ npm run test:playwright -- --build
 The browser and visual lanes prove controls, storage, responsive layout, accessibility, and rendered
 biology. They complement the fast deterministic Node/tsx suite; neither test count nor a pixel or
 timing threshold is a release criterion.
+
+Capture the complete rendered review, including every currently rendered tooltip across all six
+evolution views-and verify its manifest-backed screenshot identities:
+
+```bash
+node tools/capture_visual_review.mjs
+node tools/capture_visual_review.mjs --verify-existing
+```
+
+Regenerate the fixed-clock README story, including the explicit upgrade-price and tooltip frame:
+
+```bash
+node --import tsx tools/capture_readme_screenshots.mjs
+```
 
 ## Status and boundaries
 

@@ -29,6 +29,7 @@ test("Cell projects immutable paths and exposes each real cell as a pointer targ
   assert.equal(Object.isFrozen(first), true);
   assert.equal(first.membrane.d, input.cell.membranePath);
   assert.equal(first.nucleus.d, input.cell.nucleusPath);
-  assert.equal(first.membrane.fill, `url(#${input.definitionIds.cytoplasmGradient})`);
+  assert.equal(first.membrane.fill, `url(#${input.definitionIds.cytoplasmPattern})`);
+  assert.equal(first.membrane.stroke, "#f6c2b8");
   assert.equal(first.nucleus.fill, `url(#${input.definitionIds.nucleusGradient})`);
 });

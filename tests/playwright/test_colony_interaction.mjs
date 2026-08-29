@@ -88,10 +88,14 @@ test("the 1280 by 800 colony board keeps its primary clicker surfaces visible an
     await expect(page.locator("#save-status")).toBeVisible();
 
     const firstProducer = page.locator("[data-producer-id]").first();
-    await expect(firstProducer).toContainText(/Owned level \d+/);
-    await expect(firstProducer).toContainText(/\d+(?:\.\d+)? cells\/s/);
-    await expect(firstProducer).toContainText(/Next 1 cost:/);
-    await expect(firstProducer).toContainText(/affordable|unavailable/);
+    await expect(firstProducer).toContainText("Undiscovered target");
+    await expect(page.getByText("Cyclin D", { exact: true })).toHaveCount(0);
+    await page.getByRole("button", { name: "Divide cell" }).click();
+    await expect(firstProducer).toContainText("Owned 0");
+    await expect(firstProducer).toContainText("Output 0 cells/s");
+    await expect(firstProducer).toContainText("Buy 1");
+    await expect(firstProducer).toContainText("Cost 1.00 cells");
+    await expect(firstProducer).toContainText("Adds 1 cell / 10 s");
 
     await expectInViewport(page, [
       ".colony-panel__action",
@@ -109,8 +113,8 @@ test("the 1280 by 800 colony board keeps its primary clicker surfaces visible an
         scrolled: element.scrollTop > 0,
       };
     });
-    expect(storeScrolling.scrollable).toBe(true);
-    expect(storeScrolling.scrolled).toBe(true);
+    expect(storeScrolling.scrollable).toBe(false);
+    expect(storeScrolling.scrolled).toBe(false);
     await expect(page.locator("[data-producer-id]").last()).toBeVisible();
     expect(
       await page.evaluate(
@@ -133,8 +137,8 @@ test("visible cells accept pointer division while tissue whitespace stays inert 
   await expect(cell).toBeVisible();
   await cell.click();
   expect(await readSavedCellCount(page)).toBe(1);
-  await expect(page.getByLabel("Cell count", { exact: true })).toContainText("1.00 cell");
-  await expect(page.getByLabel("Tumor biomass", { exact: true })).toContainText("1.00 cell");
+  await expect(page.getByLabel("Cell count", { exact: true })).toContainText("1 cell");
+  await expect(page.getByLabel("Tumor biomass", { exact: true })).toContainText("1 cell");
 
   await whitespace.click({ position: { x: 8, y: 8 } });
   expect(await readSavedCellCount(page)).toBe(1);
@@ -149,7 +153,7 @@ test("visible cells accept pointer division while tissue whitespace stays inert 
   await expect(action).toBeFocused();
 });
 
-test("upgrade rows expose price state at a glance and keep biology in their tooltip", async ({
+test("upgrade rows reveal progressively, expose economics, and portal tooltips outside the rack", async ({
   page,
 }) => {
   await page.goto("/");
@@ -158,20 +162,50 @@ test("upgrade rows expose price state at a glance and keep biology in their tool
   const secondRow = page.locator('[data-producer-id="cdk4"]');
   const firstBuy = firstRow.locator(".producer-row__buy");
 
+  await expect(page.locator("[data-producer-id]")).toHaveCount(2);
   await expect(firstRow).toHaveAttribute("data-affordable", "false");
-  await expect(firstBuy).toBeDisabled();
+  await expect(firstRow).toContainText("Undiscovered target");
+  await expect(firstBuy).toHaveCount(0);
+  await expect(secondRow).toContainText("Undiscovered target");
+  await expect(page.getByText("Cyclin D", { exact: true })).toHaveCount(0);
   await action.locator(".colony-cell__membrane").first().click();
+  await expect(page.locator("[data-producer-id]")).toHaveCount(3);
   await expect(firstRow).toHaveAttribute("data-affordable", "true");
   await expect(firstBuy).toBeEnabled();
+  await expect(firstRow).toContainText("Owned 0");
+  await expect(firstRow).toContainText("Output 0 cells/s");
+  await expect(firstRow).toContainText("Buy 1");
+  await expect(firstRow).toContainText("Cost 1.00 cells");
+  await expect(firstRow).toContainText("Adds 1 cell / 10 s");
   await expect(secondRow).toHaveAttribute("data-affordable", "false");
-  await expect(secondRow.locator(".producer-row__buy")).toBeDisabled();
+  await expect(secondRow.locator(".producer-row__buy")).toHaveCount(0);
 
   const rowHeightBeforeTooltip = await firstRow.evaluate(
     (element) => element.getBoundingClientRect().height,
   );
   await firstBuy.focus();
-  await expect(firstRow.locator(".help-tooltip-content")).toContainText("Affordable now");
-  await expect(firstRow.locator(".help-tooltip-content")).toContainText("Produces");
+  const tooltipId = await firstBuy.getAttribute("aria-describedby");
+  if (tooltipId === null) throw new Error("Purchase control requires tooltip help.");
+  const tooltip = page.locator(`#${tooltipId}`);
+  await expect(tooltip).toContainText("Affordable now");
+  await expect(tooltip).toContainText("Produces");
+  await expect(tooltip).toHaveAttribute("data-positioned", "true");
+  const tooltipFit = await tooltip.evaluate((element) => {
+    const box = element.getBoundingClientRect();
+    const rack = document.querySelector(".game-board__rack")?.getBoundingClientRect();
+    return {
+      inViewport:
+        box.left >= 8 &&
+        box.top >= 8 &&
+        box.right <= window.innerWidth - 8 &&
+        box.bottom <= window.innerHeight - 8,
+      textFits:
+        element.scrollWidth <= element.clientWidth + 1 &&
+        element.scrollHeight <= element.clientHeight + 1,
+      outsideRack: rack !== undefined && box.right <= rack.left + 16,
+    };
+  });
+  expect(tooltipFit).toEqual({ inViewport: true, textFits: true, outsideRack: true });
   const rowHeightWithTooltip = await firstRow.evaluate(
     (element) => element.getBoundingClientRect().height,
   );
@@ -289,9 +323,11 @@ test("a successful direct-cell gesture exposes bounded arena feedback while tiss
   const tissue = action.locator(".colony-figure__plate");
 
   await action.focus();
-  await expect(page.locator(".tumor-arena .help-tooltip-content")).toHaveText(
-    "Divide a visible cell",
-  );
+  const tooltipId = await action.getAttribute("aria-describedby");
+  if (tooltipId === null) throw new Error("Divide control requires tooltip help.");
+  const actionTooltipId = tooltipId.split(" ").find((id) => id !== "tumor-arena-description");
+  if (actionTooltipId === undefined) throw new Error("Divide tooltip requires its own ID.");
+  await expect(page.locator(`#${actionTooltipId}`)).toHaveText("Divide a visible cell");
   const reward = page.locator(".tumor-arena .reward-feedback");
   const beforeRewardSequence = await reward.getAttribute("data-reward-sequence");
   const click = await clickVisibleSvgPath(page, ".colony-cell__membrane");

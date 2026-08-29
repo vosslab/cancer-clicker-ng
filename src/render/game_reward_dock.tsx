@@ -56,7 +56,7 @@ export function GameRewardDock(props: GameRewardDockProps): JSX.Element {
   const timer = props.timer ?? browserFeedbackTimer();
   installTransientFeedbackExpiryLifecycle(props.ui, timer);
   return (
-    <div class="game-reward-dock" aria-live="polite" aria-label="Recent rewards">
+    <div class="game-reward-dock" role="log" aria-live="polite" aria-label="Recent rewards">
       <For each={props.ui.transientFeedback()}>
         {(feedback) => (
           <output class={`game-reward-dock__item is-${feedback.tone}`}>{feedback.message}</output>

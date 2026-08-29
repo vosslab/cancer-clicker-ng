@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Cancer Clicker NG becomes a fluorescent, tactile incremental game about an evolving tumor world.
+Cancer Clicker NG becomes a warm, tactile incremental game about an evolving tumor world.
 At first glance, a player sees an organic tumor arena they can touch, a compact rack of strange
 biological machines they can grow, and bright hallmark sigils that advertise the next obsession.
 They should want to click before they need to read a paragraph.
@@ -14,17 +14,23 @@ fictional biological abstraction and does not depict patients, diagnosis, or cli
 
 ## Visual contract
 
-| Field            | Contract                                                                                                                                                                                                  |
-| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Audience         | High-school and college players who respond to visible growth, collection, discovery, and tactile feedback.                                                                                               |
-| Primary viewport | 1280 x 800, 16:10. The first board state shows the arena, upgrade machinery, immediate progression, and concise status together.                                                                          |
-| First read       | Living tumor arena, active cell click target, visible machine shelf, and one active hallmark/stage spectacle.                                                                                             |
-| Second read      | Owned counts, affordability, resource rate, and the immediate next action.                                                                                                                                |
-| Detail route     | Native `title`, `aria-label`, focus tooltip, or optional detail drawer. Long explanatory paragraphs leave the persistent board.                                                                           |
-| Embed mode       | Inline SolidJS SVG for scene art and reusable decorative `ActionIcon` marks. Native HTML buttons remain the focusable controls.                                                                           |
-| Palette          | Fluorescent microscopy over a deep blue-black laboratory field: cyan cytoplasm, violet nuclei, magenta growth signals, arterial coral vessels, acid-lime actionable energy, and restrained amber rewards. |
-| Shape language   | Rounded cellular contours, branching vessels, faceted glassware, soft specimen shadows, and compact 24 by 24 sigils.                                                                                      |
-| Text policy      | One compact name or number beside a control when it is necessary for scanning; the picture, silhouette, and icon identify the family first.                                                               |
+| Field            | Contract                                                                                                                                                                         |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Audience         | High-school and college players who respond to visible growth, collection, discovery, and tactile feedback.                                                                      |
+| Primary viewport | 1280 x 800, 16:10. The first board state shows the arena, upgrade machinery, immediate progression, and concise status together.                                                 |
+| First read       | Living tumor arena, active cell click target, visible machine shelf, and one active hallmark/stage spectacle.                                                                    |
+| Second read      | Owned counts, affordability, resource rate, and the immediate next action.                                                                                                       |
+| Detail route     | Native `title`, `aria-label`, focus tooltip, or optional detail drawer. Long explanatory paragraphs leave the persistent board.                                                  |
+| Embed mode       | Inline SolidJS SVG for scene art and reusable decorative `ActionIcon` marks. Native HTML buttons remain the focusable controls.                                                  |
+| Palette          | Warm body tissue over a deep marrow field: eosin rose cytoplasm, hematoxylin plum nuclei, burgundy stroma, arterial coral vessels, cream contours, and restrained amber rewards. |
+| Shape language   | Rounded cellular contours, branching vessels, faceted glassware, soft specimen shadows, and compact 24 by 24 sigils.                                                             |
+| Text policy      | One compact name or number beside a control when it is necessary for scanning; the picture, silhouette, and icon identify the family first.                                      |
+
+The initial implementation of this direction was rejected during owner review: it still read as a
+blue/green science-fiction interface, the opening cell resembled an eye, and the UI hid basic
+purchase meaning while tooltips and hallmark copy overlapped. The corrected contract below uses a
+body-tissue palette, explicit economics, progressive target discovery, and a comprehensive tooltip
+capture corpus. Automated evidence is complete; owner aesthetic acceptance is not presumed.
 
 The visual system uses the existing `0 0 1000 700` colony scene and `0 0 24 24` icon coordinate
 systems. SVG `viewBox` coordinates stay stable while the viewport scales the same art at desktop,
@@ -42,20 +48,20 @@ keeps the smallest sigils recognizable.
 
 ### Tumor as the hero
 
-The left arena becomes a deep circular-to-lobulated specimen well, occupying the largest visual
-mass on the board. It looks like a live fluorescent microscopy field rather than a framed chart.
+The center arena becomes a deep tissue well, occupying the largest visual mass on the board. It
+looks like a stylized cellular microenvironment rather than a framed chart or cosmic viewport.
 The player clicks a visibly pulsing foreground cell or active membrane rim. The full cell field
 remains the actual pointer target, so a player can click what they see instead of hunting for a
 separate button.
 
-- **Backdrop:** a cool, vignetted slide with faint tissue fibers, soft depth haze, and one subtle
-  specimen-well rim. The quiet background creates a dark stage for fluorescent cells.
+- **Backdrop:** a warm marrow and burgundy field with quiet stroma bands, soft depth haze, and one
+  subtle tissue-well rim. The background supports the cell without implying an aquatic tank.
 - **Tumor mass:** a readable outer colony silhouette before local cells. Early stages have generous
   extracellular gaps; later stages compress, lobulate, form a necrotic core, develop branching
   perfusion, then cast invasive satellites beyond the margin.
-- **Cell depth:** surface cells use cyan membranes, deep plum nuclei, pearl highlights, and a
-  heavier near-side contour. Mid-depth cells become cooler and less saturated. Deep cells fade into
-  a violet-blue tissue field. Overlap, value falloff, and interrupted rear contours make density
+- **Cell depth:** surface cells use eosin membranes, deep plum nuclei, cream highlights, and a
+  heavier near-side contour. Mid-depth cells become darker and less saturated. Deep cells fade into
+  a burgundy tissue field. Overlap, value falloff, and interrupted rear contours make density
   legible without a wall of identical blobs.
 - **Vessel and tissue depth:** coral capillaries enter from the specimen edge, branch toward the
   viable rim, and stop at hypoxic or necrotic spaces. Their illuminated wall and darker lumen make
@@ -68,7 +74,7 @@ separate button.
 
 ### Tactile click feedback
 
-A direct cell click produces a short, layered response: membrane compression, a cyan-magenta ring
+A direct cell click produces a short, layered response: membrane compression, a rose-cream ring
 that travels into the field, a tiny burst of daughter-cell motes, and the authoritative cell total
 increments beside the arena. The feedback reads as a biological division pulse, not a generic
 button flash. It is local presentation after the existing typed divide intent succeeds.
@@ -85,15 +91,15 @@ small collectible prop with an unmistakable silhouette, owned-count badge, cost 
 production sparkline. The whole row is the purchase target; its illustration carries the family
 identity and the concise adjacent number carries the transactional state.
 
-| Family                | Illustration recipe                                                  | Existing owner seam                                  | Visual evolution                                                                        |
-| --------------------- | -------------------------------------------------------------------- | ---------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| Division machinery    | Mitotic spindle press, paired chromosomes, and a glass cell chamber  | `src/render/producers_panel.tsx`, `src/svg/icons.ts` | Additional owned machines stack behind the lead prop and add a small cyan output pulse. |
-| Growth signaling      | Receptor tower with magenta ligand sparks                            | `src/render/hallmark_tree.tsx`, `src/svg/icons.ts`   | Signal nodes light outward from the membrane.                                           |
-| Metabolic machinery   | Glucose flask, pipette pump, and ATP cell                            | `src/render/hallmark_tree.tsx`, `src/svg/icons.ts`   | Fluid fills and amber charge marks increase.                                            |
-| Genome machinery      | Repair-fork loom, broken helix, and chromosomal cassette             | `src/render/hallmark_tree.tsx`, `src/svg/icons.ts`   | The fork develops controlled asymmetric branches.                                       |
-| Culture apparatus     | Culture dish, cryobank cassette, and assay cartridge                 | `src/render/culture_panel.tsx`, `src/svg/icons.ts`   | One selected vessel glows and owned modules fill a rack.                                |
-| Dissemination network | Node atlas, route tube, and containment shell                        | `src/render/network_panel.tsx`, `src/svg/icons.ts`   | Lines connect physical node props and then echo into the tumor scene.                   |
-| Stage spectacle       | Large specimen stamp, arrow gate, and evolving organ-site silhouette | `src/render/stage_panel.tsx`, `src/svg/icons.ts`     | The current stage uses a larger emblem and an earned transition flare.                  |
+| Family                | Illustration recipe                                                  | Existing owner seam                                  | Visual evolution                                                                         |
+| --------------------- | -------------------------------------------------------------------- | ---------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| Division machinery    | Mitotic spindle press, paired chromosomes, and a glass cell chamber  | `src/render/producers_panel.tsx`, `src/svg/icons.ts` | Additional owned machines stack behind the lead prop and add a small amber output pulse. |
+| Growth signaling      | Receptor tower with magenta ligand sparks                            | `src/render/hallmark_tree.tsx`, `src/svg/icons.ts`   | Signal nodes light outward from the membrane.                                            |
+| Metabolic machinery   | Glucose flask, pipette pump, and ATP cell                            | `src/render/hallmark_tree.tsx`, `src/svg/icons.ts`   | Fluid fills and amber charge marks increase.                                             |
+| Genome machinery      | Repair-fork loom, broken helix, and chromosomal cassette             | `src/render/hallmark_tree.tsx`, `src/svg/icons.ts`   | The fork develops controlled asymmetric branches.                                        |
+| Culture apparatus     | Culture dish, cryobank cassette, and assay cartridge                 | `src/render/culture_panel.tsx`, `src/svg/icons.ts`   | One selected vessel glows and owned modules fill a rack.                                 |
+| Dissemination network | Node atlas, route tube, and containment shell                        | `src/render/network_panel.tsx`, `src/svg/icons.ts`   | Lines connect physical node props and then echo into the tumor scene.                    |
+| Stage spectacle       | Large specimen stamp, arrow gate, and evolving organ-site silhouette | `src/render/stage_panel.tsx`, `src/svg/icons.ts`     | The current stage uses a larger emblem and an earned transition flare.                   |
 
 Each family begins as an editable inline SVG component built from a silhouette, two or three value
 planes, one shared highlight direction, and a small repeated detail motif. Use symbols for parts
@@ -111,17 +117,17 @@ inspection.
 | Hallmark                               | Sigil silhouette                             | Accent behavior                                     |
 | -------------------------------------- | -------------------------------------------- | --------------------------------------------------- |
 | Sustaining proliferative signaling     | Radiating receptor cell                      | Magenta signal rays pulse from a central membrane.  |
-| Evading growth suppressors             | Open shield with escaped check               | A broken inhibitory arc reveals a cyan path.        |
+| Evading growth suppressors             | Open shield with escaped check               | A broken inhibitory arc reveals a cream path.       |
 | Resisting cell death                   | Heart-like cell with a diagonal survival bar | Coral survival core holds against a dim outer ring. |
 | Enabling replicative immortality       | Looping clock and telomere ends              | Violet loop closes into an endless orbit.           |
-| Inducing angiogenesis                  | Branching capillary sprout                   | Coral branches grow toward a cyan rim.              |
+| Inducing angiogenesis                  | Branching capillary sprout                   | Coral branches grow toward a pale rose rim.         |
 | Activating invasion and metastasis     | Escaping cell and directional trail          | A detached satellite crosses the badge edge.        |
-| Deregulating cellular metabolism       | Charged flask                                | Amber fill and a lime charge notch rise together.   |
+| Deregulating cellular metabolism       | Charged flask                                | Amber fill and a cream charge notch rise together.  |
 | Avoiding immune destruction            | Masked shield                                | A dark mask slides across a bright immune scan.     |
 | Tumor-promoting inflammation           | Controlled flame in tissue                   | Coral flame flickers inside a muted tissue ring.    |
 | Genome instability and mutation        | Split double helix                           | One branch breaks into precise magenta fragments.   |
 | Unlocking phenotypic plasticity        | Three shifting cell profiles                 | The profiles share a center but differ in contour.  |
-| Nonmutational epigenetic reprogramming | Layered chromatin loop                       | A cyan strand wraps a violet core.                  |
+| Nonmutational epigenetic reprogramming | Layered chromatin loop                       | A rose strand wraps a violet core.                  |
 | Polymorphic microbiomes                | Clustered microbe constellation              | Three distinct dots orbit one tissue niche.         |
 | Senescent cells                        | Arrested clock-cell                          | Amber pause bars sit inside a worn membrane.        |
 
@@ -222,19 +228,23 @@ The arena holds roughly 48 percent of the first-view visual mass, the progressio
 percent, and the store 22 percent. The header is a thin instrument strip. Most text sits at the
 edges of illustrated objects, keeping the center of gravity in the game world.
 
-## Dispatchable asset packages
+## Asset-package closure
 
-| Package                      | Status                             | Delivered files                                                                                                                                                                                                              | Remaining success criterion                                                                                             | Evidence                                                         |
-| ---------------------------- | ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
-| V1 Arena hierarchy           | Implemented source; review pending | `src/svg/colony.tsx`, `src/svg/cell.tsx`, `src/svg/defs.ts`, `src/render/tumor_arena.tsx`, `src/style.css`                                                                                                                   | Confirm at 1280 x 800 that the tumor is the largest, directly clickable focal object with a readable three-depth field. | Built desktop and compact screenshots; direct-cell Playwright.   |
-| V2 Microscopy palette        | Implemented source; review pending | `src/style.css`, `src/svg/defs.ts`, `src/svg/colony_overlays.tsx`                                                                                                                                                            | Confirm cyan, violet, coral, lime, and amber roles read with shape/value companions.                                    | Render review plus measured contrast for meaningful text.        |
-| V3 Click response            | Implemented source; review pending | `src/svg/tumor_feedback.tsx`, `src/render/tumor_arena.tsx`, `src/style.css`                                                                                                                                                  | Confirm a successful divide reads as a biological pulse with keyboard and reduced-motion clarity.                       | Focused browser interaction and reduced-motion capture.          |
-| V4 Machine shelf             | Implemented source; review pending | `src/svg/producer_machines.tsx`, `src/render/producers_panel.tsx`, `src/style.css`                                                                                                                                           | Confirm every producer reads as a collectible machine with concise owned/cost state.                                    | 1280 x 800 store capture and native-control accessibility check. |
-| V5 Hallmark seals            | Implemented source; review pending | `src/svg/icons.ts`, `src/svg/evolution_sigils.tsx`, `src/render/hallmark_tree.tsx`, `src/style.css`                                                                                                                          | Confirm all 14 hallmarks retain unique small silhouettes and a feature-scale active seal.                               | Icon contact sheet at 16, 24, 56, and 72 px.                     |
-| V6 Progression spectacle     | Implemented source; review pending | `src/svg/evolution_sigils.tsx`, `src/render/stage_panel.tsx`, `src/style.css`                                                                                                                                                | Confirm a stage or hallmark unlock creates one legible event without a text-heavy panel.                                | Reached-state screenshots and reduced-motion review.             |
-| V7 Culture and network props | Implemented source; review pending | `src/svg/culture_network_props.tsx`, `src/svg/prestige_route_props.tsx`, `src/render/culture_panel.tsx`, `src/render/network_panel.tsx`, `src/render/transit_panel.tsx`, `src/render/prestige_panel.tsx`, `src/prestige.css` | Confirm culture and network decisions read as a growing laboratory/world rather than form rows.                         | L3/L4 screenshots and keyboard journey.                          |
-| V8 Text reduction            | Active refinement                  | `src/render/*.tsx`, `src/style.css`, `src/prestige.css`, `src/ending.css`                                                                                                                                                    | Make persistent board copy short while native names and hover/focus tooltips retain detail.                             | Keyboard/focus audit and first-view 1280 x 800 review.           |
-| V9 Screenshot story          | Pending review artifact            | `tools/capture_readme_screenshots.mjs`, `docs/screenshots/*`, `README.md`                                                                                                                                                    | Capture direct click, visual accumulation, hallmark unlock, culture/network world, and earned ending.                   | Fresh production-dist captures plus independent image review.    |
+The `complete_visual_review.md` report records the corrected implementation evidence. Status below
+means implemented and inspected in the dated corpus; it does not mean owner, participant, or future
+pixel acceptance.
+
+| Package                      | Status                    | Closure evidence                                                                                        |
+| ---------------------------- | ------------------------- | ------------------------------------------------------------------------------------------------------- |
+| V1 Arena hierarchy           | Implemented and inspected | 1280 x 800 and five-width corpus; direct-cell production-browser behavior                               |
+| V2 Body-tissue palette       | Implemented and inspected | Served-asset green scan, measured contrast, and rendered tumor/Culture/Network inspection               |
+| V3 Click response            | Implemented and inspected | Success-feedback frame plus keyboard, pointer, and reduced-motion browser behavior                      |
+| V4 Progressive machine rack  | Implemented and inspected | Anonymous future rows, explicit economics, tooltip geometry, 44px targets, and accessible control names |
+| V5 Hallmark seals            | Implemented and inspected | Three-column full-name grid with selected detail and no overlapping prose                               |
+| V6 Progression spectacle     | Implemented and inspected | Reached-state and reduced-motion captures with concise persistent stage copy                            |
+| V7 Culture and network props | Implemented and inspected | Refreshed L3/L4 Culture, Network, transit, and Chicago frames                                           |
+| V8 Tooltip system            | Implemented and inspected | Portal placement, focus/Escape behavior, 33-tooltip corpus, optional inspector evidence                 |
+| V9 Screenshot story          | Implemented and inspected | Eight documentation frames plus the 51-frame whole-game review corpus                                   |
 
 ## Validation
 
@@ -260,12 +270,12 @@ edges of illustrated objects, keeping the center of gravity in the game world.
   "heaviest lines are used to draw the closest parts": a limited information budget and depth-line
   hierarchy make the crowded tumor field legible without turning it into a poster.
 
-## First implementation order
+## Recorded implementation order
 
 1. Deliver V1 and V3 together so the hero arena looks and feels immediately clickable.
 2. Deliver V4 and V5 in parallel to replace the dominant plain-button vocabulary with collectible
    machines and hallmark seals.
-3. Deliver V2 and V6 to bind the arena, progression rail, and unlocks into one fluorescent world.
+3. Deliver V2 and V6 to bind the arena, progression rail, and unlocks into one body-tissue world.
 4. Deliver V7 and V8 to complete the prestige-world reading and reduce persistent copy.
 5. Deliver V9 after the integrated build, then use the screenshot review to tune hierarchy rather
    than freeze a pixel-level target.

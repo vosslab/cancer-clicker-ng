@@ -16,6 +16,7 @@ export type TumorArenaProps = Readonly<{
   disabled: boolean;
   scene: ColonySceneRequest;
   cellsLabel: string;
+  growthProgress: number | undefined;
   magnitudeName: string | undefined;
   productionLabel: string;
   description: string;
@@ -140,6 +141,17 @@ export function TumorArena(props: TumorArenaProps): JSX.Element {
         <output class="tumor-arena__metric tumor-arena__metric--rate" aria-label="Arena output">
           {props.productionLabel}
         </output>
+        <Show when={props.growthProgress !== undefined}>
+          <span class="tumor-arena__growth-progress">
+            <span>Next cell</span>
+            <progress
+              max="100"
+              value={props.growthProgress ?? 0}
+              aria-label={`Next cell ${Math.round(props.growthProgress ?? 0)} percent complete`}
+            />
+            <strong>{Math.round(props.growthProgress ?? 0)}%</strong>
+          </span>
+        </Show>
         <RewardFeedback sequence={props.feedbackSequence} />
       </div>
       <HelpTooltip tooltip="Divide a visible cell">

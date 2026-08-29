@@ -62,8 +62,8 @@ export function describeCellSvg(props: CellProps): CellSvgStructure {
   const membrane: CellSvgPath = Object.freeze({
     className: "colony-cell__membrane",
     d: props.cell.membranePath,
-    fill: localSvgReference(props.definitionIds.cytoplasmGradient),
-    stroke: localSvgReference(props.definitionIds.membranePattern),
+    fill: localSvgReference(props.definitionIds.cytoplasmPattern),
+    stroke: "#f6c2b8",
   });
   const nucleus: CellSvgPath = Object.freeze({
     className: "colony-cell__nucleus",

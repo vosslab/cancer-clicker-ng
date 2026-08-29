@@ -1,22 +1,22 @@
 /* Compact visual boards for L3 culture and L4 contamination. */
 .culture-network-panel {
-  --board-accent: #77f1c3;
-  --board-accent-soft: rgb(119 241 195 / 23%);
+  --board-accent: #ca8cff;
+  --board-accent-soft: rgb(202 140 255 / 23%);
   display: grid;
   gap: 0.55rem;
   padding: 0.65rem;
-  border-color: rgb(111 241 195 / 55%);
+  border-color: rgb(202 140 255 / 55%);
   background:
-    radial-gradient(circle at 12% 0%, rgb(77 212 161 / 22%), transparent 31%),
-    linear-gradient(145deg, #123a32, #071e1c 76%);
+    radial-gradient(circle at 12% 0%, rgb(255 120 154 / 20%), transparent 31%),
+    linear-gradient(145deg, #281a3a, #130d20 76%);
 }
 .network-panel {
-  --board-accent: #82d4ff;
-  --board-accent-soft: rgb(130 212 255 / 23%);
-  border-color: rgb(130 212 255 / 57%);
+  --board-accent: #e18faa;
+  --board-accent-soft: rgb(225 143 170 / 23%);
+  border-color: rgb(225 143 170 / 57%);
   background:
-    radial-gradient(circle at 87% 0%, rgb(73 155 234 / 27%), transparent 33%),
-    linear-gradient(145deg, #12334a, #071923 76%);
+    radial-gradient(circle at 87% 0%, rgb(194 87 126 / 27%), transparent 33%),
+    linear-gradient(145deg, #4d253b, #24131d 76%);
 }
 .culture-network-board {
   display: grid;
@@ -25,7 +25,7 @@
   padding: 0.55rem;
   border: 1px solid color-mix(in srgb, var(--board-accent) 38%, transparent);
   border-radius: 0.85rem;
-  background: rgb(2 13 17 / 33%);
+  background: rgb(41 19 28 / 40%);
 }
 .culture-network-board__topline,
 .culture-network-board__status,
@@ -47,7 +47,7 @@
 .culture-network-compact-list,
 .culture-network-map__label {
   margin: 0;
-  color: #dcfff5;
+  color: #fff0e9;
   font-size: 0.74rem;
   font-weight: 750;
   letter-spacing: 0.035em;
@@ -68,7 +68,7 @@
   padding: 0.4rem 0.48rem;
   border-inline-start: 3px solid var(--board-accent);
   border-radius: 0.38rem;
-  color: #e7fff6;
+  color: #f5edf9;
   background: var(--board-accent-soft);
   font-size: 0.72rem;
   font-weight: 800;
@@ -93,11 +93,11 @@
   stroke-width: 2.2;
 }
 .culture-network-prop__body {
-  fill: rgb(7 20 29 / 74%);
+  fill: rgb(45 22 31 / 78%);
 }
 .culture-network-prop__body circle,
 .culture-network-prop__body ellipse {
-  fill: rgb(89 241 190 / 20%);
+  fill: rgb(255 120 154 / 20%);
 }
 .culture-network-prop__shadow {
   fill: rgb(0 0 0 / 38%);
@@ -112,20 +112,20 @@
   filter: saturate(0.35);
 }
 .culture-network-prop--ready {
-  color: #92ffd2;
-  filter: drop-shadow(0 0 0.28rem rgb(87 255 194 / 45%));
+  color: #ffd16f;
+  filter: drop-shadow(0 0 0.28rem rgb(255 209 111 / 45%));
 }
 .culture-network-prop--active {
   color: #ffce75;
   filter: drop-shadow(0 0 0.3rem rgb(255 183 84 / 46%));
 }
 .culture-network-prop--selected {
-  color: #e8fffc;
-  filter: drop-shadow(0 0 0.3rem rgb(175 255 245 / 54%));
+  color: #ffd7e0;
+  filter: drop-shadow(0 0 0.3rem rgb(255 120 154 / 48%));
 }
 .network-panel .culture-network-prop__body circle,
 .network-panel .culture-network-prop__body ellipse {
-  fill: rgb(129 211 255 / 20%);
+  fill: rgb(225 143 170 / 22%);
 }
 .culture-network-action-grid {
   display: grid;
@@ -145,9 +145,9 @@
   padding: 0.32rem 0.42rem;
   border: 1px solid color-mix(in srgb, var(--board-accent) 45%, transparent);
   border-radius: 0.7rem;
-  color: #eaffff;
+  color: #fff0e9;
   text-align: start;
-  background: linear-gradient(145deg, var(--board-accent-soft), rgb(4 14 21 / 58%));
+  background: linear-gradient(145deg, var(--board-accent-soft), rgb(44 23 31 / 64%));
   box-shadow: none;
 }
 .culture-network-action:hover:not(:disabled) {
@@ -174,7 +174,7 @@
   white-space: nowrap;
 }
 .culture-network-action__count {
-  color: #c5eee2;
+  color: #d2b5ad;
   font-size: 0.67rem;
   font-variant-numeric: tabular-nums;
 }
@@ -185,7 +185,7 @@
   gap: 0.35rem;
   padding: 0.35rem;
   border-radius: 0.68rem;
-  background: linear-gradient(145deg, rgb(70 177 242 / 14%), rgb(2 12 20 / 52%));
+  background: linear-gradient(145deg, rgb(194 87 126 / 15%), rgb(41 19 28 / 56%));
 }
 .culture-network-map::before {
   position: absolute;
@@ -229,14 +229,14 @@
 }
 .culture-network-board details {
   border-top: 1px solid color-mix(in srgb, var(--board-accent) 26%, transparent);
-  color: #c8ddd9;
+  color: #d6bdb5;
   font-size: 0.73rem;
   line-height: 1.36;
 }
 .culture-network-board summary {
   min-height: 2.75rem;
   padding: 0.58rem 0.2rem;
-  color: #ddfff8;
+  color: #ffe4da;
   cursor: pointer;
   font-size: 0.75rem;
   font-weight: 800;

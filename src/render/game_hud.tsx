@@ -1,12 +1,12 @@
 import { createMemo } from "solid-js";
 import type { JSX } from "solid-js";
 
-import { formatBigNum, formatQuantity } from "../bignum/format.js";
 import { cellProductionRate } from "../economy/production.js";
 import { stageDefinition } from "../stages/catalog.js";
 import type { GameState } from "../types/state.js";
 import { ActionIcon } from "./action_icon.js";
 import { ActionTooltip, HelpTooltip } from "./action_tooltip.js";
+import { formatCellInventory, formatCellRate, nextCellProgress } from "./cell_metrics.js";
 
 type GameHudProps = Readonly<{
   game: GameState;
@@ -33,17 +33,16 @@ export function GameHud(props: GameHudProps): JSX.Element {
       <h1 id="game-title" class="sr-only">
         Cancer Clicker NG
       </h1>
-      <div class="game-hud__mark" aria-label="Cancer Clicker Next Generation">
+      <div class="game-hud__mark" role="img" aria-label="Cancer Clicker Next Generation">
         <span aria-hidden="true">NG</span>
       </div>
       <output class="game-hud__metric" aria-label="Cell count">
-        <strong>
-          {formatQuantity(props.game.cells, props.game.numberFormat, 2, "cell", "cells")}
-        </strong>
+        <strong>{formatCellInventory(props.game.cells, props.game.numberFormat)}</strong>
+        <span>Next cell {Math.round(nextCellProgress(props.game.cells) ?? 0)}%</span>
       </output>
       <output class="game-hud__metric game-hud__metric--rate" aria-label="Cell production rate">
-        <strong>{formatBigNum(rate(), props.game.numberFormat, 2)}</strong>
-        <span>cells/s</span>
+        <strong>{formatCellRate(rate(), props.game.numberFormat)}</strong>
+        <span>Automatic growth</span>
       </output>
       <span class="game-hud__stage" title={`Active stage: ${stage().title}`}>
         <ActionIcon name="stage_advance" />

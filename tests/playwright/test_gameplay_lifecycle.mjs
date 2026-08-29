@@ -124,11 +124,11 @@ test("gameplay lifecycle production dist is playable, persistent, accessible, an
   await expect(page.getByRole("button", { name: "Divide cell" })).toBeFocused();
 
   const { cyclin, buyOne } = await earnAndBuyCyclin(page);
-  await expect(cyclin).toContainText("Owned level 1");
+  await expect(cyclin).toContainText("Owned 1");
   await expect(buyOne).toBeFocused();
   await page.reload();
   await expect(page.getByRole("heading", { name: "Offline progress" })).toHaveCount(0);
-  await expect(page.locator('[data-producer-id="producer"]')).toContainText("Owned level 1");
+  await expect(page.locator('[data-producer-id="producer"]')).toContainText("Owned 1");
   await expect(
     page
       .locator('[data-producer-id="producer"]')
@@ -220,7 +220,7 @@ test("gameplay lifecycle production dist awards meaningful offline production th
   await expect(page.getByRole("heading", { name: "Offline progress" })).toBeVisible();
   await expect(offlinePanel).toContainText(/Applied 1[2-9]\d{4,} ms/);
   await expect(page.getByLabel("Cell count")).not.toHaveText(beforeOffline ?? "");
-  await expect(cyclin).toContainText("Owned level 1");
+  await expect(cyclin).toContainText("Owned 1");
   expect(diagnostics).toEqual([]);
 });
 

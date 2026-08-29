@@ -1,0 +1,10 @@
+/* Shared readable text and focus colors measured against the canonical tissue background. */
+:root {
+  --copy: #fff4ed;
+  --muted: #d2b5ad;
+  --growth: #f08a9b;
+  --growth-bright: #ffe0dc;
+  --atp: #ffd66f;
+  --danger: #ff9b83;
+  --focus: #ffd66f;
+}

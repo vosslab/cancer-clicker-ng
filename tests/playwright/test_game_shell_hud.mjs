@@ -12,6 +12,11 @@ test("the 1280 by 800 shell keeps a compact scoreboard and one active evolution 
 
     const hud = page.locator(".game-hud");
     await expect(hud).toBeVisible();
+    await expect(page.getByRole("img", { name: "Cancer Clicker Next Generation" })).toBeVisible();
+    await expect(page.locator('.game-reward-dock[role="log"]')).toHaveAttribute(
+      "aria-label",
+      "Recent rewards",
+    );
     await expect(page.getByRole("status", { name: "Cell count", exact: true })).toBeVisible();
     await expect(
       page.getByRole("status", { name: "Cell production rate", exact: true }),

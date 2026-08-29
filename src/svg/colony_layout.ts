@@ -772,13 +772,13 @@ function slotFor(
   // directly targetable while the allocator continues to enforce containment
   // and collision policy from the same authoritative dimensions.
   const rx = isOpeningCell
-    ? 106
+    ? 98
     : (8.25 + random() * 3.5) *
       scale *
       (isEarlyMicrocolony ? 1.8 : 1) *
       (1 + (random() - 0.5) * disorganization * 0.24);
   const ry = isOpeningCell
-    ? 88
+    ? 98
     : (7 + random() * 3) *
       scale *
       (isEarlyMicrocolony ? 1.8 : 1) *

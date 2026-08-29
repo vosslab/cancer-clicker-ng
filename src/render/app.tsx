@@ -1,6 +1,5 @@
 import { For, Show, createSignal, onCleanup, onMount } from "solid-js";
 import type { JSX } from "solid-js";
-import { formatBigNum, formatQuantity } from "../bignum/format.js";
 import { GAME_COPY } from "../content/game_copy.js";
 import { cellProductionRate } from "../economy/production.js";
 import { stageDefinition } from "../stages/catalog.js";
@@ -26,6 +25,7 @@ import type { EvolutionTab } from "./game_ui_state.js";
 import { InspectorDrawer } from "./inspector_drawer.js";
 import { HelpTooltip } from "./action_tooltip.js";
 import { ActionIcon } from "./action_icon.js";
+import { formatCellInventory, formatCellRate } from "./cell_metrics.js";
 import type { SvgIconName } from "../svg/icons.js";
 import { createGameController, persistWithStorage } from "./game_controller.js";
 import type {
@@ -184,14 +184,8 @@ export function App(props: AppProps): JSX.Element {
 
   function openSpecimenInspector(invoker: HTMLElement): void {
     const stage = stageDefinition(controller.game.currentStage);
-    const cells = formatQuantity(
-      controller.game.cells,
-      controller.game.numberFormat,
-      2,
-      "cell",
-      "cells",
-    );
-    const rate = formatBigNum(cellProductionRate(controller.game), controller.game.numberFormat, 2);
+    const cells = formatCellInventory(controller.game.cells, controller.game.numberFormat);
+    const rate = formatCellRate(cellProductionRate(controller.game), controller.game.numberFormat);
     gameUi.openInspector(
       {
         id: `specimen:${stage.id}`,
@@ -200,7 +194,7 @@ export function App(props: AppProps): JSX.Element {
         summary: `${GAME_COPY.mastheadSubtitle} ${stage.gameplayIdentity}`,
         details: [
           { label: "Cells", value: cells },
-          { label: "Production", value: `${rate} cells/s` },
+          { label: "Production", value: rate },
           { label: "Pressure", value: stage.pressure },
           { label: "Opportunity", value: stage.opportunity },
         ],
@@ -304,7 +298,8 @@ export function App(props: AppProps): JSX.Element {
   }
 
   onMount(() => {
-    timer = setInterval(advance, 1000);
+    // Four visible updates per second keep growth legible without a render-frame simulation loop.
+    timer = setInterval(advance, 250);
     if (props.debug) window.addEventListener("keydown", handleDebugKeydown);
     onCleanup(() => {
       if (timer !== undefined) clearInterval(timer);

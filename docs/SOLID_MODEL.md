@@ -53,9 +53,22 @@ without changing its action. Producer rows use that existing buy surface for eco
 so hidden help is absolutely positioned and contributes no track or row height.
 
 Tooltips open for pointer, focus, and pointer-down input, expose `role="tooltip"`, and connect to
-the trigger with `aria-describedby`. The optional specimen drawer moves focus to its close control,
-closes with Escape, and restores focus to its invoker. These are presentation routes; no tooltip or
-drawer state changes gameplay.
+the trigger with `aria-describedby`. Escape dismisses a tooltip without moving its trigger focus.
+The optional specimen drawer moves focus to its close control, closes with Escape, and restores
+focus to its invoker. These are presentation routes; no tooltip or drawer state changes gameplay.
+
+## Live update cadence
+
+`App` owns one 250ms timer and disposes it with the component. Each callback advances elapsed
+simulation time through `controller.tick()`. The controller retains the established atomic
+boundary: it computes the next snapshot, persists it, and reconciles the Solid store only after the
+write succeeds. Components continue to read one canonical store; no interpolated display value,
+worker mirror, or WebAssembly state duplicates the durable numbers.
+
+The cadence is deliberately slower than animation frames and faster than the former one-second
+step. CSS owns continuous decorative motion. TypeScript owns economy arithmetic and canonical
+`BigNum`; a native or WebAssembly backend requires new profiling evidence and a separate design
+decision.
 
 ## Responsive and motion contract
 
@@ -77,3 +90,6 @@ isolation. Production-dist Playwright covers transformed JSX, rendered-cell poin
 keyboard parity, focus restoration, accessible names, responsive layout, reduced motion, and
 browser-local saves. `./check_codebase.sh` is the canonical aggregate TypeScript gate. Build and
 captured-board review are separate one-time evidence when visual work changes.
+`tools/capture_visual_review.mjs` owns the reproducible whole-board viewport, tooltip, drawer,
+success, error, recovery, offline, forced-colors, geometry, touch-target, palette, Axe, and
+ARIA-tree evidence. Its output is ignored and is not a pixel-regression test.

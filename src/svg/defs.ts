@@ -31,7 +31,8 @@ export type ColonySvgDefinitionIds = Readonly<{
   nucleusGradient: SceneSvgId;
   hypoxiaGradient: SceneSvgId;
   vesselGradient: SceneSvgId;
-  membranePattern: SceneSvgId;
+  cytoplasmPattern: SceneSvgId;
+  matrixPattern: SceneSvgId;
   plateMask: SceneSvgId;
 }>;
 
@@ -96,23 +97,24 @@ export function createColonySvgDefinitions(scene: ColonySceneRequest): ColonySvg
     nucleusGradient: sceneSvgId(trustedScene, "nucleus-gradient"),
     hypoxiaGradient: sceneSvgId(trustedScene, "hypoxia-gradient"),
     vesselGradient: sceneSvgId(trustedScene, "vessel-gradient"),
-    membranePattern: sceneSvgId(trustedScene, "membrane-pattern"),
+    cytoplasmPattern: sceneSvgId(trustedScene, "cytoplasm-pattern"),
+    matrixPattern: sceneSvgId(trustedScene, "matrix-pattern"),
     plateMask: sceneSvgId(trustedScene, "plate-mask"),
   });
   const definitions = Object.freeze([
     definition("radialGradient", ids.tissueGradient, { cx: "42%", cy: "35%", r: "76%" }, [
-      definitionNode("stop", { offset: "0%", stopColor: "#6f9d92", stopOpacity: 0.94 }),
-      definitionNode("stop", { offset: "66%", stopColor: "#25555a", stopOpacity: 0.98 }),
-      definitionNode("stop", { offset: "100%", stopColor: "#102f37", stopOpacity: 1 }),
+      definitionNode("stop", { offset: "0%", stopColor: "#d9868f", stopOpacity: 0.96 }),
+      definitionNode("stop", { offset: "66%", stopColor: "#9f4e62", stopOpacity: 0.98 }),
+      definitionNode("stop", { offset: "100%", stopColor: "#5d293b", stopOpacity: 1 }),
     ]),
     definition(
       "linearGradient",
       ids.cytoplasmGradient,
       { x1: "16%", y1: "8%", x2: "84%", y2: "92%" },
       [
-        definitionNode("stop", { offset: "0%", stopColor: "#9abec0", stopOpacity: 0.96 }),
-        definitionNode("stop", { offset: "56%", stopColor: "#527d83", stopOpacity: 0.94 }),
-        definitionNode("stop", { offset: "100%", stopColor: "#284b56", stopOpacity: 0.98 }),
+        definitionNode("stop", { offset: "0%", stopColor: "#f3b7a9", stopOpacity: 0.98 }),
+        definitionNode("stop", { offset: "56%", stopColor: "#cf7080", stopOpacity: 0.97 }),
+        definitionNode("stop", { offset: "100%", stopColor: "#8e3d59", stopOpacity: 0.99 }),
       ],
     ),
     definition(
@@ -120,8 +122,9 @@ export function createColonySvgDefinitions(scene: ColonySceneRequest): ColonySvg
       ids.nucleusGradient,
       { x1: "20%", y1: "12%", x2: "80%", y2: "88%" },
       [
-        definitionNode("stop", { offset: "0%", stopColor: "#9664a2", stopOpacity: 0.98 }),
-        definitionNode("stop", { offset: "100%", stopColor: "#452859", stopOpacity: 1 }),
+        definitionNode("stop", { offset: "0%", stopColor: "#9e6a9f", stopOpacity: 0.98 }),
+        definitionNode("stop", { offset: "58%", stopColor: "#674066", stopOpacity: 1 }),
+        definitionNode("stop", { offset: "100%", stopColor: "#3a223e", stopOpacity: 1 }),
       ],
     ),
     definition("radialGradient", ids.hypoxiaGradient, { cx: "50%", cy: "50%", r: "60%" }, [
@@ -141,9 +144,43 @@ export function createColonySvgDefinitions(scene: ColonySceneRequest): ColonySvg
     ),
     definition(
       "pattern",
-      ids.membranePattern,
-      { width: 8, height: 8, patternUnits: "userSpaceOnUse" },
-      [definitionNode("circle", { cx: 2, cy: 2, r: 0.7, fill: "#d7e7df", opacity: 0.18 })],
+      ids.cytoplasmPattern,
+      { width: 28, height: 24, patternUnits: "userSpaceOnUse" },
+      [
+        definitionNode("rect", {
+          x: 0,
+          y: 0,
+          width: 28,
+          height: 24,
+          fill: "#c96f7f",
+        }),
+        definitionNode("circle", { cx: 7, cy: 7, r: 1.8, fill: "#ffd7bd", opacity: 0.42 }),
+        definitionNode("circle", { cx: 21, cy: 17, r: 1.4, fill: "#6c334f", opacity: 0.42 }),
+        definitionNode("path", {
+          d: "M 12 18 C 15 14 18 15 20 11",
+          fill: "none",
+          stroke: "#f0a277",
+          strokeWidth: 1.4,
+          opacity: 0.38,
+        }),
+      ],
+    ),
+    definition(
+      "pattern",
+      ids.matrixPattern,
+      { width: 110, height: 82, patternUnits: "userSpaceOnUse" },
+      [
+        definitionNode("rect", { x: 0, y: 0, width: 110, height: 82, fill: "#28141c" }),
+        definitionNode("path", {
+          d: "M -12 56 C 18 19 54 77 122 28",
+          fill: "none",
+          stroke: "#70404d",
+          strokeWidth: 9,
+          opacity: 0.28,
+        }),
+        definitionNode("circle", { cx: 24, cy: 23, r: 4, fill: "#a55f70", opacity: 0.3 }),
+        definitionNode("circle", { cx: 83, cy: 61, r: 3, fill: "#c07a78", opacity: 0.24 }),
+      ],
     ),
     definition(
       "mask",

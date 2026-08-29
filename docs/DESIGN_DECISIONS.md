@@ -580,6 +580,48 @@ test-only fixture files.
 
 **Owner.** [REPO_STYLE.md](REPO_STYLE.md)
 
+### Body-tissue visual system, discrete cells, and four-hertz live cadence
+
+**Decision.** The game uses one warm body-tissue visual system built from marrow, burgundy,
+eosin-like rose, arterial coral, hematoxylin plum, cream, and ATP amber. Blue and green are not the
+board or gameplay theme. The opening transformed cell uses an irregular membrane, granular
+cytoplasm, and an eccentric nucleus without a surrounding eye-like macro silhouette.
+
+Player-facing inventory remains discrete: values below 1,000 display as whole cells, while the
+continuous `BigNum` balance remains authoritative for costs and simulation. Partial accrual is a
+separate percentage toward the next cell, and sub-one production is written as time per whole cell,
+for example `1 cell / 10 s`. The live controller advances at four visible updates per second through
+the existing persist-before-reconcile tick; TypeScript and canonical `BigNum` remain the computation
+backend.
+
+**Why.** Green laboratory panels, cyan field lines, and blue-black surfaces implied a generic
+biology dashboard or science-fiction display rather than body tissue. A decimal cell count also
+confused a continuous resource accumulator with a countable biological object. The former
+one-second UI timer, rather than arithmetic cost, made numbers feel slow. One-time profiling of an
+active state found economy advancement and full-save serialization far below the budget for a
+four-hertz loop, so a WebAssembly boundary would solve no measured bottleneck while complicating
+the static Pages build, type boundary, debugging, and persistence story.
+
+**Consequence.** Palette roles retain text, icon, border, native state, and geometry companions so
+color is never the sole cue. Locked producer identities stay hidden until ownership, affordability,
+or an already-primed assay action establishes discovery. A known row labels Owned, Output, Buy,
+Cost, and Adds directly; tooltips provide redundant context rather than owning core economics.
+
+Tooltips render through a document-level portal, choose a viewport-fitting side, remain outside
+layout flow, and hide until their measured position is ready. `tools/capture_visual_review.mjs`
+captures five widths, all six evolution views, and every tooltip rendered by the seeded corpus. It
+checks viewport margin, text overflow, trigger overlap, rack overlap, responsive content fit,
+overflow, touch targets, console diagnostics, served palette, Axe, and ARIA-tree evidence. The
+ignored manifest has a read-only verification mode. `@axe-core/playwright` remains development-only
+and outside the static artifact. Reconsider WASM only after supported-device profiling identifies
+a sustained engine bottleneck that cannot be removed inside the TypeScript domain.
+
+**Owner.** `src/style.css`, `src/game_ui.css`, `src/tumor_arena.css`,
+`src/evolution_dock.css`, `src/upgrade_rack.css`, `src/culture_network_ui.css`,
+`src/render/app.tsx`, `src/render/action_tooltip.tsx`, `src/render/game_hud.tsx`,
+`src/render/game_reward_dock.tsx`, `src/render/cell_metrics.ts`, and
+`tools/capture_visual_review.mjs`
+
 ## Dependencies
 
 ### Living progression and bounded tumor motion

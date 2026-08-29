@@ -257,14 +257,39 @@ function depth(
 export const STAGE_MORPHOLOGY_FIXTURES = {
   transformed_cell: {
     stageId: "transformed_cell",
-    referenceRowIds: ["stage:transformed_cell", "morphology:nuclear_irregularity"],
+    referenceRowIds: [
+      "stage:transformed_cell",
+      "morphology:nuclear_irregularity",
+      "morphology:pleomorphism",
+    ],
     contributions: [
       add(
         "nuclearEccentricity",
-        0.04,
+        0.32,
         "stage:transformed_cell",
-        "slightly eccentric nucleus",
+        "eccentric enlarged nucleus",
         "morphology:nuclear_irregularity",
+      ),
+      add(
+        "nuclearToCytoplasmicRatio",
+        0.14,
+        "stage:transformed_cell",
+        "enlarged nucleus",
+        "morphology:nuclear_irregularity",
+      ),
+      add(
+        "asymmetry",
+        0.18,
+        "stage:transformed_cell",
+        "irregular cell contour",
+        "morphology:pleomorphism",
+      ),
+      add(
+        "membraneWaviness",
+        0.12,
+        "stage:transformed_cell",
+        "irregular cell contour",
+        "morphology:pleomorphism",
       ),
     ],
   },

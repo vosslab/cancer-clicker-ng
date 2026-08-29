@@ -18,7 +18,9 @@ export function GameBoard(props: GameBoardSlots): JSX.Element {
       </section>
       <section class="game-board__evolution" aria-label="Tumor progression">
         {props.tabs}
-        <div class="game-board__evolution-content">{props.evolution}</div>
+        <div class="game-board__evolution-content" tabIndex={0}>
+          {props.evolution}
+        </div>
       </section>
       <aside class="game-board__rack" aria-label="Division apparatus store">
         {props.rack}

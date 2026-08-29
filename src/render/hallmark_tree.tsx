@@ -43,7 +43,6 @@ import { LateSenescencePanel } from "./late_senescence_panel.js";
 import type { CheckpointId, GameState, InflammationEpisode, TriageAction } from "../types/state.js";
 import type { HallmarkId, MutationId, OfferId, RouteId } from "../types/ids.js";
 import { HallmarkSigil } from "../svg/evolution_sigils.js";
-import { HelpTooltip } from "./action_tooltip.js";
 
 type HallmarkTreeProps = Readonly<{
   game: GameState;
@@ -58,21 +57,18 @@ type HallmarkBranch =
       number: number;
       definition: CoreSixHallmarkDefinition;
       status: BranchStatus;
-      unlock: string;
     }>
   | Readonly<{
       family: "extended";
       number: number;
       definition: ExtendedHallmarkDefinition;
       status: BranchStatus;
-      unlock: string;
     }>
   | Readonly<{
       family: "late";
       number: number;
       definition: LateHallmarkDefinition;
       status: BranchStatus;
-      unlock: string;
     }>;
 
 const CHECKPOINTS = [
@@ -89,23 +85,6 @@ const TRIAGE_ACTIONS = [
 function readableIdentifier(value: string): string {
   const words = value.replace(/[-_]/g, " ");
   return `${words.charAt(0).toUpperCase()}${words.slice(1)}`;
-}
-
-function mechanicSummary(definition: CoreSixHallmarkDefinition): string {
-  switch (definition.mechanicClass) {
-    case "division-allocation":
-      return "Allocate division effort between an immediate burst and cycle fill.";
-    case "checkpoint-routing":
-      return "Bypass one named growth checkpoint and accept its visible pressure.";
-    case "damage-triage":
-      return "Resolve a pending damage event by absorbing, repairing, or losing its region.";
-    case "replicative-budget":
-      return "Spend telomerase charges to refill a threatened region or bank a reserve floor.";
-    case "perfusion-layout":
-      return "Link or unlink a viable region to trade ATP upkeep for regional perfusion.";
-    case "route-commitment":
-      return "Commit a bounded cell parcel to one revealed route.";
-  }
 }
 
 function ownsHallmark(game: GameState, hallmarkId: HallmarkId): boolean {
@@ -135,19 +114,6 @@ function lateHallmarkBranchStatus(
   return hasReachedLateHallmarkActivation(game.currentStage, definition.key)
     ? "available"
     : "locked";
-}
-
-function lateMechanicSummary(definition: LateHallmarkDefinition): string {
-  switch (definition.mechanicClass) {
-    case "phenotype-switching":
-      return "Assign an eligible region a durable phenotype with production, route-risk, and pressure tradeoffs.";
-    case "program-editing":
-      return "Spend ATP to assign a cooldown-limited program to an owned hallmark target.";
-    case "community-composition":
-      return "Install one exact saved two-niche composition from a rotating three-card offer.";
-    case "senescence-management":
-      return "Keep a nondividing secretory region or clear its complete local projection.";
-  }
 }
 
 function LateHallmarkAcquiredControls(
@@ -817,34 +783,20 @@ function branchCatalog(game: GameState): readonly HallmarkBranch[] {
     number: index + 1,
     definition,
     status: branchStatus(game, definition),
-    unlock: `Unlocks at ${readableIdentifier(definition.unlock.stageId)}.`,
   }));
   const extended = EXTENDED_HALLMARK_CATALOG.map((definition, index) => ({
     family: "extended" as const,
     number: index + 7,
     definition,
     status: extendedHallmarkBranchStatus(game, definition),
-    unlock: `Unlocks at ${readableIdentifier(definition.unlock.stageId)}.`,
   }));
   const late = LATE_HALLMARK_CATALOG.map((definition, index) => ({
     family: "late" as const,
     number: index + 11,
     definition,
     status: lateHallmarkBranchStatus(game, definition),
-    unlock: `Unlocks at ${readableIdentifier(definition.activation.stageId)}.`,
   }));
   return [...core, ...extended, ...late];
-}
-
-function branchSummary(branch: HallmarkBranch): string {
-  switch (branch.family) {
-    case "core":
-      return mechanicSummary(branch.definition);
-    case "extended":
-      return `${readableIdentifier(branch.definition.mechanicClass)} creates a durable tradeoff.`;
-    case "late":
-      return lateMechanicSummary(branch.definition);
-  }
 }
 
 function BranchControls(props: HallmarkTreeProps, branch: HallmarkBranch): JSX.Element {
@@ -885,29 +837,22 @@ export function HallmarkTree(props: HallmarkTreeProps): JSX.Element {
         <For each={branches()}>
           {(branch) => {
             const isActive = (): boolean => activeBranch()?.definition.id === branch.definition.id;
-            const tooltip = (): string =>
-              `${branch.definition.displayName}. ${readableIdentifier(branch.status)}. ${branchSummary(branch)} ${branch.unlock}`;
             return (
               <li data-state={branch.status}>
-                <HelpTooltip tooltip={tooltip()}>
-                  {(bindings) => (
-                    <button
-                      {...bindings}
-                      class="evolution-hallmarks__sigil-button"
-                      classList={{ "is-active": isActive() }}
-                      type="button"
-                      aria-pressed={isActive()}
-                      aria-label={`${branch.definition.displayName}, ${branch.status}`}
-                      onClick={() => setSelectedId(branch.definition.id)}
-                    >
-                      <HallmarkSigil name={branch.definition.id} state={branch.status} />
-                      <span class="evolution-hallmarks__name">{branch.definition.displayName}</span>
-                      <span class="evolution-hallmarks__state">
-                        {readableIdentifier(branch.status)}
-                      </span>
-                    </button>
-                  )}
-                </HelpTooltip>
+                <button
+                  class="evolution-hallmarks__sigil-button"
+                  classList={{ "is-active": isActive() }}
+                  type="button"
+                  aria-pressed={isActive()}
+                  aria-label={`${branch.definition.displayName}, ${branch.status}`}
+                  onClick={() => setSelectedId(branch.definition.id)}
+                >
+                  <HallmarkSigil name={branch.definition.id} state={branch.status} />
+                  <span class="evolution-hallmarks__name">{branch.definition.displayName}</span>
+                  <span class="evolution-hallmarks__state">
+                    {readableIdentifier(branch.status)}
+                  </span>
+                </button>
               </li>
             );
           }}

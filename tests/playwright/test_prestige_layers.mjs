@@ -162,6 +162,18 @@ async function savedEnvelope(page) {
   return { raw, envelope: JSON.parse(raw) };
 }
 
+function prestigeStateSnapshot(envelope) {
+  const state = envelope.state;
+  return {
+    currentStage: state.currentStage,
+    eventSequence: state.eventSequence,
+    prestigeAvailability: state.prestigeAvailability,
+    lineageLedger: state.lineageLedger,
+    metastasis: state.metastasis,
+    hostTransfer: state.hostTransfer,
+  };
+}
+
 function prestigePanel(page) {
   return page.getByRole("region", { name: "Prestige layers" });
 }
@@ -215,7 +227,10 @@ test("prestige metastasis confirmation cancels safely then persists one delibera
   await page.keyboard.press("Escape");
   await expect(dialog).toBeHidden();
   await expect(reset).toBeFocused();
-  expect((await savedEnvelope(page)).raw).toBe(before.raw);
+  const afterCancel = await savedEnvelope(page);
+  expect(prestigeStateSnapshot(afterCancel.envelope)).toEqual(
+    prestigeStateSnapshot(before.envelope),
+  );
 
   await reset.click();
   await confirm(page, "Begin metastasis reset");

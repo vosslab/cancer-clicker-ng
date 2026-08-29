@@ -87,13 +87,13 @@ explanatory text at the moment it is useful.
 
 ## Palette and non-color cues
 
-| Role                                  | Direction                                              | Companion cue                                           |
-| ------------------------------------- | ------------------------------------------------------ | ------------------------------------------------------- |
-| Board canvas                          | Deep venous navy with arterial and oxygenated accents  | Stable panel hierarchy and generous spacing             |
-| Action controls                       | Coral growth, oxygenated cyan, and ATP amber           | Native label, visible focus, enabled state              |
-| Cytoplasm and nucleus                 | Eosin-like rose tissue with a hematoxylin-purple core  | Contour, volume, depth, and overlap                     |
-| Hypoxia, necrosis, and vascular state | Purple, ash, arterial coral, or contrasting route line | Region, void, density, directional placement, and shape |
-| Network connection                    | Bright outline and diamond/route geometry              | Connected-site position and label                       |
+| Role                                  | Direction                                               | Companion cue                                           |
+| ------------------------------------- | ------------------------------------------------------- | ------------------------------------------------------- |
+| Board canvas                          | Deep marrow and burgundy tissue with quiet stroma bands | Stable panel hierarchy and generous spacing             |
+| Action controls                       | Eosin rose, arterial coral, cream, and ATP amber        | Native label, visible focus, enabled state              |
+| Cytoplasm and nucleus                 | Eosin-like rose tissue with a hematoxylin-purple core   | Contour, volume, depth, and overlap                     |
+| Hypoxia, necrosis, and vascular state | Purple, ash, arterial coral, or contrasting route line  | Region, void, density, directional placement, and shape |
+| Network connection                    | Cream outline and amber diamond/route geometry          | Connected-site position and label                       |
 
 Color never carries stage, selection, action availability, depth, or biological status alone.
 Meaningful text and icons are reviewed in their actual backgrounds, and every interaction has a

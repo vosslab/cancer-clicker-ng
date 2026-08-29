@@ -2,6 +2,54 @@
 
 ### Additions and New Features
 
+- Rebuilt the complete tooltip screenshot lane. The visual-review harness now visits all six
+  evolution views, captures every tooltip rendered by its seeded Stage, Culture, and Network
+  corpus, and rejects viewport escape, clipped text, trigger overlap, or purchase-help intrusion
+  into rack content. The README capture now includes a dedicated explicit-price decision frame.
+
+- Replaced the blue/green laboratory presentation with a warm body-tissue system spanning the
+  board, tumor SVG, rack, Culture, Network, prestige, transit, and ending surfaces. Shared text
+  tokens have a generated 5.5:1 contrast audit on the marrow background.
+
+- Reworked the opening transformed cell so it reads as an irregular granular cell with an
+  eccentric nucleus rather than an eye inside scanner rings. The hallmark deck now uses readable
+  full names and selected detail without overlapping tooltip prose.
+
+- Added whole-cell presentation helpers: inventory below 1,000 is discrete, partial automatic
+  accrual is next-cell progress, and sub-one rates use time per cell. The controller now updates at
+  four hertz; profiling did not justify adding a WebAssembly backend.
+
+- Made the upgrade rack a progressively disclosed decision surface. Normal play shows discovered
+  rows and at most the next two anonymous targets; already primed assay targets remain discovered.
+  Known rows explicitly label Owned, Output, Buy, Cost, and Adds so the tooltip is supporting help,
+  not the sole price explanation.
+
+- Corrective verification passed with 371 deterministic Node tests, 49 production-browser tests,
+  1,555 Python checks against the complete nonignored candidate projection, and a verified 51-frame
+  visual corpus containing 33 rendered tooltips, all six evolution views, 11 zero-violation Axe
+  audits, zero tooltip diagnostics, and zero served green candidates.
+
+- Added a whole-game visual-review harness with 320, 480, 768, 1280, and 1920 px screenshots;
+  focused-tooltip, specimen-drawer, success, persistence-error, corrupt-save recovery,
+  offline-return, and forced-colors states; panel geometry, stacked-panel content fit, overflow,
+  target-size, console, served-palette, Axe, and ARIA-tree evidence; an ignored contact sheet and
+  manifest; and read-only existing-corpus verification.
+
+- Added the complete HCI/UI review and measured palette-contrast audit, with explicit separation
+  between expert rendered inspection, reproducible browser evidence, permanent behavior tests,
+  one-time performance profiling, and future participant acceptance.
+
+- Added a learner-focused task model and guideline ledger to the visual review. It ties the first
+  session, whole-cell model, producer economics, discovery, help, mode changes, and recovery to
+  cognitive-walkthrough evidence and states the remaining participant-study limits.
+
+- Added the development-only `@axe-core/playwright` accessibility auditor. Its first review found
+  one serious prohibited-ARIA rule on two nodes; the NG mark now has image semantics and recent
+  rewards is a chronological log. Recording incomplete results then exposed and fixed absent
+  tooltip description IDs, roleless disabled-help wrappers, and a roleless stage-number label.
+  Five audited states now have zero violation rules and no unresolved semantic incomplete rule;
+  gradient-based contrast candidates remain explicit for measured and rendered manual review.
+
 - Historical evidence: completed M22 autonomous local-candidate closure with fresh independent
   release audit PASS, 5/5 source checks plus 372 Node tests, 48/48 production-browser tests,
   Pages workflow verification, selected zero-blocker balance evidence, and a post-report 1,520-test
@@ -142,6 +190,21 @@
 
 ### Behavior or Interface Changes
 
+- Removed the generic green/mint theme from active and legacy visual sources. Culture now uses a
+  violet/rose identity, Network remains oxygenated blue, and affordable machinery uses cyan while
+  tumor, vascular, hypoxia, and ATP roles remain rose, coral, violet, and amber.
+
+- Increased live simulation and visible-number updates from one to four times per second while
+  retaining the controller's persist-before-reconcile guarantee. One-time profiling identified the
+  one-second scheduler as the bottleneck and found no justification for a WebAssembly backend.
+
+- Added Escape dismissal to enabled and disabled tooltip routes without moving trigger focus,
+  expanded the producer assay target to 44 x 44 px, made the buy surface fill its row, and reduced
+  the optional inspector's desktop overlap.
+
+- Removed the fixed minimum height that left stacked evolution panels visually empty at phone and
+  tablet widths, and mapped the stage sigil to readable system colors in forced-colors mode.
+
 - Reworked the first-view interaction grammar around the cancer-cell viewpoint. Rendered cells now
   carry their own pointer response and visible count update, accepted divisions retain the local
   cleavage-and-daughter burst, and the persistent targeting reticle is removed.
@@ -169,6 +232,9 @@
 
 ### Fixes and Maintenance
 
+- Raised base disabled-control copy to the 5.5:1 house contrast target and verified meaningful
+  shared, tooltip, culture, selected, locked, and unaffordable text/backplate pairs.
+
 - Reconciled the post-M22 interface correction from base HEAD
   `d4230ce1a9abe6d52e00329365c7e29764027b3a`: 5/5 source checks with 368 Node tests,
   a production build, 49/49 browser tests, and seven fixed-clock 1280 x 800 captures. The broader
@@ -184,6 +250,12 @@
   reducer suite remains the permanent owner of the no-cell-minting contract, while the browser
   journey verifies visible substrate and ATP behavior in the presence of normal background
   production.
+
+- Made the recovery browser journey verify blocked-write, replacement-write, and later-action
+  ordering without asserting an exact write count that races the four-hertz live scheduler.
+
+- Made prestige-cancel coverage compare the reset-owned durable state instead of requiring an
+  identical save timestamp and active-time clock while the confirmation dialog is open.
 
 - Recorded the permanent real-cell-target layout contract, the one-time sparse-void sweep, the
   semantic-only regression boundary, canonical balance provenance, and exact schema-8 cutover.
@@ -259,6 +331,15 @@
   domain schema, validator, and supported examples exist.
 
 ### Developer Tests and Notes
+
+- The complete visual review passed all five `./check_codebase.sh` lanes with 369 Node tests, a
+  rebuilt production artifact, all 49 production-browser tests, all 1,533 Python tests, the
+  12-frame responsive/edge-state visual corpus and read-only verification, and the seven
+  fixed-state README captures. The final manifest reports zero overflow, zero stacked evolution
+  dead space, zero undersized visible buttons, exact desktop column alignment, bounded overlays,
+  five zero-violation Axe audits with no unresolved semantic incomplete rule, ARIA-tree evidence,
+  no browser diagnostics, and zero served green candidates. `npm audit` reports zero
+  vulnerabilities and the development-only Axe dependency is absent from `dist/`.
 
 - Current interface verification passed all five `./check_codebase.sh` lanes with 368 Node tests,
   the production build, and all 49 production-browser tests. Seven fresh 1280 x 800 captures passed

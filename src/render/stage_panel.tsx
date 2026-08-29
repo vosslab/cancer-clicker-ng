@@ -9,6 +9,7 @@ import type { GameState } from "../types/state.js";
 import { StageSigil } from "../svg/evolution_sigils.js";
 import { ActionIcon } from "./action_icon.js";
 import { HelpTooltip } from "./action_tooltip.js";
+import { formatCellInventory } from "./cell_metrics.js";
 
 type StagePanelProps = Readonly<{
   game: GameState;
@@ -53,7 +54,7 @@ function vesselLinkCount(game: GameState): number {
 }
 
 function modeReadout(game: GameState, mode: StageUiMode): ModeReadout {
-  const cellCount = formatBigNum(game.cells, game.numberFormat, 2);
+  const cellCount = formatCellInventory(game.cells, game.numberFormat);
   const substrate = formatBigNum(game.substrate, game.numberFormat, 2);
   const atp = formatBigNum(game.atp, game.numberFormat, 2);
   const producerLevels = game.producerLevels.reduce((total, level) => total + level.level, 0);
@@ -62,7 +63,7 @@ function modeReadout(game: GameState, mode: StageUiMode): ModeReadout {
     case "cell-focus":
       return {
         heading: "Cell focus",
-        metrics: [`Cells ${cellCount}`, `Charge ${game.manualDivisionCharge}`],
+        metrics: [cellCount, `Charge ${game.manualDivisionCharge}`],
       };
     case "colony-grid":
       return {
@@ -108,7 +109,7 @@ function modeReadout(game: GameState, mode: StageUiMode): ModeReadout {
         metrics: [`Seeded ${game.seededSites.length}`, `Pressure ${pressures}`],
       };
     case "collapse-summary":
-      return { heading: "Collapse", metrics: [`Cells ${cellCount}`, `Pressure ${pressures}`] };
+      return { heading: "Collapse", metrics: [cellCount, `Pressure ${pressures}`] };
     case "culture-bench": {
       const l3 = game.prestigeAvailability.some(
         (entry) => entry.id === "L3" && entry.status === "earned",
@@ -161,7 +162,7 @@ export function StagePanel(props: StagePanelProps): JSX.Element {
           <p class="evolution-stage__mode">{readableMode(current().uiMode)}</p>
         </div>
       </header>
-      <div class="evolution-stage__numbers" aria-label={readout().heading}>
+      <div class="evolution-stage__numbers" role="group" aria-label={readout().heading}>
         <For each={readout().metrics}>{(metric) => <output>{metric}</output>}</For>
       </div>
       <Show

@@ -20,8 +20,8 @@ Open the URL in a browser and use `Ctrl-C` in the terminal to stop the foregroun
 1. Click a visible cancer cell in the tumor arena. Keyboard users can focus **Divide cell** and
    press Enter or Space.
 2. Read the cell total and cells-per-second rate in the shallow scoreboard.
-3. Buy an affordable illustrated machine from the upgrade rack; each row shows its cost, owned
-   level, and marginal production.
+3. Buy an affordable illustrated machine from the upgrade rack; each known row explicitly labels
+   Owned, Output, Buy, Cost, and Adds. Unknown future targets remain anonymous until discovered.
 4. Use the evolution dock's icon tabs as new stage and hallmark decisions become available.
    Focusable tooltips and the specimen drawer provide optional biology detail.
 5. Reload the same local URL to continue from browser-local progress. A return after time away may
@@ -48,6 +48,9 @@ Run each named front door for the question it answers:
 ```bash
 ./check_codebase.sh
 ./build_github_pages.sh
+node tools/capture_visual_review.mjs
+node tools/capture_visual_review.mjs --verify-existing
+node --import tsx tools/capture_readme_screenshots.mjs
 ./run_playwright_tests.sh --build
 source source_me.sh && python3 devel/verify_pages_workflow.py
 source source_me.sh && python3 devel/verify_candidate.py
@@ -55,6 +58,17 @@ source source_me.sh && python3 devel/verify_candidate.py
 
 - `./check_codebase.sh` checks TypeScript, lint, formatting, and deterministic Node behavior.
 - `./build_github_pages.sh` produces the static deployment artifact.
+- `node tools/capture_visual_review.mjs` captures the rebuilt game at 320, 480, 768, 1280, and
+  1920 px widths plus all six evolution views; every currently rendered tooltip; and inspector,
+  success, persistence-error, recovery, offline-return, and forced-colors states. It writes an
+  ignored contact sheet and evidence manifest under `output_visual/game_visual_review/`, including
+  tooltip viewport/text/overlap geometry, target size, served palette, Axe, and ARIA-tree evidence.
+  `@axe-core/playwright` is development-only and is not shipped in `dist/`.
+- `node tools/capture_visual_review.mjs --verify-existing` checks the existing visual-review files
+  and hashes without launching a browser or changing the corpus.
+- `node --import tsx tools/capture_readme_screenshots.mjs` regenerates the fixed-clock README story,
+  including the explicit upgrade-price and tooltip decision frame, then synchronizes the managed
+  screenshot block.
 - `./run_playwright_tests.sh --build` exercises that rebuilt artifact in supported browser tests.
 - `source source_me.sh && python3 devel/verify_pages_workflow.py` checks the local Pages workflow
   contract without contacting GitHub.

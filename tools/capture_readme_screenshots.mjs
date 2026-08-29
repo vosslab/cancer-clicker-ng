@@ -39,6 +39,7 @@ const README_BLOCK = Object.freeze({
   end: "<!-- screenshots:end -->",
   lines: Object.freeze([
     "![Cancer Clicker NG game board after a visible tumor-cell click, with the living tumor, compact scoreboard, icon tabs, and upgrade rack](docs/screenshots/cancer_clicker_ng_board.png)",
+    "![Cancer Clicker NG upgrade decision with explicit Owned, Output, Buy, Cost, and Adds labels plus a viewport-contained tooltip](docs/screenshots/cancer_clicker_ng_upgrade_decision.png)",
     "",
     "<details>",
     "<summary>Central tumor progression: hypoxic core, perfusion, and invasive route</summary>",
@@ -445,6 +446,45 @@ async function screenshotBoard(page, url, outputPath) {
   return { ...measurements, directCellClick: true, viewpoint, scene };
 }
 
+async function screenshotUpgradeDecision(page, url, outputPath) {
+  await page.addInitScript(() => localStorage.clear());
+  await installFixedCaptureClock(page);
+  await page.goto(url, { waitUntil: "networkidle" });
+  await page.locator("[data-colony-cell]").first().click();
+  const buy = page.locator('[data-producer-id="producer"] .producer-row__buy');
+  await buy.waitFor({ state: "visible" });
+  await buy.focus();
+  await page.clock.runFor(20);
+  const tooltipId = await buy.getAttribute("aria-describedby");
+  if (tooltipId === null) throw new Error("README upgrade decision lacks tooltip help.");
+  const tooltip = page.locator(`#${tooltipId}`);
+  await tooltip.waitFor({ state: "visible" });
+  const geometry = await tooltip.evaluate((element) => {
+    const tooltipRect = element.getBoundingClientRect();
+    const rackRect = element.ownerDocument
+      .querySelector(".game-board__rack")
+      ?.getBoundingClientRect();
+    const view = element.ownerDocument.defaultView;
+    if (rackRect === undefined || view === null)
+      throw new Error("Upgrade rack geometry is absent.");
+    return {
+      insideViewport:
+        tooltipRect.left >= 8 &&
+        tooltipRect.top >= 8 &&
+        tooltipRect.right <= view.innerWidth - 8 &&
+        tooltipRect.bottom <= view.innerHeight - 8,
+      textFits:
+        element.scrollWidth <= element.clientWidth + 1 &&
+        element.scrollHeight <= element.clientHeight + 1,
+      outsideRack: tooltipRect.right <= rackRect.left + 16,
+    };
+  });
+  if (!geometry.insideViewport || !geometry.textFits || !geometry.outsideRack)
+    throw new Error(`README upgrade tooltip failed geometry: ${JSON.stringify(geometry)}`);
+  await page.screenshot({ path: outputPath });
+  return { tooltip: (await tooltip.textContent())?.trim(), geometry };
+}
+
 async function screenshotHypoxicNecrotic(page, url, outputPath) {
   await installFixedCaptureClock(page);
   await seedState(page, hypoxicNecroticState(), "readme-hypoxic-necrotic-fixture-seeded");
@@ -670,6 +710,10 @@ async function main() {
     await waitForServer(url);
     console.log("Capturing primary tumor board.");
     const boardPath = path.join(SCREENSHOT_DIRECTORY, "cancer_clicker_ng_board.png");
+    const upgradeDecisionPath = path.join(
+      SCREENSHOT_DIRECTORY,
+      "cancer_clicker_ng_upgrade_decision.png",
+    );
     const perfusedTumorPath = path.join(
       SCREENSHOT_DIRECTORY,
       "cancer_clicker_ng_perfused_tumor.png",
@@ -687,6 +731,15 @@ async function main() {
     const chicagoScalePath = path.join(SCREENSHOT_DIRECTORY, "cancer_clicker_ng_chicago_scale.png");
     const board = await screenshotBoard(page, url, boardPath);
     await page.close();
+    const upgradeDecisionPage = await browserContext.newPage();
+    const upgradeDecisionDiagnostics = collectDiagnostics(upgradeDecisionPage);
+    const upgradeDecision = await screenshotUpgradeDecision(
+      upgradeDecisionPage,
+      url,
+      upgradeDecisionPath,
+    );
+    diagnostics.push(...upgradeDecisionDiagnostics);
+    await upgradeDecisionPage.close();
     const hypoxicNecroticPage = await browserContext.newPage();
     const hypoxicNecroticDiagnostics = collectDiagnostics(hypoxicNecroticPage);
     const hypoxicNecrotic = await screenshotHypoxicNecrotic(
@@ -726,6 +779,7 @@ async function main() {
     await rewriteReadmeBlock();
     const files = await Promise.all([
       screenshotInfo(boardPath),
+      screenshotInfo(upgradeDecisionPath),
       screenshotInfo(hypoxicNecroticPath),
       screenshotInfo(perfusedTumorPath),
       screenshotInfo(invasiveRoutePath),
@@ -739,6 +793,7 @@ async function main() {
         {
           viewport: VIEWPORT,
           board,
+          upgradeDecision,
           hypoxicNecrotic,
           perfusedTumor,
           invasiveRoute,

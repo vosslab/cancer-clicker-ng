@@ -15,14 +15,28 @@ test("reduced-motion reward feedback appears and a non-modal inspector closes fr
 
     const lockedAdvanceHelp = page.locator('.evolution-stage .help-tooltip[aria-disabled="true"]');
     await expect(lockedAdvanceHelp).toBeVisible();
+    await expect(lockedAdvanceHelp).toHaveAttribute("role", "group");
+    const lockedTooltipId = await lockedAdvanceHelp.getAttribute("aria-describedby");
+    if (lockedTooltipId === null) throw new Error("Disabled help requires a tooltip description.");
+    await expect(page.locator(`#${lockedTooltipId}`)).toBeHidden();
     await lockedAdvanceHelp.focus();
     await expect(lockedAdvanceHelp).toBeFocused();
     await expect(page.getByRole("button", { name: "Advance" })).toBeDisabled();
-    await expect(lockedAdvanceHelp.locator(".help-tooltip-content")).toContainText(
-      /Local cluster cells|Advance unavailable/,
-    );
+    const lockedTooltip = page.locator(`#${lockedTooltipId}`);
+    await expect(lockedTooltip).toContainText(/Local cluster cells|Advance unavailable/);
+    await page.keyboard.press("Escape");
+    await expect(lockedTooltip).toBeHidden();
+    await lockedAdvanceHelp.focus();
 
-    await page.getByRole("button", { name: "Divide cell" }).click();
+    const divide = page.getByRole("button", { name: "Divide cell" });
+    const divideTooltipId = await divide.getAttribute("aria-describedby");
+    if (divideTooltipId === null) throw new Error("Divide requires a tooltip description.");
+    const divideDescriptionId = divideTooltipId.split(" ")[0];
+    if (divideDescriptionId === undefined)
+      throw new Error("Divide tooltip description requires one ID.");
+    await expect(page.locator(`#${divideDescriptionId}`)).toBeHidden();
+
+    await divide.click();
     const feedback = page.locator(".game-reward-dock__item");
     await expect(feedback).toHaveText("+1 cell");
 
